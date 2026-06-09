@@ -1,0 +1,591 @@
+{
+  "generated_at": "2026-06-09",
+  "version": 1,
+  "entries": [
+    {
+      "path": "architecture/perception-owns-task-geometry.md",
+      "category": "architecture",
+      "title": "Perception should own shared task geometry",
+      "id": "kb-architecture-0001",
+      "tags": [
+        "robotics",
+        "perception",
+        "geometry",
+        "contract-design"
+      ],
+      "keywords": [
+        "tcp_target",
+        "downstream consumer",
+        "recompute",
+        "shared geometry",
+        "target pose"
+      ],
+      "triggers": [
+        "duplicated geometry recomputation",
+        "prepare recomputes target pose",
+        "visualizer recomputes perception result",
+        "multiple modules derive different target geometry"
+      ],
+      "related": [
+        "[[trace-runtime-consumers-before-tuning]]"
+      ],
+      "aliases": [],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md#2026-06-07-1243",
+        "cuttofo:.project-log/progress.md#2026-06-07-1805",
+        "cuttofo:.project-log/business-logic/main.md"
+      ],
+      "confidence": "high",
+      "applicability": "Robotics perception-to-action pipelines with shared geometry consumers.",
+      "updated_at": "2026-06-09",
+      "rule": "When several downstream modules depend on the same interpreted perception result, one layer should own that geometry contract and publish it once."
+    },
+    {
+      "path": "architecture/tick-driven-state-machine-linear-workflows.md",
+      "category": "architecture",
+      "title": "Tick-driven state machine is sufficient for predominantly linear robot workflows",
+      "id": "kb-architecture-0002",
+      "tags": [
+        "robotics",
+        "state-machine",
+        "orchestration",
+        "architecture"
+      ],
+      "keywords": [
+        "tick-driven state machine",
+        "linear robot workflow",
+        "behavior tree alternative",
+        "SMACH alternative",
+        "robot task orchestration",
+        "state enum loop"
+      ],
+      "triggers": [
+        "behavior tree",
+        "SMACH",
+        "state machine",
+        "orchestrator pattern",
+        "workflow engine choice",
+        "robot task sequencing"
+      ],
+      "related": [
+        "[[single-purpose-launches-and-central-orchestration]]"
+      ],
+      "aliases": [
+        "simple state machine vs behavior tree",
+        "tick-driven orchestrator",
+        "linear workflow state machine"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/business-logic/decision-records.md#tick-driven-orchestrator"
+      ],
+      "confidence": "medium",
+      "applicability": "Linear or mostly-linear multi-step robot task orchestration.",
+      "updated_at": "2026-06-09",
+      "rule": "For robot workflows that are mostly sequential with occasional optional steps, a simple tick-driven state machine (state enum + loop at fixed frequency) is often sufficient. Reserve Behavior Trees for workflows with significant branching, parallel execution, or runtime re-planning."
+    },
+    {
+      "path": "config-behavior/trace-runtime-consumers-before-tuning.md",
+      "category": "config-behavior",
+      "title": "Trace runtime consumers before tuning config",
+      "id": "kb-config-behavior-0001",
+      "tags": [
+        "config",
+        "runtime-behavior",
+        "debugging",
+        "orchestration"
+      ],
+      "keywords": [
+        "yaml parameter",
+        "runtime consumer",
+        "effective control",
+        "parameter tracing",
+        "config tuning"
+      ],
+      "triggers": [
+        "config not effective",
+        "yaml changed but behavior unchanged",
+        "parameter appears configurable but does nothing",
+        "trace runtime consumer before tuning"
+      ],
+      "related": [
+        "[[perception-owns-task-geometry]]"
+      ],
+      "aliases": [],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md#2026-06-07-1735",
+        "cuttofo:.project-log/progress.md#2026-06-07-1805",
+        "cuttofo:.project-log/progress.md#2026-06-08-current",
+        "cuttofo:.project-log/config/config-schema.md"
+      ],
+      "confidence": "high",
+      "applicability": "Multi-layer systems with YAML config, runtime overrides, and orchestration-mediated parameter application.",
+      "updated_at": "2026-06-09",
+      "rule": "A parameter is not a real control surface until you trace where it is read, transformed, and finally consumed at runtime."
+    },
+    {
+      "path": "debugging/action-client-timeout-lifecycle.md",
+      "category": "debugging",
+      "title": "ROS2 action client timeout is often a goal-lifecycle mismatch, not a network issue",
+      "id": "kb-debugging-0003",
+      "tags": [
+        "ros",
+        "debugging",
+        "action-client",
+        "timeout",
+        "orchestration"
+      ],
+      "keywords": [
+        "action timeout",
+        "goal handle",
+        "result callback",
+        "action client",
+        "async send goal",
+        "goal response",
+        "result timeout"
+      ],
+      "triggers": [
+        "action timeout",
+        "goal not completing",
+        "wait for result hangs",
+        "action client no response"
+      ],
+      "related": [],
+      "aliases": [
+        "ros2 action timeout",
+        "goal handle timeout",
+        "action server not responding"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md"
+      ],
+      "confidence": "medium",
+      "applicability": "ROS2 systems where orchestrators or skill nodes use action clients to invoke hardware actions and encounter timeout errors.",
+      "updated_at": "2026-06-09",
+      "rule": "When a ROS2 action client times out waiting for a result, first distinguish between three distinct failure modes: (1) the goal was never accepted by the server (goal response timeout), (2) the goal was accepted but never finished (result timeout), or (3) the goal finished but the result callback was not triggered. Each has a different root cause and fix."
+    },
+    {
+      "path": "debugging/action-server-setoperatemode-failed.md",
+      "category": "debugging",
+      "title": "Action server setOperateMode fails when previous operation has not released control",
+      "id": "kb-debugging-0002",
+      "tags": [
+        "ros",
+        "debugging",
+        "action-server",
+        "robotics",
+        "orchestration"
+      ],
+      "keywords": [
+        "setOperateMode",
+        "automatic mode",
+        "action server",
+        "mode switch",
+        "control release",
+        "previous motion",
+        "startOperate",
+        "stopOperate"
+      ],
+      "triggers": [
+        "setOperateMode automatic failed",
+        "mode switch rejected",
+        "action server busy",
+        "cannot change mode while executing",
+        "previous motion not released"
+      ],
+      "related": [],
+      "aliases": [
+        "setOperateMode failed",
+        "action mode switch error",
+        "cannot set automatic mode"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md"
+      ],
+      "confidence": "high",
+      "applicability": "ROS2 action servers (especially hardware-control actions) that reject mode switches because a prior goal handle is still active or the internal state machine is in a transitional state.",
+      "updated_at": "2026-06-09",
+      "rule": "A `setOperateMode(automatic)` call that fails is usually not a configuration problem — it means the action server's internal state machine still holds the previous operation's control. Before retrying the mode switch, ensure the previous action goal has been explicitly cancelled or has reached a terminal state."
+    },
+    {
+      "path": "debugging/rclpy-tools-need-full-ros2-runtime.md",
+      "category": "debugging",
+      "title": "Python tools embedding rclpy need full ROS2 runtime, not just sys.path",
+      "id": "kb-debugging-0004",
+      "tags": [
+        "ros2",
+        "rclpy",
+        "python",
+        "environment",
+        "debugging"
+      ],
+      "keywords": [
+        "rclpy.create_client failed load library",
+        "typesupport shared library not found",
+        "LD_LIBRARY_PATH ROS2 Python",
+        "AMENT_PREFIX_PATH rclpy",
+        "exec after source setup.bash",
+        "GUI ros2 runtime"
+      ],
+      "triggers": [
+        "rclpy.create_client fails",
+        "rclpy.create_node fails",
+        "typesupport library not found",
+        "load library failed rosidl_typesupport",
+        "python3 main.py ros2",
+        "Could not load library"
+      ],
+      "related": [
+        "[[ros2-subscriber-no-message-qos]]"
+      ],
+      "aliases": [
+        "rclpy runtime environment",
+        "ros2 python gui setup.bash",
+        "typesupport .so not found",
+        "ros2 python tool environment"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md#2026-06-07-1956"
+      ],
+      "confidence": "high",
+      "applicability": "Any Python GUI, CLI tool, or standalone script that embeds ROS2 client libraries.",
+      "updated_at": "2026-06-09",
+      "rule": "Python scripts that call `rclpy.create_node()`, `create_client()`, or `create_subscription()` need the full ROS2 runtime environment — not just Python import paths. The typesupport shared libraries are loaded dynamically by the middleware and depend on `AMENT_PREFIX_PATH` + `LD_LIBRARY_PATH`."
+    },
+    {
+      "path": "debugging/ros2-subscriber-no-message-qos.md",
+      "category": "debugging",
+      "title": "ROS2 subscriber silently receives no messages when QoS mismatches",
+      "id": "kb-debugging-0001",
+      "tags": [
+        "ros",
+        "debugging",
+        "qos",
+        "communication"
+      ],
+      "keywords": [
+        "qos mismatch",
+        "no message",
+        "topic not found",
+        "subscriber silent",
+        "best_effort vs reliable",
+        "image_callback never fires",
+        "dds compatibility"
+      ],
+      "triggers": [
+        "topic exists but no message",
+        "subscriber callback not firing",
+        "qos mismatch silent failure",
+        "best_effort publisher reliable subscriber",
+        "no message on topic"
+      ],
+      "related": [],
+      "aliases": [
+        "ros2 topic no message",
+        "topic advertised but no data",
+        "subscriber callback never triggered"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md#2026-06-06-2345"
+      ],
+      "confidence": "high",
+      "applicability": "Any ROS2 system where a subscriber appears to be set up correctly but never receives messages, especially across package boundaries where QoS profiles differ.",
+      "updated_at": "2026-06-09",
+      "rule": "When a ROS2 subscriber never fires despite the topic being advertised, check QoS compatibility before debugging anything else — a BEST_EFFORT subscriber connected to a RELIABLE publisher silently receives nothing, with no warning from the middleware."
+    },
+    {
+      "path": "patterns/axis-specific-control-modes.md",
+      "category": "patterns",
+      "title": "Use axis-specific control modes for multi-phase manipulation tasks",
+      "id": "kb-patterns-0001",
+      "tags": [
+        "robotics",
+        "control",
+        "impedance-control",
+        "position-control",
+        "manipulation"
+      ],
+      "keywords": [
+        "axis-specific control mode",
+        "impedance vs position control",
+        "force compliance horizontal",
+        "precision vertical cut",
+        "multi-phase manipulation",
+        "control strategy per phase"
+      ],
+      "triggers": [
+        "impedance control",
+        "position control",
+        "force control",
+        "control mode selection",
+        "admittance control",
+        "multi-axis manipulation"
+      ],
+      "related": [],
+      "aliases": [
+        "per-phase control strategy",
+        "hybrid control mode selection",
+        "impedance for compliance position for precision"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/business-logic/decision-records.md#impedance-vs-position-control"
+      ],
+      "confidence": "medium",
+      "applicability": "Multi-phase manipulation tasks where physical requirements differ between phases.",
+      "updated_at": "2026-06-09",
+      "rule": "When a manipulation task spans multiple physical directions or phases with different requirements (compliance in one axis, precision in another), use different control modes per phase rather than one global mode. The control strategy should match the physical constraint, not the tool identity."
+    },
+    {
+      "path": "workflow/ros2-workspace-environment-isolation.md",
+      "category": "workflow",
+      "title": "ROS2 workspace environment isolation is not automatic",
+      "id": "kb-workflow-0002",
+      "tags": [
+        "ros2",
+        "workspace",
+        "environment",
+        "colcon",
+        "build"
+      ],
+      "keywords": [
+        "install/setup.bash underlay pollution",
+        "AMENT_PREFIX_PATH contamination",
+        "workspace copy environment leak",
+        "clean build env -i",
+        "COLCON_PREFIX_PATH baked paths"
+      ],
+      "triggers": [
+        "workspace copied",
+        "workspace moved",
+        "install/setup.bash contains old paths",
+        "build environment contamination",
+        "underlay chain leaked"
+      ],
+      "related": [
+        "[[trace-runtime-consumers-before-tuning]]"
+      ],
+      "aliases": [
+        "ros2 workspace isolation",
+        "colcon build clean environment",
+        "setup.bash contamination"
+      ],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md#2026-06-07-1435"
+      ],
+      "confidence": "high",
+      "applicability": "Any ROS2 project that has been moved, copied, or shared across machines.",
+      "updated_at": "2026-06-09",
+      "rule": "When a ROS2 workspace is cloned, moved, or duplicated, always rebuild in a clean shell. Never trust that `install/setup.bash` from a prior build is self-contained — it snapshots the underlay chain of its build environment."
+    },
+    {
+      "path": "workflow/single-purpose-launches-and-central-orchestration.md",
+      "category": "workflow",
+      "title": "Keep launches single-purpose and compose full workflows centrally",
+      "id": "kb-workflow-0001",
+      "tags": [
+        "workflow",
+        "launch",
+        "orchestration",
+        "ros"
+      ],
+      "keywords": [
+        "single-purpose launch",
+        "central orchestration",
+        "bringup boundary",
+        "nested launch ownership"
+      ],
+      "triggers": [
+        "nested launch side effects",
+        "launch file implicitly starts other subsystems",
+        "bringup boundary unclear",
+        "full workflow assembly belongs in orchestrator"
+      ],
+      "related": [
+        "[[trace-runtime-consumers-before-tuning]]"
+      ],
+      "aliases": [],
+      "source_projects": [
+        "cuttofo"
+      ],
+      "source_refs": [
+        "cuttofo:.project-log/progress.md#2026-06-08-current",
+        "cuttofo:.project-log/current-session.md"
+      ],
+      "confidence": "high",
+      "applicability": "ROS or multi-service systems with layered bringup, testing, and workflow execution entry points.",
+      "updated_at": "2026-06-09",
+      "rule": "Keep subsystem launch files single-purpose, and assemble the full workflow in one explicit orchestration entry point."
+    }
+  ],
+  "normalized_fields": {
+    "tags": [
+      "action-client",
+      "action-server",
+      "architecture",
+      "build",
+      "colcon",
+      "communication",
+      "config",
+      "contract-design",
+      "control",
+      "debugging",
+      "environment",
+      "geometry",
+      "impedance-control",
+      "launch",
+      "manipulation",
+      "orchestration",
+      "perception",
+      "position-control",
+      "python",
+      "qos",
+      "rclpy",
+      "robotics",
+      "ros",
+      "ros2",
+      "runtime-behavior",
+      "state-machine",
+      "timeout",
+      "workflow",
+      "workspace"
+    ],
+    "keywords": [
+      "action-client",
+      "action-server",
+      "action-timeout",
+      "ament-prefix-path-contamination",
+      "ament-prefix-path-rclpy",
+      "async-send-goal",
+      "automatic-mode",
+      "axis-specific-control-mode",
+      "behavior-tree-alternative",
+      "best-effort-vs-reliable",
+      "bringup-boundary",
+      "central-orchestration",
+      "clean-build-env-i",
+      "colcon-prefix-path-baked-paths",
+      "config-tuning",
+      "control-release",
+      "control-strategy-per-phase",
+      "dds-compatibility",
+      "downstream-consumer",
+      "effective-control",
+      "exec-after-source-setup-bash",
+      "force-compliance-horizontal",
+      "goal-handle",
+      "goal-response",
+      "gui-ros2-runtime",
+      "image-callback-never-fires",
+      "impedance-vs-position-control",
+      "install-setup-bash-underlay-pollution",
+      "ld-library-path-ros2-python",
+      "linear-robot-workflow",
+      "mode-switch",
+      "multi-phase-manipulation",
+      "nested-launch-ownership",
+      "no-message",
+      "parameter-tracing",
+      "precision-vertical-cut",
+      "previous-motion",
+      "qos-mismatch",
+      "rclpy-create-client-failed-load-library",
+      "recompute",
+      "result-callback",
+      "result-timeout",
+      "robot-task-orchestration",
+      "runtime-consumer",
+      "setoperatemode",
+      "shared-geometry",
+      "single-purpose-launch",
+      "smach-alternative",
+      "startoperate",
+      "state-enum-loop",
+      "stopoperate",
+      "subscriber-silent",
+      "target-pose",
+      "tcp-target",
+      "tick-driven-state-machine",
+      "topic-not-found",
+      "typesupport-shared-library-not-found",
+      "workspace-copy-environment-leak",
+      "yaml-parameter"
+    ],
+    "triggers": [
+      "action-client-no-response",
+      "action-server-busy",
+      "action-timeout",
+      "admittance-control",
+      "behavior-tree",
+      "best-effort-publisher-reliable-subscriber",
+      "bringup-boundary-unclear",
+      "build-environment-contamination",
+      "cannot-change-mode-while-executing",
+      "config-not-effective",
+      "control-mode-selection",
+      "could-not-load-library",
+      "duplicated-geometry-recomputation",
+      "force-control",
+      "full-workflow-assembly-belongs-in-orchestrator",
+      "goal-not-completing",
+      "impedance-control",
+      "install-setup-bash-contains-old-paths",
+      "launch-file-implicitly-starts-other-subsystems",
+      "load-library-failed-rosidl-typesupport",
+      "mode-switch-rejected",
+      "multi-axis-manipulation",
+      "multiple-modules-derive-different-target-geometry",
+      "nested-launch-side-effects",
+      "no-message-on-topic",
+      "orchestrator-pattern",
+      "parameter-appears-configurable-but-does-nothing",
+      "position-control",
+      "prepare-recomputes-target-pose",
+      "previous-motion-not-released",
+      "python3-main-py-ros2",
+      "qos-mismatch-silent-failure",
+      "rclpy-create-client-fails",
+      "rclpy-create-node-fails",
+      "robot-task-sequencing",
+      "setoperatemode-automatic-failed",
+      "smach",
+      "state-machine",
+      "subscriber-callback-not-firing",
+      "topic-exists-but-no-message",
+      "trace-runtime-consumer-before-tuning",
+      "typesupport-library-not-found",
+      "underlay-chain-leaked",
+      "visualizer-recomputes-perception-result",
+      "wait-for-result-hangs",
+      "workflow-engine-choice",
+      "workspace-copied",
+      "workspace-moved",
+      "yaml-changed-but-behavior-unchanged"
+    ]
+  }
+}

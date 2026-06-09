@@ -20,6 +20,7 @@ It separates:
 - `ai-collaboration/`: practices for working effectively with AI agents
 - `config-behavior/`: config/runtime mapping lessons
 - `anti-patterns/`: traps and bad defaults to avoid
+- `config/`: portable runtime configuration such as session hot-load rules
 - `staging/`: reviewable draft knowledge from distillation runs
 - `source-project-logs/`: synchronized raw `.project-log` archives
 - `distillation-ledger/`: cross-project distillation audit trail
@@ -30,3 +31,4 @@ It separates:
 - Staging content may be revised or rejected.
 - Raw project-log archives are evidence, not polished knowledge.
 - Every accepted knowledge entry should preserve evidence lineage.
+- Session-time automation should prefer repository tools such as `tools/kb.py` and `tools/kb_hotload.py` so behavior can move across machines with the repo.

@@ -3,11 +3,27 @@
 ## architecture/perception-owns-task-geometry.md
 
 ---
+id: kb-architecture-0001
 title: Perception should own shared task geometry
+category: architecture
 tags: [robotics, perception, geometry, contract-design]
+keywords: [tcp_target, downstream consumer, recompute, shared geometry, target pose]
+triggers:
+  - duplicated geometry recomputation
+  - prepare recomputes target pose
+  - visualizer recomputes perception result
+  - multiple modules derive different target geometry
+related:
+  - [[trace-runtime-consumers-before-tuning]]
+source_projects: [cuttofo]
+source_refs:
+  - cuttofo:.project-log/progress.md#2026-06-07-1243
+  - cuttofo:.project-log/progress.md#2026-06-07-1805
+  - cuttofo:.project-log/business-logic/main.md
 confidence: high
+applicability: Robotics perception-to-action pipelines with shared geometry consumers.
+updated_at: 2026-06-09
 source_type: distilled-from-project
-updated: 2026-06-09
 ---
 
 ## Rule
@@ -35,11 +51,28 @@ Use this when multiple modules depend on a shared target pose, edge direction, g
 ## config-behavior/trace-runtime-consumers-before-tuning.md
 
 ---
+id: kb-config-behavior-0001
 title: Trace runtime consumers before tuning config
+category: config-behavior
 tags: [config, runtime-behavior, debugging, orchestration]
+keywords: [yaml parameter, runtime consumer, effective control, parameter tracing, config tuning]
+triggers:
+  - config not effective
+  - yaml changed but behavior unchanged
+  - parameter appears configurable but does nothing
+  - trace runtime consumer before tuning
+related:
+  - [[perception-owns-task-geometry]]
+source_projects: [cuttofo]
+source_refs:
+  - cuttofo:.project-log/progress.md#2026-06-07-1735
+  - cuttofo:.project-log/progress.md#2026-06-07-1805
+  - cuttofo:.project-log/progress.md#2026-06-08-current
+  - cuttofo:.project-log/config/config-schema.md
 confidence: high
+applicability: Multi-layer systems with YAML config, runtime overrides, and orchestration-mediated parameter application.
+updated_at: 2026-06-09
 source_type: distilled-from-project
-updated: 2026-06-09
 ---
 
 ## Rule
@@ -68,11 +101,26 @@ Use this whenever behavior depends on config files, runtime overrides, action go
 ## workflow/single-purpose-launches-and-central-orchestration.md
 
 ---
+id: kb-workflow-0001
 title: Keep launches single-purpose and compose full workflows centrally
+category: workflow
 tags: [workflow, launch, orchestration, ros]
+keywords: [single-purpose launch, central orchestration, bringup boundary, nested launch ownership]
+triggers:
+  - nested launch side effects
+  - launch file implicitly starts other subsystems
+  - bringup boundary unclear
+  - full workflow assembly belongs in orchestrator
+related:
+  - [[trace-runtime-consumers-before-tuning]]
+source_projects: [cuttofo]
+source_refs:
+  - cuttofo:.project-log/progress.md#2026-06-08-current
+  - cuttofo:.project-log/current-session.md
 confidence: high
+applicability: ROS or multi-service systems with layered bringup, testing, and workflow execution entry points.
+updated_at: 2026-06-09
 source_type: distilled-from-project
-updated: 2026-06-09
 ---
 
 ## Rule

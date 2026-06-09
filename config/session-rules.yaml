@@ -1,0 +1,39 @@
+explicit_request_patterns:
+  - 知识库
+  - 类似经验
+  - 之前有没有
+  - 查一下经验
+error_trigger_patterns:
+  - setOperateMode
+  - not effective
+  - timeout
+  - topic not found
+  - no message
+  - qos mismatch
+error_phrase_map:
+  setOperateMode: "setOperateMode automatic mode switch action server"
+  timeout: "action timeout goal lifecycle"
+  topic not found: "topic no message subscriber qos"
+  no message: "subscriber no message qos mismatch"
+  qos mismatch: "qos mismatch best_effort reliable subscriber"
+  not effective: "config not effective runtime consumer tracing"
+task_context_tags:
+  launch:
+    - workflow
+    - orchestration
+    - ros
+    - launch
+  perception:
+    - perception
+    - geometry
+    - vision
+  config:
+    - config
+    - runtime-behavior
+    - debugging
+  robotics-runtime:
+    - robotics
+    - ros
+    - debugging
+max_injected_entries: 3
+summary_template: compact-bullets
