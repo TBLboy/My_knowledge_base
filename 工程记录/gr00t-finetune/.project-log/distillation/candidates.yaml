@@ -1,0 +1,54 @@
+version: "0.2"
+candidates:
+  - id: rule-immediate-recording
+    statement: |
+      用户确认事实、决策或需求后，Agent 必须在当前回复结束前将其写入 .project-log/，
+      不能等待用户主动要求"更新进度"或"记录下来"才执行。
+    context: |
+      在 GR00T N1 微调项目中，用户指出 Agent 在每次提问获得回复后没有自动记录，
+      需要用户主动提醒"更新进度"才执行记录义务。Agent 承认漏记并表示这是原则到位
+      但缺少可执行检查点的问题。
+    applicability:
+      - 所有涉及用户确认关键事实、决策、需求或提供重要信息的对话回合
+      - 不适用于纯闲聊、流程问候或 Agent 单方面的猜测
+    supporting_evidence:
+      - session: GR00T N1 微调，用户提问"按理来说...这条规则是不是没有写到agent的md文件当中"
+      - outcome: Agent 承认漏记，用户要求将此规则蒸馏为永久规则
+    counterexamples: []
+    confidence: high
+    risk_if_generalized_incorrectly: |
+      可能偶尔打断流式思考节奏，但相比丢失用户确认信息的代价，可接受。
+    proposed_target: constitution
+    target_file: ~/.config/opencode/AGENTS.md
+    approval_requirement: 用户直接要求"蒸馏之后写入agent.md" = 已批准
+    evaluation_plan: |
+      后续3次对话中，用户确认信息后，检查 current-session.md 或对应日志是否
+      在回复结束前即时更新。若漏记则回退规则强度，补充触发条件中的模糊边界。
+
+  - id: skill-hf-download
+    statement: |
+      Hugging Face Hub 模型下载的最佳实践：使用 hf_xet（替代已废弃的 hf_transfer）、
+      HF_ENDPOINT 镜像站、内置断点续传、--max-workers 并行、HF_XET_HIGH_PERFORMANCE
+      高速模式。已凝固为 b-hf-download Skill。
+    context: |
+      在 GR00T N1 微调项目中，用户从 HF 下载 6GB 模型时遇到 huggingface.co 直连不通、
+      限速 ~500 B/s 的问题。调研后发现 hf_transfer 已废弃，替代为 hf_xet；
+      国内使用 hf-mirror.com 镜像后速度提升至 ~3 MB/s。此经验值得复用。
+    applicability:
+      - 需要从 HF Hub 下载模型、数据集或 Spaces 的场景
+      - 中国大陆网络环境下需要镜像站
+      - 下载超大模型需要高速传输和续传
+    supporting_evidence:
+      - session: GR00T N1 微调项目，模型下载环节
+      - outcome: 切换到 hf-mirror.com 后速度从 ~500 B/s 提升至 ~3 MB/s
+      - reference: huggingface_hub 官方文档确认 hf_transfer 废弃、hf_xet 为替代方案
+    counterexamples:
+      - 如果 hf-mirror.com 也不可达 → 需要代理方案
+    confidence: high
+    risk_if_generalized_incorrectly: |
+      hf_xet 非所有仓库都启用 Xet storage，未启用时自动回退到 httpx 常规下载，不影响功能。
+    proposed_target: skill
+    target_file: ~/.config/opencode/skills/b-hf-download/SKILL.md
+    approval_requirement: 用户明确要求将经验凝固为 b 级别 skills = 已批准
+    evaluation_plan: |
+      下次从 HF Hub 下载时，按 b-hf-download 流程操作，验证关键步骤是否覆盖实际需求。

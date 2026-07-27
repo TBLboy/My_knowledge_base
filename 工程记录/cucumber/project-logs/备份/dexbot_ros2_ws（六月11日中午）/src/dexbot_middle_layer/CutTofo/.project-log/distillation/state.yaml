@@ -1,0 +1,18 @@
+project_id: cuttofo
+knowledge_repo_project_key: cuttofo
+last_scan_at: 2026-06-09T15:30:00
+last_draft_at: 2026-06-09T15:30:00
+last_apply_at: 2026-06-09T16:00:00
+last_source_sync_at: null
+last_source_hashes:
+  progress_md: manual-first-sample
+  current_session_md: manual-first-sample
+  decision_records_md: manual-first-sample
+  distill_input: seeded-from-log-review
+last_candidate_id: 7
+last_kb_run_ref: distillation-ledger/runs/2026-06-09T15-30-00-cuttofo.md
+last_kb_snapshot_ref: architecture/perception-owns-task-geometry.md, config-behavior/trace-runtime-consumers-before-tuning.md, workflow/single-purpose-launches-and-central-orchestration.md, workflow/ros2-workspace-environment-isolation.md, debugging/rclpy-tools-need-full-ros2-runtime.md, architecture/tick-driven-state-machine-linear-workflows.md, patterns/axis-specific-control-modes.md
+notes:
+  - First real draft-stage distillation sample completed from existing CutTofo project-log records.
+  - 2026-06-09T14:20:00 apply accepted all three initial add-candidates into the formal knowledge base and rebuilt indexes.
+  - 2026-06-09T15:30:00 scan identified 4 new candidates (cuttofo-0004 through 0007) from progress.md and decision-records.md that were not covered by the first distillation run.

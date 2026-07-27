@@ -1,0 +1,202 @@
+# cucumber
+
+切黄瓜/切豆腐机器人 ROS2 工程及其大量历史副本，包含视觉、抓刀、机械臂控制、阶段流程和 GUI 等模块记录。
+
+## 汇总范围
+
+- 来源顶层目录：`/home/tbl/Project/cucumber`
+- 收集到的 `.project-log` 目录：183 个
+- 收集到的文件：2,459 个
+- 文件总大小：28,785,701 字节
+
+## 目录约定
+
+- 如果来源工程根目录直接包含 `.project-log`，副本位于本目录的 `.project-log/`。
+- 如果来源日志位于嵌套工程或历史副本中，副本位于 `project-logs/` 下，并保留来源相对路径，避免同名日志互相覆盖。
+- 原始工程文件未移动或删除；本目录是独立副本。
+
+## 来源日志清单
+
+- `cucumber/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（38 个文件，583,052 字节）
+- `cucumber/dexbot_ros2_ws/src/dexbot_bottom_layer/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/dexbot_bottom_layer/.project-log`（0 个文件，0 字节）
+- `cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/.project-log`（26 个文件，267,094 字节）
+- `cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，130,926 字节）
+- `cucumber/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/cuttofo_xcore/.project-log`（38 个文件，583,052 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/dexbot_bottom_layer/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/dexbot_bottom_layer/.project-log`（0 个文件，0 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/dexbot_middle_layer/CutTofo/.project-log`（25 个文件，281,987 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/gui/.project-log`（24 个文件，130,926 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/dexbot_ros2_ws（另一个复件）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（另一个复件）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/dexbot_ros2_ws（复件）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（复件）/src/cuttofo_xcore/.project-log`（38 个文件，583,052 字节）
+- `cucumber/dexbot_ros2_ws（复件）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（复件）/src/dexbot_middle_layer/CutTofo/.project-log`（25 个文件，255,002 字节）
+- `cucumber/dexbot_ros2_ws（复件）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（复件）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/dexbot_ros2_ws（复件）/src/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（复件）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/dexbot_ros2_ws（复件）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（复件）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/dexbot_ros2_ws（复件）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（复件）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/cuttofo_xcore/.project-log`（38 个文件，583,052 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/dexbot_bottom_layer/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/dexbot_bottom_layer/.project-log`（0 个文件，0 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/dexbot_middle_layer/CutTofo/.project-log`（26 个文件，266,109 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/gui/.project-log`（24 个文件，130,926 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/dexbot_ros2_ws（第 3 个复件）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/dexbot_ros2_ws（第 3 个复件）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws(6号修改)/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(6号修改)/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws(6号修改)/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(6号修改)/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，51,562 字节）
+- `cucumber/备份/dexbot_ros2_ws(6号修改)/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(6号修改)/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws(6号修改)/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(6号修改)/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws(6号修改)/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(6号修改)/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws(6号修改)/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(6号修改)/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws(附件16)/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(附件16)/src/cuttofo_xcore/.project-log`（38 个文件，583,052 字节）
+- `cucumber/备份/dexbot_ros2_ws(附件16)/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(附件16)/src/dexbot_middle_layer/CutTofo/.project-log`（25 个文件，145,857 字节）
+- `cucumber/备份/dexbot_ros2_ws(附件16)/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(附件16)/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws(附件16)/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(附件16)/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws(附件16)/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(附件16)/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws(附件16)/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws(附件16)/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/.project-log`（6 个文件，6,614 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/src/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/src/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/src/cuttofo_lbot/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/src/cuttofo_lbot/.project-log`（6 个文件，180,863 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/src/cuttofo_xcore/.project-log`（29 个文件，593,222 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws1（附件4）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws1（附件4）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，123,800 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（原始版本）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/.project-log`（16 个文件，64,042 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（复件）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/.project-log`（17 个文件，99,589 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件-13）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/.project-log`（17 个文件，96,648 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件10-豆腐全流程正在推进）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/.project-log`（17 个文件，96,648 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件11-初步全流程）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/.project-log`（17 个文件，96,648 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件12-全流程参数没优化）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，581,202 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/.project-log`（18 个文件，69,181 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,660 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，43,710 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-saurce备份）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，64,099 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，581,202 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/.project-log`（18 个文件，69,459 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,660 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，43,710 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件14-浇汁代码）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，64,099 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/.project-log`（16 个文件，70,210 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件2）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/.project-log`（16 个文件，70,210 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件3）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/.project-log`（16 个文件，70,210 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件5）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/.project-log`（17 个文件，82,758 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件6）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/.project-log`（17 个文件，89,540 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件7-框架优化）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/.project-log`（17 个文件，95,393 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件8-开始解决豆腐问题）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/.project-log`（17 个文件，95,393 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（附件9-prepare求解失败）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/.project-log`（17 个文件，82,758 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/gui/.project-log`（24 个文件，125,948 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws_525（黄瓜全流程）/dexbot_ros2_ws/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月7日上午）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月7日上午）/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月7日上午）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月7日上午）/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，56,096 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月7日上午）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月7日上午）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月7日上午）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月7日上午）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月7日上午）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月7日上午）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月7日上午）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月7日上午）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月8日-上午）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月8日-上午）/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月8日-上午）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月8日-上午）/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，87,576 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月8日-上午）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月8日-上午）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月8日-上午）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月8日-上午）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月8日-上午）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月8日-上午）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（6月8日-上午）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（6月8日-上午）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（六月11日中午）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（六月11日中午）/src/cuttofo_xcore/.project-log`（38 个文件，583,052 字节）
+- `cucumber/备份/dexbot_ros2_ws（六月11日中午）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（六月11日中午）/src/dexbot_middle_layer/CutTofo/.project-log`（25 个文件，249,567 字节）
+- `cucumber/备份/dexbot_ros2_ws（六月11日中午）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（六月11日中午）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（六月11日中午）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（六月11日中午）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（六月11日中午）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（六月11日中午）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（六月11日中午）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（六月11日中午）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-14）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-14）/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-14）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-14）/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，76,684 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-14）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-14）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-14）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-14）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-14）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-14）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-14）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-14）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-15）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-15）/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-15）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-15）/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，89,687 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-15）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-15）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-15）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-15）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-15）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-15）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件-15）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件-15）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16-没问题版本）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16-没问题版本）/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16-没问题版本）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16-没问题版本）/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，94,577 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16-没问题版本）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16-没问题版本）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16-没问题版本）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16-没问题版本）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16-没问题版本）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16-没问题版本）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16-没问题版本）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16-没问题版本）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16）/src/cuttofo_xcore/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16）/src/cuttofo_xcore/.project-log`（29 个文件，580,298 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16）/src/dexbot_middle_layer/CutTofo/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16）/src/dexbot_middle_layer/CutTofo/.project-log`（14 个文件，94,577 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16）/src/dexbot_middle_layer/CutTofo/toolbox/cuttofo_calibration/.project-log`（4 个文件，37,632 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16）/src/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16）/src/gui/.project-log`（24 个文件，126,763 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16）/src/gui_backup/gui/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16）/src/gui_backup/gui/.project-log`（3 个文件，38,894 字节）
+- `cucumber/备份/dexbot_ros2_ws（附件16）/src/gui_backup/gui2/.project-log` → `cucumber/project-logs/备份/dexbot_ros2_ws（附件16）/src/gui_backup/gui2/.project-log`（3 个文件，59,283 字节）

@@ -1,0 +1,136 @@
+version: "0.2"
+mode: standard
+current_phase: verification
+active_goal: "完成 GR00T 工程结构正式汇报，并保留未见轨迹、真机与触觉扩展的验证边界"
+phase_order:
+  - business-intent
+  - business-clarification
+  - requirement-baseline
+  - solution-research
+  - architecture-decision
+  - task-decomposition
+  - engineering-spec
+  - implementation
+  - verification
+  - alignment
+  - retrospective
+  - distillation
+phases:
+  business-intent:
+    status: active
+    gate_status: open
+    required_artifacts: []
+    exit_conditions:
+      - goal and target outcome are stated
+    evidence: []
+  business-clarification:
+    status: completed
+    gate_status: passed
+    required_artifacts:
+      - .project-log/business-logic/atoms.yaml
+    exit_conditions:
+      - in-scope behavior is atomic and observable
+      - no blocking C-level semantic question is hidden
+    evidence:
+      - .project-log/research/gr00t-engineering-report-notes.md
+  requirement-baseline:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/requirements/baseline.yaml
+    exit_conditions:
+      - scope and exclusions are explicit
+      - active atoms have acceptance criteria
+    evidence: []
+  solution-research:
+    status: completed
+    gate_status: passed
+    required_artifacts:
+      - .project-log/research/solution-research.yaml
+    exit_conditions:
+      - material technical choices have evidence or are explicitly not required
+    evidence:
+      - .project-log/research/gr00t-engineering-report-chapters-01-03.md
+  architecture-decision:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/architecture/architecture.yaml
+    exit_conditions:
+      - ownership interfaces data and failure boundaries are sufficient for decomposition
+    evidence: []
+  task-decomposition:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/tasks/task-list.yaml
+    exit_conditions:
+      - next ready task can be selected mechanically
+      - in-scope atoms are covered or intentionally deferred
+    evidence: []
+  engineering-spec:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/specs
+    exit_conditions:
+      - non-trivial ready tasks have implementation-ready specs
+    evidence: []
+  implementation:
+    status: completed
+    gate_status: passed
+    required_artifacts: []
+    exit_conditions:
+      - planned outputs exist
+      - deviations are recorded
+    evidence:
+      - .project-log/tasks/task-list.yaml#task-009
+  verification:
+    status: active
+    gate_status: open
+    required_artifacts:
+      - .project-log/verification/evidence.yaml
+    exit_conditions:
+      - completion conditions have evidence or exact limitations are recorded
+    evidence:
+      - .project-log/verification/evidence.yaml#verification-013
+      - docs/gr00t-engineering-report.md
+  alignment:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/alignment/findings.yaml
+    exit_conditions:
+      - material business-code-test differences are resolved assigned or accepted
+    evidence: []
+  retrospective:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/retrospective/retrospective.yaml
+    exit_conditions:
+      - concrete workflow improvements are recorded
+    evidence: []
+  distillation:
+    status: pending
+    gate_status: not-evaluated
+    required_artifacts:
+      - .project-log/distillation/candidates.yaml
+    exit_conditions:
+      - lessons are classified without silently becoming permanent rules
+    evidence: []
+open_gates: []
+return_edges:
+  - from: implementation
+    to: business-clarification
+    reason: implementation exposed product ambiguity
+  - from: verification
+    to: implementation
+    reason: acceptance evidence failed
+  - from: alignment
+    to: business-clarification
+    reason: authoritative behavior conflict
+  - from: alignment
+    to: implementation
+    reason: implementation or test drift
+last_updated: "2026-07-23T21:15:00+08:00"

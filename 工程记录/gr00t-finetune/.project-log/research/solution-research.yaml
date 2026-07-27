@@ -1,0 +1,66 @@
+version: "0.2"
+studies:
+  - id: research-002
+    status: complete
+    topic: "GR00T 13D 倒水训练未形成有效 open-loop 策略的初步根因诊断"
+    date: "2026-07-22"
+    question: "20,000-step 微调效果不佳是否由 cosine 学习率过早衰减导致，以及下一项最低成本的判别实验是什么。"
+    evidence:
+      - source: "checkpoint-20000/trainer_state.json"
+        finding: "LR 在 1,000 step 达约 1e-4，10,000 step 为 5.41e-5，15,000 step 为 1.61e-5，20,000 step 近 0；warmup 为前 5%。因此 LR 直到末段才显著变小，并非在 5k 或 10k 后立刻失效。"
+      - source: ".project-log/logs/checkpoint-comparison-open-loop.log"
+        finding: "16k–20k 的同条件评估不单调下降（18k 最好），不支持“cosine 导致模型在后半程明确退化”的说法。"
+      - source: ".project-log/logs/per-dimension-eval-ckpt20000.log"
+        finding: "模型对 trajectory 0 的误差远高于当前状态基线，尤其 O6 手部；即在训练内轨迹上也未学会简单连续动作行为。"
+      - source: "gr00t_n1/gr00t/data/dataset/sharded_single_step_dataset.py:160-236"
+        finding: "episode_sampling_rate=0.1 会把每个 episode 打散为十个互补子序列，而非永久丢弃 90% 时间步；不能把它作为数据仅使用 10% 的根因。"
+      - source: "gr00t_n1/examples/linkerhand_right_o6_config.py + launch_finetune.py:113"
+        finding: "动作配置为 ABSOLUTE；虽然训练配置启用 use_relative_action，但处理器仅对 rep=RELATIVE 执行相对动作变换，未发现 absolute/relative 双重转换证据。"
+    conclusion: "证据排除了两个优先猜测：episode_sampling_rate 并非只用 10% 数据，cosine 也不能单独解释失败。进一步实验确认，主要问题是实际训练暴露量：全量约45,030有效锚点而 batch=1只运行20,000 steps，等效不足0.45 pass。单 episode将训练从0.65 pass提升至约4.3 pass后，MSE从约1278降至683，表明优化确有学习，但尚未超过强 current-state baseline（MSE83）。因此最强结论是“训练量严重不足，cosine 将有限训练预算进一步摊薄”；custom embodiment 契约仍有待在足够训练量后最终验证，不能在现有证据下直接判为数据管线错误。"
+    recommendation:
+      strategy: "spike-first"
+      proposal: "不要继续使用20k batch-1 run 作为收敛试验。先清理实验 checkpoint 释放磁盘；随后以至少5个全量等效 pass（约225k optimizer samples，若仍batch=1）作为最小 full-data run，采用warmup后constant或缓慢衰减LR，并每1个pass保存/固定评估。若资源不允许该训练量，先冻结更大模块或实现梯度累积/更大有效batch，而不是再次运行不足1个pass的全参训练。"
+    confidence: high
+    invalidation_conditions:
+      - "若固定 seed 的 base 和多个早期 checkpoint 对照显示明显持续改善，则需重新评估当前一次随机评估的代表性。"
+      - "若单 episode overfit 通过，则不能将问题归因于管线契约错误，应转向数据多样性、有效 batch、schedule 和训练时长。"
+  - id: research-001
+    status: complete
+    topic: "GR00T N1.7 LoRA/PEFT 支持"
+    date: "2026-07-22"
+    question: "当前 GR00T N1.7 是否原生支持 LoRA，以及能否用于 24GB RTX 4090 的 action head 微调。"
+    constraints:
+      - "单张 RTX 4090 24GB。"
+      - "当前全参数 projector + DiT 训练在 Adam 初始化阶段 OOM。"
+      - "最终动作空间为右臂 7D + O6 6D 连续 13D。"
+    evidence:
+      - source: "gr00t_n1/pyproject.toml:21"
+        finding: "声明 peft==0.17.1，但 GR00T 主训练代码没有 peft/LoraConfig/get_peft_model/PeftModel 使用。"
+      - source: "gr00t_n1/gr00t/configs/finetune_config.py:49-59"
+        finding: "只有 tune_llm、tune_visual、tune_projector、tune_diffusion_model 布尔开关，没有 LoRA 参数。"
+      - source: "gr00t_n1/gr00t/model/gr00t_n1d7/gr00t_n1d7.py:121-143"
+        finding: "tune_projector 是完整 state_encoder/action_encoder/action_decoder 的 requires_grad 控制，不是 LoRA。"
+      - source: "gr00t_n1/gr00t/model/gr00t_n1d7/setup.py:78-120"
+        finding: "训练和恢复使用完整 AutoModel checkpoint，没有 adapter-only 保存/加载协议。"
+      - source: "gr00t_n1/gr00t/model/gr00t_n1d7/gr00t_n1d7.py:50-97"
+        finding: "DiT/action head 使用自定义模块和 Diffusers Attention，未提供 LoRA 注入边界。"
+      - source: "gr00t_n1/getting_started/finetune_new_embodiment.md"
+        finding: "官方自定义 embodiment 流程未提供 LoRA/adapter CLI 或示例。"
+    conclusion: "当前上游和本地 GR00T N1.7 不原生支持 LoRA；peft 依赖存在但未接线。"
+    options:
+      - name: "直接实现 LoRA spike"
+        fit: "可降低 optimizer 状态，但需自行决定 target modules、注入顺序和 adapter checkpoint 生命周期。"
+        risk: "仅对 VLM 加 LoRA 可能无法解决 DiT/action head 的主要显存问题；对 DiT/projector 注入暂无官方契约。"
+      - name: "冻结 DiT，仅训练 projector/action encoder/decoder"
+        fit: "改动小、最接近现有官方接口，显存风险最低。"
+        risk: "可能牺牲新动作分布适配能力。"
+      - name: "8-bit optimizer / gradient checkpointing"
+        fit: "保持网络结构和全参数训练目标，可能降低 optimizer/activation 显存。"
+        risk: "当前训练入口未验证 bitsandbytes 或 checkpointing 配置；需独立 spike。"
+    recommendation:
+      strategy: "spike-first"
+      proposal: "先做单步 LoRA 可行性实验，优先针对 Qwen language 或明确的 DiT Linear target；同时与冻结 DiT 基线比较峰值显存和可恢复性。"
+      confidence: high
+    invalidation_conditions:
+      - "如果单步训练仍在 optimizer 或 forward 阶段 OOM，则不能把 LoRA 作为当前 4090 方案。"
+      - "如果 adapter 重载后 action 输出无法复现，则需改为合并完整 checkpoint或放弃该路径。"

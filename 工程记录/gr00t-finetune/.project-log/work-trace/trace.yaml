@@ -1,0 +1,17 @@
+version: "0.2"
+entries:
+  - id: trace-20260723-progress-alignment
+    task_id: task-009
+    context: "current-session 已记录 30,000-step 重训与 verification-013，但 progress.md、requirements.md 和 workflow/task active_goal 仍停留在模型下载/训练阻塞阶段。"
+    hypothesis: "项目实际状态已经进入训练集 open-loop 验证完成、留出泛化与闭环待验收。"
+    action: "核对训练进程、checkpoint、评估日志、task-009 和 verification-013，并同步面向人读与机器可读的进度记录。"
+    expected_result: "所有当前进度摘要指向同一事实状态，且不把 open-loop 结果升级为真机部署结论。"
+    observation: "无训练进程；checkpoint-22400/28000/30000 存在；verification-013 为 passed；仅评估训练集轨迹 0-3。"
+    actual_result: "已更新 progress.md、current-session.md、requirements.md、workflow.yaml、task-list.yaml；当前阶段统一为 verification，闭环和未见轨迹仍明确为未完成。"
+    delta: "此前进度摘要误报为模型下载/训练阻塞；现已纠正。项目验证记录体系仍存在历史 schema 版本不一致。"
+    lesson: "训练产物完成不等于策略整体验收完成；进度摘要必须同时标注已验证边界和未验证边界。"
+    next_adjustment: "下一轮先做留出轨迹评估；真机测试前由用户确认安全条件、测试范围和停止策略。"
+    evidence:
+      - ".project-log/verification/evidence.yaml#verification-013"
+      - "/mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/open_loop_eval/"
+    knowledge_candidate: false

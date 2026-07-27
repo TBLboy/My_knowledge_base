@@ -1,0 +1,10 @@
+Skipped source episodes:
+  - double_linkerhand_task_pouring_version1_2026-07-16_14-52-12/episode_000040: missing ['telemetry.npz', 'manifest.json', 'cameras/cam_top.mp4', 'cameras/cam_right_wrist.mp4', 'cameras/cam_top.timestamps.npy', 'cameras/cam_right_wrist.timestamps.npy']
+Wrote 1/148 episodes
+Wrote 25/148 episodes
+Wrote 50/148 episodes
+Wrote 75/148 episodes
+Wrote 100/148 episodes
+Wrote 125/148 episodes
+Wrote 148/148 episodes
+Conversion completed: /home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d

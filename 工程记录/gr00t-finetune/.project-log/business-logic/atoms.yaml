@@ -1,0 +1,52 @@
+version: "0.2"
+atoms:
+  - id: atom-vla-001
+    status: active
+    summary: "GR00T N1 微调：使用自定义机器人倒水数据微调 VLA 模型（最终单右臂/O6 手动作契约待确认）"
+    actor: "NVIDIA GR00T N1 (Cosmos-Reason2-2B)"
+    trigger: "用户运行 examples/finetune.sh"
+    preconditions:
+      - base model checkpoint 已下载
+      - 训练数据已转换为 LeRobot 格式
+      - embodiment config 已注册
+    inputs:
+      - "3 路摄像头图像: cam_top, cam_left_wrist, cam_right_wrist"
+      - "原始 telemetry: qpos/actions 均为 26 维；右臂关节位于 [7:14]，右 O6 手角度的原始 CAN 编码位于 [20:26]。"
+      - "右 O6 手通道顺序: thumb_flex, thumb_abd, index, middle, ring, pinky；SDK 角度映射: raw * 100 / 255。"
+      - "语言条件: 使用 LeRobot episode 级 task 标签 `pouring`；当前没有逐帧或多技能人工语言标注"
+    rule: |
+      模型接收摄像头图像 + 机器人状态 + 语言指令，通过 VLM (Eagle-2) 编码为视觉-语言 token，
+       再由 DiT 通过 flow matching 生成未来动作。最终动作表示尚未冻结：当前双臂 ee_pose 14D 转换产物不得视为已确认契约。
+      训练使用 Flow Matching 损失 + 辅助检测损失，仅微调 projector + DiT（默认冻结 LLM 和 visual encoder）。
+    outputs:
+      - "末端执行器动作: ee_poses_actions (14 维, H=16 steps)"
+    exceptions:
+      - GPU 内存不足：降低 batch_size 或使用 LoRA
+      - 数据加载错误：检查 LeRobot 格式和 norm_stats
+    acceptance:
+      - Given: 一个 episode 的 3 路摄像头图像 + 机器人状态
+      - When: 运行 policy.infer(example)
+      - Then: 输出 14 维末端执行器动作，动作在合理范围内
+
+  - id: atom-data-001
+    status: active
+    summary: "数据格式转换：将 npz+MP4 原始数据转换为 LeRobot 格式"
+    actor: "数据转换脚本"
+    trigger: "用户提供 MinIO episode 名单后运行转换脚本"
+    preconditions:
+      - MinIO 连接正常
+      - episode 名单已确定
+    inputs:
+      - telemetry.npz (含 ee_poses_qpos, ee_poses_actions, timestamps 等)
+      - cam_top.mp4, cam_left_wrist.mp4, cam_right_wrist.mp4
+      - manifest.json (含 fps, frame_count)
+    rule: |
+      对每个 episode：
+      1. 从 MP4 按帧率抽取图像，保存为 PNG
+      2. 从 npz 提取 ee_poses_qpos (状态) 和 ee_poses_actions (动作) 写入 parquet
+      3. 生成 LeRobot 标准目录结构 + metadata
+    outputs:
+      - LeRobot 格式数据集目录（parquet + PNG 图片 + 元数据）
+    exceptions:
+      - 帧数不对齐：使用 timestamps.npy 进行同步
+      - 视频损坏：跳过该 episode 并记录日志

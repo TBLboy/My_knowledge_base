@@ -1,0 +1,79 @@
+# Main Business Logic
+
+## Status
+
+- Research phase: Complete（公开数据集调研 + TeleDex 格式分析 + MinIO 数据湖实查均已完成）
+- Current phase: Node F 业务规则已闭环，进入 Node D 实现准备阶段
+
+## Main Path
+
+```text
+A → B1 + B2 + B3 → C → F → D → E
+```
+
+## Path Summary
+
+- **A**: 项目启动，调研目标确定
+- **B1**: 报告 01 — 公开数据集隐式 QC 策略（DROID/RH20T/LeRobot/RoboMimic/OXE/RoboCasa）
+- **B2**: 报告 02 — 数据质量检测框架（DQAF/score_lerobot/Consistency/Green-VLA/PSD）
+- **B3**: 报告 03 — 数据筛选/策展框架（Data Quality in IL/DemInf/QoQ/SCIZOR/S2I）
+- **C**: Linker TeleDex 数据格式深度分析 + MinIO 对象存储实地验证
+- **F**: MinIO 数据湖控制面方案设计（业务规则已闭环）
+- **D**: 基于 MinIO 数据湖架构的 QC 方案落地
+- **E**: 完整项目交付
+
+## Deliverables
+
+| 文件 | 节点 | 状态 |
+|------|------|------|
+| `doc/reports/01_public_dataset_implicit_qc.md` | B1 | 进行中（DROID 已完成，扩展到 19 数据集） |
+| `doc/reports/02_data_quality_assessment_frameworks.md` | B2 | 进行中（DQAF + Consistency Matters + Forge 已完成） |
+| `doc/reports/03_data_curation_frameworks.md` | B3 | 未开始 |
+| `doc/reports/04_teledex_qc_summary.md` | E | 基线章节完成（v0.1）；§6–§9 待补充 |
+| `control-plane-schema-v1.md` | F | 已产出（schema v0.2 + 扫描/分类/对象访问规则） |
+| MinIO → PostgreSQL ingestion / manual QC 改造方案 | D | 待实现 |
+
+## Transition Phase — F Closed, D Ready
+
+当前业务逻辑主线已经从“定义 MinIO 控制面规则”推进到“按既定规则实施 Node D 改造”。Node F 已完成的实现前规则包括：
+
+- `yaocao` bucket 对象布局实查确认：`<bucket>/<list_prefix>/{raw|processed}/episode_xxxxxx/...`
+- list 定义、deepest-match 排重、全量递归扫描策略
+- `ingestable / processable / qc_ready` 三层 episode 状态模型
+- `scan_jobs / discovered_prefixes / lists / episode_inventory / episode_objects / classification_rules` 六张控制面表设计
+- `task_types` / `lists` / `qc_tasks` 三类实体区分，以及 bind / unbind / retire 语义
+- manual QC 的 MinIO 对象访问协议：媒体预览走短时 presigned URL，结构化对象与显式下载走后端受控接口
+- Node D manual QC API 合同：`qc-context` embedded `media[]`、按 `objectId` 定向 refresh、下载走独立 endpoint
+
+仍保留但不阻塞实现的开放项：
+
+- `Q-20260623-004`：`yaocao` bucket 的全量 list census（raw_only / processed_only / both 分布）尚未完成；这影响规模评估和验收覆盖，不影响当前实现方向
+
+## Stable Assumptions
+
+- 数据采集平台已确定使用 Linker Open TeleDex，数据格式不改动
+- MinIO 在 V1 中仅作为原始对象存储层，不承担业务查询职责
+- PostgreSQL 是唯一业务查询入口和系统事实源
+- 前端继续只调后端 API，不直接耦合 MinIO 路径
+- `yaocao` 为 V1 默认 bucket，不做多 bucket 路由
+- bucket 全量扫描采用全层级递归发现 + 结构特征识别 list
+- Episode 生命周期采用 ingestable / processable / qc_ready 三层模型
+- 任务类型由 PostgreSQL 控制面归类并落库，不把 MinIO 路径字符串直接当最终业务分类键
+- MinIO 凭据通过环境变量注入，不写入仓库代码
+
+## Verification Status
+
+- A: 已完成
+- B1: 进行中（DROID 已完成，扩展到 19 数据集）
+- B2: 进行中（DQAF + Consistency Matters + Forge 已完成）
+- B3: 未开始
+- C: 已完成（TeleDex 文档、schema、MinIO 实查均已完成）
+- **F: 已闭环（可指导实现）**
+- **D: ready（可按现有业务规则开始实现）**
+- E: 待 D 完成后整合交付
+
+## Notes
+
+- 当前已不再缺核心业务规则，剩余工作重心转向代码实现
+- 唯一仍打开的问题是全量 list census，它属于规模与验收覆盖问题，不改变既定控制面设计
+- 下一阶段产出应是 MinIO 控制面 migration、扫描器实现、manual QC MinIO 化改造

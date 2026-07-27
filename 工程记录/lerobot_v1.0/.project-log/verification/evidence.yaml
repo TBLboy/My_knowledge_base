@@ -1,0 +1,169 @@
+version: '0.2'
+evidence:
+- id: EV-001
+  task_id: TASK-001
+  business_logic:
+  - Vibe Coding 项目必须具备可恢复、可校验的 Project Log 状态。
+  acceptance_criteria:
+  - validate_project 和 vibe validate 返回通过。
+  result: passed
+  level: 2
+  commands:
+  - python3 ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  - python3 ~/.codex/vibe-workflow/scripts/vibe.py --root /home/tbl/Project/lerobot_v1.0 validate
+  limitations: []
+  artifacts:
+  - .project-log/
+- id: EV-002
+  task_id: TASK-001
+  business_logic:
+  - Loop Core 必须能够恢复并报告当前运行状态。
+  acceptance_criteria:
+  - restore、status、validate 成功；状态为 active/business-intent，未绑定 Goal 与任务符合空项目初始状态。
+  result: passed
+  level: 2
+  commands:
+  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/lerobot_v1.0 --json restore
+  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/lerobot_v1.0 --json status
+  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/lerobot_v1.0 --json validate
+  limitations: []
+  artifacts:
+  - .project-log/loop/active-run.yaml
+  - .project-log/loop/evidence-index.yaml
+- id: EV-003
+  task_id: TASK-001
+  business_logic:
+  - 框架发布包必须通过资产校验，核心 Loop、Hook、角色与 Skill 测试必须通过。
+  acceptance_criteria:
+  - validate_package 通过；测试通过；8 个角色提示词均可渲染。
+  result: passed
+  level: 3
+  commands:
+  - uv run --no-project --python 3.12 --with PyYAML --with jsonschema python runtime/scripts/validate_package.py --root /home/tbl/Project/vibe-coding
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --python 3.12 --with pytest --with PyYAML --with jsonschema python -m pytest -q
+    tests
+  - render_subagent_prompt.py --role {all 8 registered roles}
+  limitations:
+  - 测试结果为 16 passed, 1 skipped, 4 subtests passed；跳过项是历史 0.3.0 archive 不在源代码工作区。
+  artifacts:
+  - /home/tbl/Project/vibe-coding/runtime
+  - /home/tbl/Project/vibe-coding/skills
+  - /home/tbl/Project/vibe-coding/tests
+- id: EV-004
+  task_id: TASK-001
+  business_logic:
+  - 已安装的全局框架应能通过安装器 verify。
+  acceptance_criteria:
+  - 使用 Python 3.12 和运行时依赖执行 verify 返回通过。
+  result: passed
+  level: 3
+  commands:
+  - uv run --no-project --python 3.12 --with PyYAML --with jsonschema python scripts/global_installer.py verify --codex-home
+    ~/.codex --without-mcp
+  limitations:
+  - 系统默认 Python 3.10.12 执行 verify 会因缺少 tomllib 被拒绝；框架文档明确要求 Python 3.11+。
+  artifacts:
+  - ~/.codex/.vibe-codex-installation-state.json
+- id: EV-005
+  task_id: TASK-002
+  business_logic:
+  - 后续 LeRobot 开发必须运行当前仓库 v1.0，而不是旧版 site-package。
+  acceptance_criteria:
+  - 旧版 lerobot 0.5.1 被移除
+  - 当前仓库 lerobot 0.6.1 以 editable 模式安装
+  - 导入路径指向 /home/tbl/Project/lerobot_v1.0/src/lerobot
+  result: passed
+  level: 3
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip uninstall -y lerobot
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip install -e '.[dev,test,wallx]'
+  - /home/tbl/miniforge3/envs/lerobot/bin/python metadata/import path check
+  limitations: []
+  artifacts:
+  - /home/tbl/miniforge3/envs/lerobot/lib/python3.12/site-packages/lerobot-0.6.1.dist-info
+  - /home/tbl/Project/lerobot_v1.0/src/lerobot
+- id: EV-006
+  task_id: TASK-002
+  business_logic:
+  - 当前 LeRobot 环境必须能够加载项目配置和训练 CLI。
+  acceptance_criteria:
+  - 配置测试通过
+  - lerobot-train --help 成功加载
+  result: passed
+  level: 2
+  commands:
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/configs/test_default.py
+  - env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+  limitations:
+  - 首次 CLI smoke 暴露 transformers 5.3.0 不兼容，随后通过 wallx extra 安装 transformers 5.5.4 后通过。
+  - pip check 仍有环境外部包 generate-parameter-library-py 缺少 typeguard。
+  artifacts:
+  - lerobot 0.6.1
+  - transformers 5.5.4
+  - torch 2.10.0 + CUDA 12.8
+- id: EV-007
+  task_id: TASK-003
+  business_logic:
+  - LeRobot 开发环境的依赖检查必须无 broken requirements。
+  acceptance_criteria:
+  - typeguard 已安装并满足 generate-parameter-library-py 0.7.1
+  - pip check 通过
+  - LeRobot CLI 和配置测试未回归
+  result: passed
+  level: 2
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip install 'typeguard>=4,<5'
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip check
+  - env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/configs/test_default.py
+  limitations: []
+  artifacts:
+  - typeguard 4.6.0
+  - 'pip check: No broken requirements found'
+  - 5 passed
+- id: EV-008
+  task_id: TASK-004
+  business_logic:
+  - 代码地图必须基于当前工作区证据，说明项目用途、模块职责、主要 CLI 调用链、数据流、测试和阅读路径。
+  acceptance_criteria:
+  - 根目录存在 CODE_MAP.md
+  - 文档覆盖 24 个顶层模块、主要用户流程、关键文件和边界说明
+  - 文档引用的关键路径存在
+  - LeRobot 包导入路径和核心 CLI 可加载
+  result: passed
+  level: 2
+  commands:
+  - find src/lerobot -mindepth 1 -maxdepth 1 -type d ! -name __pycache__
+  - key-path existence check for CODE_MAP.md, src/lerobot/, tests/, docs/source/, examples/
+  - /home/tbl/miniforge3/envs/lerobot/bin/python package version/import path smoke check
+  - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+  - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-record --help
+  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  limitations:
+  - 未连接真实机器人、相机、电机或仿真 benchmark；未运行训练和完整测试套件。
+  - 文档描述当前代码结构，不等于对所有硬件/外部 SDK 的端到端可用性承诺。
+  artifacts:
+  - CODE_MAP.md
+  - /home/tbl/Project/lerobot_v1.0/src/lerobot
+  - /tmp/lerobot-train-help.txt
+  - /tmp/lerobot-record-help.txt
+- id: EV-009
+  task_id: TASK-005
+  business_logic: []
+  acceptance_criteria:
+  - CodeGraph index is up to date
+  - Codex MCP is enabled
+  - .codegraph/ is ignored
+  result: passed
+  level: 3
+  commands:
+  - codegraph status /home/tbl/Project/lerobot_v1.0
+  - codex mcp list
+  - git -C /home/tbl/Project/lerobot_v1.0 status --short --untracked-files=all
+  limitations:
+  - 未在重启后的 ACP 会话执行 MCP tool 查询。
+  artifacts:
+  - .codegraph/
+  - .gitignore
+  - CODE_MAP.md
+  - /home/tbl/.codex/config.toml

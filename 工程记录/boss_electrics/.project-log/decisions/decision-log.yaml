@@ -1,0 +1,67 @@
+version: "0.2"
+decisions:
+  - id: decision-research-pouring-layered-control
+    date: 2026-07-22
+    status: proposed
+    scope: atom-plating-pour
+    decision: >
+      将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”，
+      在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
+    rationale: >
+      论文证据主要针对液体倾倒，不能直接证明固体+汤汁装盘；MoveIt 2 负责规划/伺服边界，
+      ros2_control 提供通用接口和控制器能力，但 KP200 的真实 effort/F-T 接口与时延未确认。
+    evidence:
+      - https://export.arxiv.org/api/query?id_list=2310.18473
+      - https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html
+      - https://moveit.picknik.ai/main/doc/examples/hybrid_planning/hybrid_planning_tutorial.html
+      - https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/hardware_interface_types_userdoc.html
+      - https://control.ros.org/rolling/doc/ros2_controllers/pid_controller/doc/userdoc.html
+      - https://control.ros.org/rolling/doc/ros2_controllers/admittance_controller/doc/userdoc.html
+    invalidation_conditions:
+      - KP200 无可用且稳定的力矩/effort/F-T 信号
+      - 估重在已知负载 Spike 中不单调或重复性不足
+      - 局部修正引发姿态振荡、超力矩或碰撞风险
+      - 固体卡料和落盘完整性无法由现有信号观测
+    next_action: task-pouring-validation-spike
+  - id: decision-grasp-confirmation-gate
+    date: 2026-07-22
+    status: proposed
+    scope: atom-pan-handle-grasp-confirmation
+    decision: >
+      将锅把抓取确认独立为倾倒动作的前置安全闸门；采用“视觉定位 + 多指/专用夹具抓取 + 接触/负载联合确认 +
+      受控微抬升”的流程。未输出 grasp_confirmed 时，不得转运锅具或进入倾倒。
+    rationale: >
+      锅具承受的不仅是重力，还包括长柄倾覆力矩、转运加速度、倾倒时质心变化和卡料冲击；
+      单一闭合到位或电机电流信号不足以证明稳定抓取。固定 KP200 原型优先评估专用锅把适配夹具/软衬垫，
+      灵巧手多指包络作为软件主路径，双臂协同仅在负载/力矩评估证明单手不足时启用。
+    evidence:
+      - https://arxiv.org/abs/2503.17501
+      - https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html
+      - https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/hardware_interface_types_userdoc.html
+    invalidation_conditions:
+      - 锅把无法被可靠定位或温度不满足接近条件
+      - 灵巧手/夹具无法提供可重复接触和承载确认
+      - 微抬升验证无法在安全支撑面附近执行
+      - 单手负载/倾覆力矩超出安全余量且未提供合格双臂方案
+    next_action: task-pan-handle-grasp-spike
+  - id: decision-mvp-plating-fixed-scene
+    date: 2026-07-22
+    status: proposed
+    scope: atom-pan-handle-grasp-confirmation, atom-plating-pour
+    decision: >
+      第一版采用固定场景 MVP：单臂抓锅，视觉定位锅把抓取点，固定初始状态和餐盘位置，
+      采用录制/回放的抓取后倾倒轨迹，再将锅具放回原位；暂不引入模型策略、全局自适应倾倒或双臂协同。
+      但抓取闭合后必须增加最小抓取确认和受控微抬升，未确认不得转运或倾倒。
+    rationale: >
+      固定场景能压缩变量，便于尽快验证任务链；模型路线当前成功率和数据成本不确定，
+      视觉伺服适合解决锅把定位和局部对位，但不应承担菜品完整倾倒判断；录制回放适合第一版，
+      但必须配合初始状态、碰撞/速度限制、超时、急停和失败回退。
+    evidence:
+      - "方案1.md"
+      - ".project-log/research/solution-research.yaml#grasp_precondition"
+    invalidation_conditions:
+      - 固定场景仍存在不可接受的锅把定位漂移或餐盘位置漂移
+      - 单臂在最坏负载下无法稳定抓取或试抬升
+      - 录制轨迹存在碰撞、超力矩或明显洒落
+      - 任务失败后无法安全回到支撑面/人工接管
+    next_action: task-mvp-plating-pipeline

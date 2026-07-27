@@ -1,0 +1,6 @@
+Loaded modality config: examples/linkerhand_right_o6_config.py
+Generating stats for /home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d
+Collecting all parquet files...:   0%|          | 0/148 [00:00<?, ?it/s]Collecting all parquet files...:  30%|███       | 45/148 [00:00<00:00, 449.85it/s]Collecting all parquet files...:  61%|██████    | 90/148 [00:00<00:00, 298.59it/s]Collecting all parquet files...:  85%|████████▌ | 126/148 [00:00<00:00, 318.56it/s]Collecting all parquet files...: 100%|██████████| 148/148 [00:00<00:00, 305.78it/s]
+Computing statistics for observation.state...
+Computing statistics for action...
+Computing statistics for timestamp...

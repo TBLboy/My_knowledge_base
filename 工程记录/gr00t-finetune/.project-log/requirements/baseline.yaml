@@ -1,0 +1,37 @@
+version: "0.2"
+baselines:
+  - id: baseline-teacher-report-001
+    status: superseded
+    title: "GR00T 工程理解老师汇报（15 分钟）"
+    confirmed_at: "2026-07-23"
+    form: "oral-15min + markdown-screen"
+    in_scope:
+      - "用右臂 O6 13D 倒水微调主线讲清工程结构"
+      - "数据契约、流水线、训练/推理、结果根因、扩展路径、边界"
+      - "产出 docs/gr00t-teacher-report.md"
+    out_of_scope:
+      - "真机闭环新实验"
+      - "重新训练"
+      - "完整 B Skill 蒸馏（汇报后）"
+    acceptance:
+      - "10–12 分钟可独立口述"
+      - "能指出加数值触觉的最小改动面"
+      - "明确 open-loop 已验证、closed-loop 未做"
+    evidence:
+      - "该版本在用户澄清后被撤销：正式汇报文档必须等待研究讨论记录充分后再生成"
+  - id: baseline-groot-engineering-research-001
+    status: active
+    title: "GR00T 工程理解研究讨论记录"
+    confirmed_at: "2026-07-23"
+    in_scope:
+      - "建立源码证据驱动的代码仓模块地图"
+      - "研究训练与推理调用路径、数据系统、模体系统、模型与扩展边界"
+      - "核对参数量、性能和预训练覆盖的一手来源"
+    out_of_scope:
+      - "在研究记录不足前生成正式汇报稿"
+      - "以单次微调经历作为报告主线"
+    acceptance:
+      - "存在结构化讨论记录，区分事实、代码证据、分析和未知"
+      - "正式报告结构仅作为候选，不冻结"
+    evidence:
+      - ".project-log/research/gr00t-engineering-report-notes.md"

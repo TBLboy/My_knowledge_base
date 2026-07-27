@@ -1,0 +1,35 @@
+version: "0.2"
+findings:
+  - id: alignment-001
+    status: resolved
+    type: implementation-drift
+    severity: high
+    summary: "现有 LeRobot 数据转换和 linkerhand_config 使用双臂 ee_pose 14D，未反映已确认的单右臂任务及原始右手 O6 信号。"
+    authoritative_facts:
+      - "用户确认：倒水是单右臂、右手实际操作任务。"
+      - "148 个有效 episode 的 telemetry 结构一致：qpos/actions 均为 [T, 26]。"
+      - "参考转换代码将源结构明确记为 two 7-DoF arms and two 6-DoF hands，并指定 right arm=qpos/actions[7:14]、right O6 hand=qpos/actions[20:26]。"
+    conflicting_implementation:
+      - "convert_to_lerobot.py 将 ee_poses_{qpos,actions}_{left,right} 拼成 14D 状态/动作。"
+      - "examples/linkerhand_config.py 为 eef_left/eef_right 双臂 ee_pose 注册配置。"
+    evidence:
+      - "全量审计：148/148 telemetry schema 相同，47,250 telemetry frames，时间戳严格递增。"
+      - "右臂 qpos[7:14] episode 最大变化中位数 1.492958 rad；左臂 qpos[0:7] 中位数 0.006499 rad。"
+      - "右手 qpos/actions[20:26] 在全语料值域为 0..255；参考代码称该 6D 信号为 right O6 hand。"
+      - "左手数据并非全量恒零：version1 有 11 个 episode 的 qpos[14:20] 非零，57 个 episode 的 actions[14:20] 非零；不可据此前小样本断言左手全部无效。"
+    required_resolution:
+      - "确认最终训练动作空间采用右臂关节位置 7D + 右 O6 手角度 6D，或另行批准 ee_pose 方案。"
+      - "重建 LeRobot 数据与 embodiment 配置，使其匹配批准后的单右臂 13D 契约。"
+    resolved_facts:
+      - "O6 SDK 确认 [20:26] 是六个手关节角度的原始 CAN 编码，不是触觉。"
+      - "原始值 0..255 与 SDK 角度值 0..100 的映射为 angle = raw * 100 / 255。"
+      - "通道顺序：[thumb_flex, thumb_abd, index, middle, ring, pinky]。"
+    resolution:
+      - "用户确认连续单右臂 13D 契约：三路相机 + 右臂关节 7D + 右 O6 连续角度 6D。"
+      - "已生成隔离的 lerobot_dataset_right_o6_13d/；旧 lerobot_dataset/ 保留但不作为最终训练输入。"
+      - "已创建 linkerhand_right_o6_config.py，使用两个 NON_EEF + ABSOLUTE 动作分组。"
+    affected:
+      - ".project-log/business-logic/atoms.yaml#atom-vla-001"
+      - "convert_to_lerobot.py"
+      - "gr00t_n1/examples/linkerhand_config.py"
+      - ".project-log/tasks/task-list.yaml#task-004"

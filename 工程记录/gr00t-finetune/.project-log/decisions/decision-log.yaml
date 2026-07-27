@@ -1,0 +1,69 @@
+version: "0.2"
+decisions:
+  - id: decision-001
+    status: confirmed
+    scope: data-contract
+    decision: "将原始 telemetry 的右 O6 手切片 [20:26] 定义为六关节角度信号，并保留其固定通道顺序和 CAN 编码映射。"
+    rationale: "O6 SDK 的 O6Angle 明确声明六关节顺序、0..100 的公开角度接口，以及 raw = round(angle * 255 / 100) / angle = raw * 100 / 255 的转换。"
+    contract:
+      raw_slice: "qpos/actions[20:26]"
+      joint_order:
+        - thumb_flex
+        - thumb_abd
+        - index
+        - middle
+        - ring
+        - pinky
+      raw_range: [0, 255]
+      sdk_angle_range: [0, 100]
+      decode: "sdk_angle = raw * 100 / 255"
+      encode: "raw = round(sdk_angle * 255 / 100)"
+    evidence:
+      - "/home/tbl/Project/power_gloves-dev_glove_o6/linkerbot-python-sdk-0.5.4/docs/zh/src/reference/o6/README.md#关节说明"
+      - "/home/tbl/Project/power_gloves-dev_glove_o6/linkerbot-python-sdk-0.5.4/src/linkerbot/hand/o6/angle.py#O6Angle"
+      - "全量原始数据：qpos/actions[20:26] 均在 raw 0..255 范围内，转换到 0..100 后无越界。"
+  - id: decision-002
+    status: proposed
+    scope: training-method
+    decision: "不把当前 GR00T N1.7 宣称为原生 LoRA 支持；在 4090 上先执行最小 LoRA spike，再决定是否替换现有训练方案。"
+    rationale: "上游仅声明 peft 依赖，没有 LoRA 注入、target module、adapter checkpoint 或 CLI；当前全参数 projector+DiT 已因 Adam 状态 OOM。"
+    alternatives:
+      - "冻结 DiT，仅训练 projector/action encoder/decoder"
+      - "验证 8-bit optimizer 或 gradient checkpointing"
+      - "自定义 LoRA 注入 DiT/action head，并实现 adapter 保存/加载"
+    authority: C
+  - id: decision-003
+    status: confirmed
+    scope: training-method
+    decision: "在不改变 DiT/projector 网络结构和训练目标的前提下，先采用 paged_adamw_8bit + global batch size 1 + gradient checkpointing 作为 4090 低显存训练尝试。"
+    rationale: "上一次全参数 DiT+projector 训练在 Adam 状态初始化时 OOM；8-bit optimizer 针对 optimizer state，batch=1 和 gradient checkpointing 针对 activation 显存。"
+    fallback: "若仍 OOM，再评估 Adafactor、ZeRO/offload 或冻结 DiT。"
+    authority: C
+  - id: decision-004
+    status: confirmed
+    scope: training-operations
+    decision: "因训练期间电脑系统卡死并重启，先将启动脚本默认切换为 20-step 稳定性试跑：dataloader workers=0、batch=1、gradient checkpointing、paged_adamw_8bit；通过后再恢复长训练。"
+    rationale: "训练时 GPU 使用约 23.96/24.56 GiB，仅约 112 MiB 余量；机器 31 GiB RAM 且无 swap，4 个视频数据 worker 和 shard 缓存可能造成系统内存压力。"
+    authority: C
+  - id: decision-005
+    status: confirmed
+    scope: training-run
+    decision: "从基础 GR00T checkpoint 重新开始正式训练 20,000 个 optimizer steps；使用独立输出目录，保留低显存配置。"
+    parameters:
+      max_steps: 20000
+      save_steps: 1000
+      output_dir: outputs/gr00t_n1_right_o6_13d_full_20k
+      global_batch_size: 1
+      dataloader_num_workers: 0
+      optimizer: paged_adamw_8bit
+      gradient_checkpointing: true
+      resume_from_checkpoint: false
+    authority: C
+  - id: decision-006
+    status: confirmed
+    scope: documentation-information-architecture
+    decision: "GR00T 代码工程地图改用‘最小完整旅程 → 站点地图 → 分支能力 → 深入索引’的叙事架构，而不以目录树、术语表或功能矩阵作为首次阅读入口。"
+    rationale: "现有地图的事实与导航信息基本完整，但首次读者在理解术语出现的时机和必要性前就被要求处理并列目录、配置层和评估类型，导致内容正确但难以顺读。完整旅程先建立数据、配置、训练、checkpoint、Policy 与验证/控制的因果主干；目录和索引随后承担定位，而非解释的职责。"
+    authority: B
+    evidence:
+      - ".project-log/research/gr00t-engineering-report-notes.md#代码地图可读性诊断（二）：现有信息架构为何“不好入口”（2026-07-23）"

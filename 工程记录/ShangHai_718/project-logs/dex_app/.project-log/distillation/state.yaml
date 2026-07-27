@@ -1,0 +1,15 @@
+project_id: shanghai-718
+knowledge_repo_project_key: unknown
+last_scan_at: null
+last_draft_at: null
+last_apply_at: null
+last_source_sync_at: null
+last_source_hashes:
+  progress_md: null
+  current_session_md: null
+  decision_records_md: null
+  distill_input: null
+last_candidate_id: 0
+last_kb_run_ref: null
+last_kb_snapshot_ref: null
+notes: []

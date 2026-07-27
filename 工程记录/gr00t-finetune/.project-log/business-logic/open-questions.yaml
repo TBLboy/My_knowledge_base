@@ -1,0 +1,19 @@
+version: "0.2"
+questions:
+  - id: question-report-001
+    status: resolved
+    priority: critical
+    question: "今晚老师汇报的时长与形式是什么？"
+    resolution: "A：15 分钟口述 + 可投屏 Markdown/PDF"
+    why: "直接决定文档深度、是否需要口述讲稿、以及代码细节铺到哪一层。"
+    options:
+      - "15 分钟口述 + 1 份可投屏 Markdown/PDF（推荐默认）"
+      - "30–45 分钟深度技术答辩"
+      - "只交文档、不口述"
+    recommended: "15 分钟口述 + 1 份可投屏 Markdown/PDF"
+    impact: "结构、页数、demo 是否展示、扩展章节占比都会变。"
+  - id: question-report-002
+    status: deferred
+    priority: high
+    question: "老师更看重哪一类证据：架构理解、实验结果、还是扩展可行性？"
+    note: "在时长确认后作为第二优先级；默认三维都要，但权重随时长调整。"

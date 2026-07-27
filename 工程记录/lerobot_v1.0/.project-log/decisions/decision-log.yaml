@@ -1,0 +1,95 @@
+version: '0.2'
+decisions:
+- id: DEC-001
+  title: 后续 LeRobot 开发使用 Miniforge lerobot 环境并采用 editable 源码安装
+  category: tooling
+  status: active
+  authority: A
+  user_approval: approved
+  related_tasks:
+  - TASK-002
+  related_business_logic: []
+  context: 用户明确要求清除旧版 LeRobot，并在当前 lerobot-v1.0 仓库上继续开发。
+  hypothesis: 复用已有 Python 3.12/CUDA Miniforge 环境并安装当前源码，可避免重复下载大型 CUDA 依赖，同时保证修改立即生效。
+  options:
+  - name: 复用 Miniforge lerobot 环境并 editable 安装当前仓库
+    benefits:
+    - 复用已有 CUDA/PyTorch 环境
+    - 源码修改立即生效
+    - 避免创建重复 uv .venv
+    costs:
+    - 环境可能保留历史无关依赖
+    risks:
+    - 历史依赖冲突需要单独识别
+  - name: 重新创建 uv 项目环境
+    benefits:
+    - 隔离性和锁文件复现性更强
+    costs:
+    - 需要重新下载大型 PyTorch/CUDA 依赖
+    risks:
+    - 硬件相关依赖和已有 CUDA 配置可能需要重新验证
+  decision: 选择复用 /home/tbl/miniforge3/envs/lerobot，并将当前仓库以 editable 模式安装。
+  reason_summary:
+  - 用户已明确选择该环境作为后续开发环境。
+  - 现有环境已具备 Python 3.12.13、Torch 2.10.0 和 CUDA 12.8。
+  conditions:
+  - 不删除整个 Conda 环境
+  - 若发现依赖冲突，记录并单独处理，不静默修改产品源码
+  action: 卸载 lerobot 0.5.1；执行 pip install -e '.[dev,test,wallx]'。
+  expected_result: lerobot 版本为 0.6.1，导入路径指向当前仓库，CLI 可以加载。
+  reversal_plan: 可在该环境中重新安装原版 PyPI lerobot，或重建 Miniforge 环境。
+  observation: 安装完成；首次 CLI smoke 暴露 transformers 5.3.0 不兼容，补齐 wallx 约束后 transformers 升级至 5.5.4。
+  actual_result: 当前源码 0.6.1 editable 安装成功，CLI smoke 和配置测试通过。
+  outcome_status: successful
+  lesson: 复用旧环境前必须检查可选依赖版本；当前仓库的 wallx 导入要求 transformers 5.4+。
+  evidence:
+  - EV-005
+  - EV-006
+  created_at: '2026-07-27T10:41:43+08:00'
+  updated_at: '2026-07-27T10:41:43+08:00'
+- id: DEC-002
+  title: CodeGraph 作为 Codex 工具运行，不安装进 LeRobot Python 环境
+  category: tooling
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-005
+  related_business_logic: []
+  context: LeRobot 开发需要代码结构和调用关系导航，但 CodeGraph 属于开发工具，不是 LeRobot 运行时依赖。
+  hypothesis: 将 CodeGraph 安装在用户工具目录并通过 Codex MCP 使用，可避免污染 /home/tbl/miniforge3/envs/lerobot。
+  options:
+  - name: 安装进 lerobot 环境
+    benefits:
+    - 调用路径近
+    costs:
+    - 增加应用环境依赖
+    risks:
+    - 破坏环境隔离
+  - name: 安装为 Codex MCP（选择）
+    benefits:
+    - 与应用环境解耦
+    - 多个项目可复用
+    costs:
+    - 需要重启 ACP 才能加载
+    risks:
+    - MCP server 与 Codex 配置需要维护
+  decision: 采用 Codex 全局 MCP 配置，CodeGraph 不安装进 LeRobot conda 环境。
+  reason_summary:
+  - 保持 LeRobot 运行环境干净
+  - CodeGraph 面向工程导航而非产品运行时
+  - Codex/Zed ACP 可跨项目复用
+  conditions:
+  - CodeGraph 索引目录保持项目本地并加入 .gitignore。
+  action: 保留 /home/tbl/.local/bin/codegraph，配置 /home/tbl/.codex MCP，并在 LeRobot 根忽略 .codegraph/。
+  expected_result: CodeGraph 可查询 LeRobot 且不改变 lerobot 环境依赖。
+  reversal_plan: 执行 codex mcp remove codegraph 并删除本地索引。
+  observation: 索引和 MCP 配置验证通过。
+  actual_result: 804 files、17,512 nodes、46,134 edges，状态 up to date；lerobot 环境未新增 CodeGraph 依赖。
+  outcome_status: successful
+  lesson: 开发辅助工具应与产品运行时环境分层。
+  evidence:
+  - EV-009
+  supersedes: []
+  created_at: '2026-07-27T11:48:34+08:00'
+  updated_at: '2026-07-27T11:48:34+08:00'

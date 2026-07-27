@@ -1,0 +1,205 @@
+version: "0.2"
+evidence:
+  - id: verification-001
+    task: task-004
+    status: passed
+    subject: "单右臂 + O6 连续 13D LeRobot 数据和 GR00T modality 配置"
+    commands:
+      - "conda run -n gr00t_n1 python -m py_compile convert_to_lerobot_right_o6.py gr00t_n1/examples/linkerhand_right_o6_config.py"
+      - "conda run -n gr00t_n1 python <13D extraction assertion>"
+      - "conda run -n gr00t_n1 python <all 148 parquet/source mapping assertion>"
+      - "conda run -n gr00t_n1 python <linkerhand_right_o6_config import/register assertion>"
+    results:
+      - "转换日志：148/148 episode 写入完成；episode_000040 因源 telemetry 和相关资产缺失被显式跳过。"
+      - "输出：148 parquet、47,250 frames、444 MP4（3×148）。"
+      - "全量 parquet 验证通过：state/action 为 float32 [T,13]、无 NaN/Inf。"
+      - "映射验证通过：右臂为 source [7:14]；O6 为 source [20:26] * 100/255；O6 全局范围 [0,100]。"
+      - "GR00T config import/register 通过；state/action keys 均为 right_arm、right_o6_hand。"
+    limitations:
+      - "尚未运行 normalization stats、GR00T DataLoader 全路径或 GPU 微调。"
+  - id: verification-002
+    task: task-005
+    status: passed
+    subject: "最终 13D 数据的 normalization stats 与单卡微调启动脚本"
+    commands:
+      - "conda run -n gr00t_n1 python gr00t/data/stats.py --dataset-path /home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d --embodiment-tag NEW_EMBODIMENT --modality-config-path examples/linkerhand_right_o6_config.py"
+      - "bash -n finetune_right_o6_13d.sh"
+      - "BASE_MODEL_PATH=... DATASET_PATH=... ./finetune_right_o6_13d.sh --help"
+    results:
+      - "stats.py 已加载 linkerhand_right_o6_config.py 并扫描 148/148 parquet，生成 lerobot_dataset_right_o6_13d/meta/stats.json。"
+      - "stats.json 的 observation.state/action 均含 mean、std、min、max、q01、q99，所有统计数组为有限 13D。"
+      - "启动脚本通过 shell 语法、模型/数据/stats 前置检查和真实 launch_finetune.py CLI help 验证。"
+      - "默认启动计划：单 GPU、2,000 steps、global batch size 4、每 500 steps 保存一次，输出到 outputs/gr00t_n1_right_o6_13d。"
+    limitations:
+      - "脚本尚未执行训练；GPU 仍需从 Ollama 释放。"
+  - id: verification-003
+    task: task-005
+    status: passed
+    subject: "任务级语言条件与 13D GR00T episode loader 兼容性"
+    command: "conda run -n gr00t_n1 python <load linkerhand_right_o6_config.py + LeRobotEpisodeLoader assertion>"
+    results:
+      - "最终数据集没有逐帧/逐 episode 的人工自然语言 annotation；meta/tasks.jsonl 与所有 episodes.jsonl 的 tasks 提供单一 task 级文本 `pouring`。"
+      - "GR00T loader 的内建 LANG_KEYS 支持 `task`，并从 episode 元数据生成语言序列。"
+      - "已将 config 的 language 模态设置为 task；真实 Loader 读取 episode 0 成功。"
+      - "验证列：三路 video、state.right_arm[7]、state.right_o6_hand[6]、action.right_arm[7]、action.right_o6_hand[6]、language.task；每帧语言均为 `pouring`。"
+    limitation: "语言只区分一个固定技能，不能验证或提供多指令/多技能泛化。"
+  - id: verification-004
+    task: task-005
+    status: passed
+    subject: "本地 Cosmos-Reason2-2B backbone 配置"
+    results:
+      - "Cosmos 目录包含 model.safetensors（4.6G）及 config/tokenizer/processor/video 配置文件。"
+      - "AutoConfig.from_pretrained(local_path, local_files_only=True) 加载为 Qwen3VLForConditionalGeneration。"
+      - "AutoProcessor.from_pretrained(local_path, local_files_only=True) 加载为 Qwen3VLProcessor。"
+      - "基础 GR00T config.json 的 model_name 已改为 /home/tbl/Project/models/cosmos_reason2_2b。"
+    limitation: "尚未执行完整模型 GPU 初始化和训练；启动训练时仍需观察显存和运行时兼容性。"
+  - id: verification-005
+    task: task-005
+    status: passed
+    subject: "GR00T 本地 Qwen3-VL backbone 路径识别修复"
+    results:
+      - "训练失败根因：get_backbone_cls 仅按远程 model_name 字符串匹配，将本地 Cosmos 路径判为 Unsupported model name。"
+      - "已修改 gr00t_n1/gr00t/model/gr00t_n1d7/gr00t_n1d7.py：本地 config.json 的 model_type=qwen3_vl 或 Qwen3VLForConditionalGeneration 架构会选择 Qwen3Backbone。"
+      - "修复保持远程模型名判断逻辑不变，仅增加本地 Qwen3-VL 目录兼容。"
+    limitation: "需重新启动训练验证完整模型初始化和数据管道。"
+  - id: verification-006
+    task: task-005
+    status: passed
+    subject: "GR00T processor 本地 Cosmos 路径修复"
+    results:
+      - "定位到 processor_config.json 缺少 model_name，Gr00tN1d7Processor.from_pretrained 会回退为远程 nvidia/Cosmos-Reason2-2B。"
+      - "已写入 processor_kwargs.model_name=/home/tbl/Project/models/cosmos_reason2_2b。"
+      - "HF_HUB_OFFLINE=1 下加载 Gr00tN1d7Processor 成功，model_name 为本地 Cosmos 路径。"
+    limitation: "完整训练尚未重新启动。"
+  - id: verification-007
+    task: task-005
+    status: passed
+    subject: "微调入口保持本地 backbone 路径"
+    results:
+      - "定位到 launch_finetune.py 第 100 行会无条件覆盖 model_name 为 nvidia/Cosmos-Reason2-2B，导致 processor 阶段仍访问 HF。"
+      - "已修改入口：若 base_model_path/config.json 存在，则读取其中的 model_name；否则保持原远程默认值。"
+      - "本地 GR00T config 的 model_name 为 /home/tbl/Project/models/cosmos_reason2_2b。"
+    limitation: "需前台重新启动验证 processor 与数据管道。"
+  - id: verification-008
+    task: task-005
+    status: passed
+    subject: "低显存训练参数接线"
+    results:
+      - "bitsandbytes 0.49.2 已安装到 gr00t_n1 环境。"
+      - "FinetuneConfig 新增 optim 与 gradient_checkpointing 字段，launch_finetune.py 已映射到 TrainingConfig。"
+      - "启动脚本默认使用 paged_adamw_8bit、global batch size 1、gradient checkpointing。"
+    limitation: "尚未验证真实 optimizer.step；下一次训练需观察首个 step 的显存。"
+  - id: verification-009
+    task: task-005
+    status: passed
+    subject: "低显存配置首个 optimizer step 与持续训练"
+    results:
+      - "后台训练 PID 1107621 已进入正式训练。"
+      - "日志进度已从 1/2000 推进至约 290/2000，证明 paged_adamw_8bit 的 optimizer.step 已成功执行。"
+      - "当前 GPU 使用约 23,961 MiB / 24,564 MiB，剩余约 112 MiB；尚未再次 OOM。"
+      - "网络结构未改变：trainable parameters 仍为 1,620,515,968；本次降低的是 optimizer/activation 显存。"
+    limitations:
+      - "训练尚未完成；需继续观察 checkpoint-500 和后续显存稳定性。"
+  - id: verification-010
+    task: task-005
+    status: passed
+    subject: "20-step 低显存稳定性试跑"
+    results:
+      - "20/20 steps 完成，训练正常退出并打印 Training completed。"
+      - "首个训练批次和 optimizer.step 成功；loss step10=1.5256，step20=1.5867；grad_norm 分别为 2.0842、1.6781。"
+      - "train_runtime=33.7856s，约 0.592 steps/s。"
+      - "checkpoint-20 已生成且 trainer_state.global_step=20。"
+      - "系统恢复后无训练进程，GPU 约 275 MiB 使用、约 23.8 GiB 空闲；RAM 可用约 25 GiB。"
+    artifacts:
+      - "outputs/gr00t_n1_right_o6_13d/gr00t_n1_right_o6_13d/checkpoint-20"
+      - ".project-log/logs/finetune-right-o6-13d-lowmem.log（正式长跑日志）"
+    limitations:
+      - "这是稳定性试跑，不代表模型已经充分收敛；max_steps=20 时 cosine learning rate 在末步接近 0。"
+  - id: verification-011
+    task: task-005
+    status: partial-failed
+    subject: "20,000-step GR00T checkpoint 的 open-loop 策略质量诊断"
+    commands:
+      - "HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES=0 python gr00t/eval/open_loop_eval.py --dataset-path .../lerobot_dataset_right_o6_13d --embodiment-tag NEW_EMBODIMENT --model-path .../checkpoint-20000 --traj-ids 0 --execution-horizon 16 --steps 400 --modality-keys right_arm right_o6_hand"
+      - "checkpoint-16000/18000/19000/20000：同一 trajectory 0、100-step、horizon=16 对照"
+      - "python .project-log/eval_action_diagnostics.py .../checkpoint-20000"
+    results:
+      - "checkpoint-20000 可加载；400-step eval: unnormalized total MSE=717.3781，MAE=12.3097。"
+      - "100-step checkpoint 对照（diffusion sampling 存在随机性）：16k MSE/MAE=754.53/13.66；18k=642.40/12.21；19k=723.99/12.83；20k=691.24/12.70。不存在随训练后段单调恶化的证据，18k 反而是本次最佳。"
+      - "20k 的逐维复测：总 MSE/MAE=622.80/11.56；右臂 MSE/MAE=0.1279/0.2731；O6 手 MSE/MAE=1349.25/24.74。"
+      - "同一轨迹的当前状态（不动作）基线显著更好：总 MSE/MAE=82.91/3.51；右臂=0.00011/0.00605；O6 手=179.63/7.61。模型没有学到该数据中强烈的 action≈current-state 时间连续性。"
+      - "O6 0..100 数值范围主导非归一化总误差；按全数据 stats 估算，手部维度贡献约 99.99% 的全局动作均值 MSE。因此总 MSE 不能用于和仅含弧度关节的数据集横向比较，但与同数据的当前状态基线比较有效。"
+    artifacts:
+      - "outputs/gr00t_n1_right_o6_13d_full_20k/open_loop_eval_ckpt20000.png"
+      - ".project-log/logs/checkpoint-comparison-open-loop.log"
+      - ".project-log/logs/per-dimension-eval-ckpt20000.log"
+      - ".project-log/eval_action_diagnostics.py"
+    conclusion: "训练产物技术上有效（可加载、可推理），但未达到数据内 open-loop 行为质量；当前不能执行真机闭环。cosine 学习率末段衰减可能限制后续改善，却不是此失败的充分或已证实根因。"
+    limitations:
+      - "checkpoint 只保留 16k 之后的五个版本，无法比较 1k/5k/10k；未运行基础模型对照。"
+      - "评估只覆盖 trajectory 0，且扩散采样未固定随机种子；100-step 指标含采样噪声。"
+      - "尚未实施单 episode overfit，因此尚不能区分训练/评估管线错误与完整数据训练超参数不足。"
+  - id: verification-012
+    task: task-007
+    status: partial-failed
+    subject: "单 episode 多训练暴露量与去噪步数对照"
+    commands:
+      - "conda run -n gr00t_n1 python .project-log/diagnose_action_alignment.py"
+      - "python .project-log/create_single_episode_subset.py && python gr00t/data/stats.py ...overfit_ep0"
+      - "300-step 训练：base model + episode 0（462 valid action anchors）+ batch=1 + shard_size=64 + sampling_rate=0.1"
+      - "2,000-step 训练：相同设置，checkpoint at 1,000 and 2,000"
+      - "python .project-log/eval_action_diagnostics.py <checkpoint> <ep0 dataset> <denoising steps>"
+    results:
+      - "数据对齐：全量同帧 action-state MAE=2.334（右臂=0.0222 rad，O6=5.032），下一帧 MAE=2.565（右臂=0.0269 rad，O6=5.527）。同帧更接近，未发现整体 action/state 错一帧证据。"
+      - "300-step（约 0.65 个等效 episode pass）训练完成；checkpoint-100/200/300 的 episode-0 action MSE 约 1251/1300/1278，均差于 current-state baseline MSE=82.91。"
+      - "checkpoint-300 在 4、8、16 个 diffusion denoising steps 下的 MSE 分别约 1341、1371、1273；增加推理去噪步未解决问题。"
+      - "2,000-step run 实际完成全部 optimizer steps（日志到 step 2000，末段 train loss 约 0.99–1.14）；checkpoint-1000 成功加载评估，MSE=682.67、MAE=12.64，显著优于 300-step 但仍远差于 state baseline MSE=82.91。"
+      - "checkpoint-2000 权重与 optimizer 文件写入完成，但训练在最终模型重复保存时因根分区仅剩约 1.7GB 出现 PyTorchStreamWriter file-write error；processor 元数据未完整写入，无法作为可加载 eval checkpoint。"
+    conclusion: "训练暴露量是确认的主导问题：20k batch-1 对约45,030个有效全量动作锚点仅相当于0.44个数据 pass；单 episode从0.65 pass增加到约4.3 pass后，MSE从约1,278改善到682，证明模型确实在学习，而非单纯推理去噪不足或整体时序错位。但4.3 pass仍未超过强 current-state baseline，因此不能宣称已验证完整管线无误；也不能用当前训练量判断模型能力上限。"
+    artifacts:
+      - ".project-log/diagnose_action_alignment.py"
+      - ".project-log/create_single_episode_subset.py"
+      - ".project-log/eval_action_diagnostics.py"
+      - ".project-log/logs/overfit-ep0-sharded-300.log"
+      - ".project-log/logs/overfit-ep0-eval.log"
+      - ".project-log/logs/overfit-ep0-2k.log"
+      - ".project-log/logs/overfit-ep0-2k-eval.log"
+    limitations:
+      - "扩散采样未在评估脚本中固定 generator；单次数值存在采样方差。"
+      - "2k checkpoint 的 processor 不完整，无法评估其最终点；checkpoint-1000 是多 epoch 对照的最后可加载证据。"
+      - "单 episode 只验证记忆能力，不说明148 episode的泛化。"
+  - id: verification-013
+    task: task-009
+    status: passed
+    subject: "30,000-step 重训（constant LR, batch=8, ~5.3 passes）在多条验证轨迹上的 open-loop 动作质量"
+    commands:
+      - "env HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES=0 /home/tbl/miniforge3/envs/gr00t_n1/bin/python /home/tbl/Project/gr00t-finetune/gr00t_n1/gr00t/eval/open_loop_eval.py
+         --dataset-path /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d
+         --embodiment-tag NEW_EMBODIMENT
+         --model-path /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/checkpoint-30000
+         --traj-ids 0 --execution-horizon 16 --steps 400 --denoising-steps 4
+         --modality-keys right_arm right_o6_hand"
+      - "同上，--traj-ids 1 2 3"
+    results:
+      - "checkpoint-30000 可加载；轨迹 0 (400 steps): MSE=13.73, MAE=0.99"
+      - "轨迹 1 (400 steps): MSE=18.50, MAE=0.90"
+      - "轨迹 2 (400 steps): MSE=29.87, MAE=1.39"
+      - "轨迹 3 (400 steps): MSE=22.50, MAE=1.15"
+      - "平均 (4 轨迹): MSE=23.62, MAE=1.15"
+    comparison:
+      - "vs 旧 20k checkpoint (traj 0): MSE 717.38 → 13.73（↓98%）"
+      - "vs current-state 基线 (traj 0): MSE 82.91 → 13.73（↓83%）"
+      - "vs 单 episode 4.3 pass (traj 0): MSE ~683 → 13.73（↓98%）"
+    artifacts:
+      - "/mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/open_loop_eval/ckpt30000_traj0.png"
+      - "/mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/open_loop_eval/ckpt30000_traj0.log"
+      - "/mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/open_loop_eval/ckpt30000_traj1-3.png"
+      - "/mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/open_loop_eval/ckpt30000_traj1-3.log"
+    conclusion: |
+      根因诊断完全证实：训练量不足（0.44 pass → 5.3 passes），加上恒定学习率，使模型在检测轨迹上实现了大幅优于先前所有对照的动作预测。
+      平均 MSE 23.62（4 轨迹）显著优于 current-state 基线（82.91），且各轨迹表现一致稳定。
+      模型已具备可用的开放循环动作预测能力。
+    limitations:
+      - "仅评估了 4 条训练集轨迹，未评估未见过的验证轨迹或真机闭环部署。"
+      - "MSE 受 O6 手部 [0-100] 数值尺度主导，不能与仅含弧度关节的数据集直接比较，但与同数据基线的比较有效。"
+      - "扩散采样未固定 seed，存在单次采样方差。"

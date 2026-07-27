@@ -1,0 +1,89 @@
+schema_version: 1
+evidence:
+- id: EV-001
+  kind: validation
+  subject: Project Log schemas and references
+  status: valid
+  command: validate_project.py + vibe.py validate
+  result_ref: .project-log/verification/evidence.yaml#EV-001
+  covers:
+    files:
+    - .project-log/
+    requirements:
+    - Project Log 可恢复且结构一致
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: null
+    file_hashes:
+      .project-log/workflow.yaml: ad2b315d71fd439c3e19307b56b04404a59edb698343d3801a7401fb0403eb46
+      .project-log/schemas/workflow.schema.json: decb419942b03368b1d7a74aeb5eea7eb62d123d021bdfb1d3bbc70cd0b972a3
+  recorded_at: '2026-07-27T09:47:08+08:00'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-002
+  kind: validation
+  subject: Loop Core restore/status/validate
+  status: valid
+  command: loopctl.py restore/status/validate
+  result_ref: .project-log/verification/evidence.yaml#EV-002
+  covers:
+    files:
+    - .project-log/loop/
+    requirements:
+    - Loop Core 可恢复并报告状态
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: null
+    file_hashes:
+      .project-log/loop/active-run.yaml: b7fa7fab2dc2b58b3deadd5c8181e4ef76a7498b87b386bfca4bf85de52011e3
+      .project-log/loop/evidence-index.yaml: 6ddf7ee9da2908c4b60f5c8c11f38e535d7eae624c8690125ed1f1e9ac0660f9
+  recorded_at: '2026-07-27T09:47:08+08:00'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-003
+  kind: test
+  subject: Vibe Coding package validation and tests
+  status: valid
+  command: uv run Python 3.12 package validation/tests/role rendering
+  result_ref: .project-log/verification/evidence.yaml#EV-003
+  covers:
+    files:
+    - /home/tbl/Project/vibe-coding/
+    requirements:
+    - 框架包资产与核心测试通过
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: 82c3fecae3a07ad57fd507114b62af4d3bc568e7
+    diff_hash: null
+    file_hashes:
+      runtime/scripts/validate_package.py: c5e585ef6c5a3b27751ad1e82f486bde477c1cf7d0562dc9b374ff108affb145
+      runtime/scripts/loopctl.py: b13b0817dac3999a2de7351f4c96e00ab2582c12edac95a1c0e9ac79039bd26b
+      tests/test_loop_core.py: ce2fa1a6952af309a92bc7fca6e2d45f757b2fb15547b734744f0a11fcb82d43
+  recorded_at: '2026-07-27T09:47:08+08:00'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-004
+  kind: verification
+  subject: Installed global framework verify
+  status: valid
+  command: global_installer.py verify --codex-home ~/.codex --without-mcp
+  result_ref: .project-log/verification/evidence.yaml#EV-004
+  covers:
+    files:
+    - ~/.codex/.vibe-codex-installation-state.json
+    requirements:
+    - 全局安装状态有效
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: 82c3fecae3a07ad57fd507114b62af4d3bc568e7
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-27T09:47:08+08:00'
+  invalidated_at: null
+  invalidation_reason: null

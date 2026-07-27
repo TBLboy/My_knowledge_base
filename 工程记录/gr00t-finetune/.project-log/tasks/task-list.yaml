@@ -1,0 +1,472 @@
+version: "0.2"
+active_goal: "推进 checkpoint-30000 的未见轨迹泛化与真机闭环验收"
+tasks:
+  - id: task-001
+    kind: environment-setup
+    phase: implementation
+    goal: 搭建 GR00T N1 微调环境
+    status: completed
+    priority: high
+    business_atoms: []
+    acceptance:
+      - conda 环境 gr00t_n1 中 torch CUDA 正常 ✅
+      - 全部核心依赖安装验证通过 ✅
+      - 项目包 gr00t 已注册 ✅
+    evidence: |
+      python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+      => 2.9.0+cu128, True (RTX 4090)
+      28/28 依赖验证通过，flash-attn 2.8.3 正常
+
+  - id: task-002
+    kind: data-preparation
+    phase: implementation
+    goal: 从 MinIO 下载training_data + 转换为 LeRobot 格式
+    status: completed
+    priority: high
+    dependencies: []
+    business_atoms: [atom-data-001]
+    acceptance:
+      - 149 episodes 全部下载到本地 ✅
+      - 148/149 有效 episode 已转换为最终单右臂 O6 连续 13D LeRobot 数据集
+      - episode_000040 缺失 telemetry.npz，已显式跳过
+    progress: "最终 13D 数据集：148 eps、47,250 帧、444 路视频文件"
+    note: |
+      数据下载: 149/149 ✅
+      最终转换脚本: /home/tbl/Project/gr00t-finetune/convert_to_lerobot_right_o6.py
+      最终输出: /home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d/
+      旧双臂 ee_pose 14D 产物: /home/tbl/Project/gr00t-finetune/lerobot_dataset/（保留，非最终训练输入）
+
+  - id: task-003
+    kind: model-download
+    phase: implementation
+    goal: 下载 GR00T-N1.7-3B base model
+    status: completed
+    priority: high
+    dependencies: []
+    business_atoms: [atom-vla-001]
+    acceptance:
+      - /home/tbl/Project/models/gr00t_n1_base/ 包含完整模型文件（config.json + 2个.safetensors）
+    progress: "✅ 全部完成 (6.5GB)"
+    evidence: |
+      model-00001-of-00002.safetensors: 4.99GB, header=103352 bytes ✅
+      model-00002-of-00002.safetensors: 1.92GB, header=34192 bytes ✅
+      全部配置文件、processor_config、scheduler、statistics 等 ✅
+      下载源: HF_ENDPOINT=https://hf-mirror.com, hf_transfer, 8-18MB/s
+
+  - id: task-004
+    kind: config-definition
+    phase: implementation
+    goal: 定义自定义机器人 embodiment 配置
+    status: completed
+    priority: high
+    dependencies:
+      - task-002
+      - task-003
+    business_atoms: [atom-vla-001]
+    spec: .project-log/specs/task-004-right-o6-13d.md
+    acceptance:
+      - 最终数据与配置仅引用已确认的右臂 7D + 右 O6 手 6D 连续状态/动作
+      - 配置键与最终 LeRobot meta/modality.json 一致
+      - 配置可导入并注册到 MODALITY_CONFIGS
+    evidence: |
+      最终数据: lerobot_dataset_right_o6_13d/，148 episode、47,250 帧、3×148 个 MP4。
+      全量验证: 148/148 parquet 的 state/action 均为 float32 [T,13]、有限值；
+      state[:7]/action[:7] 严格等于源 qpos/actions[7:14]；
+      state[7:]/action[7:] 严格等于源 qpos/actions[20:26] * 100 / 255；O6 全局范围 [0,100]。
+      最终配置: gr00t_n1/examples/linkerhand_right_o6_config.py；导入、注册、键匹配验证通过。
+
+  - id: task-005
+    kind: training
+    phase: implementation
+    goal: 使用单右臂 + O6 连续 13D 数据运行 GR00T N1 微调
+    status: completed
+    priority: high
+    dependencies:
+      - task-003
+      - task-004
+    business_atoms: [atom-vla-001]
+    inputs:
+      - /home/tbl/Project/models/gr00t_n1_base
+      - /home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d
+      - /home/tbl/Project/gr00t-finetune/gr00t_n1/examples/linkerhand_right_o6_config.py
+      - /home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d/meta/stats.json
+    execution_plan: |
+      1. 停止或迁移 Ollama，确认 4090 可用显存足够。
+      2. 运行 ./finetune_right_o6_13d.sh（默认 1 GPU、2,000 steps、batch size 4）。
+      3. 检查输出 checkpoints、训练损失与首个 open-loop eval。
+    done_when:
+      - 微调在指定输出目录启动并产生可加载 checkpoint
+      - 训练和初步 open-loop 验证证据已记录
+    preflight_evidence: |
+      normalization stats 已生成并验证：lerobot_dataset_right_o6_13d/meta/stats.json。
+      启动脚本 finetune_right_o6_13d.sh 已通过 bash -n、路径/统计前置检查和 launch_finetune.py --help 解析。
+    blocker: "20-step 稳定性试跑已完成；正式长训练仍需用户确认后启动。"
+    latest_attempt: |
+      PID 1037233 与 PID 1081314 均已退出；日志指出 ValueError: Unsupported model name: /home/tbl/Project/models/cosmos_reason2_2b。
+      修复后 get_backbone_cls 本地验证返回 Qwen3Backbone，尚未完成完整训练启动。
+    low_memory_plan:
+      optimizer: paged_adamw_8bit
+      global_batch_size: 1
+      gradient_checkpointing: true
+      network_structure_changed: false
+    decision: .project-log/decisions/decision-log.yaml#decision-003
+    latest_evidence: |
+      低显存训练 PID 1107621 正常运行；约 step 290/2000，已通过首个 optimizer.step。
+      GPU 使用约 23,961 MiB / 24,564 MiB，尚未 OOM；日志：.project-log/logs/finetune-right-o6-13d-lowmem.log。
+      用户随后重启电脑并暂停训练；当前无残留训练进程，未确认已生成 checkpoint-500。
+    status_note: "暂停：训练曾推进至约 step 290，但系统卡死后重启；不得自动重新启动。"
+    open_loop_evaluation: |
+      checkpoint-20000 已于 2026-07-22 完成首个 open-loop eval：轨迹 0、400 steps、execution_horizon=16、denoising_steps=4。
+      Unnormalized Action MSE=717.3780517578125，MAE=12.309718132019043；图表：outputs/gr00t_n1_right_o6_13d_full_20k/open_loop_eval_ckpt20000.png。
+      判定：训练产物可加载，但该单轨迹证据显示预测动作偏差很大；尚未通过策略质量验收，也尚未完成跨 checkpoint 或真机闭环验证。
+    stability_followups:
+      - "将 DATALOADER_NUM_WORKERS 从 4 降到 0 或 1。"
+      - "确认系统至少有 16GB 可用 RAM；当前系统无 swap，应增加 swap 或 zram。"
+      - "训练时保留至少 0.5-1.0GB GPU 余量，必要时降低图像/激活压力。"
+      - "先用 max_steps=20 做稳定性试跑，再恢复长训练。"
+    stability_test_config:
+      max_steps: 20
+      global_batch_size: 1
+      dataloader_num_workers: 0
+      gradient_checkpointing: true
+      optimizer: paged_adamw_8bit
+    stability_test_result: |
+      20/20 steps 完成，loss(step10)=1.5256、loss(step20)=1.5867，checkpoint-20 已生成；
+      运行后 GPU/RAM 正常释放，未再出现 OOM 或系统卡死。
+    formal_run_plan:
+      max_steps: 20000
+      save_steps: 1000
+      output_dir: outputs/gr00t_n1_right_o6_13d_full_20k
+      start_from_base_checkpoint: true
+      resume_from_checkpoint: false
+      note: "20-step 稳定性测试 checkpoint 不作为正式训练起点。"
+
+  - id: task-006
+    kind: research-spike
+    phase: solution-research
+    goal: 验证 GR00T N1.7 在 24GB RTX 4090 上的 LoRA 可行性
+    status: pending
+    priority: high
+    dependencies:
+      - task-005
+    business_atoms: [atom-vla-001]
+    spec: .project-log/research/solution-research.yaml#research-001
+    acceptance:
+      - 明确 GR00T 是否原生支持 LoRA
+      - 若自定义注入，明确 target modules 与注入顺序
+      - 完成至少一个真实 batch 的 forward/backward/optimizer step
+      - 记录 peak VRAM、trainable params、loss 和 adapter/完整 checkpoint 重载结果
+    done_when:
+      - spike 结果足以决定采用 LoRA、冻结 DiT 或 8-bit optimizer
+    blocker: "需要用户确认是否执行会改变训练实现路径的 LoRA spike。"
+  - id: task-007
+    kind: diagnostic-experiment
+    phase: verification
+    goal: "通过数据时序对齐和受控单 episode 过拟合，区分 GR00T 13D 训练失败的主要原因。"
+    status: completed
+    priority: high
+    dependencies: [task-005]
+    business_atoms: [atom-vla-001]
+    inputs:
+      - "lerobot_dataset_right_o6_13d（148 条训练 episode）"
+      - "基础模型 /home/tbl/Project/models/gr00t_n1_base"
+      - "正式 checkpoint-16000 到 checkpoint-20000 的既有评估证据"
+    execution_plan: |
+      1. 量化全数据 action 与同帧/相邻 state 的误差，验证动作时序契约。
+      2. 构建一个可复现的单 episode LeRobot 子集，保持原始 metadata、视频和 13D 合同。
+      3. 从基础 checkpoint 在固定 seed、无颜色增强、episode_sampling_rate=1.0 下训练一个有限步数的 overfit run。
+      4. 对比短（300-step）与多 epoch（2,000-step）single-episode run、当前-state baseline 与现有 full run 的 open-loop 逐维指标。
+    done_when:
+      - "时序对齐结果、训练参数、checkpoint 和评估输出都记录到 project-log。"
+      - "能够用证据将根因收敛到管线/监督契约或完整训练配方之一，或明确仍不可区分的限制。"
+    risks:
+      - "单 episode 过拟合需要 GPU 且可能耗时数分钟；结果只验证可记忆性，不代表泛化。"
+      - "扩散推理有采样随机性；比较需固定 seed 或多次报告范围。"
+    result: |
+      数据时间对齐未见整体错帧；推理从4增至16去噪步无改善。
+      20k正式训练在batch=1下仅约0.44个全量有效数据pass，是未拟合的主要可证实原因。
+      单episode从约0.65 pass到约4.3 pass，open-loop MSE由约1278降至683，说明优化确有学习；仍未超过state baseline 82.91，故全量部署仍不可接受。
+      2k实验的final save受根分区空间耗尽影响，但checkpoint-1000已可加载并提供关键对照证据。
+    evidence:
+      - .project-log/verification/evidence.yaml#verification-012
+      - .project-log/research/solution-research.yaml#research-002
+    artifact_retention: "用户于 2026-07-22 明确要求删除所有训练/诊断 checkpoint；outputs/ 已清空，日志与证据保留。"
+  - id: task-008
+    kind: migration-and-retrain-preparation
+    phase: implementation
+    goal: "将 GR00T 训练所需数据、基础模型和输出目录迁移到 /mnt/data，并准备修复后的重训入口。"
+    status: completed
+    priority: high
+    dependencies: [task-007]
+    inputs:
+      - "/home/tbl/Project/gr00t-finetune/training_data"
+      - "/home/tbl/Project/gr00t-finetune/lerobot_dataset_right_o6_13d"
+      - "/home/tbl/Project/models/gr00t_n1_base"
+      - "/home/tbl/Project/models/cosmos_reason2_2b"
+    outputs:
+      - "/mnt/data/gr00t-finetune/datasets/training_data"
+      - "/mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d"
+      - "/mnt/data/gr00t-finetune/models/gr00t_n1_base"
+      - "/mnt/data/gr00t-finetune/models/cosmos_reason2_2b"
+      - "/mnt/data/gr00t-finetune/outputs"
+    acceptance:
+      - "rsync --dry-run --delete 对全部迁移资产无差异"
+      - "离线 AutoConfig/AutoProcessor 可加载新位置模型"
+      - "训练脚本默认路径和 GR00T base 内嵌 Cosmos 路径均指向 /mnt/data"
+      - "旧资产删除后旧路径不存在"
+      - "重训 CLI 暴露 gradient accumulation、constant scheduler、warmup steps 和 state dropout 参数"
+    evidence: |
+      rsync dry-runs returned no changes for all five asset groups.
+      HF_HUB_OFFLINE=1 AutoConfig/AutoProcessor load passed.
+      bash -n finetune_right_o6_13d.sh and CLI help preflight passed.
+      Old asset paths were removed; root free space increased to ~285GiB.
+    retrain_spec: |
+      physical batch=1; gradient_accumulation_steps=8; max_steps=30000;
+      learning_rate=5e-5; warmup_steps=1500; lr_scheduler_type=constant;
+      state_dropout_prob=0; dataloader workers=0; paged_adamw_8bit;
+      gradient checkpointing; output under /mnt/data/gr00t-finetune/outputs.
+    limitation: "重训尚未成功启动；首次手动启动因 Ollama llama-server 占用约21.7GiB显存而在模型迁移到GPU阶段OOM。已停止该进程并确认GPU释放；需重新运行。"
+    checkpoint_policy: "用户确认最多保留3个完整checkpoint；默认每5600 optimizer steps保存一次，SAVE_STEPS 与 SAVE_TOTAL_LIMIT 可通过环境变量覆盖。"
+  - id: task-009
+    kind: training
+    phase: implementation
+    goal: "30,000-step 重训（constant LR, gradient_accumulation=8, ~5.3 passes）并验证 action 预测质量"
+    status: completed
+    priority: high
+    dependencies: [task-008]
+    business_atoms: [atom-vla-001]
+    inputs:
+      - "/mnt/data/gr00t-finetune/models/gr00t_n1_base"
+      - "/mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d"
+      - "/mnt/data/gr00t-finetune/models/cosmos_reason2_2b"
+    execution_plan: |
+      physical batch=1; gradient_accumulation=8 (effective batch=8);
+      max_steps=30000; lr=5e-5 constant; warmup=1500; state_dropout=0;
+      workers=0; paged_adamw_8bit; gradient_checkpointing;
+      save every 5600 steps, max 3 checkpoints.
+    outputs:
+      - "/mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/"
+    checkpoint_evidence:
+      - "checkpoint-22400（约4.0 passes）"
+      - "checkpoint-28000（约5.0 passes）"
+      - "checkpoint-30000（约5.3 passes，final）"
+    open_loop_evaluation: |
+      checkpoint-30000 验证结果（verification-013）：
+        4 条训练轨迹平均 MSE=23.62, MAE=1.15
+        vs 旧 20k 基准: MSE 98%↓
+        vs current-state 基线: MSE 83%↓
+        结论：根因诊断完全证实，模型已学会有效的动作预测。
+    done_when:
+      - "30,000 steps 训练完成，loss 收敛至 ~0.04"
+      - "open-loop eval 在多条轨迹上显著优于旧 20k 和 current-state 基线"
+    verification: ".project-log/verification/evidence.yaml#verification-013"
+
+  - id: task-010
+    kind: codebase-research-and-discussion
+    phase: business-clarification
+    goal: "建立源码证据驱动的 GR00T 工程研究讨论记录；信息充分后再生成正式汇报文档"
+    status: completed
+    priority: high
+    dependencies: [task-009]
+    business_atoms: []
+    done_when:
+      - "研究记录覆盖模块地图、训练/推理调用路径、数据/模体机制、扩展边界"
+      - "每个材料结论有代码或官方资料证据，并标注未知"
+      - "用户明确确认信息积累充分后，才开始正式汇报文档"
+    notes: "正式稿已由用户明确触发并生成；训练案例仅作为代码结构映射案例。训练内自动 eval 关闭，但 checkpoint-30000 已完成训练集轨迹 0–3 的独立 open-loop 评估；不得与未见泛化或真机闭环混称。"
+    outputs:
+      - ".project-log/research/gr00t-engineering-report-notes.md"
+      - ".project-log/research/gr00t-engineering-report-chapters-01-03.md"
+      - "docs/gr00t-engineering-report.md"
+    evidence:
+      - "docs/gr00t-engineering-report.md（11 章正式汇报稿与证据索引）"
+      - ".project-log/verification/evidence.yaml#verification-013（checkpoint-30000 独立 open-loop 结果）"
+    research_sequence:
+      - "R1 代码仓模块图和训练/推理调用图"
+      - "R2 模型定位、参数、预训练覆盖、性能"
+      - "R3 数据系统"
+      - "R4 多模体适配系统"
+      - "R5 模型系统"
+      - "R6 训练系统"
+      - "R7 推理与评估系统"
+      - "R8 13D 映射、扩展、风险结论"
+
+  - id: task-011
+    kind: documentation-map
+    phase: task-decomposition
+    goal: "生成面向汇报的 GR00T 代码工程地图，使读者能按目标任务定位目录、入口文件与阅读路径"
+    status: completed
+    priority: high
+    dependencies: [task-010]
+    business_atoms: []
+    inputs:
+      - "gr00t_n1 顶层目录、入口脚本、示例与使用材料"
+      - "已有技术附录：docs/gr00t-engineering-report.md"
+      - "源码研究证据：.project-log/research/gr00t-engineering-report-chapters-01-03.md"
+    outputs:
+      - "docs/gr00t-codebase-map.md"
+    scope:
+      included:
+        - "工程定位、顶层目录和模块职责"
+        - "功能地图及模块依赖方向"
+        - "微调、推理/真机、评估、部署、扩展的任务路径"
+        - "每条路径的入口脚本、核心类/目录、关键产物与推荐阅读顺序"
+      excluded:
+        - "以 13D 训练结果、参数量或算法推导作为主线"
+        - "将 open-loop 指标解释为闭环或真机成功率"
+        - "逐文件 API 参考或逐层模型实现说明"
+    plan:
+      - "先定义读者问题、章节边界和每章统一的导航模板。"
+      - "以源码核对每个目录职责和六条任务路径的实际文件锚点。"
+      - "按地图视角撰写主文档；既有工程研究报告仅作为可下钻的技术附录。"
+      - "检查所有路径是否回答：做什么、从哪里开始、经过什么、产出什么、何时需要进一步阅读。"
+    done_when:
+      - "文档覆盖仓库全景、功能地图与六条任务路径。"
+      - "读者可根据目标任务定位至少一个入口文件、核心目录和预期工件。"
+      - "各导航主张经本地目录与源码入口核对；不含资料摘抄式表述。"
+      - "文档清楚区分 GR00T 策略工程与外部机器人控制/安全 adapter 的边界。"
+    verification:
+      - "目录树与入口文件路径存在性检查。"
+      - "人工检查每条任务路径具有目标、入口、主链、产物、边界五项。"
+      - "Markdown 结构与链接/代码文件引用检查。"
+    result: |
+      已生成 docs/gr00t-codebase-map.md（417 行）。主文档按地图视角组织为：
+      工程定位、仓库全景、功能地图、共用核心链路、微调、策略/真机、
+      评估、部署、扩展和阅读索引。既有 docs/gr00t-engineering-report.md
+      保留为技术附录，不再承担晚间汇报主线。
+    evidence: |
+      2026-07-23 文档静态校验通过：12 个主体二级标题、3 张 Mermaid 图、
+      代码 fence 成对闭合；训练/推理/开环/仿真/服务端/TRT/扩展的任务入口均覆盖。
+      对 31 个文档引用的源码、示例、部署和使用材料路径执行存在性检查，全部通过。
+      正文未出现“README 里/中/说明/指出/说”等资料摘抄式表达。
+    validation_limit: |
+      尝试使用系统 python3 执行 pytest --collect-only 时，因系统 pytest 与用户级
+      anyio 插件版本不兼容（ModuleNotFoundError: _pytest.scope）而失败；该问题不影响
+      本次只读文档的目录、路径和 Markdown 校验，且未将其表述为仓库测试失败。
+
+  - id: task-012
+    kind: documentation-information-architecture-revision
+    phase: task-decomposition
+    goal: "将 GR00T 代码工程地图从可检索的目录手册重构为首次接触者可顺读的工程说明书"
+    status: completed
+    priority: high
+    dependencies: [task-011]
+    business_atoms: []
+    inputs:
+      - "docs/gr00t-codebase-map.md（当前地图正文）"
+      - ".project-log/research/gr00t-engineering-report-notes.md#代码地图可读性诊断（二）"
+    scope:
+      included:
+        - "先以新机器人从演示数据到动作策略的一次完整旅程建立叙事主干"
+        - "将目录、功能、任务路径、评估、部署和扩展重新映射到旅程站点"
+        - "在术语首次出现时提供与当前站点相关的最低成本定义"
+        - "保留现有入口文件、责任边界、源码锚点和技术附录链接"
+      excluded:
+        - "补写新的模型算法研究或扩展未验证结论"
+        - "为追求可读性删除必要的机器人安全边界"
+    done_when:
+      - "读者可先复述数据→config→训练→checkpoint→Policy→评估/控制的因果主干，再使用目录表定位实现。"
+      - "所有并列功能均明确其从主干哪一站分出、解决什么问题。"
+      - "保持各源码入口、责任边界和技术事实的可追溯性。"
+    verification:
+      - "人工按首次接触者视角审阅术语的首次出现、站点交接物和章节转场。"
+      - "Markdown fence、链接与源码路径存在性复查。"
+    result: |
+      已将 docs/gr00t-codebase-map.md 重构为"指南 → 概览 → 完整旅程 → 分支路径 → 扩展 → 索引"架构。
+      完整旅程以"新机器人从演示数据到动作策略"为主线，建立数据→config→训练→checkpoint→Policy→
+      评估/控制的六站因果链；目录职责、功能分支、评估层级和部署路径挂回各站后作为岔路详情。
+      首次读者无需事先理解 Processor、embodiment 或 open-loop；术语在旅程站点自然引出。
+    evidence: |
+      2026-07-23 重构后校验通过：16 个 code fence 成对闭合、20 个引用的源码/示例/文档路径存在性检查通过、
+      无资料摘抄式表述、11 个主体二级标题。文档从 454 行增加至 521 行（重构后正文更紧凑，篇幅源于新增的旅程站点和交接物说明）。
+
+  - id: task-013
+    kind: documentation-structure-overview
+    phase: verification
+    goal: "在代码地图开头补充仓库文件夹结构和目录职责总览"
+    status: completed
+    priority: medium
+    dependencies: [task-012]
+    inputs:
+      - "gr00t_n1/ 顶层目录和根目录文件"
+      - "docs/gr00t-codebase-map.md"
+    scope:
+      included:
+        - "在阅读指南后、工程概览前增加顶层目录树"
+        - "明确核心代码/使用目录、数据与产物目录、环境与记录目录的区别"
+        - "列出 gr00t/ 内部各子目录的职责"
+        - "同步更新章节跳转和阅读路线编号"
+      excluded:
+        - "不把缓存、模型产物或版本控制目录包装成核心代码模块"
+        - "不展开各目录内部的函数级实现"
+    done_when:
+      - "读者在进入模型和训练说明前，可以知道仓库有哪些主要目录及其职责。"
+      - "目录计数与本地顶层目录核对一致。"
+      - "新增章节不破坏后续章节编号、跳转和主线阅读顺序。"
+    verification:
+      - "顶层目录存在性核对。"
+      - "Markdown fence 和章节编号检查。"
+      - "源码、示例、部署和使用材料引用路径复查。"
+    result: |
+      已在 docs/gr00t-codebase-map.md 第 2 章增加仓库结构总览：8 个核心代码/使用目录、4 个数据与产物目录、
+      4 个环境与记录目录；同时补充 gr00t/ 子目录职责表，并将后续章节统一顺延一章。
+    evidence: |
+      2026-07-23：顶层目录核对通过；Markdown fence 成对闭合；章节编号和阅读指南跳转已同步；
+      `scripts/lerobot_conversion/`、`examples/SO100/`、`docker/Dockerfile` 等文档引用路径存在。
+
+  - id: task-014
+    kind: documentation-naming-alignment
+    phase: verification
+    goal: "将汇报主文档统一命名为 GR00T N1.7 代码地图"
+    status: completed
+    priority: low
+    dependencies: [task-013]
+    inputs:
+      - "docs/gr00t-codebase-map.md"
+      - "项目进度和会话记录"
+    scope:
+      included:
+        - "修改 Markdown 主标题"
+        - "同步文档附录中的自称"
+        - "同步项目记录中的名称"
+      excluded:
+        - "不修改文档文件路径和正文内容结构"
+    done_when:
+      - "主文档标题为 GR00T N1.7 代码地图。"
+      - "项目记录不再使用旧的‘代码工程说明书’名称。"
+    verification:
+      - "全文检索旧名称。"
+      - "确认主标题和附录名称一致。"
+    result: |
+      已将主文档标题改为“GR00T N1.7 代码地图”，并同步更新文档自称、current-session、progress 和任务记录。
+    evidence: |
+      2026-07-23：旧名称检索无残留；主文档标题为 `# GR00T N1.7 代码地图`。
+
+  - id: task-015
+    kind: documentation-language-normalization
+    phase: verification
+    goal: "将代码地图第 4 章的口语化旅程隐喻改为正式工程流程表述"
+    status: completed
+    priority: medium
+    dependencies: [task-014]
+    inputs:
+      - "docs/gr00t-codebase-map.md 第 4 章"
+      - "用户对‘第一站’等表述的修订要求"
+    scope:
+      included:
+        - "将章节标题改为端到端主流程"
+        - "将各小节改为数据、配置、统计量、训练、推理、评估等流程名称"
+        - "清理正文中的旅程、站点、岔路等隐喻"
+      excluded:
+        - "不改变流程事实、源码入口和章节内容结构"
+    done_when:
+      - "第 4 章标题和小节标题使用正式工程术语。"
+      - "正文不再使用‘第一站’等口语化流程隐喻。"
+    verification:
+      - "检索完整旅程、第一站、站点、岔路等旧表述。"
+      - "确认第 4 章七个小节编号和标题连续。"
+      - "Markdown 结构保持有效。"
+    result: |
+      第 4 章已改为“端到端主流程：从演示数据到动作策略”，并将六个处理阶段和总结改为正式工程名称。
+    evidence: |
+      2026-07-23：旧隐喻检索无残留；第 4 章标题及 4.1—4.7 小节编号连续。

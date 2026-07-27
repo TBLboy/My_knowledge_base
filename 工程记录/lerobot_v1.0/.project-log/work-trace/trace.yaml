@@ -1,0 +1,88 @@
+version: '0.2'
+entries:
+- id: TRACE-001
+  task_id: TASK-001
+  timestamp: '2026-07-27T09:47:08+08:00'
+  context: 用户要求检查 Vibe Coding 框架是否正常；项目此前没有 .project-log。
+  hypothesis: 如果 Project Log、Loop Core、框架包、安装状态和测试均通过，则框架核心链路正常；Python 版本问题应单独归类为环境限制。
+  decision_ref: null
+  action: 初始化项目日志，执行 restore/status/validate、包校验、隔离测试、角色提示词渲染和已安装框架 verify。
+  expected_result: 所有核心检查通过，或得到可归因的异常。
+  observation: 项目日志校验通过；包校验通过；核心测试 16 passed、1 skipped；8 个角色均可渲染；安装 verify 通过。系统 Python 为 3.10.12。
+  actual_result: 框架核心链路正常。默认 Python 3.10 低于文档要求 3.11+，不能直接运行安装器，但 Python 3.12 隔离验证通过。
+  delta: 相对初始状态新增 .project-log/；未修改框架源代码。
+  lesson: 框架健康检查必须在 Python 3.11+ 环境执行安装器与完整测试；当前系统默认解释器不足。
+  next_adjustment: 后续直接运行安装/升级时显式使用 Python 3.11+，推荐 Python 3.12。
+  evidence:
+  - EV-001
+  - EV-002
+  - EV-003
+  - EV-004
+  knowledge_candidate: false
+- id: TRACE-002
+  task_id: TASK-002
+  timestamp: '2026-07-27T10:41:43+08:00'
+  context: 用户要求将 Miniforge lerobot 环境从旧版 LeRobot 切换到当前 lerobot-v1.0。
+  hypothesis: 旧版包可被单独替换；当前源码以 editable 模式安装后，导入和 CLI 应指向仓库源码。
+  decision_ref: DEC-001
+  action: 确认旧版 0.5.1，卸载后执行 pip install -e '.[dev,test,wallx]'；运行版本、路径、CLI 和配置测试验证。
+  expected_result: 环境运行当前仓库 0.6.1，核心 CLI 和配置加载成功。
+  observation: 旧版卸载成功；当前源码 editable 安装成功；首次 CLI 因 transformers 5.3.0 失败，补齐依赖后 transformers 5.5.4，CLI 通过；配置测试 5 passed。
+  actual_result: Miniforge lerobot 环境已切换到当前仓库 0.6.1。pip check 仍有无关 ROS/机器人包缺少 typeguard，长组合测试未完整跑完。
+  delta: 相对旧版环境，lerobot 从 site-package 0.5.1 替换为仓库 editable 0.6.1，并升级 transformers 5.3.0 -> 5.5.4。
+  lesson: 环境切换应优先替换目标包；可选依赖冲突要先用最小验证暴露，再按当前 extra 约束补齐。
+  next_adjustment: 后续开发命令固定使用 /home/tbl/miniforge3/envs/lerobot/bin/python，并在需要时显式使用 PYTHONPATH 清理 ROS 插件干扰。
+  evidence:
+  - EV-005
+  - EV-006
+  knowledge_candidate: false
+- id: TRACE-003
+  task_id: TASK-003
+  timestamp: 2026-07-27 10:45:00+08:00
+  context: 用户要求修复 pip check 报告的 typeguard 缺失依赖。
+  hypothesis: 在 Miniforge lerobot 环境安装 typeguard 4.x 可满足 ROS 提供的 generate-parameter-library-py 0.7.1 元数据要求，且不影响 LeRobot。
+  decision_ref: null
+  action: 在 Miniforge lerobot 环境执行 pip install 'typeguard>=4,<5'，随后运行 pip check、CLI 和配置测试。
+  expected_result: pip check 无 broken requirements，LeRobot 验证不回归。
+  observation: 安装 typeguard 4.6.0；pip check 返回 No broken requirements found；CLI smoke 通过；配置测试 5 passed。
+  actual_result: 缺失依赖已修复，当前环境无 pip check 报告的 broken requirements。
+  delta: 相对修复前新增 typeguard 4.6.0；generate-parameter-library-py 0.7.1 的依赖检查从失败变为通过。
+  lesson: 环境依赖修复应安装到实际运行解释器对应的环境，不修改 ROS 系统目录。
+  next_adjustment: 继续固定使用 /home/tbl/miniforge3/envs/lerobot/bin/python。
+  evidence:
+  - EV-007
+  knowledge_candidate: false
+- id: TRACE-004
+  task_id: TASK-004
+  timestamp: '2026-07-27T11:03:15+08:00'
+  context: 用户要求探索 LeRobot 工程并生成代码地图，帮助快速掌握项目脉络。
+  hypothesis: 通过静态梳理包结构、CLI 入口、factory、核心抽象、数据集、processor、策略、硬件、测试和文档，可以形成足够导航性且可复核的工程地图；真实硬件行为需要单独验证。
+  decision_ref: null
+  action: 使用只读代码库探索和主代理本地证据分析，编写根目录 CODE_MAP.md；不修改产品代码。
+  expected_result: 文档覆盖项目定位、24 个顶层模块、主要用户流程、调用链、数据格式、测试/文档入口和边界；关键路径及 CLI smoke 验证通过。
+  observation: CODE_MAP.md 已生成 667 行；关键源文件、tests、docs/source 和 examples 路径存在；LeRobot 0.6.1 导入路径指向当前仓库；lerobot-train/record
+    --help 成功；Project Log 校验通过。
+  actual_result: 代码地图已完成并标注了当前代码事实与未验证的硬件/仿真边界。
+  delta: 相对任务开始，新增一份根目录工程地图和 EV-008 验证证据；未修改 LeRobot 产品代码。
+  lesson: 对大型机器人框架应先建立 workflow、模块边界和 processor 数据转换地图，再深入单个策略或硬件适配器。
+  next_adjustment: 后续若开发具体功能，应从 CODE_MAP.md 的对应阅读路线进入，并为真实设备/仿真行为补充专项验证。
+  evidence:
+  - EV-008
+  knowledge_candidate: false
+- id: TRACE-005
+  task_id: TASK-005
+  timestamp: '2026-07-27T11:48:34+08:00'
+  context: 用户决定在 Codex 中使用 CodeGraph，并要求将其与 LeRobot 应用环境分离。
+  hypothesis: 全局 CodeGraph MCP + 项目本地索引可以提供工程导航，同时避免修改 lerobot 依赖。
+  decision_ref: DEC-002
+  action: 安装 CodeGraph 1.5.0，建立 LeRobot 索引，配置 Codex MCP，将 .codegraph/ 加入 .gitignore。
+  expected_result: 索引可用、状态 up to date、Git 不追踪索引、lerobot 环境不新增 CodeGraph 依赖。
+  observation: codex mcp list 为 enabled；CodeGraph status 显示 804 files、17,512 nodes、46,134 edges，up to date；.codegraph/ 未出现在
+    Git 状态。
+  actual_result: CodeGraph 集成完成；LeRobot 产品代码未修改。
+  delta: 相对 TASK-004 新增工程图谱索引和 Codex 工具配置。
+  lesson: 代码地图文档与可查询图谱互补：CODE_MAP 提供人工导航，CodeGraph 提供符号/调用关系查询。
+  next_adjustment: 重启 Codex/Zed ACP，执行一次 codegraph_explore 或 codegraph_node MCP smoke test。
+  evidence:
+  - EV-009
+  knowledge_candidate: false

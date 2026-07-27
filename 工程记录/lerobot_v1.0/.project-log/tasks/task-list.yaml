@@ -1,0 +1,321 @@
+version: '0.2'
+active_goal: null
+tasks:
+- id: TASK-001
+  title: 检查 Vibe Coding 框架运行状态
+  kind: task
+  parent_id: null
+  phase: business-intent
+  goal: 确认项目日志、Loop Core、Skill 角色渲染、框架包校验、安装状态与测试是否可正常运行。
+  status: done
+  priority: medium
+  risk: low
+  authority: A
+  owner: agent
+  tags:
+  - framework-health-check
+  related_business_logic: []
+  acceptance_refs:
+  - EV-001
+  - EV-002
+  - EV-003
+  - EV-004
+  related_decisions: []
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-loop-control
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - 项目 AGENTS.md
+  - Vibe Workflow runtime
+  - vibe-coding 框架源代码
+  outputs:
+  - 框架健康检查结论
+  - 验证证据与工作留痕
+  plan:
+  - 初始化并恢复项目日志
+  - 运行 Loop Core 与 Project Log 校验
+  - 校验框架包、安装状态、角色渲染和测试
+  - 记录限制与结论
+  done_when:
+  - 项目 Project Log 校验通过
+  - Loop Core restore/status/validate 可运行
+  - 框架包校验和隔离测试通过，或明确记录环境限制
+  - 安装状态验证通过
+  verification:
+    status: passed
+    commands:
+    - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root <project> --json restore
+    - python3 ~/.codex/vibe-workflow/scripts/validate_project.py --root <project>
+    - uv run --no-project --python 3.12 --with PyYAML --with jsonschema python runtime/scripts/validate_package.py --root
+      <vibe-coding>
+    - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --python 3.12 --with pytest --with PyYAML --with jsonschema python -m pytest
+      -q tests
+    - python3.12 scripts/global_installer.py verify --codex-home ~/.codex --without-mcp
+    evidence:
+    - EV-001
+    - EV-002
+    - EV-003
+    - EV-004
+    limitations:
+    - 默认 /usr/bin/python3 为 Python 3.10.12，低于框架要求的 Python 3.11+；使用 Python 3.12.13 隔离环境完成需要 3.11+ 的验证。
+  result:
+    summary: 框架核心功能正常；项目日志此前缺失，已按运行时模板初始化。默认 Python 3.10 不能直接运行安装器，但不是框架代码失败。
+    changed_files:
+    - .project-log/
+    deviations:
+    - 未修改框架源代码；仅生成本项目缺失的 .project-log/。
+    follow_ups:
+    - 如需直接运行安装/升级命令，将 shell 默认 Python 切换到 3.11+，推荐 3.12。
+  created_at: '2026-07-27T09:47:08+08:00'
+  updated_at: '2026-07-27T09:47:08+08:00'
+- id: TASK-002
+  title: 将当前 LeRobot v1.0 安装到 Miniforge lerobot 环境
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: 移除 Miniforge lerobot 环境中的旧版 LeRobot，并将当前仓库 v0.6.1 以 editable 模式安装，作为后续开发运行环境。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - environment
+  - lerobot-v1.0
+  - miniforge
+  - editable-install
+  related_business_logic: []
+  acceptance_refs:
+  - EV-005
+  - EV-006
+  related_decisions:
+  - DEC-001
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - 当前仓库 pyproject.toml
+  - Miniforge 环境 /home/tbl/miniforge3/envs/lerobot
+  outputs:
+  - 旧版 lerobot 0.5.1 已移除
+  - 当前仓库 lerobot 0.6.1 editable 安装
+  - 环境验证记录
+  plan:
+  - 确认旧版包来源与环境基础依赖
+  - 移除旧版 lerobot
+  - 安装当前仓库 editable 包及开发/测试/Wall-X 依赖
+  - 验证源码导入、版本、CLI 与针对性测试
+  done_when:
+  - Miniforge lerobot 环境中的 lerobot 版本为 0.6.1
+  - lerobot 导入路径指向当前仓库 src/lerobot
+  - 核心 CLI 可加载
+  - 针对性测试通过，环境限制已明确记录
+  verification:
+    status: passed
+    commands:
+    - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip uninstall -y lerobot
+    - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip install -e '.[dev,test,wallx]'
+    - /home/tbl/miniforge3/envs/lerobot/bin/python metadata/import path smoke check
+    - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/configs/test_default.py
+    - env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+    evidence:
+    - EV-005
+    - EV-006
+    limitations:
+    - pip check 仍报告环境中与 LeRobot 无关的 generate-parameter-library-py 缺少 typeguard。
+    - processor pipeline 组合测试运行至 69 passed 后因耗时约 3 分钟手动中止；未将其作为完整套件通过证据。
+  result:
+    summary: 旧版 0.5.1 已替换为当前仓库 0.6.1 editable 安装；CLI smoke 与配置测试通过。
+    changed_files:
+    - .project-log/
+    deviations:
+    - 为修复旧环境中 transformers 5.3.0 与当前源码 Wall-X 导入不兼容，安装了当前 wallx extra 所需 transformers 5.5.4。
+    - 未删除整个 Conda 环境，仅替换 lerobot 包并补齐当前开发依赖。
+    follow_ups:
+    - 后续命令默认使用 /home/tbl/miniforge3/envs/lerobot/bin/python。
+    - 如需完整测试，使用 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 并单独安排长时间测试窗口。
+  created_at: '2026-07-27T10:41:43+08:00'
+  updated_at: '2026-07-27T10:41:43+08:00'
+- id: TASK-003
+  title: 修复 lerobot 环境 typeguard 缺失依赖
+  kind: task
+  parent_id: TASK-002
+  phase: implementation
+  goal: 补齐 generate-parameter-library-py 0.7.1 要求的 typeguard，使 Miniforge lerobot 环境 pip check 通过。
+  status: done
+  priority: medium
+  risk: low
+  authority: A
+  owner: agent
+  tags:
+  - environment
+  - dependency-fix
+  - typeguard
+  related_business_logic: []
+  acceptance_refs:
+  - EV-007
+  related_decisions: []
+  depends_on:
+  - TASK-002
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - pip check 缺失依赖报告
+  - generate-parameter-library-py 0.7.1 元数据
+  outputs:
+  - typeguard 安装记录
+  - pip check 通过证据
+  plan:
+  - 确认依赖来源和约束
+  - 在 Miniforge lerobot 环境安装兼容 typeguard
+  - 运行 pip check 与 LeRobot smoke 验证
+  done_when:
+  - typeguard 已安装
+  - pip check 返回 No broken requirements found
+  - LeRobot CLI 与配置测试仍通过
+  verification:
+    status: passed
+    commands:
+    - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip install 'typeguard>=4,<5'
+    - /home/tbl/miniforge3/envs/lerobot/bin/python -m pip check
+    - env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+    - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/configs/test_default.py
+    evidence:
+    - EV-007
+    limitations: []
+  result:
+    summary: 已安装 typeguard 4.6.0；pip check、LeRobot CLI 和配置测试通过。
+    changed_files:
+    - .project-log/
+    deviations:
+    - 未修改 ROS Humble 系统目录；依赖安装在用户指定的 Miniforge lerobot 环境中。
+    follow_ups:
+    - 后续继续使用 /home/tbl/miniforge3/envs/lerobot/bin/python。
+  created_at: '2026-07-27T10:45:00+08:00'
+  updated_at: '2026-07-27T10:45:00+08:00'
+- id: TASK-004
+  title: 建立 LeRobot 代码地图
+  kind: task
+  parent_id: null
+  phase: verification
+  goal: 通过只读代码库探索生成 Markdown 代码地图，帮助用户快速理解项目用途、模块边界、主要 CLI 调用链与关键数据流。
+  status: done
+  priority: medium
+  risk: low
+  authority: A
+  owner: agent
+  tags:
+  - codebase-onboarding
+  - documentation
+  - architecture-map
+  related_business_logic: []
+  acceptance_refs:
+  - EV-008
+  related_decisions: []
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-codebase-onboarding
+  - a-project-log
+  - a-verification
+  spec_ref: null
+  inputs:
+  - README.md
+  - pyproject.toml
+  - src/lerobot/
+  - tests/
+  - docs/source/
+  - examples/
+  outputs:
+  - CODE_MAP.md
+  plan:
+  - 恢复项目记录并界定只读探索范围
+  - 梳理项目入口、顶层模块、关键数据流和扩展机制
+  - 编写可导航的代码地图
+  - 验证文档引用的路径及项目日志
+  done_when:
+  - 根目录存在 CODE_MAP.md
+  - 文档说明项目用途、模块职责、CLI 入口和关键数据流
+  - 关键文件和目录路径经过本地验证
+  - 项目日志记录完成状态与验证证据
+  verification:
+    status: passed
+    commands:
+    - key-path existence check
+    - /home/tbl/miniforge3/envs/lerobot/bin/python package version/import path smoke check
+    - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+    - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-record --help
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    evidence:
+    - EV-008
+    limitations:
+    - 未连接真实机器人、相机、电机或仿真 benchmark；未运行训练和完整测试套件。
+  result:
+    summary: 已生成根目录 CODE_MAP.md，覆盖项目定位、24 个顶层模块、主要 CLI 流程、数据集结构、processor/策略/硬件边界、测试、文档和推荐阅读顺序。
+    changed_files:
+    - CODE_MAP.md
+    - .project-log/
+    deviations:
+    - 仅新增说明文档和项目日志，没有修改 LeRobot 产品代码。
+    follow_ups:
+    - 具体硬件、仿真 benchmark、训练性能和外部 SDK 需按专项任务单独验证。
+  created_at: '2026-07-27T00:00:00+08:00'
+  updated_at: '2026-07-27T11:03:15+08:00'
+- id: TASK-005
+  title: 安装并验证 CodeGraph 工程代码图谱
+  kind: task
+  phase: verification
+  goal: 为 LeRobot 建立可查询的 CodeGraph 索引，并保持索引产物不进入 Git。
+  status: done
+  authority: A
+  owner: agent
+  related_business_logic: []
+  depends_on:
+  - TASK-004
+  inputs:
+  - LeRobot v1.0 工作区
+  - CodeGraph 1.5.0
+  - Codex MCP 配置
+  outputs:
+  - .codegraph 本地索引
+  - CodeGraph Codex MCP 配置
+  - .gitignore 规则
+  done_when:
+  - CodeGraph 索引建立且状态 up to date
+  - Codex mcp list 显示 codegraph enabled
+  - .codegraph/ 被 Git 忽略
+  verification:
+    status: passed
+    commands:
+    - codegraph status /home/tbl/Project/lerobot_v1.0
+    - codex mcp list
+    - git status --short --untracked-files=all
+    evidence:
+    - EV-009
+    limitations:
+    - 当前 ACP 线程尚未直接暴露 MCP tool；需新会话确认工具调用。
+  result:
+    summary: CodeGraph 1.5.0 已安装为 Codex MCP，LeRobot 索引完成且为最新；本地索引目录加入 .gitignore。
+    changed_files:
+    - .gitignore
+    - .project-log/
+    deviations: []
+    follow_ups:
+    - 重启 Codex/Zed ACP 后执行一次 MCP 查询 smoke test。
+  created_at: '2026-07-27T11:48:34+08:00'
+  updated_at: '2026-07-27T11:48:34+08:00'

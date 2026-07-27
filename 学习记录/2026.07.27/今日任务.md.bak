@@ -1,0 +1,851 @@
+# 1：老板电器部分：
+
+进一步测试能否左手拿锅，右手使用铲子辅助
+结论：锅把竖着目前好抓，主要是遥操作的时候手部姿态无法达到一个合适的抓取姿势，可能原因是：机械臂本身的结构限制、遥操作设备不太合适。目前等进一步进行拖动测试
+锅把朝左可以比较好的抓取，同时也可以完成倾倒动作。倾倒位置最好是在锅的右侧。到时候使用左手抓锅，然后底盘组支持，移动到盘子附近，让盘子处于左手的正右侧，然后再进行倾倒。
+同时锅把朝左更方便视觉识别，判断长度，计算抓取点
+
+然后锅铲部分，目前有三个难点：
+a：右手拿取锅铲不好拿，因为锅铲的把很细，o6手目前握紧状态下，只有一小部分区域是处于足够闭合状态，其他区域都不足以稳定抓取锅铲。目前是人手把锅铲放置在右手中。
+b：锅铲到时候放在哪里？
+c：右手可以勉强把锅铲放在锅中，但是暂时很难做出有效且精准的辅助动作，可能原因有：机械臂本身的结构限制、遥操作设备的限制。并且难点还有，真实生产环境中如何把右手正确的放置在锅中？辅助动作如何确保能把菜品给扒拉出来
+并且稳定的落在盘子里？
+辅助动作起到的效果有限，需要收缩这部分的预期值。这部分只能作为后续技术迭代的补充功能，不能作为主体功能。
+
+结论：
+目前以锅把朝左为基准，先完成抓取锅把，定位盘子，倾倒的动作流程，可以加入倾倒后抖动，进一步倒干净菜品。
+暂时不考虑加入右手动作，该动作作为后续迭代方案考虑
+
+给出第一版本的左手抓锅的方案程序：
+
+
+
+
+
+
+
+
+
+
+
+# 2：力触觉部分，了解lerobot框架内容。
+
+## 2.1：学习记录
+
+在lerobot中接入一个新的VLA的总体结构是什么呢？
+可以把模型接入拆成五层结构：
+硬件层
+  ├── Robot
+  ├── Camera
+  ├── Tactile Sensor
+  └── Teleoperator
+
+数据层
+  ├── observation.state
+  ├── observation.images.*
+  ├── observation.tactile.*
+  ├── action
+  ├── task / language
+  └── timestamp / episode
+
+转换层
+  ├── observation processor
+  ├── tactile processor
+  ├── normalization
+  ├── action representation
+  └── feature bridge
+
+策略层
+  ├── PolicyConfig
+  ├── PolicyModel
+  ├── pretrained checkpoint
+  └── policy pre/post processor
+
+工作流层
+  ├── record
+  ├── train
+  ├── eval
+  ├── rollout
+  └── replay
+
+不同VLA模型真正需要适配的核心接口是：
+
+LeRobot observation
+        │
+        ▼
+Policy Preprocessor
+        │
+        ▼
+VLA 模型输入
+        │
+        ▼
+VLA 模型输出动作块
+        │
+        ▼
+Policy Postprocessor
+        │
+        ▼
+RobotAction
+        │
+        ▼
+机器人执行
+
+其中最重要的不是 CLI，而是：数据契约 + Processor + Policy Adapter
+
+这一阶段最重要的不是修改Groot的主干，而是让机器人的数据符合Groot的输入输出契约。
+
+自有机器人
+   │
+   ▼
+Robot.get_observation()
+   │
+   ▼
+LeRobot Dataset
+   │
+   ▼
+GR00T Processor
+   │
+   ▼
+GrootPolicy
+   │
+   ▼
+GR00T action chunk
+   │
+   ▼
+GR00T Postprocessor
+   │
+   ▼
+Robot.send_action()
+
+
+
+目前lerobot已经提供了：
+Groot Config
+GrootPolicy
+GROOT N1.7 Processor
+GROOT action packing
+GROOT action decoding
+GROOT checkpoint loading
+GROOT action chunck 推理
+GROOT 的训练 forward
+
+因此我们目前不需要先编写：
+新的VLA的主干
+新的Transformer
+新的action head
+新的训练循环
+新的 rollout循环
+
+我们需要解决的就是：
+自己的硬件如何变成lerobot的数据
+自己的数据如何符合GROOT的embodiment
+GROOT的输出如何转换成自己机器人的动作
+
+
+
+
+
+2.机器人适配器：
+机器人适配器RobotAdapter只负责真实机器人本身：
+连接硬件、读取状态、读取相机、发送动作、执行校准、端开连接
+它不需要知道当前使用的是什么策略模型
+也就是说，同一个机器人的适配器可以被多个模型复用
+
+Robot需要提供两个契约：
+a：Observation Contract。机器人需要告诉lerobot我能输出哪些观测？例如：observation.state     observation.images.front      observation.images.wrist
+对应的具体信息为：字段名、shape、dtype、单位、采样频率、是否允许确实
+例如：observation.state：
+    shape:[7]
+    dtype:float32
+    含义：6个关节位置+1个夹爪位置
+    单位：rad或归一化值
+    频率：30HZ
+
+b：Action Contract：机器人还要告诉Lerobot我能接受什么动作？例如：
+action：
+    shape:[7]
+    含义：6个关节位置+1个夹爪位置
+    单位：rad
+    控制频率：30hz
+
+这两个契约必须匹配：
+Robot.observation_features
+Robot.action_features
+Robot.get_observation()
+Robot.send_action(action)
+
+我们需要实现的最小Robot接口：
+典型结构：
+src/lerobot/robots/<your_robot>/
+├── config_<your_robot>.py
+├── <your_robot>.py
+└── __init__.py
+核心方法包括：
+class YourRobot(Robot):
+    def connect(self):
+        ...
+
+    def disconnect(self):
+        ...
+    
+    def calibrate(self):
+        ...
+    
+    def get_observation(self):
+        ...
+    
+    def send_action(self, action):
+        ...
+
+真正重要的就是：
+observation = robot.get_observation()
+robot.send_action(action)
+
+示意：
+
+observation = {
+    "observation.state": joint_positions,
+    "observation.images.front": front_image,
+    "observation.images.wrist": wrist_image,
+}
+
+action = {
+    "action": target_joint_positions,
+}
+
+在现实项目当中，具体的字典结构会根据Lerobot当前的feature表示方式组织，但是概念上就是要做到：
+
+机器人 → 标准 observation
+标准 action → 机器人
+
+
+
+
+
+
+
+3.相机适配器：
+
+如果使用的是标准相机，那么可以直接复用：
+
+OpenCV
+RealSense
+ZMQ camera
+Reachy2 camera
+
+如果硬件不是标准硬件，需要提供以下功能：
+connect()
+disconnect()
+read()
+async_read()
+read_latest()
+
+相机适配器只负责拿到图像，不负责对图像做resize、tokenizer等等后处理工作。这些都是processor层的工作。
+
+因此具体的边界就是：
+
+Camera.read()
+    └── 返回原始或基础格式图像
+
+GR00T Processor
+    └── resize、crop、normalize、tokenize、构造 VLM 输入
+
+这样以后切换模型的时候就不需要修改相机驱动。
+
+
+
+
+
+4.数据集字段映射到底是什么？
+
+这个是最容易出现问题的地方。我们的数据集可能输出以下字段：
+
+joint_position
+joint_velocity
+motor_current
+wrist_rgb
+front_rgb
+gripper_position
+
+但是lerobot要求把他们整理成统一的数据集字段，例如：
+observation.state
+
+observation.images.front
+
+observation.images.wrist
+
+action
+
+task
+
+可以理解成一个映射：
+
+你们硬件字段                 LeRobot 字段
+
+joint_position        ───►    observation.state
+front_rgb             ───►    observation.images.front
+wrist_rgb             ───►    observation.images.wrist
+target_joint_position ───►    action
+任务描述               ───►    task
+
+这一步不是简单的更改名字，还要确定语义。比如下面几个字段可能维度都是7,但是他们含义完全不一样：
+**““”**
+
+**关节绝对位置
+关节相对位移
+关节速度
+末端位姿增量
+电机控制量**
+
+**““”**
+
+他们不能相互转换
+
+
+
+
+
+5.Groot关心的不是字段名字，而是字段的语义。
+
+Groot1.7最重要的兼容问题是：
+““”
+
+**state 的每一维到底代表什么？
+action 的每一维到底代表什么？**
+
+““”
+
+例如：
+
+`state[0] = 左臂肩关节位置
+state[1] = 左臂肘关节位置
+state[2] = 左臂腕关节位置
+state[3] = 夹爪位置`
+
+一次需要同时定义：
+
+`字段名称
+维度顺序
+物理意义
+单位
+归一化方式
+时间含义`
+
+
+
+
+
+6.GrootProcessor到底在做什么？
+
+这个是Groot适配的核心，负责以下过程：
+
+```
+LeRobot 数据格式
+        ↓
+GR00T 专用输入格式
+        ↓
+GR00T 输出格式
+        ↓
+LeRobot RobotAction
+
+```
+
+它分为两个部分：
+
+a：进入模型之前的Preprocessor
+
+训练或者推理时，原是数据大致是：
+
+```
+observation.state
+observation.images.front
+observation.images.wrist
+task
+action              # 训练时存在，推理时通常不存在
+
+```
+
+GROOT Processor会进行：
+
+```
+图像处理
+    ├── resize
+    ├── crop
+    ├── image normalization
+    └── 转换为视觉模型输入
+
+语言处理
+    ├── task 文本
+    ├── tokenizer
+    ├── attention mask
+    └── conversation/template
+
+状态处理
+    ├── state 对齐
+    ├── padding
+    ├── state mask
+    ├── embodiment 映射
+    └── 统计值处理
+
+动作处理
+    ├── action 对齐
+    ├── padding
+    ├── action mask
+    ├── relative/absolute 转换
+    └── action horizon 处理
+
+```
+
+最终模型接收到的不是简单的：
+
+
+```
+{
+    "observation.state": ...,
+    "observation.images.front": ...,
+}
+
+```
+
+
+
+而是更接近：
+
+```
+{
+    "state": ...,
+    "state_mask": ...,
+    "input_ids": ...,
+    "attention_mask": ...,
+    "pixel_values": ...,
+    "image_grid_thw": ...,
+    "video_grid_thw": ...,
+    "embodiment_id": ...,
+}
+
+```
+
+训来时还会额外包含：
+
+```
+{
+    "action": ...,
+    "action_mask": ...,
+}
+
+```
+
+
+
+
+
+b：模型输出之后的Postprocessor
+
+GROOT输出的通常是动作块[B, 40, action_dim]，而不是单个动作
+
+然后Postprocessor需要进行：
+
+```
+动作截断
+    ↓
+动作反归一化
+    ↓
+relative action → absolute action
+    ↓
+动作维度裁剪
+    ↓
+转换为机器人动作结构
+    ↓
+发送给 Robot.send_action()
+
+```
+
+所以实际的流程是：
+
+```
+GR00T 输出：
+[40, 132]
+
+根据真实 action_dim 截取：
+[40, 7]
+
+根据 action 表示解码：
+关节相对动作 → 关节绝对目标
+
+取当前需要执行的动作步：
+第 1 步或前 N 步
+
+最终发送：
+[7] 的 RobotAction
+
+```
+
+这也就是为什么chunk_size和n_action_steps很重要
+
+
+
+
+
+
+
+
+
+7.ActionChunk到底是什么？
+
+VLA通常不是一次预测一个动作，而是预测未来的一段动作：当前观测 → 预测未来 40 步动作
+
+形状大致是：[B, T, A]
+
+其中：
+
+B = batch size
+T = action horizon
+A = action dimension
+
+
+
+Lerobot rollout时不一定一次性执行全部40步动作，而是：
+
+预测一整个动作块
+执行前 N 步
+重新读取 observation
+再次预测
+
+因此我们的机器人的控制频率必须和GROOT的action horizion必须协调
+
+
+
+
+
+8.关于max_state_dim=132是什么意思？
+
+这表示GROOT的统一state容器最多容纳132维。如果实际机器人的状态维度不足132维度，则内部会被重新整理为：
+
+```
+[j1, j2, j3, j4, j5, j6, gripper, 0, 0, ..., 0]
+```
+
+也就是说7个真实的维度+padding到模型容器。同时还会生成：state_mask。用于告诉模型：哪些模型是真实的、哪些维度只是padding。
+
+但是需要注意：padding只能解决维度问题，无法解决语义问题。因此如果7个维度的含义和模型预期的不一致，单纯的padding没有意义。
+
+
+
+
+
+9.max_action_dim=132是什么意思？
+
+假设我的机器人的action维度是：
+
+```
+7 维：
+[j1, j2, j3, j4, j5, j6, gripper]
+```
+
+GROOT可以将其扩展到统一的action容器
+
+```
+7 个真实动作维度
++ 其余 padding 维度
+```
+
+然后通过：action_mask
+
+说明哪些维度才是真正参与训练和推理。
+
+所以这两个参数：max_state_dim、max_action_dim
+
+更像是模型的统一容量上限，而不是机器人实际的输入和输出维度。
+
+
+
+
+
+
+
+10. embodiment_tag到底是什么？
+
+这个是最容易被误解的地方。embodiment_tag不是简单的“机器人名字”，而是更接近：“一套机器人输入输出语义和预处理规则的标识”。
+
+它可能关联：
+
+```
+state 字段顺序
+action 字段顺序
+state/action 维度
+动作表示
+归一化统计
+相机/视频模态
+动作解码方式
+checkpoint processor 配置
+```
+
+因此：
+
+```
+so101
+my_robot
+new_embodiment
+```
+
+这些字符串本身不会自动让GROOT理解你的机器人。真正重要的是：这个 embodiment 对应的 checkpoint、statistics 和 processor_config。
+
+当前的GROOT适配器会读取checkpoint旁边的配置和统计文件，例如：
+
+processor_config.json
+statistics.json
+
+这些文件共同定义
+
+```
+state 如何预处理
+action 如何预处理
+输入模态有哪些
+动作如何解码
+哪些维度有效
+```
+
+所以使用新的机器人时，通常不能只修改：
+
+```
+embodiment_tag = "new_embodiment"
+```
+
+还需要确保：
+
+```
+训练数据按照该 embodiment 组织
+checkpoint 按该 embodiment 训练或微调
+statistics 与数据匹配
+processor_config 与模型匹配
+```
+
+
+
+
+
+
+
+11.自己的 7 维机器人应该如何判断兼容性
+
+可以分三种情况。
+
+情况 A：完全兼容已有 embodiment
+
+例如：
+
+```text
+state 的含义一致
+action 的含义一致
+关节顺序一致
+单位一致
+动作表示一致
+```
+
+那么你们可能只需要：
+
+```text
+实现 Robot
+实现 Camera
+制作数据集
+配置对应 embodiment
+```
+
+不需要修改 GR00T 模型。
+
+---
+
+情况 B：维度不同，但语义可以映射
+
+例如已有模型使用：
+
+```text
+末端相对动作 + 夹爪
+```
+
+你们机器人使用：
+
+```text
+关节绝对位置 + 夹爪
+```
+
+这时可以通过 Processor 增加：
+
+```text
+末端动作 → 逆运动学 → 关节动作
+```
+
+或者：
+
+```text
+关节动作 → 末端动作
+```
+
+但这已经不是简单字段重命名，需要明确：
+
+```text
+坐标系
+单位
+控制频率
+动作边界
+相对/绝对定义
+```
+
+这种情况下，通常需要写自定义 action processor。
+
+---
+
+情况 C：语义完全不同
+
+例如已有模型面向：
+
+```text
+机械臂关节控制
+```
+
+你们的机器人是：
+
+```text
+移动底盘 + 双臂 + 腰部 + 灵巧手
+```
+
+那么即使总维度不超过 132，也不能直接复用已有 embodiment。
+
+这时通常需要：
+新的 embodiment 定义
+新的数据统计
+新的 processor 配置
+新的微调数据
+甚至新的 action head
+
+
+
+
+
+12.最小无触觉基线到底需要改哪些代码
+
+按照优先级排序如下：
+a：必须实现
+
+```
+1. Robot 适配器
+2. Camera 适配器，若现有相机不支持
+3. observation/action feature 定义
+4. 数据集采集或转换逻辑
+5. GR00T 对应的 config
+6. 训练和推理验证
+```
+
+可能需要：
+
+```
+1. 自定义 observation processor
+2. 自定义 action processor
+3. 自定义 embodiment 映射
+4. 自定义数据集转换脚本
+5. 自定义 teleoperator
+```
+
+不需要修改：
+
+```
+1. GrootPolicy 主干
+2. GR00T Transformer
+3. action head
+4. LeRobot 训练循环
+5. rollout 主循环
+6. LeRobotDataset 核心实现
+```
+
+只要你们的机器人数据能映射到标准 observation/action 契约，很多情况下只需要新增：
+
+```text
+robots/<your_robot>/
+cameras/<your_camera>/
+```
+
+再加上数据集配置和 Processor 配置。
+
+
+
+
+
+13.对模型探索阶段最实用的判断表
+
+只有已有 LeRobot 数据集，想测试 GR00T | 主要是配置，不需要写模型 |
+| 有自有机器人，但数据语义和已有 embodiment 一致 | Robot 适配器 + 数据采集 |
+| 自有机器人 state 维度不同，但语义可转换 | Robot 适配器 + Processor |
+| action 表示不同 | 自定义 action processor |
+| 相机类型不同 | Camera 适配器 |
+| 有触觉但暂时不输入模型 | 采集和存储模块，模型不改 |
+| 触觉作为普通 state 输入 | Dataset schema + Processor + embodiment/checkpoint |
+| 触觉作为独立模态输入 | 新的模型输入处理和模型结构 |
+| 完全不同的 VLA 模型 | PolicyConfig + PolicyModel + pre/post processor
+
+
+
+
+
+
+
+14. 当前阶段你们最应该建立的不是代码，而是兼容性表
+
+对于每一个准备测试的模型，建立一张表：
+
+| 项目                         | GR00T N1.7 | ACT | SmolVLA | 你们自己的 VLA |
+| -------------------------- | ---------- | --- | ------- | --------- |
+| 图像输入                       |            |     |         |           |
+| 是否需要语言                     |            |     |         |           |
+| state 格式                   |            |     |         |           |
+| action 格式                  |            |     |         |           |
+| action 是 absolute/relative |            |     |         |           |
+| action horizon             |            |     |         |           |
+| 是否支持多相机                    |            |     |         |           |
+| 是否支持自定义 embodiment         |            |     |         |           |
+| checkpoint 附带统计            |            |     |         |           |
+| 是否支持触觉                     |            |     |         |           |
+| 需要自定义 Processor 吗          |            |     |         |           |
+| 需要改 PolicyModel 吗          |            |     |         |           |
+
+这张表可以帮助你们区分：
+
+```text
+模型差异
+硬件差异
+数据差异
+Processor 差异
+真正需要改模型的地方
+```
+
+---
+
+## 最终可以把这部分总结成一句话
+
+在你们当前的模型探索阶段，接入 GR00T N1.7 的最小任务不是“重新实现一个 VLA”，而是：
+
+```text
+把自有机器人包装成 LeRobot Robot，
+把自有数据整理成稳定的数据契约，
+把 state/action 映射到 GR00T 的 embodiment，
+复用现有 GrootPolicy 和 Processor，
+先完成训练—推理—机器人执行闭环。
+```
+
+只有当你们确认：
+
+```text
+无触觉 GR00T 基线已经跑通
+触觉数据确实能提升任务性能
+```
+
+之后，才值得进入 Processor 扩展或模型结构修改阶段。
+
+
+
+
+
+
+
+
+
+## 进行一个模型实验（可选）
