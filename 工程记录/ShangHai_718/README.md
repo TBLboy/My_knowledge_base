@@ -2,19 +2,14 @@
 
 上海项目集合：包含机器人烹饪控制 APP、Dexbot ROS2 工作空间以及切黄瓜相关开发记录。
 
-## 汇总范围
+## 整理统计
 
-- 来源顶层目录：`/home/tbl/Project/ShangHai_718`
-- 收集到的 `.project-log` 目录：1 个
-- 收集到的文件：25 个
-- 文件总大小：108,500 字节
+- 原始日志副本：1 个
+- 去重后唯一日志：1 个
+- 删除完全重复副本：0 个
 
-## 目录约定
+## 日志目录
 
-- 如果来源工程根目录直接包含 `.project-log`，副本位于本目录的 `.project-log/`。
-- 如果来源日志位于嵌套工程或历史副本中，副本位于 `project-logs/` 下，并保留来源相对路径，避免同名日志互相覆盖。
-- 原始工程文件未移动或删除；本目录是独立副本。
+以下日志目录均为同一级别；目录内部保留 `.project-log` 原有文件和结构：
 
-## 来源日志清单
-
-- `ShangHai_718/dex_app/.project-log` → `ShangHai_718/project-logs/dex_app/.project-log`（25 个文件，108,500 字节）
+- `001__dex_app` ← `ShangHai_718/dex_app/.project-log`；重复来源 1 个；SHA256 `1b084493f595ee36`

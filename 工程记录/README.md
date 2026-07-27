@@ -1,33 +1,38 @@
-# 工程记录汇总
+# 工程记录汇总（扁平去重版）
 
-本目录汇总 `/home/tbl/Project` 下各来源工程的 `.project-log` 目录。每个外层目录对应一个来源顶层工程/工程集合，目录内保留原始日志内容和相对来源路径。
+本目录对原有工程记录进行了**同层级整理和完全重复去重**。每个外层工程目录下，唯一日志均直接作为同级子目录保存；不再保留 `project-logs/.../.project-log` 的嵌套结构。
 
-## 汇总统计
+## 统计
 
-- 来源 `.project-log` 目录：441 个
-- 外层工程分组：12 个
-- 日志文件：4,943 个
-- 文件总大小：75,362,194 字节
+- 原始 `.project-log` 副本：441 个
+- 去重后唯一日志：87 个
+- 删除的完全重复副本：354 个
+- 去重后日志文件：1,656 个
+- 去重后文件总大小：31,680,056 字节
+
+## 目录规则
+
+- 每个工程目录下的日志目录均为同一级别，例如 `001__dexbot_ros2_ws__src__cuttofo_xcore/`。
+- 日志目录内部仍保留 `.project-log` 原有内容结构；只扁平化日志目录之间的外层嵌套。
+- 仅删除内容完全一致的日志副本；内容有任何差异的版本均保留。
+- `整理清单.tsv` 记录每个保留日志的来源、哈希、文件数和重复来源。
+- `重复删除清单.tsv` 记录被去掉的重复来源及其对应保留目录。
 
 ## 工程分组
 
-| 工程分组 | `.project-log` 数量 | 文件数量 | 字节数 | 说明 |
-|---|---:|---:|---:|---|
-| [ShangHai_718](./ShangHai_718/README.md) | 1 | 25 | 108,500 | 上海项目集合：包含机器人烹饪控制 APP、Dexbot ROS2 工作空间以及切黄瓜相关开发记录。 |
-| [Transformer-Koopman](./Transformer-Koopman/README.md) | 1 | 14 | 46,398 | PatchTST/Transformer-Koopman 非线性系统建模与分层 LQR 控制研究，面向柔性机械臂和软体机器人平台。 |
-| [boss_electrics](./boss_electrics/README.md) | 1 | 53 | 119,676 | 老板电器智能厨房机器人方案研究，重点涉及锅把特征检测、视觉伺服、厨房场景和机器人—厨电协同。 |
-| [cucumber](./cucumber/README.md) | 183 | 2,459 | 28,785,701 | 切黄瓜/切豆腐机器人 ROS2 工程及其大量历史副本，包含视觉、抓刀、机械臂控制、阶段流程和 GUI 等模块记录。 |
-| [data_collect](./data_collect/README.md) | 2 | 71 | 871,945 | 机器人训练数据消费与质量控制工程，包含数据采集、MinIO 数据资产、人工质检和自动指标评估相关记录。 |
-| [gr00t-finetune](./gr00t-finetune/README.md) | 2 | 76 | 11,751,228 | NVIDIA Isaac GR00T N1 视觉—语言—动作模型相关工程，包含机器人数据格式、微调、推理和评测记录。 |
-| [lerobot_v1.0](./lerobot_v1.0/README.md) | 1 | 62 | 111,200 | Hugging Face LeRobot 机器人学习库的本地工程记录，涉及数据集、策略训练、评测和机器人学习基础设施。 |
-| [tofu](./tofu/README.md) | 226 | 1,882 | 30,492,281 | Dexbot 双臂 ROS 2 工作空间，主线为结合视觉引导、灵巧手和双臂协同的切豆腐演示。 |
-| [vibe-coding](./vibe-coding/README.md) | 1 | 62 | 107,150 | 个人 Vibe Coding 全局工作流工程，包含项目日志、Skills、Loop Control、验证和工作流自动化建设记录。 |
-| [worktrees](./worktrees/README.md) | 1 | 24 | 24,747 | Git worktree 中的工程工作副本记录；当前发现的日志来自 ShangHai_718 工作树。 |
-| [人物画像](./人物画像/README.md) | 1 | 12 | 21,564 | 个人人物画像与 AI 工作架构工程，围绕具身智能职业成长、证据化记录和 Skill 体系建设。 |
-| [切黄瓜项目跟踪](./切黄瓜项目跟踪/README.md) | 21 | 203 | 2,921,804 | 切黄瓜机器人项目跟踪资料及多个历史工作空间副本，记录 ROS2 流程调试、阶段推进和参数优化。 |
+| 工程分组 | 原始副本 | 去重后 | 删除重复 |
+|---|---:|---:|---:|
+| [ShangHai_718](./ShangHai_718/README.md) | 1 | 1 | 0 |
+| [Transformer-Koopman](./Transformer-Koopman/README.md) | 1 | 1 | 0 |
+| [boss_electrics](./boss_electrics/README.md) | 1 | 1 | 0 |
+| [cucumber](./cucumber/README.md) | 183 | 34 | 149 |
+| [data_collect](./data_collect/README.md) | 2 | 2 | 0 |
+| [gr00t-finetune](./gr00t-finetune/README.md) | 2 | 2 | 0 |
+| [lerobot_v1.0](./lerobot_v1.0/README.md) | 1 | 1 | 0 |
+| [tofu](./tofu/README.md) | 226 | 35 | 191 |
+| [vibe-coding](./vibe-coding/README.md) | 1 | 1 | 0 |
+| [worktrees](./worktrees/README.md) | 1 | 1 | 0 |
+| [人物画像](./人物画像/README.md) | 1 | 1 | 0 |
+| [切黄瓜项目跟踪](./切黄瓜项目跟踪/README.md) | 21 | 7 | 14 |
 
-## 详细映射
-
-完整的来源路径、目标路径、文件数和字节数见同目录的 `汇总清单.tsv`。
-
-> 说明：本次收集排除了 `/home/tbl/Project/.project-log`（本次汇总任务自身的工作流日志）和目标目录 `工作经历汇总/工程记录`，以避免循环收集。
+> 去重依据：日志目录内的相对文件路径、文件类型、文件大小和文件内容 SHA-256 完全一致。
