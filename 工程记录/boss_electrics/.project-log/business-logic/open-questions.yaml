@@ -22,7 +22,7 @@ questions:
   answered_at: null
 - id: Q-002
   title: 倾倒过程是否需要双臂协同
-  status: open
+  status: deferred
   authority: C
   impact: high
   uncertainty: high
@@ -30,16 +30,15 @@ questions:
   related_business_logic:
   - BL-PLATING-001
   related_tasks:
-  - TASK-002
-  - TASK-004
-  context: 影响任务分解、同步控制和碰撞规划。
-  recommendation: 确认餐盘是否需要辅助固定，并以单臂最坏负载评估为准
+  - TASK-005
+  context: V1 已确认不加入右手锅铲辅助；其他双臂协同需求不阻塞 V1，延期到 V2 根据单臂最坏负载、落料完整性和碰撞风险评估。
+  recommendation: V1 先完成左手单臂闭环，V2 再确认是否需要右手锅铲或其他双臂协同
   alternatives: []
-  answer: null
+  answer: V1 不考虑右手锅铲辅助；双臂协同作为 V2 迭代问题，不纳入 V1 验收。
   source_refs:
   - .project-log-legacy-20260728/current-session.md
   created_at: '2026-07-22'
-  answered_at: null
+  answered_at: '2026-07-28'
 - id: Q-003
   title: 机器人关节力矩接口和采样频率
   status: open
@@ -99,7 +98,7 @@ questions:
   answered_at: null
 - id: Q-006
   title: 固体落料完整性、卡料和盘外洒落的观测信号
-  status: open
+  status: answered
   authority: C
   impact: critical
   uncertainty: high
@@ -109,14 +108,14 @@ questions:
   related_tasks:
   - TASK-003
   - TASK-004
-  context: 重量变化不能单独证明固体已完整落盘。
-  recommendation: 定义人工确认、视觉信号或保守状态机的验收组合
+  context: 用户明确 V1 当前只打通动作流程，不增加菜品完整落盘、卡料或洒落的自动验收规则。
+  recommendation: 当前 V1 不引入落料验收信号；后续需要时再单独定义视觉、人工或其他反馈规则
   alternatives: []
-  answer: null
+  answer: V1 不加落料完整性验收规则，只验证动作流程能够执行到既定节点。
   source_refs:
   - .project-log-legacy-20260728/current-session.md
   created_at: '2026-07-22'
-  answered_at: null
+  answered_at: '2026-07-28'
 - id: Q-007
   title: 灵巧手型号、触觉/夹持力接口和专用夹具许可
   status: open
@@ -155,3 +154,142 @@ questions:
   - .project-log-legacy-20260728/current-session.md
   created_at: '2026-07-22'
   answered_at: null
+- id: Q-009
+  title: V1 是否启用抓取确认步骤
+  status: answered
+  authority: C
+  impact: high
+  uncertainty: medium
+  rework_cost: high
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-007
+  - TASK-004
+  context: 用户已确认当前 V1 初版直接跑无抓取确认流程，抓取确认不进入本轮实现；后续迭代再考虑。
+  recommendation: 从 V1 初版状态链和验收条件中移除抓取确认，仅保留后续迭代入口
+  alternatives: []
+  answer: 当前 V1 初版不执行抓取确认，先跑通闭合、提锅、底盘移动、倾倒和放回；后续迭代再考虑抓取确认。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 流程
+  created_at: '2026-07-28'
+  answered_at: '2026-07-28'
+- id: Q-010
+  title: 左臂抓取 TCP、锅具 TCP 和抓取偏置定义
+  status: answered
+  authority: B
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  context: 用户确认抓取偏置表达在机器人中心坐标系 C 下，并沿锅把主轴 PCA 向量方向施加；抓取 TCP 和锅具 TCP 均使用可参数化的位置与姿态定义。
+  recommendation: 使用抓取 TCP 和锅具 TCP 的参数化位姿；将抓取偏置建模为 C 下沿锅把 PCA 方向的标量偏置
+  alternatives: []
+  answer: grasp_target_C = grasp_point_C + grasp_offset_pca * pca_axis_C；左臂抓取 TCP 与锅具 TCP 的位置、姿态均作为参数配置，锅具 TCP 是锅上的固定参考点。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 流程
+  created_at: '2026-07-28'
+  answered_at: '2026-07-28'
+- id: Q-011
+  title: 餐盘定位后的倾倒目标点计算
+  status: answered
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  context: 用户已确认 V1 倾倒点由机器人中心坐标系 C 下的餐盘中心点加同一坐标系下 xyz 三轴可调偏置得到。
+  recommendation: 采用 pour_point_C = plate_center_C + pour_offset_C；后续只需确认接口字段、参数管理和底层坐标转换
+  alternatives: []
+  answer: V1 倾倒点为机器人中心坐标系下餐盘中心点加相对于机器人中心坐标系 xyz 的三个可调偏置量；所有业务坐标统一使用机器人中心坐标系。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 流程
+  created_at: '2026-07-28'
+  answered_at: '2026-07-28'
+- id: Q-012
+  title: 预录制增量倾倒动作的承载方式
+  status: answered
+  authority: B
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  context: 用户确认 V1 采用锅具 TCP 坐标系下的预录制增量动作回放；具体参数值和文件承载方式属于技术选型输入。
+  recommendation: 以锅具 TCP 为局部参考系记录并回放增量动作，具体格式和参数在技术选型阶段确定
+  alternatives: []
+  answer: V1 倾倒动作采用锅具 TCP 坐标系下的录制与回放方式。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 流程
+  created_at: '2026-07-28'
+  answered_at: '2026-07-28'
+- id: Q-013
+  title: 放回原位和 home 位置定义
+  status: deferred
+  authority: C
+  impact: medium
+  uncertainty: high
+  rework_cost: medium
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  context: 用户明确放回规则或轨迹暂不讨论，不得阻塞前段抓取、提锅、底盘协同和倾倒流程；具体放回实现后续确定。
+  recommendation: 当前先保留放回步骤的扩展接口或占位，后续再决定规则放置还是轨迹回放
+  alternatives: []
+  answer: 放回锅具和具体 home 轨迹暂不作为当前前段流程的阻塞项，后续单独确定。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 流程
+  created_at: '2026-07-28'
+  answered_at: null
+- id: Q-014
+  title: 抓取失败和倾倒异常的回退语义
+  status: answered
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-007
+  context: 用户明确当前 V1 暂不加入异常检查和异常处理，只在流程中预留扩展位置。
+  recommendation: V1 先不实现异常分支、自动重试或回退动作；仅保留后续扩展接口
+  alternatives: []
+  answer: 当前 V1 不加入异常检查和处理，只预留异常处理位置；流程跑通后再单独设计。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 流程
+  created_at: '2026-07-28'
+  answered_at: '2026-07-28'
+- id: Q-015
+  title: 机器人中心坐标系 C 的原点、轴向和时序语义
+  status: answered
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-007
+  - TASK-008
+  context: 用户确认代码已经基于左右臂各自 base 坐标系的相机标定文件计算统一中心坐标系 C，用于把左右臂放入同一坐标系并支持双臂协同。
+  recommendation: 复用代码已有中心坐标系和标定链路，不另设业务坐标系；技术选型阶段核对其配置入口、变换方向和运行时使用方式。
+  alternatives:
+  - 使用随底盘实时更新的中心坐标系，适合底盘运动期间的动态目标，但需要明确时间戳和同步语义
+  - 继续使用某一机械臂基座作为中间基准，不符合已确认的统一中心坐标系规则，不推荐
+  answer: 机器人中心坐标系 C 沿用代码中由左右臂 base 坐标系及相机标定文件计算出的统一坐标系，服务于左右臂协同；业务目标统一在 C 下表达。
+  source_refs:
+  - 用户于 2026-07-28 补充 V1 坐标规则
+  created_at: '2026-07-28'
+  answered_at: '2026-07-28'

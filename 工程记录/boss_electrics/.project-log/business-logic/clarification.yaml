@@ -1,102 +1,309 @@
 version: '0.4'
-status: passed
+status: active
 functional_business_logic:
   actors:
+  - 操作员/任务发起方
+  - 上一个环节任务/子任务
   - 双臂移动机器人
-  - 灵巧手
+  - 左臂灵巧手
+  - 感知组模型提供方
+  - 底盘控制组
+  - 两个仓库共同开发团队
   - 自动翻炒锅 KP200
   - 餐盘
   scenarios:
-  - 固定场景下抓锅、倾倒入盘、放回原位
+  - V1 作为中间环节，在上一个环节完成并移交后，锅把朝左，由左手抓锅、移动、倾倒、必要轻微抖动、放回原位
+  - V2 在 V1 闭环稳定后评估右手锅铲抓取、放置和辅助动作
   rules:
-  - 抓取确认未输出 grasp_confirmed 时不得转运或倾倒。
-  - 倾倒过程必须避免高温区、碰撞和明显洒落。
+  - 场景检查通常由上游环节完成；本子任务保留可选场景检查占位，不把它作为当前启动前置。
+  - 感知模型由感知组提供，本子任务只订阅锅把中心、抓取点、主轴方向及有效性等约定信息。
+  - 抓取目标由感知抓取点沿锅把主轴 PCA 向量施加可调偏置计算，左臂通过已标定且参数化的抓取 TCP 以固定姿态到达目标。
+  - V1 倾倒点由机器人中心坐标系 C 下的餐盘中心点加 C 下 xyz 三轴可调偏置得到：pour_point_C = plate_center_C + pour_offset_C。
+  - 所有业务目标、中间位姿和偏置统一在机器人中心坐标系 C 下表达；机械臂基坐标系只允许作为底层执行时的转换结果。
+  - 当前 V1 初版不执行抓取确认，左手闭合后直接进入提锅和准备倾倒；抓取确认作为后续迭代预留，不属于当前 V1 基础流程。
+  - 左手抓住锅把后进入准备倾倒姿态并保持，底盘移动期间左臂不改变该姿态。
+  - 倾倒阶段使用参数化锅具 TCP 与目标点的转换，移动到倾倒位置时保持 TCP 姿态不变；倾倒动作采用锅具 TCP 坐标系下的预录制增量动作回放。
+  - V1 不依赖右手锅铲辅助，右手锅铲不作为 V1 前置条件或验收条件。
+  - V1 当前只打通动作流程，不增加菜品完整落盘、卡料或洒落的验收规则。
+  - V1 暂不实现异常检查、自动重试和回退处理，仅在流程中预留后续扩展位置。
   state_transitions:
-  - safe-supported → grasping → grasp-confirmed → transferring/pouring → returned
-    or human-intervention
+  - handoff-ready → optional-scene-check → perception-subscribed → grasp-target-calculated → hand-closed → lift-to-pour-ready → base-positioned → plate-target-calculated → pour-positioned → pouring → returned → hand-opened → home
+  - hand-closed → lift-to-pour-ready；后续版本可在 hand-closed 与 lift-to-pour-ready 之间插入抓取确认
+  - perception-not-ready → wait/not-started
+  - future-error-handling-extension：在 V1 主流程跑通后补充异常检查、停止、重试和人工接管语义
+  - V1-completed → V2-evaluation
   exceptions:
-  - 抓取失败、卡料、盘位移位、超力矩、通信丢失和过量洒落
+  - 当前 V1 不实现上述异常分支，仅保留异常处理扩展位置
+  - 右手锅铲无法稳定抓取、放置、进入锅内或造成碰撞（V2）
   boundaries:
-  - 第一版固定锅位、盘位、菜量和机器人初始状态；不承诺泛化、双臂协同或全轨迹自适应力控。
+  - V1 固定锅位、盘位、锅把朝向、菜量范围、机器人初始状态、抓取姿态和倾倒动作基线。
+  - 感知模型训练、推理和锅把特征识别不属于本子任务；本子任务负责订阅和消费其输出。
+  - 底盘移动控制由底盘组支持；本子任务负责定义左臂保持准备倾倒姿态的协同要求。
+  - 抓取 TCP 和锅具 TCP 的位置、姿态均可参数化；抓取偏置数值属于待填写参数，放回规则或轨迹及 home 位置后续确定，均不阻塞当前前段流程。
+  - 抓取确认不进入当前 V1 实现，后续是否增加及其失败回退另立迭代任务。
+  - V1 不承诺右手锅铲辅助、生产级泛化、全轨迹自适应力控或默认双臂协同，也不加入当前版本的落料验收和异常处理。
+  - 当前澄清只冻结业务边界，不冻结未来框架、库、控制器或重构方案。
 technical_business_logic:
   current_implementation_facts:
-  - 当前项目目录主要包含方案文档和 Project Log，没有已迁移的产品代码实现。
+  - kitchen_robot_home 是 ROS 2 Humble 主工作空间，包含 dexbot_interfaces、dexbot_task_planner、dexbot_bringup、配置和 SDK 资源。
+  - dexbot_task_planner 订阅 perception/scene，提供 StartTask、CheckPick、PauseTask、GetTaskStatus 服务，并通过 motion_executor/execute_task action 调用执行层。
+  - TaskPlannerNode 按 task_type 选择 policy；policy 返回 PlannedStep 或 BimanualStep；planner 将步骤转换为 ExecuteTask.Goal。
+  - robot_motion_executor 是独立 ROS 2 Python 包，提供 ExecuteTask action server，并注册 API、Skill 和 Controller。
+  - MotionExecutor 将高层目标映射为 MotionPrimitive，再调用 robot_driver 的移动、夹爪、灵巧手状态和停止接口。
+  - ExecuteTask 当前支持单臂、双臂并发、双臂协调同步，以及 control=True 控制器路径和 resume_restart 重启标记。
+  - 当前两个仓库是独立 Git 工作树，不是主仓库内的 Git submodule；主仓库 README 同时描述部分执行层为已安装 deb 黑盒。
+  - 两个仓库由团队共同开发；后续产品代码变更必须按主仓库与执行仓库的职责边界协同落地，不能默认只有单一开发者维护。
+  - 感知组将提供锅把识别模型和感知信息；当前子任务的技术事实范围是订阅和使用结果，不包含模型实现。
+  - 底盘组负责底盘移动能力；V1 要求底盘移动期间左臂保持准备倾倒姿态。
+  - 机器人中心坐标系由左右臂 base 坐标系与相机标定文件计算得到，现有脚本约定中心坐标轴为 X 前、Y 左、Z 上。
+  - '`robot_params.yaml` 已提供 `toolset.end` 和 `toolset.ref` 的位置/姿态配置入口，可作为 TCP 和相关工件坐标参数化的代码事实依据。'
+  - robot_motion_executor 的 PerceptionReceiver 已订阅 `perception/scene`，只缓存最新 ScenePerception，并可按 scene_valid 判断当前场景是否有效；这可承载“订阅感知结果”，但不能替代锅把语义字段契约。
+  - 两仓库现有测试主要是版权、flake8 和 pep257 检查，未发现针对 V1 锅把抓取/倾倒闭环的行为测试。
   interface_contracts:
-  - 抓取确认需要输出 grasp_confirmed/grasp_unverified/grasp_rejected。
-  - 倾倒反馈依赖关节 effort/力矩或腕部 F/T 接口。
+  - ScenePerception 提供 scene_valid、scene_id、objects 和 pointcloud；对象通过 ObjectDetection 的位姿和类别进入 WorldState。
+  - TaskTarget 当前承载 object_id、class_name、grasp/place pose、关节目标、手部 action_name、arm_type 和 check pose。
+  - ExecuteTask.Goal 以 task_id、task_type、target 为核心，并可附带 co_target、execution_mode、sync_points、control 输入和 resume_restart。
+  - MotionPrimitive 当前覆盖笛卡尔移动、线性移动、夹爪动作、关节移动、灵巧手角度/力矩读取设置、触觉抓取、路径录制等类型。
+  - 当前业务新增两个坐标语义：左臂抓取 TCP 用于到达锅把抓取目标，锅具 TCP 用于将锅上参考点转换到倾倒目标；所有业务目标先在机器人中心坐标系表达，现有消息契约尚未明确表达坐标系和两个 TCP。
+  - V1 倾倒目标的业务公式已确认，但现有代码没有 plate_center_C、pour_offset_C 或 frame_id 数据契约。
+  - 当前 V1 约定抓取姿态暂时固定，抓取目标由感知抓取点加可调偏置得到；灵巧手闭合关节角度和力矩参数由后续执行输入补充。
+  - 当前 V1 倾倒动作优先考虑预先录制的增量动作播放；录制格式、相对坐标系、播放入口和停止语义尚未选型。
+  - 现有 PathRecordSkill 可按名称在控制器侧录制路径，MotionPrimitive 有 RECORD_PATH 类型；当前未确认该能力是否已经提供面向 V1 的增量回放 ExecuteTask 入口。
+  - robot_driver 的真实服务语义、反馈粒度、力矩/触觉接口和 stop latch 行为需要结合驱动仓库或设备实测确认。
   data_and_state_rules:
-  - 抓取确认必须由接触、承载和无明显滑移三类证据组合。
+  - planner 的 WorldState 保存最新感知对象、picked/placed 集合、整体机器人状态和左右臂独立状态。
+  - planner 以当前 policy 状态和 goal handle 推进任务；executor 以 primitive 顺序推进单臂任务，双臂路径使用独立结果和命名屏障。
+  - 当前代码没有明确的锅把中心、抓取点、锅把主轴、两个 TCP、抓取偏置、可选 grasp_confirmed 结果和菜品落盘完整性数据契约。
   consistency_and_concurrency:
-  - 锅具仍有安全支撑时完成抓取确认；异常时降回支撑面并停止。
+  - planner 单臂默认按一个 goal 顺序执行；双臂模式由 execution_mode 和 co_target 驱动。
+  - executor 对双臂分别构建 primitive，并在 sync_barrier 处等待，取消或失败会触发对应结果失败。
+  - planner 通过 goal_epoch、忙标志和取消回调避免处理过期 goal，但 V1 业务级重试和幂等语义尚未定义。
+  - 当前业务要求底盘移动与左臂保持姿态协同，但现有双臂执行模式不等同于底盘-机械臂协同契约，尚未确认承载方式。
   external_constraints:
-  - 厨房高温、油污、台面/灶具碰撞和设备接口不统一。
+  - ROS 2 Humble、机器人驱动服务、感知消息、灵巧手接口和真实厨房安全边界是当前系统约束。
+  - 主工作空间 launch 中 motion_executor 和 task_planner 默认启动，但感知节点和部分安全节点当前存在注释或延迟启动配置，需要运行时核实。
   compatibility_constraints:
-  - 目标环境为双臂 7-DOF 机器人、灵巧手和 ROS 2/MoveIt 2 体系。
+  - 未来 V1 需要同时兼容主仓库的接口/任务规划边界和执行仓库的 Skill/MotionPrimitive 边界。
+  - 技术选型不能绕过既有 ExecuteTask、TaskTarget、MotionPrimitive 和 robot_driver 服务契约，除非先记录接口变更决策。
+  - 两个仓库共同开发意味着接口、版本、测试和发布边界需要在后续架构决策中共同维护。
 alignment:
-  confirmed_matches: []
-  conflicts: []
+  confirmed_matches:
+  - id: ALIGN-MATCH-001
+    type: confirmed-match
+    summary: 既有架构已经把任务选择、技能分解和机器人驱动调用分层，符合后续在两个仓库分工扩展的方向。
+    status: accepted
+    authority: B
+    evidence:
+    - kitchen_robot_home/README.md
+    - robot_motion_executor/README.md
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - id: ALIGN-MATCH-002
+    type: confirmed-match
+    summary: 既有单臂执行路径和抓取检查服务可以作为 V1 闭环的技术承载候选，但尚未证明满足锅把承载确认语义。
+    status: accepted
+    authority: B
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+    - kitchen_robot_home/src/dexbot_interfaces/srv/CheckPick.srv
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - id: ALIGN-MATCH-003
+    type: confirmed-match
+    summary: 现有执行层具备灵巧手角度/力矩设置、控制器和路径录制相关能力，可作为用户提出的闭合参数、准备姿态和录制增量动作的技术事实候选，但具体承载尚未选型。
+    status: accepted
+    authority: B
+    evidence:
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  - id: ALIGN-MATCH-004
+    type: confirmed-match
+    summary: 执行仓库已有 PerceptionReceiver 对最新感知场景进行订阅和有效性判断，与本子任务消费感知组结果的职责相符；锅把字段仍需由接口契约补齐。
+    status: accepted
+    authority: B
+    evidence:
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/core/perception_receiver.py
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+  conflicts:
+  - id: ALIGN-CODE-001
+    type: missing-implementation
+    summary: 现有 task_type 和 Skill 注册中未发现 V1 锅把抓取、准备倾倒、底盘协同、移动倾倒、轻微抖动和放回原位的完整业务任务链；抓取确认也尚未形成可选插槽语义。
+    status: open
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - id: ALIGN-CODE-002
+    type: missing-implementation
+    summary: TaskTarget 目前是通用抓放目标，尚未表达感知锅把字段、抓取偏置、两个 TCP、可选抓取确认结果、底盘协同状态和菜品落盘验收信号。
+    status: open
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+    - .project-log/business-logic/atoms.yaml
+  - id: ALIGN-CODE-006
+    type: missing-implementation
+    summary: 当前主链没有底盘移动 action/service 与左臂保持准备倾倒姿态的业务同步契约；ExecuteTask 的双臂同步能力不能直接证明底盘-机械臂协同已实现。
+    status: open
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - id: ALIGN-CODE-007
+    type: traceability-gap
+    summary: PathRecordSkill 和 RECORD_PATH 原语支持路径录制，但尚未找到 V1 锅具 TCP 坐标系下增量倾倒回放的完整任务契约、停止语义和验收证据。
+    status: open
+    authority: B
+    evidence:
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - id: ALIGN-MATCH-005
+    type: confirmed-match
+    summary: V1 倾倒目标点的业务规则已由用户确认：机器人中心坐标系下的餐盘中心点叠加同一坐标系下的 xyz 可调偏置；该规则独立于底层机械臂执行坐标。
+    status: accepted
+    authority: C
+    evidence:
+    - 用户于 2026-07-28 补充 V1 倾倒点和统一坐标系规则
+    - .project-log/business-logic/atoms.yaml
+  - id: ALIGN-CODE-008
+    type: traceability-gap
+    summary: 当前 ScenePerception、TaskTarget、ExecuteTask 和 Pose3d 未形成统一机器人中心坐标系的 frame_id/坐标契约；部分执行层文档仍以 base frame 或机械臂执行坐标描述。
+    status: open
+    authority: B
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+    - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+    - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/pose3d.py
+  - id: ALIGN-CODE-003
+    type: constraint-conflict
+    summary: 主仓库文档将 Motion Executor 描述为 deb 黑盒，但当前工作目录同时存在其独立源码仓库；两种交付/调试边界需要确认。
+    status: open
+    authority: B
+    evidence:
+    - kitchen_robot_home/README.md
+    - robot_motion_executor/README.md
+    - kitchen_robot_home/VERSIONS.yaml
+  - id: ALIGN-CODE-004
+    type: missing-test
+    summary: 当前未发现覆盖 V1 抓取参数、两个 TCP 转换、底盘移动期间姿态保持、录制增量动作、可选抓取确认插槽、取消恢复、失败回退、倾倒完整性和 V2 延后边界的行为测试。
+    status: open
+    authority: B
+    evidence:
+    - kitchen_robot_home/src/dexbot_task_planner/test
+    - robot_motion_executor/src/dexbot_motion_executor/test
+  - id: ALIGN-CODE-005
+    type: implementation-drift
+    summary: robot_motion_executor 的 package.xml 版本为 0.1.3，而 setup.py 版本为 0.1.1，发布和运行时版本事实不一致。
+    status: open
+    authority: B
+    evidence:
+    - robot_motion_executor/src/dexbot_motion_executor/package.xml
+    - robot_motion_executor/src/dexbot_motion_executor/setup.py
   unknowns:
-  - id: Q-001
+  - id: ARCH-Q-001
     type: unknown
-    summary: 影响抓取姿态、夹具选择和力矩基线。
-    status: deferred
-    authority: C
-    evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-002
-    type: unknown
-    summary: 影响任务分解、同步控制和碰撞规划。
-    status: deferred
-    authority: C
-    evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-003
-    type: unknown
-    summary: 影响受限重量反馈和局部修正实现。
-    status: deferred
+    summary: robot_driver 服务的实际运动反馈、错误码、停止锁存、effort/力矩和灵巧手传感器语义未知。
+    status: open
     authority: B
     evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-004
+    - kitchen_robot_home/src/dexbot_interfaces
+    - robot_motion_executor/src/dexbot_motion_executor/motion_executor_node.py
+  - id: ARCH-Q-002
     type: unknown
-    summary: 影响负载分级、参数标定和失败分类。
-    status: deferred
+    summary: 感知层能否稳定输出锅把中心、抓取点、主轴方向、锅把朝向、餐盘目标和有效性/置信度尚未确认。
+    status: open
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+    - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+  - id: ARCH-Q-003
+    type: unknown
+    summary: CheckPick 服务当前只提供接口存在性，尚未确认它是否能承载接触、承载、滑移和微抬升联合确认。
+    status: open
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/srv/CheckPick.srv
+    - robot_motion_executor/src/dexbot_motion_executor/motion_executor_node.py
+  - id: ARCH-Q-004
+    type: unknown
+    summary: planner 的失败重试、暂停恢复和 resume_restart 目前是技术路径，尚未形成 V1 业务级幂等和人工接管规则。
+    status: open
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+  - id: ARCH-Q-005
+    type: unknown
+    summary: 倾倒轨迹、路径回放、局部反馈和感知闭环应由 planner、executor、controller 还是设备驱动负责，尚未做技术选型。
+    status: open
     authority: B
     evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-005
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/control
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills
+  - id: ARCH-Q-006
     type: unknown
-    summary: 影响控制周期、滤波和安全限幅。
-    status: deferred
+    summary: 左臂抓取 TCP 和锅具 TCP 的坐标系定义、标定方式、转换链路及运行时表达尚未确认。
+    status: open
     authority: B
     evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-006
+    - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/pose3d.py
+  - id: ARCH-Q-007
     type: unknown
-    summary: 重量变化不能单独证明固体已完整落盘。
-    status: deferred
-    authority: C
+    summary: 餐盘定位后倾倒目标点的业务计算规则已确认，但坐标字段、偏置参数承载、有效性判定和底层转换链路尚未确认。
+    status: partially-answered
+    authority: B
     evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-007
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+    - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+  - id: ARCH-Q-008
     type: unknown
-    summary: 决定多指包络抓取是否可行。
-    status: deferred
-    authority: C
+    summary: 抓取偏置的坐标方向、参数来源、默认值和运行时调节方式尚未确认。
+    status: open
+    authority: B
     evidence:
-    - .project-log/business-logic/open-questions.yaml
-  - id: Q-008
+    - .project-log/business-logic/atoms.yaml
+  - id: ARCH-Q-009
     type: unknown
-    summary: 影响抓取可靠性、热安全和夹具材料选择。
-    status: deferred
-    authority: C
+    summary: 底盘移动时左臂保持准备倾倒姿态的跨节点同步、失败和恢复语义尚未确认。
+    status: open
+    authority: B
     evidence:
-    - .project-log/business-logic/open-questions.yaml
+    - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - id: ARCH-Q-010
+    type: unknown
+    summary: 预录制增量倾倒动作的录制坐标系、播放接口、速度缩放、停止和版本管理方式尚未确认。
+    status: open
+    authority: B
+    evidence:
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py
+  - id: ARCH-Q-011
+    type: unknown
+    summary: 机器人中心坐标系的名称、原点、轴向、发布来源、时间同步和机械臂基坐标转换由哪个模块维护尚未确认。
+    status: open
+    authority: B
+    evidence:
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+    - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/pose3d.py
   decisions_required:
-  - DEC-003 用户审阅固定场景 MVP
-  - Q-001/Q-002/Q-006/Q-007/Q-008 C 级问题需用户确认
+  - DEC-003 已确认 V1/V2 业务边界；本轮用户补充进一步确认感知和底盘职责，代码尚未承载该业务流程。
+  - 抓取确认由原“必经安全闸门”修订为“当前 V1 初版不实现，后续迭代预留”；触觉判断和失败回退不阻塞当前闭环。
+  - 先完成 V1 业务状态、输入输出和失败语义澄清，再对 TaskTarget/ExecuteTask/Skill/MotionPrimitive 的承载方式做技术选型。
+  - 明确两个仓库的源码开发、deb 发布和主工作空间 overlay 关系。
+  - 明确架构讲解范围：先按 ScenePerception → TaskPlanner → ExecuteTask → MotionExecutor → RobotDriver 主链理解。
 gate:
-  status: passed
-  blocking_unknowns: []
-  notes: 旧日志已声明当前目标范围明确；未决问题保留为 open questions，并在进入 Spike/实现前重新评估。
+  status: open
+  blocking_unknowns:
+  - Q-001
+  - Q-006
+  - Q-007
+  - Q-008
+  - ARCH-Q-001
+  - ARCH-Q-002
+  - ARCH-Q-003
+  notes: 第一轮代码接管已完成；当前代码行为只作为技术事实和对齐证据，不自动升级为业务规则。技术框架、库、控制器和接口改造方案留到澄清完成后进入技术选型。
 updated_at: '2026-07-28'

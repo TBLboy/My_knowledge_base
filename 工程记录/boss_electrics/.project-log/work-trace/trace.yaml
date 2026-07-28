@@ -17,3 +17,115 @@ entries:
   - .project-log/research/solution-research.yaml
   - .project-log/decisions/decision-log.yaml
   knowledge_candidate: true
+- id: TRACE-002
+  task_id: TASK-007
+  timestamp: '2026-07-28'
+  context: 用户进一步明确两个仓库由团队共同开发，感知模型和底盘能力由其他小组提供，本子任务负责执行链路；同时修订了抓取确认的必选假设。
+  hypothesis: 将职责边界、两个 TCP、抓取偏置、姿态保持和录制增量动作写入业务原子，能减少后续把外部能力误算成本任务实现或把技术假设误当产品规则的风险。
+  decision_ref: DEC-004
+  action: 更新业务原子、需求基线、决策、任务、开放问题、澄清和会话记录；将抓取确认从必经闸门修订为可选插槽。
+  expected_result: 后续技术选型围绕真实 V1 流程展开，团队成员能从项目日志恢复统一口径。
+  observation: 用户明确了上游移交、感知订阅、左臂抓取 TCP、锅具 TCP、底盘保持姿态、倾倒增量回放和放回/home 等流程节点；抓取确认失败回退仍待定。
+  actual_result: 已更新 REQ-001 revision 2、DEC-004、BL-PLATING-001、BL-GRASP-001、TASK-004、TASK-007 及相关会话记录。
+  delta: 从“抓取确认是倾倒前置安全闸门”改为“抓取确认暂留可选步骤插槽”；从“感知/底盘由本任务负责”改为“感知组和底盘组提供能力，本任务消费并协同”。
+  lesson: 业务闭环应先明确跨团队输入和坐标契约，再决定接口扩展；可选能力不能在需求基线中隐式变成强制闸门。
+  next_adjustment: 继续澄清两个 TCP 与抓取偏置、倾倒目标点、录制动作的坐标和版本契约，再进入技术选型。
+  evidence:
+  - 用户于 2026-07-28 补充 V1 流程
+  - .project-log/business-logic/atoms.yaml
+  - .project-log/requirements/baseline.yaml
+  knowledge_candidate: false
+- id: TRACE-004
+  task_id: TASK-007
+  timestamp: '2026-07-28'
+  context: 用户明确 V1 倾倒点计算方式和项目统一坐标基准。
+  hypothesis: 将餐盘中心和倾倒偏置统一表达在机器人中心坐标系，可避免业务规则绑定单臂基坐标，并为后续双臂/V2 扩展保留一致基准。
+  decision_ref: DEC-005
+  action: 记录 pour_point_C = plate_center_C + pour_offset_C，更新业务原子、需求基线、开放问题、决策和任务依赖。
+  expected_result: Q-011 从业务澄清阻塞项中关闭，后续只围绕中心坐标系工程定义和底层转换做技术选型。
+  observation: 用户确认偏置为机器人中心坐标系 xyz 三个可调量，所有操作坐标最终统一到机器人中心坐标系。
+  actual_result: 新增 DEC-005、BL-PLATING-001-AC-006，并将 Q-011 标记为 answered。
+  delta: 从“倾倒目标点计算待定”变为“业务公式已定、接口字段和底层转换待定”。
+  lesson: 先冻结业务坐标基准和公式，再讨论 TaskTarget、Controller 或 MotionPrimitive 的字段承载。
+  next_adjustment: 继续确认中心坐标系的原点/轴向/发布来源、两个 TCP 转换和参数版本管理。
+  evidence:
+  - 用户于 2026-07-28 补充 V1 倾倒点和统一坐标系规则
+  - .project-log/business-logic/atoms.yaml
+  - .project-log/decisions/decision-log.yaml
+  knowledge_candidate: false
+- id: TRACE-003
+  task_id: TASK-007
+  timestamp: '2026-07-28'
+  context: 需要把用户补充的 V1 流程继续映射到两个仓库的实际接口和执行能力。
+  hypothesis: 若先确认感知接收、路径录制和底盘协同的真实边界，再提出业务决策，能够避免把现有通用能力误认为完整 V1 实现。
+  decision_ref: null
+  action: 检查 PerceptionReceiver、BaseController、PathRecordSkill、MotionPrimitive、TaskPlanner 和 ExecuteTask 的承载关系，并更新澄清对齐记录。
+  expected_result: 明确已匹配能力、缺失实现和下一项最高优先级业务问题。
+  observation: 执行器可缓存最新场景并检查 scene_valid，也可录制命名路径；现有消息没有锅把语义字段和两个 TCP，当前没有底盘-左臂保持姿态的同步契约。
+  actual_result: 新增 ALIGN-MATCH-004、ALIGN-CODE-006、ALIGN-CODE-007，并将餐盘倾倒目标点列为下一项高优先级 C 级问题。
+  delta: 从静态主链地图推进到 V1 具体步骤与现有接口/技能的逐项映射。
+  lesson: V1 的第一个技术承载决策取决于倾倒目标点的业务定义；目标点未定时不应先决定 TaskTarget 或 Controller 的扩展方式。
+  next_adjustment: 先确认 V1 是否采用相对餐盘中心的固定倾倒目标点和容差，再进入两个 TCP、录制动作和底盘协同的技术选型。
+  evidence:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/core/perception_receiver.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+  - .project-log/business-logic/clarification.yaml
+  knowledge_candidate: false
+- id: TRACE-005
+  task_id: TASK-007
+  timestamp: '2026-07-28'
+  context: 当前 V1 需要优先验证不含抓取确认的基础闭环，避免未确定的触觉接口和失败回退语义阻塞主流程。
+  hypothesis: 将“抓取确认不执行”从可选插槽进一步冻结为当前 V1 的明确非必经步骤，可以避免实现和验收重新把确认逻辑当作隐藏前置条件。
+  decision_ref: DEC-006
+  action: 修正进度、任务引用和会话留痕，使 V1 范围统一表达为闭合后直接提锅、底盘协同、倾倒和放回；保留后续抓取确认扩展入口。
+  expected_result: 项目日志中的 V1 状态链、任务依赖和决策引用保持一致，后续技术选型不再以抓取确认作为当前版本前置条件。
+  observation: 已发现并修正进度描述中的“可选插槽”表述及 TASK-002 的重复决策引用；产品代码尚未修改。
+  actual_result: 日志修正完成，待执行 YAML 和 Loop 校验。
+  delta: 从“抓取确认暂定为可选插槽”收敛为“当前 V1 初版不执行抓取确认，后续迭代再加入”。
+  lesson: 对业务上暂不执行的步骤，应同时从主流程、验收、任务阻塞项和进度摘要中移除其当前版本的必经语义。
+  next_adjustment: 校验日志后，继续一次只澄清一个最高优先级问题：机器人中心坐标系的原点、轴向和发布/更新时间语义。
+  evidence:
+  - .project-log/progress.md
+  - .project-log/tasks/task-list.yaml
+  - .project-log/decisions/decision-log.yaml
+  - .project-log/business-logic/open-questions.yaml
+  knowledge_candidate: false
+- id: TRACE-006
+  task_id: TASK-007
+  timestamp: '2026-07-28'
+  context: 用户集中确认了 V1 动作流程边界，并补充了中心坐标系、PCA 偏置、TCP 参数化、锅具 TCP 回放和延期项。
+  hypothesis: 将流程骨架、参数待定项、验收规则和异常处理明确拆开，可以立即进入技术选型而不把未完成的现场参数误当成流程阻塞。
+  decision_ref: DEC-007
+  action: 更新需求基线、业务原子、澄清记录、开放问题、任务和决策；核对中心坐标系生成脚本、标定配置以及 toolset TCP 参数入口。
+  expected_result: TASK-007 完成，TASK-008 进入进行中；后续技术选型只围绕已确认的动作流程骨架和现有代码边界展开。
+  observation: 用户确认 V1 不加落料验收、不加异常检查和处理；中心坐标系沿用左右臂 base 与相机标定计算结果；抓取偏置沿锅把 PCA 主轴；TCP 位姿参数化；倾倒增量动作使用锅具 TCP 坐标系回放；放回/home 后续确定。代码中 `generate_robot_center_frames.py` 约定中心轴为 X 前、Y 左、Z 上，`robot_params.yaml` 提供 `toolset.end/ref` 位姿配置。
+  actual_result: 业务澄清记录已更新，产品代码未修改；待执行项目日志校验后进入 TASK-008 技术选型。
+  delta: 从“多个业务问题阻塞技术选型”收敛为“动作流程规则已确认，参数、放回/home、异常和落料验收按后续输入或扩展处理”。
+  lesson: V1 骨架阶段应把流程连通性和后续安全/质量闭环分开管理，参数待确定不等于流程阻塞。
+  next_adjustment: 进入 TASK-008，比较感知消息、TaskTarget/ExecuteTask、Skill/Primitive、中心坐标转换、底盘协同和锅具 TCP 轨迹回放的承载方案。
+  evidence:
+  - 用户于 2026-07-28 对剩余业务问题逐项确认
+  - kitchen_robot_home/scripts/generate_robot_center_frames.py
+  - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml
+  - .project-log/requirements/baseline.yaml
+  - .project-log/decisions/decision-log.yaml
+  knowledge_candidate: false
+- id: TRACE-007
+  task_id: TASK-007
+  timestamp: '2026-07-28'
+  context: 用户进入本轮后回顾今日任务记录，要求更新工作进度，并核实 V1 业务澄清收尾问题。
+  hypothesis: 本轮已经是第二次 V1 业务澄清，用户对 V1 流程细节已清晰，批量回答剩余问题后应能立即进入技术选型。
+  decision_ref: DEC-007
+  action: 接待用户后回顾今日任务记录，逐条理解用户补充的 V1 完整流程状态机、倾倒点公式、TCP 参数化、PCA 偏置方向等细节，确认所有开放问题一次性回答完毕。
+  expected_result: 所有 V1 业务规则确认，开放问题关闭，TASK-007 正式完成，进入 TASK-008 技术选型。
+  observation: 用户详细描述了完整的 V1 流程（handoff → home 十二个步骤），确认了倾倒点公式、偏置方向、TCP 参数化、放回待定、异常预留等全部细节，批量回答了 7 个开放问题，所有阻塞项解除。
+  actual_result: 所有业务确认完毕，用户同意进入技术选型阶段。更新 progress.md、current-session.md 和 trace.yaml。
+  delta: 业务澄清从"基本完成"到"完全完成"，所有开放问题已关闭。
+  lesson: 同一阶段的两次会话不会全量覆盖；应每次记录增量变化，避免在已有记录上重复追加导致冗余。
+  next_adjustment: 用户批准 DEC-008 后进入 TASK-004 实现任务拆分。
+  evidence:
+  - .project-log/progress.md
+  - .project-log/current-session.md
+  - .project-log/business-logic/open-questions.yaml
+  knowledge_candidate: false

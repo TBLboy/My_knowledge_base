@@ -44,23 +44,22 @@ tasks:
     limitations:
     - 用户审阅和真实设备 Spike 尚未完成。
   result:
-    summary: 调研产物已完成，当前等待用户审阅。
+    summary: 调研产物已完成，用户已确认两版本实施路线；真实设备 Spike 尚未完成。
     changed_files:
     - .project-log/research/solution-research.yaml
     deviations:
-    - 旧版 status=review 映射为新版本 status=done，审阅状态转移到 workflow phase 和 result/verification
-      limitations。
+    - 旧版 status=review 映射为新版本 status=done，用户审阅结果已转为 DEC-003 和 REQ-001 的正式批准记录。
     follow_ups:
     - 先执行 TASK-002，再决定是否启动 TASK-003。
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
 - id: TASK-002
-  title: 验证 KP200 锅把抓取和抓取确认闸门
+  title: 验证 KP200 锅把抓取及可选抓取确认能力
   kind: spike
   parent_id: TASK-001
   phase: solution-research
-  goal: 验证 KP200 锅把抓取和抓取确认闸门
-  status: pending
+  goal: 后续迭代验证 KP200 锅把抓取确认能力；当前 V1 初版不执行该任务
+  status: deferred
   priority: high
   risk: high
   authority: B
@@ -75,7 +74,9 @@ tasks:
   - BL-GRASP-001-AC-001
   - BL-PLATING-001-AC-001
   related_decisions:
-  - DEC-002
+  - DEC-003
+  - DEC-006
+  - DEC-005
   depends_on: []
   blocked_by: []
   blocked_by_questions:
@@ -88,15 +89,15 @@ tasks:
   outputs:
   - 锅把几何/温度/负载测量记录
   - 推荐抓取模式、预形状和抓取点
-  - grasp_confirmed / grasp_unverified / grasp_rejected 数据契约
-  - 抓取失败分类、重试策略和微抬升安全参数
+  - 后续迭代的 grasp_confirmed / grasp_unverified / grasp_rejected 数据契约草案
+  - 后续迭代的抓取失败分类、回退策略和安全参数
   plan: []
   done_when:
   - 已完成锅把尺寸、材质、温度、可抓取区和负载测量
   - 至少比较两种抓取模式并记录重复试验结果
-  - 抓取确认不是单一信号，而是接触、承载和滑移三类证据组合
-  - 微抬升失败时能在支撑面附近安全降回并拒绝进入倾倒
-  - 输出可供倾倒状态机消费的 grasp_confirmed 契约
+  - 不阻塞当前 V1 初版，明确记录为后续迭代任务
+  - 后续实验记录接触、承载和滑移等可用信号
+  - 输出供后续技术选型使用的抓取确认契约草案
   verification:
     status: not-run
     commands: []
@@ -164,11 +165,11 @@ tasks:
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
 - id: TASK-004
-  title: 跑通固定场景下单臂抓锅、倾倒入盘和放回原位的第一版任务链
+  title: V1 跑通锅把朝左固定场景下左手抓锅、倾倒入盘和放回原位的完整任务链
   kind: task
   parent_id: TASK-001
   phase: task-decomposition
-  goal: 跑通固定场景下单臂抓锅、倾倒入盘和放回原位的第一版任务链
+  goal: 在不依赖右手锅铲辅助的前提下，跑通锅把朝左固定场景的感知结果订阅、左手抓锅、准备倾倒、底盘协同、倾倒入盘和放回原位完整闭环
   status: pending
   priority: high
   risk: high
@@ -183,33 +184,38 @@ tasks:
   acceptance_refs:
   - BL-GRASP-001-AC-001
   - BL-PLATING-001-AC-001
+  - BL-PLATING-001-AC-002
   related_decisions:
-  - DEC-002
   - DEC-003
-  depends_on:
-  - TASK-002
+  - DEC-005
+  - DEC-006
+  depends_on: []
   blocked_by: []
-  blocked_by_questions:
-  - Q-001
-  - Q-002
-  - Q-006
+  blocked_by_questions: []
   required_skills: []
   spec_ref: null
   inputs: []
   outputs:
-  - 固定初始状态定义
-  - 锅把视觉定位与抓取动作
-  - 抓取确认状态机
-  - 固定场景倾倒回放轨迹
-  - 放回原位轨迹
-  - 失败停止与人工接管流程
+  - 锅把朝左的固定初始状态和餐盘区域定义
+  - 感知组输出订阅和锅把抓取点偏置计算
+  - 左臂抓取 TCP、锅具 TCP 及其转换链路
+  - 左臂保持准备倾倒姿态与底盘移动协同
+  - V1 左手单臂任务状态机
+  - 锅把感知结果消费与抓取动作
+  - V1 初版不包含抓取确认；保留后续迭代入口
+  - 固定场景倾倒增量动作回放
+  - 放回/home 流程扩展位置，具体规则后续确定
+  - 异常处理扩展位置，不进入当前 V1 骨架
   plan: []
   done_when:
-  - 从专属初始状态启动可重复完成抓取、确认、倾倒和放回
-  - 抓取未确认时不会进入转运或倾倒
-  - 轨迹执行有速度/加速度/碰撞/超时/急停限制
-  - 至少记录成功、抓取失败、倾倒异常和放回失败四类结果
-  - 明确第一版不支持的变量和下一轮迭代入口
+  - 从锅把朝左的专属初始状态或上游移交状态启动，可重复完成感知结果消费、左手抓取、提锅、底盘移动、倾倒、必要的轻微抖动和放回
+  - 抓取闭合完成前锅体保持安全支撑；当前 V1 初版不执行抓取确认
+  - 左臂抓取 TCP 和锅具 TCP 的坐标转换关系在执行前可验证
+  - 底盘移动期间左臂保持准备倾倒姿态，倾倒定位平移期间保持锅具 TCP 姿态
+  - 右手锅铲不参与 V1，且不成为 V1 任务链的前置条件
+  - 当前 V1 只验证动作流程按顺序执行，不增加落料验收和异常处理规则
+  - 运行参数、固定姿态、TCP 数值和放回/home 具体参数可后续填写，不阻塞流程骨架
+  - 明确 V1 不支持的变量，并输出 V2 右手锅铲辅助的迭代入口
   verification:
     status: not-run
     commands: []
@@ -221,4 +227,238 @@ tasks:
     deviations: []
     follow_ups: []
   created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+- id: TASK-005
+  title: V2 评估并加入右手锅铲辅助动作
+  kind: task
+  parent_id: TASK-004
+  phase: task-decomposition
+  goal: 在 V1 左手单臂闭环稳定后，评估右手锅铲辅助对落料完整性和任务成功率的实际收益
+  status: pending
+  priority: medium
+  risk: high
+  authority: C
+  owner: shared
+  tags:
+  - plating
+  - version-2
+  - deferred-feature
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-PLATING-001-AC-001
+  related_decisions:
+  - DEC-003
+  depends_on:
+  - TASK-004
+  blocked_by: []
+  blocked_by_questions:
+  - Q-002
+  - Q-006
+  required_skills: []
+  spec_ref: null
+  inputs:
+  - V1 闭环成功和失败分类数据
+  - 锅铲抓取、放置和锅内进入路径约束
+  outputs:
+  - 右手锅铲抓取与放置方案
+  - 左右手同步与碰撞约束
+  - 右手辅助动作对落料完整性和成功率的对比数据
+  - 是否纳入后续版本的建议
+  plan: []
+  done_when:
+  - V1 已完成并有可复现的基线数据
+  - 右手能够稳定抓取和放置锅铲，或明确记录技术阻塞
+  - 完成无锅铲与有锅铲的对照测试，并记录落料、碰撞和失败分类
+  - 只有在收益和安全性有证据时，才将右手辅助纳入后续正式方案
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
+- id: TASK-006
+  title: 完成两个仓库第一轮代码架构接管与事实地图
+  kind: research
+  parent_id: null
+  phase: business-clarification
+  goal: 识别主工作空间与运动执行仓库的入口、模块边界、接口、状态和验证现状
+  status: done
+  priority: high
+  risk: medium
+  authority: B
+  owner: agent
+  tags:
+  - codebase-onboarding
+  - architecture
+  - business-clarification
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs: []
+  related_decisions:
+  - DEC-003
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-codebase-onboarding
+  inputs:
+  - kitchen_robot_home/README.md
+  - kitchen_robot_home/DEVELOPER_GUIDE.md
+  - robot_motion_executor/README.md
+  - 两仓库核心 ROS 2 接口和 Python 模块
+  outputs:
+  - 主仓库与执行仓库职责边界
+  - ScenePerception → TaskPlanner → ExecuteTask → MotionExecutor → RobotDriver 主链地图
+  - 当前接口、状态、测试和知识盲区清单
+  plan: []
+  done_when:
+  - 已识别两个仓库的构建形态、入口节点和部署关系
+  - 已沿主链确认消息、action、service、policy、skill、primitive 和 driver 边界
+  - 已区分代码事实、已有业务规则、推断和未知项
+  - 未修改两个代码仓库
+  verification:
+    status: passed
+    commands:
+    - find kitchen_robot_home/src robot_motion_executor/src -maxdepth 3 -type f
+    - rg -n 'ExecuteTask|MotionPrimitive|TaskPlanner|RobotDriver' 两仓库核心文件
+    evidence:
+    - .project-log/business-logic/clarification.yaml
+    limitations:
+    - 未启动 ROS 2 节点，未验证真实 driver、感知和 action 运行时行为
+  result:
+    summary: 已完成第一轮静态架构接管；当前代码只作为技术事实，不自动成为业务规则。
+    changed_files: []
+    deviations: []
+    follow_ups:
+    - 继续 TASK-007 业务逻辑澄清和代码对齐
+    - 形成面向用户的端到端架构讲解
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
+- id: TASK-007
+  title: 澄清 V1 倾倒入盘业务逻辑并完成与两个仓库的双向对齐
+  kind: task
+  parent_id: null
+  phase: business-clarification
+  goal: 将 V1 左手单臂闭环拆成可验证业务原子，并明确现有代码承载、缺失实现和接口未知项
+  status: done
+  priority: critical
+  risk: high
+  authority: C
+  owner: shared
+  tags:
+  - business-clarification
+  - code-alignment
+  - plating
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-001
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-003
+  depends_on:
+  - TASK-006
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-business-clarify
+  - a-codebase-onboarding
+  inputs:
+  - .project-log/requirements/baseline.yaml
+  - .project-log/business-logic/atoms.yaml
+  - .project-log/business-logic/clarification.yaml
+  - 两仓库第一轮代码事实地图
+  outputs:
+  - V1 角色、场景、状态、输入输出、异常、边界和验收原子
+  - 感知组、底盘组和两个共同开发仓库之间的职责边界
+  - 两个 TCP、抓取偏置、底盘保持姿态和录制增量动作的业务约束
+  - 机器人中心坐标系下的餐盘中心加 xyz 偏置倾倒点规则
+  - 业务逻辑与代码行为的 confirmed-match / missing-implementation / implementation-drift / missing-test 对齐结果
+  - 需要用户确认的最高优先级 C 级问题
+  - 后续技术选型输入，而不是未经确认的框架或重构方案
+  plan: []
+  done_when:
+  - V1 主路径、无抓取确认边界、TCP/偏置/录制动作规则和 V2 延后边界均已明确
+  - 已明确当前 V1 只打通动作流程，不加入落料验收和异常处理；放回/home 具体参数不阻塞前段流程
+  - 现有代码缺失、漂移和未知项已映射到文件、接口或任务
+  - 未将当前实现静默升级为业务规则
+  verification:
+    status: passed
+    commands:
+    - VIBE_PYTHON loopctl validate
+    evidence: []
+    limitations: []
+  result:
+    summary: 已完成 V1 业务澄清与第一轮代码事实对齐；用户确认 V1 只打通动作流程，不加入落料验收和异常处理，抓取偏置沿锅把 PCA 主轴，TCP 位姿参数化，倾倒动作采用锅具 TCP 坐标系回放，放回/home 后续确定。
+    changed_files: []
+    deviations: []
+    follow_ups:
+    - 进入 TASK-008 技术选型，核对中心坐标系、TCP 配置、感知消息、底盘协同和轨迹承载
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
+- id: TASK-008
+  title: 基于业务澄清和代码边界进行技术选型并形成实现方案
+  kind: research
+  parent_id: TASK-007
+  phase: solution-research
+  goal: 在业务规则和当前技术事实稳定后，比较 V1 业务链在两个仓库中的承载方式
+  status: in-progress
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - solution-research
+  - architecture
+  - plating
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-003
+  depends_on:
+  - TASK-007
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-solution-research
+  - a-architecture-decision
+  inputs:
+  - TASK-007 澄清和对齐产物
+  - 两仓库接口与模块边界
+  outputs:
+  - TaskPlanner、MotionExecutor、Skill、Controller、RobotDriver 的职责建议
+  - TaskTarget/ExecuteTask/MotionPrimitive 是否扩展的比较
+  - V1 无抓取确认、无落料验收、无异常处理动作骨架的承载方案
+  - 后续抓取确认、倾倒反馈和异常处理的扩展位置、风险和验证计划
+  - 供用户理解和批准的技术选型记录
+  plan: []
+  done_when:
+  - 每个技术选项均映射到已确认业务原子和现有代码边界
+  - 明确数据契约、状态机、失败边界、部署/版本关系和测试策略
+  - 未经用户批准不进入两个仓库的产品代码实现
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-28'
   updated_at: '2026-07-28'

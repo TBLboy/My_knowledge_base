@@ -1,7 +1,7 @@
 schema_version: 1
 goal:
   id: GOAL-001
-  statement: 完成老板电器炒菜机器人 3.3 倾倒入盘（大）的技术方案调研，确认固定场景 MVP 路线，并准备锅把抓取确认 Spike。
+  statement: 完成老板电器炒菜机器人 3.3 倾倒入盘（大）的技术方案调研，按 V1 左手单臂固定场景无抓取确认基础闭环、V2 右手锅铲辅助的两版本路线推进，并为后续抓取确认能力预留入口。
   success_conditions:
   - id: SC-001
     statement: 至少比较多种倾倒控制路线并记录适用条件、风险和回退方案。
@@ -9,15 +9,18 @@ goal:
     evidence_refs:
     - .project-log/research/solution-research.yaml
   - id: SC-002
-    statement: 明确锅把抓取确认是倾倒前置安全闸门，并形成可执行 Spike 任务。
+    statement: 明确锅把抓取、统一中心坐标系、TCP 控制和无抓取确认倾倒闭环的业务边界，并为后续抓取确认能力形成可执行验证入口。
     status: passed
     evidence_refs:
     - .project-log/business-logic/atoms.yaml
     - .project-log/tasks/task-list.yaml
   - id: SC-003
-    statement: 用户审阅并确认固定场景 MVP 和 C 级开放问题处理方式。
-    status: pending
-    evidence_refs: []
+    statement: 用户审阅并确认 V1/V2 固定场景方案边界，明确 V1 不依赖右手锅铲，C 级问题按 Spike 和后续版本处理。
+    status: passed
+    evidence_refs:
+    - /home/tbl/Project/My_knowledge_base/学习记录/2026.07.27/今日任务.md
+    - .project-log/decisions/decision-log.yaml
+    - .project-log/requirements/baseline.yaml
   non_goals:
   - 本轮不实现生产级泛化倾倒
   - 本轮不承诺全轨迹力控
@@ -25,7 +28,8 @@ goal:
   - 本轮不替代真实设备测试
   constraints:
   - 原型验证和演示阶段优先保证可复现性
-  - 锅把抓取确认未通过不得进入转运或倾倒
+  - 灵巧手闭合完成前锅体必须保持安全支撑；当前 V1 初版不执行抓取确认
+  - 所有业务目标、中间位姿和偏置统一使用机器人中心坐标系
   - 保留安全限幅、超时、急停和人工介入
   required_evidence:
   - kind: research
@@ -33,14 +37,18 @@ goal:
     evidence_refs:
     - .project-log/research/solution-research.yaml
   - kind: decision
-    subject: 固定场景 MVP 及抓取确认闸门
+    subject: V1/V2 固定场景 MVP、团队职责、统一中心坐标系和无抓取确认 V1 边界
     evidence_refs:
     - .project-log/decisions/decision-log.yaml
   - kind: spike
-    subject: KP200 锅把抓取确认
+    subject: 后续迭代的 KP200 锅把抓取确认能力
     evidence_refs:
     - .project-log/tasks/task-list.yaml
+  - kind: scope
+    subject: V1 左手闭环与 V2 右手锅铲辅助边界
+    evidence_refs:
+    - .project-log/requirements/baseline.yaml
   risk_level: high
-  status: waiting-user
+  status: active
   created_at: '2026-07-21'
   updated_at: '2026-07-28'

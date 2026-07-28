@@ -1,6 +1,6 @@
 version: '0.4'
 mode: prototype
-current_phase: solution-research
+current_phase: business-clarification
 active_goal: GOAL-001
 phase_order:
 - business-intent
@@ -25,8 +25,8 @@ phases:
     evidence:
     - .project-log/goals/active-goal.yaml
   business-clarification:
-    status: completed
-    gate_status: passed
+    status: active
+    gate_status: open
     required_artifacts:
     - .project-log/business-logic/atoms.yaml
     - .project-log/business-logic/clarification.yaml
@@ -35,18 +35,21 @@ phases:
     - blocking conflicts are absent
     evidence:
     - .project-log/business-logic/clarification.yaml
-    notes: C 级未知项已保留并转入 open questions；不代表已获得用户答案。
+    - .project-log/tasks/task-list.yaml
+    notes: 已进入两个仓库的业务逻辑澄清；第一轮代码事实地图完成，业务规则与代码承载仍需逐条对齐。
   requirement-baseline:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/requirements/baseline.yaml
     exit_conditions:
     - scope and exclusions are explicit
     - active atoms have acceptance criteria
-    evidence: []
+    evidence:
+    - .project-log/requirements/baseline.yaml
+    - .project-log/requirements.md
   solution-research:
-    status: active
+    status: reopened
     gate_status: open
     required_artifacts:
     - .project-log/research/solution-research.yaml
@@ -54,7 +57,7 @@ phases:
     - material technical choices have evidence or are explicitly not required
     evidence:
     - .project-log/research/solution-research.yaml
-    notes: 研究产物完成，等待用户审阅推荐方案和 C 级问题。
+    notes: 倾倒控制研究和 V1/V2 业务边界仍有效；因代码事实暴露业务承载未知，先回到 business-clarification，再恢复技术选型和 Spike。
   architecture-decision:
     status: pending
     gate_status: not-evaluated
@@ -121,10 +124,14 @@ phases:
     - lessons are classified without silently becoming permanent rules
     evidence: []
 open_gates:
-- 用户审阅固定场景 MVP
-- C 级开放问题确认
-- 锅把抓取 Spike
+- V1 业务原子与两个仓库代码行为完成双向对齐
+- 锅把抓取确认、倾倒完整性和暂停恢复语义澄清
+- 两仓库源码/deb/overlay 交付边界确认
+- 技术选型批准前不得修改产品代码
 return_edges:
+- from: solution-research
+  to: business-clarification
+  reason: 第一轮代码接管暴露 V1 业务语义、接口契约和现有实现之间存在缺失与未知，需要先完成双向澄清。
 - from: implementation
   to: business-clarification
   reason: implementation exposed product ambiguity

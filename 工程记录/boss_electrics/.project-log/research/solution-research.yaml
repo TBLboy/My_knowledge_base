@@ -404,3 +404,138 @@ studies:
     confidence: high
   retrieved_at: '2026-07-22'
   updated_at: '2026-07-28'
+- id: RES-002
+  status: active
+  problem: 为 V1 左手单臂倾倒动作流程选择两个仓库中的任务编排、数据契约、中心坐标转换、TCP 参数化、底盘协同和锅具 TCP 增量回放承载方式。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-007
+  - TASK-008
+  constraints:
+  - V1 只打通动作流程，不加入落料完整性验收、异常检查、自动重试和回退处理
+  - 所有业务目标和中间位姿统一使用代码已有的机器人中心坐标系 C
+  - 抓取偏置定义为 C 下沿锅把主轴 PCA 向量的标量偏置
+  - 抓取 TCP 和锅具 TCP 的位置、姿态需要参数化
+  - 倾倒增量动作使用锅具 TCP 坐标系回放
+  - 感知组和底盘组提供能力，本任务只消费感知结果并编排执行链
+  - 两个仓库由团队共同开发，接口变化必须保持边界清晰、可测试、可回滚
+  candidates:
+  - id: option-a-generic-task-target
+    name: 复用现有 TaskTarget 字段承载全部 V1 数据
+    category: interface-reuse
+    description: 继续使用现有 grasp/place position、orientation、action_name 等通用字段，通过 task_type 解释字段语义。
+    requirement_fit:
+      rating: low
+      note: 能快速复用现有链路，但无法清晰表达中心坐标系、PCA 偏置、两个 TCP、餐盘中心和轨迹引用。
+    integration_cost: low
+    maintenance_cost: high
+    performance:
+      rating: high
+      note: 消息开销小，但不构成主要性能优势。
+    reliability:
+      rating: low
+      note: 字段语义依赖 task_type 和位置约定，容易出现坐标或字段复用错误。
+    debuggability: low
+    lock_in: medium
+    safety_risk: high
+    project_fit:
+      rating: low
+      note: 不推荐作为团队长期共同开发接口。
+  - id: option-b-typed-target-on-existing-action
+    name: 在 ExecuteTask 上增加类型化 PourTaskTarget
+    category: typed-interface
+    description: 新增领域消息承载感知结果、中心坐标系目标、TCP 参数、手部参数和轨迹引用，并作为 ExecuteTask 的可选字段传递；保留现有通用 target 兼容路径。
+    requirement_fit:
+      rating: high
+      note: 与现有 TaskPlanner→ExecuteTask→MotionExecutor 主链兼容，同时避免把业务字段塞进通用 TaskTarget。
+    integration_cost: medium
+    maintenance_cost: medium
+    performance:
+      rating: high
+      note: ROS 2 类型化消息传递满足 V1 数据量和时序需求。
+    reliability:
+      rating: high
+      note: 字段、坐标系和阶段语义显式，可在边界做校验。
+    debuggability: high
+    lock_in: low
+    safety_risk: medium
+    project_fit:
+      rating: high
+      note: 推荐方案；需要用户批准公开 action 接口变化。
+  - id: option-c-new-domain-action
+    name: 新增独立 ExecutePourTask action
+    category: domain-action
+    description: 为老板电器倾倒任务建立独立 action 和执行器入口，不修改通用 ExecuteTask。
+    requirement_fit:
+      rating: high
+      note: 领域边界最清晰，但会重复 action 生命周期、反馈、取消和执行器接入逻辑。
+    integration_cost: high
+    maintenance_cost: high
+    performance:
+      rating: high
+      note: 与方案 B 相近。
+    reliability:
+      rating: medium
+      note: 额外入口增加部署和版本协同面。
+    debuggability: high
+    lock_in: medium
+    safety_risk: medium
+    project_fit:
+      rating: medium
+      note: 只有在 V1 需要独立生命周期或通用 action 无法兼容时再采用。
+  - id: option-d-controller-only
+    name: 通过现有 control/controller 路径实现全部业务
+    category: controller-extension
+    description: 将感知、目标计算和动作序列都塞入 MotionExecutor 的 BaseController。
+    requirement_fit:
+      rating: low
+      note: Controller 当前只接收 points/poses/positions/orientations，不适合承载任务状态和底盘协同。
+    integration_cost: medium
+    maintenance_cost: high
+    performance:
+      rating: medium
+      note: 可减少部分消息往返，但不是当前瓶颈。
+    reliability:
+      rating: low
+      note: 会把业务编排和底层运动控制耦合。
+    debuggability: low
+    lock_in: high
+    safety_risk: high
+    project_fit:
+      rating: low
+      note: 不推荐。
+  strategy: wrapper-adapter
+  recommendation:
+    strategy: wrapper-adapter
+    choice: 采用 option-b；由主仓库 TaskPlanner 负责业务阶段和中心坐标系目标构造，由执行仓库新增领域 Skill/Adapter 负责把类型化目标转换为现有 MotionPrimitive 和 RobotDriver 调用。底盘保持姿态通过主仓库的底盘适配器和阶段屏障编排，不把底盘动作伪装成 arm MotionPrimitive。
+    rationale:
+    - 保留现有 ExecuteTask 生命周期、取消和反馈机制
+    - 新消息显式表达坐标系、TCP、偏置和轨迹，不污染通用 TaskTarget
+    - 业务状态留在 TaskPlanner，硬件调用留在 MotionExecutor/RobotDriver
+    - 既可先实现 V1 动作骨架，也为后续验收和异常分支保留扩展边界
+    trajectory_choice: 不直接把现有 RECORD_PATH 当作 V1 回放契约；现有 PathRecordSkill 只适合作为示教采集工具。V1 运行时优先采用带锅具 TCP 局部坐标语义的显式轨迹文件和 PLAY_RELATIVE_PATH 适配器，待底层控制器原生回放坐标语义确认后再决定是否复用。
+    coordinate_choice: 在 TaskPlanner/感知边界将输入统一归一到代码已有中心坐标系 C；Executor 接收带 frame_id=C 的目标，只在靠近 RobotDriver 的适配层转换到机械臂执行坐标。
+  conditions:
+  - 需要用户批准在现有 ExecuteTask action 中增加可选的类型化 PourTaskTarget 字段，或明确改用独立 action
+  - 需要底盘组提供移动完成/失败/超时的最小接口，V1 可先用适配器占位
+  - 需要确认现有控制器或轨迹执行接口能按显式局部 TCP 轨迹执行；否则先做最小 replay spike
+  - 需要把中心标定文件的加载和变换方向封装为单一模块，禁止各业务模块重复实现
+  contrary_evidence:
+  - 现有 TaskTarget 和 Pose3D 没有 frame_id，直接复用会把中心坐标系语义留在隐含约定中
+  - 现有 PathRecordSkill 能录制路径，但当前代码未形成锅具 TCP 局部坐标的运行时回放契约
+  - 现有 ExecuteTask/RobotDriver 接口只覆盖机械臂和灵巧手，未提供底盘协同动作契约
+  confidence: 0.84
+  decision_ref: DEC-008
+  sources:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+  - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  - kitchen_robot_home/scripts/generate_robot_center_frames.py
+  - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml
+  retrieved_at: '2026-07-28'
+  updated_at: '2026-07-28'

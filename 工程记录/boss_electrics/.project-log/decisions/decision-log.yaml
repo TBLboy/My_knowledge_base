@@ -67,12 +67,121 @@ decisions:
   supersedes: []
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
+- id: DEC-005
+  title: V1 倾倒点采用中心坐标系餐盘中心加 xyz 偏置
+  category: business
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks:
+  - TASK-007
+  - TASK-008
+  related_business_logic:
+  - BL-PLATING-001
+  context: 用户于 2026-07-28 明确 V1 倾倒点的计算方式，并要求项目所有业务操作统一使用机器人中心坐标系。
+  hypothesis: 使用中心坐标系下餐盘中心加可调 xyz 偏置，可以在固定场景中稳定定义倾倒点，并避免业务逻辑绑定某一机械臂基坐标系。
+  options:
+  - name: 中心坐标系餐盘中心加偏置
+    benefits:
+    - 业务坐标统一
+    - 偏置可调，便于现场微调
+    - 不绑定左臂或右臂基坐标
+    costs:
+    - 需要维护中心坐标系到执行坐标系的转换
+    risks:
+    - 中心坐标系定义、发布和时间同步不准确会影响全链路
+  decision: V1 倾倒点使用机器人中心坐标系 C 表达，计算公式为 pour_point_C = plate_center_C + pour_offset_C，其中 pour_offset_C 是 C 下可调的 [dx, dy, dz]；所有业务目标和中间位姿统一使用 C，机械臂基坐标仅作为底层执行转换结果。
+  reason_summary:
+  - 用户明确要求所有项目操作统一转换到机器人中心坐标系。
+  - V1 采用中心点加偏置可压缩变量，并支持现场微调。
+  conditions:
+  - 明确中心坐标系的原点、轴向、发布来源和时间同步
+  - 明确底层执行从中心坐标系到机械臂基坐标的转换边界
+  - 偏置参数必须可记录、可版本化和可回退
+  action: TASK-008
+  expected_result: 形成以中心坐标系为业务事实源的接口和执行承载方案。
+  reversal_plan: 若中心坐标系不能提供稳定转换，则暂停接口实现并重新评估统一坐标基准，不得静默改用某一机械臂基坐标。
+  observation: null
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence:
+  - 用户于 2026-07-28 补充 V1 倾倒点和统一坐标系规则
+  - .project-log/business-logic/atoms.yaml
+  supersedes: []
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
+- id: DEC-008
+  title: V1 技术承载优先采用类型化 PourTaskTarget 加现有 ExecuteTask
+  category: technical
+  status: proposed
+  authority: C
+  user_approval: pending
+  related_tasks:
+  - TASK-008
+  - TASK-004
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  context: 现有主链已经具备 TaskPlanner、ExecuteTask、MotionExecutor、Skill、MotionPrimitive 和 RobotDriver 分层，但通用 TaskTarget、Pose3D 和现有 path_record 尚未表达 V1 的中心坐标系、两个 TCP、PCA 偏置、底盘协同和锅具 TCP 局部回放。
+  hypothesis: 在现有 ExecuteTask 上增加可选的类型化 PourTaskTarget，并由 planner policy 与 executor skill 分别拥有业务编排和硬件原语转换，可以用较小边界承载 V1，同时避免通用字段语义漂移。
+  options:
+  - name: 复用通用 TaskTarget
+    benefits:
+    - 接口改动少
+    costs:
+    - 坐标系和阶段字段隐含在 task_type/数组位置中
+    risks:
+    - 团队共同开发时容易产生字段复用和坐标误解
+  - name: ExecuteTask 携带 PourTaskTarget
+    benefits:
+    - 复用现有 action 生命周期和取消机制
+    - 领域数据契约类型明确
+    - 不污染通用 TaskTarget
+    costs:
+    - 需要同步更新接口包、planner 和 executor
+    risks:
+    - 属于公开接口变化，需要用户和团队共同批准并版本化
+  - name: 新增独立 ExecutePourTask action
+    benefits:
+    - 领域边界最清晰
+    costs:
+    - 重复 action server 生命周期、反馈、取消和部署配置
+    risks:
+    - 增加双入口维护和发布复杂度
+  decision: '提议采用“类型化 PourTaskTarget + 现有 ExecuteTask”方案：主仓库 TaskPlanner 负责 V1 阶段、中心坐标 C 下的目标计算和底盘阶段屏障；执行仓库 BossElectricsPourSkill 负责把目标转换为现有 MotionPrimitive；锅具 TCP 局部轨迹通过独立回放适配器执行。该决策在用户批准前保持 proposed，不修改产品代码。'
+  reason_summary:
+  - 现有 ExecuteTask 已是两仓库间稳定的执行边界
+  - 通用 TaskTarget 不足以安全表达 V1 领域语义
+  - 业务状态不应下沉到 MotionExecutor controller
+  - 现有 PathRecordSkill 只有录制能力，不能直接视为锅具 TCP 局部回放契约
+  conditions:
+  - 用户批准接口形态和跨仓库同步变更
+  - 底盘组提供最小移动完成/失败/超时接口
+  - 轨迹回放先通过最小 replay spike 确认局部 TCP 语义
+  - 中心坐标转换只能由单一适配模块负责，禁止业务模块各自转换
+  action: TASK-008
+  expected_result: 形成可实施的 V1 类型化数据契约、阶段编排和执行适配器方案。
+  reversal_plan: 若现有 ExecuteTask 无法兼容领域目标或 action 版本协同成本过高，再评估独立 ExecutePourTask action；不得退回到隐式数组字段复用。
+  observation: null
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence:
+  - .project-log/research/solution-research.yaml
+  - .project-log/architecture/architecture.yaml
+  - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+  - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  supersedes: []
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
 - id: DEC-002
   title: 锅把抓取确认作为倾倒安全闸门
   category: technical
-  status: proposed
+  status: superseded
   authority: B
-  user_approval: pending
+  user_approval: superseded_by_user_clarification
   related_tasks:
   - TASK-002
   - TASK-004
@@ -106,8 +215,7 @@ decisions:
     - 适应性较低
     risks:
     - 固定轨迹对状态变化敏感
-  decision: '将锅把抓取确认独立为倾倒动作的前置安全闸门；采用“视觉定位 + 多指/专用夹具抓取 + 接触/负载联合确认 + 受控微抬升”的流程。未输出
-    grasp_confirmed 时，不得转运锅具或进入倾倒。
+  decision: '原方案不再作为当前 V1 必选规则；抓取确认保留为可插拔步骤，是否启用、判断信号和失败回退另行确定。
 
     '
   reason_summary:
@@ -134,30 +242,117 @@ decisions:
   supersedes: []
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
-- id: DEC-003
-  title: 第一版采用固定场景单臂 MVP
-  category: technical
-  status: proposed
+- id: DEC-004
+  title: V1 抓取确认暂留为可选步骤插槽
+  category: business
+  status: superseded
   authority: C
-  user_approval: pending
+  user_approval: superseded_by_user_clarification
   related_tasks:
+  - TASK-007
   - TASK-004
   related_business_logic:
   - BL-GRASP-001
   - BL-PLATING-001
-  context: '固定场景能压缩变量，便于尽快验证任务链；模型路线当前成功率和数据成本不确定， 视觉伺服适合解决锅把定位和局部对位，但不应承担菜品完整倾倒判断；录制回放适合第一版，
-    但必须配合初始状态、碰撞/速度限制、超时、急停和失败回退。
+  context: 用户于 2026-07-28 进一步澄清，左手闭合后是否通过触觉等信号确认抓取暂时不是 V1 基础流程的必需环节。
+  hypothesis: 将抓取确认设计为后续可插拔能力，先完成基础抓取、提锅、底盘移动、倾倒和放回流程；避免在确认接口未定时阻塞 V1 业务闭环。
+  options:
+  - name: 当前 V1 采用可选插槽
+    benefits:
+    - 不阻塞基础闭环
+    - 为后续触觉或负载判断保留扩展入口
+    costs:
+    - 当前 V1 对抓取稳定性的自动判定能力有限
+    risks:
+    - 若实际抓取能力不足，可能在缺少确认闸门时带来安全风险
+  decision: 原方案不作为当前 V1 初版实施规则；抓取确认不进入当前 V1 状态链，后续版本再重新评估是否加入。
+  reason_summary:
+  - 用户明确要求先打通基础流程，抓取确认不是当前必需环节。
+  - 灵巧手闭合关节角度和力矩参数会先由执行团队提供，触觉接口尚未作为当前前置条件。
+  conditions:
+  - 闭合前仍需保持锅具安全支撑
+  - 任何触觉/负载确认能力接入前不得将其行为默认为既定业务规则
+  - 后续若确认抓取稳定性不足，必须重新打开该决策并补充阻断/回退规则
+  action: TASK-007
+  expected_result: 当前 V1 先跑通不含抓取确认的基础流程，同时保留后续扩展入口。
+  reversal_plan: 若实测显示基础流程需要自动抓取确认才能满足安全要求，则回到业务澄清并重新定义 V1 闸门。
+  observation: null
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence:
+  - 用户于 2026-07-28 补充 V1 流程
+  supersedes:
+  - DEC-002
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
+- id: DEC-006
+  title: V1 初版不执行锅把抓取确认
+  category: business
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks:
+  - TASK-004
+  - TASK-007
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  context: 用户于 2026-07-28 明确先跑通不含抓取确认的基础版本，抓取确认暂不进入当前 V1 实现。
+  hypothesis: 先移除未定的触觉/承载判断和失败回退分支，可以缩短 V1 基础链路，优先验证感知消费、TCP 控制、底盘协同、倾倒和放回。
+  options:
+  - name: V1 初版不执行抓取确认
+    benefits:
+    - 状态链更短，便于快速跑通闭环
+    - 不被未确定的触觉接口和失败语义阻塞
+    costs:
+    - 当前版本缺少自动抓取稳定性确认
+    risks:
+    - 必须强化闭合参数、低速动作和安全停止约束
+  decision: 当前 V1 初版在灵巧手闭合后直接进入提锅和准备倾倒，不执行抓取确认；抓取确认作为后续迭代任务，不进入当前 V1 验收。
+  reason_summary:
+  - 用户明确要求先跑通无抓取确认版本。
+  - 抓取确认所需触觉/承载信号、失败回退和闸门语义尚未确定。
+  conditions:
+  - 闭合前锅体保持安全支撑
+  - 提锅、移动和倾倒必须保留速度、超时、急停和人工接管约束
+  - 后续加入抓取确认时必须重新定义状态链、验收和失败回退
+  action: TASK-004
+  expected_result: V1 基础闭环不包含抓取确认，并能独立验证主流程。
+  reversal_plan: 若无确认版本在低速安全测试中暴露不可接受风险，重新打开抓取确认决策并暂停扩大 V1 变量。
+  observation: null
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence:
+  - 用户于 2026-07-28 补充 V1 范围
+  - .project-log/requirements/baseline.yaml
+  supersedes:
+  - DEC-004
+  created_at: '2026-07-28'
+  updated_at: '2026-07-28'
+- id: DEC-003
+  title: 老板电器倾倒入盘采用两版本固定场景单臂 MVP 路线
+  category: technical
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks:
+  - TASK-004
+  - TASK-005
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  context: '2026-07-27 锅具和锅铲测试显示，锅把朝左时左手抓取和倾倒较可行；右手锅铲当前存在抓取、放置、有效辅助和碰撞风险，暂不适合作为第一版主体功能。固定场景能压缩变量，便于尽快验证任务链；模型路线当前成功率和数据成本不确定，视觉伺服适合解决锅把定位和局部对位，但不应承担菜品完整倾倒判断；录制回放适合第一版，但必须配合初始状态、碰撞/速度限制、超时、急停和失败回退。
 
     '
-  hypothesis: '第一版采用固定场景 MVP：单臂抓锅，视觉定位锅把抓取点，固定初始状态和餐盘位置， 采用录制/回放的抓取后倾倒轨迹，再将锅具放回原位；暂不引入模型策略、全局自适应倾倒或双臂协同。
-    但抓取闭合后必须增加最小抓取确认和受控微抬升，未确认不得转运或倾倒。
+  hypothesis: '将实施拆成两个版本：V1 以锅把朝左为固定场景，由左手完成锅把识别、抓取确认、餐盘定位、移动、倾倒、必要的轻微抖动和放回原位，先打通完整闭环；V2 在 V1 闭环稳定后，再评估并加入右手锅铲抓取、放置和辅助动作。V1 不等待、不依赖右手锅铲能力。
 
     '
   options:
   - name: 推荐方案
     benefits:
-    - '第一版采用固定场景 MVP：单臂抓锅，视觉定位锅把抓取点，固定初始状态和餐盘位置， 采用录制/回放的抓取后倾倒轨迹，再将锅具放回原位；暂不引入模型策略、全局自适应倾倒或双臂协同。
-      但抓取闭合后必须增加最小抓取确认和受控微抬升，未确认不得转运或倾倒。
+    - 'V1 采用锅把朝左的固定场景左手单臂闭环：视觉定位锅把和餐盘，执行抓取确认、移动、倾倒、必要轻微抖动和放回原位；V2 再迭代右手锅铲辅助。
 
       '
     costs: []
@@ -166,6 +361,7 @@ decisions:
     - 单臂在最坏负载下无法稳定抓取或试抬升
     - 录制轨迹存在碰撞、超力矩或明显洒落
     - 任务失败后无法安全回到支撑面/人工接管
+    - V2 右手锅铲仍可能存在抓取不稳、动作无效或与锅沿碰撞
   - name: 回退方案
     benefits:
     - 保留安全限幅、超时、急停和人工确认
@@ -173,22 +369,22 @@ decisions:
     - 适应性较低
     risks:
     - 固定轨迹对状态变化敏感
-  decision: '第一版采用固定场景 MVP：单臂抓锅，视觉定位锅把抓取点，固定初始状态和餐盘位置， 采用录制/回放的抓取后倾倒轨迹，再将锅具放回原位；暂不引入模型策略、全局自适应倾倒或双臂协同。
-    但抓取闭合后必须增加最小抓取确认和受控微抬升，未确认不得转运或倾倒。
+  decision: '确定采用两版本路线。V1 以锅把朝左为固定场景，不考虑右手锅铲辅助，先由左手独立完成锅把感知结果消费、抓取、准备倾倒、底盘协同、餐盘定位、移动到倾倒位、倾倒、必要的轻微抖动、放回原位和失败接管，形成完整可重复闭环；抓取确认暂留可选插槽，不作为当前 V1 基础流程必经条件；V2 在 V1 闭环完成并稳定后，再继续迭代右手锅铲抓取、放置、辅助动作及其碰撞和落料效果。
 
     '
   reason_summary:
-  - '固定场景能压缩变量，便于尽快验证任务链；模型路线当前成功率和数据成本不确定， 视觉伺服适合解决锅把定位和局部对位，但不应承担菜品完整倾倒判断；录制回放适合第一版，
-    但必须配合初始状态、碰撞/速度限制、超时、急停和失败回退。
-
-    '
+  - '锅把朝左时已观察到左手抓取和倾倒较可行；右手锅铲仍有抓取、放置、有效辅助和碰撞风险，推迟到 V2 可降低 V1 变量和交付风险。'
+  - '固定场景能压缩变量，便于尽快验证任务链；感知结果订阅和录制回放适合 V1，但必须配合初始状态、TCP 标定、碰撞/速度限制、超时、急停和失败回退。'
   conditions:
+  - V1 不把右手锅铲辅助作为前置条件、主体功能或验收条件
+  - V1 不把抓取确认作为当前基础流程的必经前置条件
+  - V2 只有在 V1 完整闭环通过后才启动
   - 固定场景仍存在不可接受的锅把定位漂移或餐盘位置漂移
   - 单臂在最坏负载下无法稳定抓取或试抬升
   - 录制轨迹存在碰撞、超力矩或明显洒落
   - 任务失败后无法安全回到支撑面/人工接管
   action: task-mvp-plating-pipeline
-  expected_result: 在真实接口和安全 Spike 前不承诺超出证据范围的全轨迹自适应控制。
+  expected_result: V1 先获得不依赖右手锅铲的完整可重复闭环；V2 再基于 V1 数据评估右手锅铲辅助是否带来可验证收益。
   reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
   observation: null
   actual_result: null
@@ -196,7 +392,58 @@ decisions:
   lesson: null
   evidence:
   - 方案1.md
+  - /home/tbl/Project/My_knowledge_base/学习记录/2026.07.27/今日任务.md
+  - 用户于 2026-07-28 确认两版本实施方案
   - .project-log/research/solution-research.yaml#grasp_precondition
+  - DEC-004
   supersedes: []
   created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+- id: DEC-007
+  title: V1 先搭建无验收、无异常处理的动作流程骨架
+  category: business
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks:
+  - TASK-007
+  - TASK-008
+  - TASK-004
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  context: 用户于 2026-07-28 进一步明确，当前目标是先搭建并打通 V1 动作流程框架；具体参数、固定姿态、TCP 数值、放回方式和异常处理不应阻塞前段流程。
+  hypothesis: 将流程骨架与验收、异常和参数标定分离，可以先验证跨仓库主链和动作编排，再逐步补齐现场参数与安全增强逻辑。
+  options:
+  - name: 先实现动作流程骨架
+    benefits:
+    - 不被落料验收、异常语义和未确定参数阻塞
+    - 便于团队先联调感知、规划、执行、底盘和轨迹接口
+    costs:
+    - 当前版本不提供落料质量判断和异常自动处理
+    risks:
+    - 必须明确这是流程联调版本，不得误认为生产级闭环
+  decision: V1 当前只打通从感知结果消费、左手抓取、提锅、底盘协同、倾倒到后续放回/home 占位的动作流程；不加入菜品落盘验收、异常检查、自动重试或回退处理。具体参数数值、固定姿态、TCP 位姿、放回规则和 home 位置作为待填写或后续确定内容，不阻塞前段流程。
+  reason_summary:
+  - 用户明确当前阶段优先搭建框架并跑通流程。
+  - 落料验收、异常处理和现场参数尚未确定，提前固化会增加无效返工。
+  conditions:
+  - 当前实现和演示必须标注为 V1 动作流程骨架，不代表完整安全闭环或落料验收闭环
+  - 抓取偏置沿锅把主轴 PCA 向量定义在机器人中心坐标系 C 下
+  - 抓取 TCP 和锅具 TCP 的位置、姿态支持参数化
+  - 倾倒增量动作采用锅具 TCP 坐标系下的录制回放
+  - 放回/home 和异常处理保留扩展位置，后续单独补齐
+  action: TASK-008
+  expected_result: 技术选型围绕最小动作流程骨架展开，不把未确认参数、落料验收或异常处理静默升级为当前 V1 前置条件。
+  reversal_plan: 若后续真实设备联调证明某项参数或异常处理是动作流程安全运行的硬前置，再回到业务澄清补充相应闸门和验收规则。
+  observation: null
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence:
+  - 用户于 2026-07-28 对 1～7 项逐项确认
+  - .project-log/requirements/baseline.yaml
+  - .project-log/business-logic/open-questions.yaml
+  supersedes: []
+  created_at: '2026-07-28'
   updated_at: '2026-07-28'
