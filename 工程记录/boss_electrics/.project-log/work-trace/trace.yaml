@@ -1,2 +1,19 @@
-version: "0.2"
-entries: []
+version: '0.4'
+entries:
+- id: TRACE-001
+  task_id: TASK-001
+  timestamp: '2026-07-22'
+  context: 原调研把液体论文指标过度外推到固体装盘，且未清晰划分 MoveIt 与底层力控边界。
+  hypothesis: 分层控制和 Spike-first 路线能降低固体菜品与未知接口带来的风险。
+  decision_ref: DEC-001
+  action: 补充 ArXiv、MoveIt 2 和 ros2_control 一手资料，并拆分锅把抓取确认前置任务。
+  expected_result: 形成可审阅的推荐方案、回退方案和最小验证入口。
+  observation: 官方资料支持组件能力，但不能证明 KP200 接口可用或固体落料必然成功。
+  actual_result: 完成分层推荐、抓取确认闸门、MVP 固定场景任务链和开放问题清单。
+  delta: 从直接承诺力感知 PID 改为示教基线加受限局部反馈。
+  lesson: 抓取确认和菜品落盘判断必须与轨迹执行结果分开建模。
+  next_adjustment: 先执行 TASK-002，再决定是否启动 TASK-003。
+  evidence:
+  - .project-log/research/solution-research.yaml
+  - .project-log/decisions/decision-log.yaml
+  knowledge_candidate: true

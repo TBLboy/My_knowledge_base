@@ -1,129 +1,224 @@
-version: "0.2"
+version: '0.4'
+active_goal: GOAL-001
 tasks:
-  - id: task-solution-research-plating
-    kind: research
-    phase: solution-research
-    goal: 调研炒菜出锅呈盘（倾倒入盘）技术路线
-    description: 针对场景二芦笋虾仁中的「出锅装盘」环节，调研锅具抓取、倾倒控制、防洒策略的技术方案
-    parent: null
-    dependencies: []
-    atoms:
-      - atom-plating-pour
-    decisions: []
-    inputs:
-      - .project-log/business-logic/atoms.yaml
-      - 项目背景信息提取.md
-    outputs:
-      - .project-log/research/solution-research.yaml
-    risks:
-      - 锅具型号（KP200）的具体手柄尺寸和重量未确认（已识别为开放问题）
-      - 防洒评价标准尚未定义
-    done_when:
-      - 至少对比2~3种可行的倾倒控制策略 ✓
-      - 明确了每种策略的适用条件、风险和实现路径 ✓
-      - 输出推荐方案及回退方案 ✓
-    status: review
-    result: >
-      调研完成。推荐方案：力感知 PID 闭环倾倒（option-b-force-pid）。
-      回退方案：纯示教轨迹（option-a-teach-replay）。
-      5 种方案已完成对比，详见 solution-research.yaml。
-      识别出 4 个待确认开放问题。
+- id: TASK-001
+  title: 调研炒菜出锅呈盘（倾倒入盘）技术路线
+  kind: research
+  parent_id: null
+  phase: solution-research
+  goal: 调研炒菜出锅呈盘（倾倒入盘）技术路线
+  status: done
+  priority: high
+  risk: medium
+  authority: B
+  owner: shared
+  tags:
+  - plating
+  - legacy-migration
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-PLATING-001-AC-001
+  related_decisions:
+  - DEC-001
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: []
+  spec_ref: null
+  inputs:
+  - .project-log/business-logic/atoms.yaml
+  - 项目背景信息提取.md
+  outputs:
+  - .project-log/research/solution-research.yaml
+  plan: []
+  done_when:
+  - 至少对比2~3种可行的倾倒控制策略 ✓
+  - 明确了每种策略的适用条件、风险和实现路径 ✓
+  - 输出推荐方案及回退方案 ✓
+  verification:
+    status: passed
+    commands: []
     evidence:
-      - 学术论文 5 篇（arXiv:2310.18473, 2407.01755, 2408.01366, 2503.17501, 2505.11680）
-      - MoveIt 2 / ROS 2 Control 框架文档
-      - solution-research.yaml 已写入
-
-  - id: task-pouring-validation-spike
-    kind: spike
-    phase: solution-research
-    goal: 验证 KP200 倾倒反馈信号与分层控制边界
-    description: >
-      在真实机器人或等比例安全测试台上，完成空锅、已知负载、液体、固体+汤汁四级测试，
-      判断是否具备受限重量反馈局部修正条件。
-    parent: task-solution-research-plating
-    dependencies:
-      - task-pan-handle-grasp-spike
-    atoms:
-      - atom-plating-pour
-    decisions:
-      - decision-research-pouring-layered-control
-    outputs:
-      - 接口更新率/延迟记录
-      - 空锅与已知负载估重基线
-      - 固体+汤汁失败分类与成功率
-      - 是否进入 architecture-decision 的建议
-    risks:
-      - 尚未获得 KP200/机器人 SDK 接口权限
-      - 食品和高温测试存在设备、卫生与人员安全风险
-    done_when:
-      - 接口可用性与实时性有实测证据或明确阻塞
-      - 估重信号在已知负载下的重复性有数据
-      - 至少完成一次固体+汤汁低速倾倒及失败分类
-      - 明确是否满足受限反馈局部修正的进入条件
-    status: pending
-
-  - id: task-pan-handle-grasp-spike
-    kind: spike
-    phase: solution-research
-    goal: 验证 KP200 锅把抓取和抓取确认闸门
-    description: >
-      针对锅把几何、温度、负载和灵巧手能力，比较专用适配夹具/软衬垫、灵巧手多指包络和条件性双臂协同，
-      建立从定位、闭合、接触确认到微抬升的可重复流程。
-    parent: task-solution-research-plating
-    dependencies: []
-    atoms:
-      - atom-pan-handle-grasp-confirmation
-      - atom-plating-pour
-    decisions:
-      - decision-grasp-confirmation-gate
-    outputs:
-      - 锅把几何/温度/负载测量记录
-      - 推荐抓取模式、预形状和抓取点
-      - grasp_confirmed / grasp_unverified / grasp_rejected 数据契约
-      - 抓取失败分类、重试策略和微抬升安全参数
-    risks:
-      - 灵巧手型号、指尖触觉和夹持力接口未确认
-      - 锅把油污、高温和光滑材质可能降低摩擦与触觉可靠性
-      - 真实最坏质量和质心未确认
-    done_when:
-      - 已完成锅把尺寸、材质、温度、可抓取区和负载测量
-      - 至少比较两种抓取模式并记录重复试验结果
-      - 抓取确认不是单一信号，而是接触、承载和滑移三类证据组合
-      - 微抬升失败时能在支撑面附近安全降回并拒绝进入倾倒
-      - 输出可供倾倒状态机消费的 grasp_confirmed 契约
-    status: pending
-
-  - id: task-mvp-plating-pipeline
-    kind: implementation
-    phase: task-decomposition
-    goal: 跑通固定场景下单臂抓锅、倾倒入盘和放回原位的第一版任务链
-    description: >
-      在固定锅位、固定餐盘位、固定菜量和固定机器人初始状态下，使用视觉锅把定位、
-      固定抓取姿态、最小抓取确认和录制回放轨迹完成一次完整出锅呈盘流程。
-    parent: task-solution-research-plating
-    dependencies:
-      - task-pan-handle-grasp-spike
-    atoms:
-      - atom-pan-handle-grasp-confirmation
-      - atom-plating-pour
-    decisions:
-      - decision-grasp-confirmation-gate
-      - decision-mvp-plating-fixed-scene
-    outputs:
-      - 固定初始状态定义
-      - 锅把视觉定位与抓取动作
-      - 抓取确认状态机
-      - 固定场景倾倒回放轨迹
-      - 放回原位轨迹
-      - 失败停止与人工接管流程
-    risks:
-      - 固定场景可能掩盖锅位、盘位、菜量变化导致的后续泛化问题
-      - 录制轨迹对锅具姿态、抓取点和初始状态敏感
-      - 没有视觉或重量反馈时无法直接证明菜品已完整落盘
-    done_when:
-      - 从专属初始状态启动可重复完成抓取、确认、倾倒和放回
-      - 抓取未确认时不会进入转运或倾倒
-      - 轨迹执行有速度/加速度/碰撞/超时/急停限制
-      - 至少记录成功、抓取失败、倾倒异常和放回失败四类结果
-      - 明确第一版不支持的变量和下一轮迭代入口
-    status: pending
+    - .project-log/research/solution-research.yaml
+    limitations:
+    - 用户审阅和真实设备 Spike 尚未完成。
+  result:
+    summary: 调研产物已完成，当前等待用户审阅。
+    changed_files:
+    - .project-log/research/solution-research.yaml
+    deviations:
+    - 旧版 status=review 映射为新版本 status=done，审阅状态转移到 workflow phase 和 result/verification
+      limitations。
+    follow_ups:
+    - 先执行 TASK-002，再决定是否启动 TASK-003。
+  created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+- id: TASK-002
+  title: 验证 KP200 锅把抓取和抓取确认闸门
+  kind: spike
+  parent_id: TASK-001
+  phase: solution-research
+  goal: 验证 KP200 锅把抓取和抓取确认闸门
+  status: pending
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - plating
+  - legacy-migration
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-001
+  related_decisions:
+  - DEC-002
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions:
+  - Q-001
+  - Q-007
+  - Q-008
+  required_skills: []
+  spec_ref: null
+  inputs: []
+  outputs:
+  - 锅把几何/温度/负载测量记录
+  - 推荐抓取模式、预形状和抓取点
+  - grasp_confirmed / grasp_unverified / grasp_rejected 数据契约
+  - 抓取失败分类、重试策略和微抬升安全参数
+  plan: []
+  done_when:
+  - 已完成锅把尺寸、材质、温度、可抓取区和负载测量
+  - 至少比较两种抓取模式并记录重复试验结果
+  - 抓取确认不是单一信号，而是接触、承载和滑移三类证据组合
+  - 微抬升失败时能在支撑面附近安全降回并拒绝进入倾倒
+  - 输出可供倾倒状态机消费的 grasp_confirmed 契约
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+- id: TASK-003
+  title: 验证 KP200 倾倒反馈信号与分层控制边界
+  kind: spike
+  parent_id: TASK-001
+  phase: solution-research
+  goal: 验证 KP200 倾倒反馈信号与分层控制边界
+  status: pending
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - plating
+  - legacy-migration
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-PLATING-001-AC-001
+  related_decisions:
+  - DEC-001
+  depends_on:
+  - TASK-002
+  blocked_by: []
+  blocked_by_questions:
+  - Q-003
+  - Q-004
+  - Q-005
+  - Q-006
+  required_skills: []
+  spec_ref: null
+  inputs: []
+  outputs:
+  - 接口更新率/延迟记录
+  - 空锅与已知负载估重基线
+  - 固体+汤汁失败分类与成功率
+  - 是否进入 architecture-decision 的建议
+  plan: []
+  done_when:
+  - 接口可用性与实时性有实测证据或明确阻塞
+  - 估重信号在已知负载下的重复性有数据
+  - 至少完成一次固体+汤汁低速倾倒及失败分类
+  - 明确是否满足受限反馈局部修正的进入条件
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+- id: TASK-004
+  title: 跑通固定场景下单臂抓锅、倾倒入盘和放回原位的第一版任务链
+  kind: task
+  parent_id: TASK-001
+  phase: task-decomposition
+  goal: 跑通固定场景下单臂抓锅、倾倒入盘和放回原位的第一版任务链
+  status: pending
+  priority: high
+  risk: high
+  authority: C
+  owner: shared
+  tags:
+  - plating
+  - legacy-migration
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-001
+  related_decisions:
+  - DEC-002
+  - DEC-003
+  depends_on:
+  - TASK-002
+  blocked_by: []
+  blocked_by_questions:
+  - Q-001
+  - Q-002
+  - Q-006
+  required_skills: []
+  spec_ref: null
+  inputs: []
+  outputs:
+  - 固定初始状态定义
+  - 锅把视觉定位与抓取动作
+  - 抓取确认状态机
+  - 固定场景倾倒回放轨迹
+  - 放回原位轨迹
+  - 失败停止与人工接管流程
+  plan: []
+  done_when:
+  - 从专属初始状态启动可重复完成抓取、确认、倾倒和放回
+  - 抓取未确认时不会进入转运或倾倒
+  - 轨迹执行有速度/加速度/碰撞/超时/急停限制
+  - 至少记录成功、抓取失败、倾倒异常和放回失败四类结果
+  - 明确第一版不支持的变量和下一轮迭代入口
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-22'
+  updated_at: '2026-07-28'

@@ -1,0 +1,102 @@
+version: '0.4'
+status: passed
+functional_business_logic:
+  actors:
+  - 双臂移动机器人
+  - 灵巧手
+  - 自动翻炒锅 KP200
+  - 餐盘
+  scenarios:
+  - 固定场景下抓锅、倾倒入盘、放回原位
+  rules:
+  - 抓取确认未输出 grasp_confirmed 时不得转运或倾倒。
+  - 倾倒过程必须避免高温区、碰撞和明显洒落。
+  state_transitions:
+  - safe-supported → grasping → grasp-confirmed → transferring/pouring → returned
+    or human-intervention
+  exceptions:
+  - 抓取失败、卡料、盘位移位、超力矩、通信丢失和过量洒落
+  boundaries:
+  - 第一版固定锅位、盘位、菜量和机器人初始状态；不承诺泛化、双臂协同或全轨迹自适应力控。
+technical_business_logic:
+  current_implementation_facts:
+  - 当前项目目录主要包含方案文档和 Project Log，没有已迁移的产品代码实现。
+  interface_contracts:
+  - 抓取确认需要输出 grasp_confirmed/grasp_unverified/grasp_rejected。
+  - 倾倒反馈依赖关节 effort/力矩或腕部 F/T 接口。
+  data_and_state_rules:
+  - 抓取确认必须由接触、承载和无明显滑移三类证据组合。
+  consistency_and_concurrency:
+  - 锅具仍有安全支撑时完成抓取确认；异常时降回支撑面并停止。
+  external_constraints:
+  - 厨房高温、油污、台面/灶具碰撞和设备接口不统一。
+  compatibility_constraints:
+  - 目标环境为双臂 7-DOF 机器人、灵巧手和 ROS 2/MoveIt 2 体系。
+alignment:
+  confirmed_matches: []
+  conflicts: []
+  unknowns:
+  - id: Q-001
+    type: unknown
+    summary: 影响抓取姿态、夹具选择和力矩基线。
+    status: deferred
+    authority: C
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-002
+    type: unknown
+    summary: 影响任务分解、同步控制和碰撞规划。
+    status: deferred
+    authority: C
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-003
+    type: unknown
+    summary: 影响受限重量反馈和局部修正实现。
+    status: deferred
+    authority: B
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-004
+    type: unknown
+    summary: 影响负载分级、参数标定和失败分类。
+    status: deferred
+    authority: B
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-005
+    type: unknown
+    summary: 影响控制周期、滤波和安全限幅。
+    status: deferred
+    authority: B
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-006
+    type: unknown
+    summary: 重量变化不能单独证明固体已完整落盘。
+    status: deferred
+    authority: C
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-007
+    type: unknown
+    summary: 决定多指包络抓取是否可行。
+    status: deferred
+    authority: C
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  - id: Q-008
+    type: unknown
+    summary: 影响抓取可靠性、热安全和夹具材料选择。
+    status: deferred
+    authority: C
+    evidence:
+    - .project-log/business-logic/open-questions.yaml
+  decisions_required:
+  - DEC-003 用户审阅固定场景 MVP
+  - Q-001/Q-002/Q-006/Q-007/Q-008 C 级问题需用户确认
+gate:
+  status: passed
+  blocking_unknowns: []
+  notes: 旧日志已声明当前目标范围明确；未决问题保留为 open questions，并在进入 Spike/实现前重新评估。
+updated_at: '2026-07-28'

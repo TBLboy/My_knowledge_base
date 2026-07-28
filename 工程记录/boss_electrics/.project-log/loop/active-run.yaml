@@ -1,0 +1,28 @@
+schema_version: 1
+run_id: RUN-20260728-001
+goal_id: GOAL-001
+phase: solution-research
+clarification_domain: null
+task_id: TASK-001
+status: waiting-user
+next_action:
+  kind: user-decision
+  subject: GOAL-001
+  statement: 用户审阅固定场景 MVP；确认后执行 TASK-002
+counters:
+  task_attempts: 0
+  same_failure_count: 0
+  no_progress_count: 0
+  loop_decisions: 0
+limits:
+  task_attempts: 4
+  same_failure_count: 2
+  no_progress_count: 2
+  loop_decisions: 40
+native_goal:
+  binding_status: unbound
+  thread_goal_id: null
+  last_known_status: null
+  last_synced_at: null
+last_event_id: null
+updated_at: '2026-07-28T00:00:00Z'

@@ -40,3 +40,10 @@
 - `status` 表示规则当前生命周期。
 
 Agent 推断的规则应为 `draft + inferred`。实验规则为 `experimental`。发现权威冲突时使用 `conflict`，不得选择性忽略证据。
+
+## 功能规则与技术事实
+
+- 功能业务逻辑描述系统应该怎样表现。
+- 技术业务逻辑描述当前系统如何承载行为及其强制约束。
+- 当前代码、配置或测试行为不能仅凭存在就升级为功能规则。
+- 未来实现方案不属于技术业务逻辑，应进入 solution research 和 architecture decision。

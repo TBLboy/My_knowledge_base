@@ -1,88 +1,148 @@
-version: "0.2"
+version: '0.4'
+source_of_truth: true
 atoms:
-  - id: atom-plating-pour
-    status: active
-    description: 机器人从自动翻炒锅中取出炒好的菜，倾倒入餐盘
-    actor: 双臂移动机器人
-    trigger: 自动翻炒锅烹饪完成，锅盖已打开，餐盘已就位
-    preconditions:
-      - 锅盖已打开并放置到安全位置
-      - 餐盘已放置在倾倒目标位置
-      - 机器人已定位到倾倒站位
-      - 锅体手柄温度在机器人安全抓取范围内
-    rule: 机器人抓取锅具手柄，将锅体倾斜至出菜角度，控制倾倒速度和路径，使菜品完整落入餐盘，避免洒出台面或餐盘外
-    inputs:
-      - 自动翻炒锅（含手柄位置和温度）
-      - 餐盘位置和朝向
-      - 菜品类型和预估重量/质地
-    outputs:
-      - 菜品装入餐盘
-      - 空锅（可能残留少量汤汁）
-    side_effects:
-      - 锅具可能残留油渍或高温
-      - 餐盘位置可能因菜品重量轻微移动
-      - 台面可能有溅出的汤汁
-    exceptions:
-      - 锅具抓取失败：松开 → 重试 → 人工介入
-      - 倾倒过程中菜品卡住：停止倾倒 → 尝试抖动 → 人工介入
-      - 餐盘移位：停止倾倒 → 人工调整 → 继续
-      - 锅体过重/重心失衡：停止 → 人工介入
-      - 菜品溅出过多：完成当前动作 → 清洁步骤
-    invariants:
-      - 机器人双臂不能进入高温区域（锅底正下方/灶具表面）
-      - 抓取点必须是手柄非高温区域
-      - 倾倒过程中锅体不能与台面、灶具或其他设备碰撞
-    acceptance:
-      given: 自动翻炒锅已完成烹饪，锅盖已打开，餐盘就位
-      when: 机器人执行倾倒动作
-      then: 菜品完整落入餐盘，无明显洒落
-    references:
-      - "项目背景信息提取.md - 场景二：芦笋虾仁"
-      - "项目背景信息提取.md - 设备：自动翻炒锅 KP200"
-
-  - id: atom-pan-handle-grasp-confirmation
-    status: experimental
-    description: 机器人识别并稳定抓取自动翻炒锅手柄，在抬升和倾倒前确认抓取承载能力
-    actor: 双臂移动机器人灵巧手
-    trigger: 自动翻炒锅烹饪完成，锅盖已打开，机器人获得锅把抓取区域
-    preconditions:
-      - 锅把抓取区域温度在允许范围内
-      - 锅把和灵巧手的几何、材质、可接触区域已标定或被视觉识别
-      - 锅体周围有安全接近和抬升空间
-      - 机器人负载、关节力矩和灵巧手夹持能力满足最坏工况估计
-    rule: >
-      机器人沿锅把轴向建立预抓取姿态，以包络式/多指夹持形成抗重力和抗倾覆力矩的抓取，
-      低速闭合并通过指尖接触、关节/腕部力矩、夹爪位移和短距离试抬升联合确认抓取稳定；
+- id: BL-PLATING-001
+  title: 倾倒入盘
+  kind: flow
+  domain: plating
+  status: active
+  priority: high
+  risk: critical
+  authority: user-confirmed
+  source:
+    type: document
+    reference: 项目背景信息提取.md; .project-log-legacy-20260728/current-session.md
+  description: 机器人从自动翻炒锅中取出炒好的菜，倾倒入餐盘
+  actors:
+  - 双臂移动机器人
+  trigger: 自动翻炒锅烹饪完成，锅盖已打开，餐盘已就位
+  preconditions:
+  - 锅盖已打开并放置到安全位置
+  - 餐盘已放置在倾倒目标位置
+  - 机器人已定位到倾倒站位
+  - 锅体手柄温度在机器人安全抓取范围内
+  inputs:
+  - 自动翻炒锅（含手柄位置和温度）
+  - 餐盘位置和朝向
+  - 菜品类型和预估重量/质地
+  rule:
+    statement: 机器人抓取锅具手柄，将锅体倾斜至出菜角度，控制倾倒速度和路径，使菜品完整落入餐盘，避免洒出台面或餐盘外
+  outputs:
+  - 菜品装入餐盘
+  - 空锅（可能残留少量汤汁）
+  side_effects:
+  - 锅具可能残留油渍或高温
+  - 餐盘位置可能因菜品重量轻微移动
+  - 台面可能有溅出的汤汁
+  exceptions:
+  - 锅具抓取失败：松开 → 重试 → 人工介入
+  - 倾倒过程中菜品卡住：停止倾倒 → 尝试抖动 → 人工介入
+  - 餐盘移位：停止倾倒 → 人工调整 → 继续
+  - 锅体过重/重心失衡：停止 → 人工介入
+  - 菜品溅出过多：完成当前动作 → 清洁步骤
+  failure_handling:
+  - 锅具抓取失败：松开 → 重试 → 人工介入
+  - 倾倒过程中菜品卡住：停止倾倒 → 尝试抖动 → 人工介入
+  - 餐盘移位：停止倾倒 → 人工调整 → 继续
+  - 锅体过重/重心失衡：停止 → 人工介入
+  - 菜品溅出过多：完成当前动作 → 清洁步骤
+  invariants:
+  - 机器人双臂不能进入高温区域（锅底正下方/灶具表面）
+  - 抓取点必须是手柄非高温区域
+  - 倾倒过程中锅体不能与台面、灶具或其他设备碰撞
+  acceptance:
+  - id: BL-PLATING-001-AC-001
+    given: 自动翻炒锅已完成烹饪，锅盖已打开，餐盘就位
+    when: 机器人执行倾倒动作
+    then: 菜品完整落入餐盘，无明显洒落
+    method: null
+    evidence: null
+    status: not-verified
+  dependencies: []
+  baseline_refs: []
+  decision_refs:
+  - DEC-001
+  - DEC-003
+  implementation_refs: []
+  test_refs: []
+  supersedes: []
+  notes: '旧 ID: atom-plating-pour; references 已迁移到 source/reference 和本 notes。'
+  created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+  last_verified_at: null
+- id: BL-GRASP-001
+  title: 锅把抓取确认
+  kind: flow
+  domain: plating
+  status: experimental
+  priority: high
+  risk: high
+  authority: experimental
+  source:
+    type: document
+    reference: 项目背景信息提取.md; .project-log-legacy-20260728/current-session.md
+  description: 机器人识别并稳定抓取自动翻炒锅手柄，在抬升和倾倒前确认抓取承载能力
+  actors:
+  - 双臂移动机器人灵巧手
+  trigger: 自动翻炒锅烹饪完成，锅盖已打开，机器人获得锅把抓取区域
+  preconditions:
+  - 锅把抓取区域温度在允许范围内
+  - 锅把和灵巧手的几何、材质、可接触区域已标定或被视觉识别
+  - 锅体周围有安全接近和抬升空间
+  - 机器人负载、关节力矩和灵巧手夹持能力满足最坏工况估计
+  inputs:
+  - 锅把位姿、轴线、直径/截面和可抓取区
+  - 锅具空载及含菜最坏工况质量、质心和温度
+  - 灵巧手指尖/掌面接触状态、关节位置和力矩
+  - 机器人与灶具、台面、餐盘的碰撞模型
+  rule:
+    statement: '机器人沿锅把轴向建立预抓取姿态，以包络式/多指夹持形成抗重力和抗倾覆力矩的抓取， 低速闭合并通过指尖接触、关节/腕部力矩、夹爪位移和短距离试抬升联合确认抓取稳定；
       未通过确认不得进入转运或倾倒。
-    inputs:
-      - 锅把位姿、轴线、直径/截面和可抓取区
-      - 锅具空载及含菜最坏工况质量、质心和温度
-      - 灵巧手指尖/掌面接触状态、关节位置和力矩
-      - 机器人与灶具、台面、餐盘的碰撞模型
-    outputs:
-      - grasp_confirmed 或 grasp_rejected 状态
-      - 抓取姿态、指关节目标、夹持力/力矩和试抬升结果日志
-      - 允许进入倾倒或转入重试/人工介入
-    side_effects:
-      - 锅把可能发生轻微转动或滑移
-      - 灵巧手接触面可能接触油污或高温残留
-      - 试抬升会引起锅内菜品和汤汁重心变化
-    exceptions:
-      - 锅把定位不确定：保持安全距离 → 重新视觉定位 → 失败则人工介入
-      - 指尖未形成预期接触：停止闭合 → 退回预抓取 → 更换抓取姿态或人工介入
-      - 试抬升发生滑移/异常力矩：立即降回安全支撑面 → 释放 → 重试一次或人工介入
-      - 温度、负载或力矩超限：禁止抓取/抬升 → 报警并人工介入
-      - 抓取确认信号丢失：保持或降回安全姿态，不进入转运和倾倒
-    invariants:
-      - 灵巧手不能接触锅体高温区、灶面或锅内食物
-      - 抓取确认前锅体仍有安全支撑，不允许悬空转运
-      - 抓取姿态必须为后续倾倒保留安全腕部姿态和运动空间
-      - 任何单一“手指闭合到位”信号不能单独证明抓取成功
-    acceptance:
-      given: 锅盖已打开，锅具仍由安全支撑面承载，锅把可见且温度/负载在允许范围
-      when: 机器人执行锅把抓取确认
-      then: 灵巧手形成稳定接触，短距离试抬升无可观测滑移或超限力矩，并输出 grasp_confirmed；否则保持支撑并拒绝进入倾倒
-    references:
-      - "arXiv:2503.17501 - Shear-based Grasp Control for Multi-fingered Underactuated Tactile Robotic Hands"
-      - "MoveIt 2 Realtime Servo 官方文档"
-      - "项目背景信息提取.md - 设备：自动翻炒锅 KP200"
+
+      '
+  outputs:
+  - grasp_confirmed 或 grasp_rejected 状态
+  - 抓取姿态、指关节目标、夹持力/力矩和试抬升结果日志
+  - 允许进入倾倒或转入重试/人工介入
+  side_effects:
+  - 锅把可能发生轻微转动或滑移
+  - 灵巧手接触面可能接触油污或高温残留
+  - 试抬升会引起锅内菜品和汤汁重心变化
+  exceptions:
+  - 锅把定位不确定：保持安全距离 → 重新视觉定位 → 失败则人工介入
+  - 指尖未形成预期接触：停止闭合 → 退回预抓取 → 更换抓取姿态或人工介入
+  - 试抬升发生滑移/异常力矩：立即降回安全支撑面 → 释放 → 重试一次或人工介入
+  - 温度、负载或力矩超限：禁止抓取/抬升 → 报警并人工介入
+  - 抓取确认信号丢失：保持或降回安全姿态，不进入转运和倾倒
+  failure_handling:
+  - 锅把定位不确定：保持安全距离 → 重新视觉定位 → 失败则人工介入
+  - 指尖未形成预期接触：停止闭合 → 退回预抓取 → 更换抓取姿态或人工介入
+  - 试抬升发生滑移/异常力矩：立即降回安全支撑面 → 释放 → 重试一次或人工介入
+  - 温度、负载或力矩超限：禁止抓取/抬升 → 报警并人工介入
+  - 抓取确认信号丢失：保持或降回安全姿态，不进入转运和倾倒
+  invariants:
+  - 灵巧手不能接触锅体高温区、灶面或锅内食物
+  - 抓取确认前锅体仍有安全支撑，不允许悬空转运
+  - 抓取姿态必须为后续倾倒保留安全腕部姿态和运动空间
+  - 任何单一“手指闭合到位”信号不能单独证明抓取成功
+  acceptance:
+  - id: BL-GRASP-001-AC-001
+    given: 锅盖已打开，锅具仍由安全支撑面承载，锅把可见且温度/负载在允许范围
+    when: 机器人执行锅把抓取确认
+    then: 灵巧手形成稳定接触，短距离试抬升无可观测滑移或超限力矩，并输出 grasp_confirmed；否则保持支撑并拒绝进入倾倒
+    method: null
+    evidence: null
+    status: not-verified
+  dependencies: []
+  baseline_refs: []
+  decision_refs:
+  - DEC-002
+  - DEC-003
+  implementation_refs: []
+  test_refs: []
+  supersedes: []
+  notes: '旧 ID: atom-pan-handle-grasp-confirmation; references 已迁移到 source/reference
+    和本 notes。'
+  created_at: '2026-07-22'
+  updated_at: '2026-07-28'
+  last_verified_at: null

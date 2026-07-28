@@ -1,654 +1,406 @@
-version: "0.2"
+version: '0.4'
 studies:
-  - id: study-pouring-control-strategies
-    title: 炒菜出锅倾倒入盘控制策略技术方案调研
-    phase: solution-research
-    status: completed
-    date: 2026-07-21
+- id: RES-001
+  status: complete
+  problem: 为 KP200 自动翻炒锅的固体+少量汤汁出锅呈盘选择可验证、可分层实现的机器人倾倒控制路线。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-001
+  - TASK-002
+  - TASK-003
+  - TASK-004
+  constraints:
+  - 手柄抓取点远离高温区域
+  - 倾倒过程中避免与台面/灶具碰撞
+  - 菜品不能洒出台面或餐盘外
+  - 锅具重量（含菜品）在机器人负载范围内
+  - 原型演示阶段，优先保证可靠性和可复现性
+  - 项目阶段：原型验证和演示阶段，允许固定预设
+  candidates:
+  - id: option-a-teach-replay
+    name: 纯示教轨迹 (Teach-and-Replay)
+    category: position-control
+    description: '人工引导机器人完成一次倾倒动作，记录关节轨迹， 在演示时直接回放。无力觉/视觉反馈。
 
-    # 一、调研前条件
-    preconditions:
-      target_capability: 双臂移动机器人抓取自动翻炒锅（KP200）手柄，将烹饪好的菜品（芦笋虾仁类固体+少量汤汁）倾倒入餐盘
-      inputs:
-        - 自动翻炒锅 KP200（含长手柄，锅体在前）
-        - 餐盘位置和朝向（预设固定位置）
-        - 菜品类型（芦笋虾仁：固体为主 + 少量汤汁）
-      outputs:
-        - 菜品完整装入餐盘
-        - 空锅（可能残留少量汤汁油渍）
-      runtime_environment:
-        - 双臂机器人 7-DOF/臂 + 灵巧手
-        - 典型 ROS 2 + MoveIt 2 控制框架
-        - IoT 平台作为设备协调中心
-        - 厨房台面高度 ~900mm，深度 ~700mm
-      integration_boundaries:
-        - 手臂运动规划（MoveIt 2 Cartesian 路径）
-        - 力/力矩感知（关节力矩传感器或腕部 F/T 传感器）
-        - 视觉定位（识别锅把手、餐盘位置）
-        - 任务调度（三级任务结构中的原子动作层）
-      constraints:
-        - 手柄抓取点远离高温区域
-        - 倾倒过程中避免与台面/灶具碰撞
-        - 菜品不能洒出台面或餐盘外
-        - 锅具重量（含菜品）在机器人负载范围内
-        - 原型演示阶段，优先保证可靠性和可复现性
-        - 项目阶段：原型验证和演示阶段，允许固定预设
-      related_atoms:
-        - atom-plating-pour
-      related_tasks:
-        - task-solution-research-plating
+      '
+    requirement_fit:
+      rating: medium
+      note: 固定场景可工作，但对食物重量变化无适应能力
+    integration_cost: 低 — 只需示教一次，不需要额外传感器
+    maintenance_cost: 低 — 固定轨迹，无需维护
+    performance:
+      rating: medium-low
+      note: 食物重量/质心变化时可能洒出；汤汁量不同时表现不稳定
+    reliability:
+      rating: medium
+      note: 预设状态良好时可靠；偏离预设时失败率高
+    debuggability: 高 — 轨迹固定，容易定位问题
+    lock_in: 无
+    safety_risk: 中 — 无力控可能导致碰撞检测不及时
+    advantages:
+    - 实现最简单
+    - 演示可复现性高
+    - 不需要额外传感器
+    - 开发周期最短
+    disadvantages:
+    - 对食物量/类型变化零适应
+    - 锅具重量不同需重新示教
+    - 汤汁洒出风险随变量增加
+    project_fit:
+      rating: medium
+      note: 可作为最小可行方案快速上线，但演示风险较高
+  - id: option-b-force-pid
+    name: 力感知 PID 闭环倾倒 (Force-based PID Pouring)
+    category: force-control
+    description: '基于"Pouring by Feel"方法，使用机器人关节力矩传感器 实时监测锅具+食物重量变化，PID 控制器根据重量损失率
+      调节倾倒角度和速度。无需外部 F/T 传感器。
 
-    # 二、检索来源证据
-    evidence_sources:
-      academic:
-        - id: arXiv:2310.18473
-          title: "Pouring by Feel: An Analysis of Tactile and Proprioceptive Sensing for Accurate Pouring"
-          authors: "Pedro Piacenza, Daewon Lee, Volkan Isler"
-          year: 2023
-          venue: arXiv (cs.RO)
-          summary: >
-            使用 PID 控制器 + 机器人关节力矩传感器估计倾倒出的液体重量。
-            仅靠本体感知（无需外部 F/T 传感器）即可达到 ±10ml 精度。
-            在 novel 位置和不同抓取方式下均表现鲁棒。
-          relevance: 核心技术参考 — 力感知闭环倾倒控制
-        - id: arXiv:2503.17501
-          title: "Shear-based Grasp Control for Multi-fingered Underactuated Tactile Robotic Hands"
-          authors: "Christopher J. Ford et al."
-          year: 2025
-          venue: IEEE Transactions on Robotics (Special Section on Tactile Robotics)
-          summary: >
-            使用指尖触觉传感器的剪切力控制实现动态倾倒。
-            特别处理了倾倒过程中重心变化导致的抓取力调整。
-            灵巧手 + 触觉反馈实现类人操作。
-          relevance: 灵巧手触觉反馈技术参考
-        - id: arXiv:2407.01755
-          title: "An Intelligent Robotic System for Perceptive Pancake Batter Stirring and Precise Pouring"
-          authors: "Xinyuan Luo, Shengmiao Jin, Hung-Jui Huang, Wenzhen Yuan"
-          year: 2024
-          venue: IROS 2024
-          summary: >
-            集成触觉感知与控制的机器人面糊倾倒系统。
-            可估计水粉比和液位，精确倒入任意形状。
-          relevance: 厨房场景触觉感知倾倒参考
-        - id: arXiv:2408.01366
-          title: "Play to the Score: Stage-Guided Dynamic Multi-Sensory Fusion for Robotic Manipulation"
-          authors: "Ruoxuan Feng, Di Hu, Wenke Ma, Xuelong Li"
-          year: 2024
-          venue: CoRL 2024 (oral)
-          summary: >
-            多感官融合（视觉+听觉+触觉）的模仿学习框架。
-            在倾倒任务中动态调整各模态优先级。
-          relevance: 高级融合方案参考（适合后续阶段）
-        - id: arXiv:2505.11680
-          title: "Grounded Task Axes: Zero-Shot Semantic Skill Generalization"
-          authors: "M. Yunus Seker, Shobhit Aggarwal, Oliver Kroemer"
-          year: 2025
-          summary: >
-            将操作技能分解为任务轴控制器（位置/力控制）。
-            在倾倒任务中验证了轴控制器的鲁棒迁移能力。
-          relevance: 控制框架设计参考
-      frameworks:
-        - name: MoveIt 2
-          capability: Cartesian 路径规划
-          relevance: 实现倾倒运动轨迹的基本框架
-          evidence: MoveIt 2 官方文档确认支持 computeCartesianPath 规划笛卡尔空间路径
-        - name: ROS 2 Control
-          capability: 力/力矩控制接口
-          relevance: 支持阻抗/导纳控制器实现力控倾倒
-          evidence: ros2_control 框架支持多种控制器类型，可通过 joint torque 接口获取力信息
+      '
+    requirement_fit:
+      rating: high
+      note: 适应不同食物重量，控制倾倒速度，降低洒出风险
+    integration_cost:
+      rating: medium
+      note: 需要接入关节力矩数据，实现重量估计算法和 PID 控制器
+    maintenance_cost: 中 — 需标定不同锅具/菜品的重量基线
+    performance:
+      rating: high
+      note: 论文证明 ±10ml 精度（液体测试），固体+汤汁效果应更优
+    reliability:
+      rating: high
+      note: 不依赖视觉条件，在关节力矩传感器可用时始终可靠
+    debuggability: 高 — PID 参数和重量估计可独立调试
+    lock_in: 无 — 在 ROS 2 框架内实现，可移植
+    safety_risk: 低 — 力感知可检测异常阻力（如食物卡住）
+    advantages:
+    - 实现在现有硬件上（关节力矩传感器）
+    - 不需要额外传感器硬件
+    - 主动适应食物重量变化
+    - 经验证的学术方法（±10ml 精度）
+    - 可检测倾倒异常（重量变化异常）
+    disadvantages:
+    - 需要标定空锅重量
+    - 对极轻/极重食物的控制参数需调整
+    - 单靠力感无法检测餐盘位置偏差
+    project_fit:
+      rating: high
+      note: 最适合原型演示阶段的技术—硬件已有、开发量适中、可靠性高
+  - id: option-c-vision-servo
+    name: 视觉引导倾倒 (Vision-guided Pouring)
+    category: visual-servo
+    description: '使用 RGB-D 相机（顶部或腕部安装）实时监测倾倒过程。 视觉算法检测餐盘位置、食物落点、汤汁飞溅。 根据视觉反馈调整倾倒轨迹。
 
-    # 三、候选方案对比
-    candidates:
-      - id: option-a-teach-replay
-        name: 纯示教轨迹 (Teach-and-Replay)
-        category: position-control
-        description: >
-          人工引导机器人完成一次倾倒动作，记录关节轨迹，
-          在演示时直接回放。无力觉/视觉反馈。
-        requirement_fit:
-          rating: medium
-          note: 固定场景可工作，但对食物重量变化无适应能力
-        integration_cost: 低 — 只需示教一次，不需要额外传感器
-        maintenance_cost: 低 — 固定轨迹，无需维护
-        performance:
-          rating: medium-low
-          note: 食物重量/质心变化时可能洒出；汤汁量不同时表现不稳定
-        reliability:
-          rating: medium
-          note: 预设状态良好时可靠；偏离预设时失败率高
-        debuggability: 高 — 轨迹固定，容易定位问题
-        lock_in: 无
-        safety_risk: 中 — 无力控可能导致碰撞检测不及时
-        advantages:
-          - 实现最简单
-          - 演示可复现性高
-          - 不需要额外传感器
-          - 开发周期最短
-        disadvantages:
-          - 对食物量/类型变化零适应
-          - 锅具重量不同需重新示教
-          - 汤汁洒出风险随变量增加
-        project_fit:
-          rating: medium
-          note: 可作为最小可行方案快速上线，但演示风险较高
+      '
+    requirement_fit:
+      rating: medium
+      note: 可检测餐盘位置偏差和飞溅，但对油烟/遮挡敏感
+    integration_cost: 高 — 需要视觉流水线、标定、实时推理
+    maintenance_cost: 高 — 光照/背景变化需维护视觉模型
+    performance:
+      rating: medium
+      note: 依赖光照、视角、油烟条件；处理延迟可能影响实时控制
+    reliability:
+      rating: medium-low
+      note: 厨房环境（油烟、蒸汽、水渍）影响视觉稳定性
+    debuggability: 中 — 视觉失败需要区分环境/算法/标定问题
+    lock_in: 低 — 可基于 OpenCV 等开源方案
+    safety_risk: 低 — 被动感知，不增加机械风险
+    advantages:
+    - 可检测餐盘位置偏差并补偿
+    - 可发现飞溅并及时调整
+    - 可与力控方案互补
+    disadvantages:
+    - 对厨房油烟/蒸汽/光照敏感
+    - 实时视觉处理增加计算负载
+    - 延迟可能影响倾倒控制稳定性
+    - 原型阶段视觉环境可能变化
+    project_fit:
+      rating: low-medium
+      note: 适合作为补充而非主力方案；原型阶段稳定视觉环境不易保证
+  - id: option-d-hybrid-force-vision
+    name: 力+视觉融合倾倒 (Hybrid Force-Visual Pouring)
+    category: hybrid
+    description: '力控为主、视觉为辅的双通道方案。 主控制回路基于关节力矩传感器的重量反馈， 视觉作为辅助确认餐盘位置和检测异常飞溅。
 
-      - id: option-b-force-pid
-        name: 力感知 PID 闭环倾倒 (Force-based PID Pouring)
-        category: force-control
-        description: >
-          基于"Pouring by Feel"方法，使用机器人关节力矩传感器
-          实时监测锅具+食物重量变化，PID 控制器根据重量损失率
-          调节倾倒角度和速度。无需外部 F/T 传感器。
-        requirement_fit:
-          rating: high
-          note: 适应不同食物重量，控制倾倒速度，降低洒出风险
-        integration_cost:
-          rating: medium
-          note: 需要接入关节力矩数据，实现重量估计算法和 PID 控制器
-        maintenance_cost: 中 — 需标定不同锅具/菜品的重量基线
-        performance:
-          rating: high
-          note: 论文证明 ±10ml 精度（液体测试），固体+汤汁效果应更优
-        reliability:
-          rating: high
-          note: 不依赖视觉条件，在关节力矩传感器可用时始终可靠
-        debuggability: 高 — PID 参数和重量估计可独立调试
-        lock_in: 无 — 在 ROS 2 框架内实现，可移植
-        safety_risk: 低 — 力感知可检测异常阻力（如食物卡住）
-        advantages:
-          - 实现在现有硬件上（关节力矩传感器）
-          - 不需要额外传感器硬件
-          - 主动适应食物重量变化
-          - 经验证的学术方法（±10ml 精度）
-          - 可检测倾倒异常（重量变化异常）
-        disadvantages:
-          - 需要标定空锅重量
-          - 对极轻/极重食物的控制参数需调整
-          - 单靠力感无法检测餐盘位置偏差
-        project_fit:
-          rating: high
-          note: 最适合原型演示阶段的技术—硬件已有、开发量适中、可靠性高
+      '
+    requirement_fit:
+      rating: high
+      note: 兼具力控的鲁棒性和视觉的异常检测能力
+    integration_cost: 高 — 需要同时实现力控和视觉流水线
+    maintenance_cost: 中高 — 两个子系统均需维护
+    performance:
+      rating: high
+      note: 双通道冗余，一组失效时另一组可降级运行
+    reliability:
+      rating: high
+      note: 即使视觉失效，力控通道仍可独立完成倾倒
+    debuggability: 中 — 交互问题需要判断哪个通道出错
+    lock_in: 低
+    safety_risk: 低 — 有冗余感知
+    advantages:
+    - 最稳健的方案
+    - 力控通道独立工作，视觉提供额外安全保障
+    - 可为后续智能化升级（如自适应倾倒）提供基础
+    disadvantages:
+    - 开发周期最长
+    - 系统复杂度高
+    - 原型阶段可能过度设计
+    project_fit:
+      rating: medium
+      note: 适合最终系统，原型阶段可能过度工程化
+  - id: option-e-tactile-dexterous
+    name: 灵巧手触觉反馈倾倒 (Tactile Dexterous Hand Pouring)
+    category: tactile-control
+    description: '利用灵巧手指尖触觉传感器感知抓取力和滑动， 在倾倒过程中动态调整抓取力和手腕姿态。 参考 Shear-based Grasp Control
+      (arXiv:2503.17501)。
 
-      - id: option-c-vision-servo
-        name: 视觉引导倾倒 (Vision-guided Pouring)
-        category: visual-servo
-        description: >
-          使用 RGB-D 相机（顶部或腕部安装）实时监测倾倒过程。
-          视觉算法检测餐盘位置、食物落点、汤汁飞溅。
-          根据视觉反馈调整倾倒轨迹。
-        requirement_fit:
-          rating: medium
-          note: 可检测餐盘位置偏差和飞溅，但对油烟/遮挡敏感
-        integration_cost: 高 — 需要视觉流水线、标定、实时推理
-        maintenance_cost: 高 — 光照/背景变化需维护视觉模型
-        performance:
-          rating: medium
-          note: 依赖光照、视角、油烟条件；处理延迟可能影响实时控制
-        reliability:
-          rating: medium-low
-          note: 厨房环境（油烟、蒸汽、水渍）影响视觉稳定性
-        debuggability: 中 — 视觉失败需要区分环境/算法/标定问题
-        lock_in: 低 — 可基于 OpenCV 等开源方案
-        safety_risk: 低 — 被动感知，不增加机械风险
-        advantages:
-          - 可检测餐盘位置偏差并补偿
-          - 可发现飞溅并及时调整
-          - 可与力控方案互补
-        disadvantages:
-          - 对厨房油烟/蒸汽/光照敏感
-          - 实时视觉处理增加计算负载
-          - 延迟可能影响倾倒控制稳定性
-          - 原型阶段视觉环境可能变化
-        project_fit:
-          rating: low-medium
-          note: 适合作为补充而非主力方案；原型阶段稳定视觉环境不易保证
+      '
+    requirement_fit:
+      rating: medium-high
+      note: 充分发挥灵巧手能力，但需要触觉传感器硬件
+    integration_cost: 高 — 需要触觉传感器集成和标定
+    maintenance_cost: 高 — 触觉传感器磨损/标定维护
+    performance:
+      rating: high
+      note: 精细抓取控制，适应重心变化
+    reliability:
+      rating: medium
+      note: 触觉传感器在厨房环境（油污）下的可靠性需验证
+    debuggability: 中 — 触觉信号解读需要专业知识
+    lock_in: 中 — 触觉传感器型号可能绑定
+    safety_risk: 低 — 精细力控可防止抓取损伤
+    advantages:
+    - 发挥灵巧手全部潜力
+    - 最接近人类操作的精细度
+    - 可检测滑移并即时调整
+    disadvantages:
+    - 需要触觉传感器硬件和驱动
+    - 高油污环境对触觉传感器的挑战
+    - 开发周期长，原型阶段风险较大
+    project_fit:
+      rating: low-medium
+      note: 适合后期精细化阶段，原型阶段优先保证基本功能可靠
+  strategy: spike-first
+  recommendation:
+    primary:
+      id: option-b-force-pid
+      name: 力感知 PID 闭环倾倒
+      strategy: wrapper-adapter
+      rationale: '综合考虑原型演示阶段定位、现有硬件能力（关节力矩传感器 + 灵巧手）、 开发周期和演示可靠性，推荐以力感知 PID 闭环倾倒作为主方案。
 
-      - id: option-d-hybrid-force-vision
-        name: 力+视觉融合倾倒 (Hybrid Force-Visual Pouring)
-        category: hybrid
-        description: >
-          力控为主、视觉为辅的双通道方案。
-          主控制回路基于关节力矩传感器的重量反馈，
-          视觉作为辅助确认餐盘位置和检测异常飞溅。
-        requirement_fit:
-          rating: high
-          note: 兼具力控的鲁棒性和视觉的异常检测能力
-        integration_cost: 高 — 需要同时实现力控和视觉流水线
-        maintenance_cost: 中高 — 两个子系统均需维护
-        performance:
-          rating: high
-          note: 双通道冗余，一组失效时另一组可降级运行
-        reliability:
-          rating: high
-          note: 即使视觉失效，力控通道仍可独立完成倾倒
-        debuggability: 中 — 交互问题需要判断哪个通道出错
-        lock_in: 低
-        safety_risk: 低 — 有冗余感知
-        advantages:
-          - 最稳健的方案
-          - 力控通道独立工作，视觉提供额外安全保障
-          - 可为后续智能化升级（如自适应倾倒）提供基础
-        disadvantages:
-          - 开发周期最长
-          - 系统复杂度高
-          - 原型阶段可能过度设计
-        project_fit:
-          rating: medium
-          note: 适合最终系统，原型阶段可能过度工程化
+        理由： 1. 充分利用现有硬件——关节力矩传感器在所有 7-DOF 机器人上标配 2. 不需要额外传感器硬件投入 3. 经验证的学术方案（Pouring
+        by Feel, ±10ml 精度） 4. 主动适应食物重量变化，降低演示风险 5. 开发量适中（PID 控制器 + 重量估计算法），适合原型阶段
+        6. 可与后续视觉/触觉方案叠加演进
 
-      - id: option-e-tactile-dexterous
-        name: 灵巧手触觉反馈倾倒 (Tactile Dexterous Hand Pouring)
-        category: tactile-control
-        description: >
-          利用灵巧手指尖触觉传感器感知抓取力和滑动，
-          在倾倒过程中动态调整抓取力和手腕姿态。
-          参考 Shear-based Grasp Control (arXiv:2503.17501)。
-        requirement_fit:
-          rating: medium-high
-          note: 充分发挥灵巧手能力，但需要触觉传感器硬件
-        integration_cost: 高 — 需要触觉传感器集成和标定
-        maintenance_cost: 高 — 触觉传感器磨损/标定维护
-        performance:
-          rating: high
-          note: 精细抓取控制，适应重心变化
-        reliability:
-          rating: medium
-          note: 触觉传感器在厨房环境（油污）下的可靠性需验证
-        debuggability: 中 — 触觉信号解读需要专业知识
-        lock_in: 中 — 触觉传感器型号可能绑定
-        safety_risk: 低 — 精细力控可防止抓取损伤
-        advantages:
-          - 发挥灵巧手全部潜力
-          - 最接近人类操作的精细度
-          - 可检测滑移并即时调整
-        disadvantages:
-          - 需要触觉传感器硬件和驱动
-          - 高油污环境对触觉传感器的挑战
-          - 开发周期长，原型阶段风险较大
-        project_fit:
-          rating: low-medium
-          note: 适合后期精细化阶段，原型阶段优先保证基本功能可靠
+        实现路径： - Phase 1: 示教空锅倾倒轨迹，记录关节角度序列 - Phase 2: 集成关节力矩传感器，实现空锅重量基线标定 - Phase
+        3: 实现 PID 重量反馈控制器，在示教轨迹基础上实时调节倾倒速度 - Phase 4: 加入食物测试，标定不同食物重量的 PID 参数 - Phase
+        5: 加入异常检测（重量变化异常 → 停止/提示）
 
-    # 四、对比总结
-    comparison_summary:
-      best_overall: option-b-force-pid
-      best_for_demo: option-b-force-pid
-      best_for_production: option-d-hybrid-force-vision
-      easiest_to_start: option-a-teach-replay
+        '
+    fallback:
+      id: option-a-teach-replay
+      name: 纯示教轨迹
+      strategy: direct-use
+      rationale: '如果力控集成遇到不可预见困难（如关节力矩传感器数据访问受限、 力矩噪声过大、实时性不满足），退回到纯示教轨迹方案。 此时必须确保：
+        1. 每次演示的食物量和类型完全一致 2. 锅具位置和姿态精确重复 3. 餐盘位置固定 4. 留有充足的安全裕度
 
-    # 五、推荐方案
-    recommendation:
-      primary:
-        id: option-b-force-pid
-        name: 力感知 PID 闭环倾倒
-        strategy: wrapper-adapter
-        rationale: >
-          综合考虑原型演示阶段定位、现有硬件能力（关节力矩传感器 + 灵巧手）、
-          开发周期和演示可靠性，推荐以力感知 PID 闭环倾倒作为主方案。
+        '
+    future_evolution:
+    - id: option-d-hybrid-force-vision
+      trigger: '力控方案稳定运行后，增加视觉作为辅助通道。 主要解决餐盘位置偏差和飞溅检测两个痛点。
 
-          理由：
-          1. 充分利用现有硬件——关节力矩传感器在所有 7-DOF 机器人上标配
-          2. 不需要额外传感器硬件投入
-          3. 经验证的学术方案（Pouring by Feel, ±10ml 精度）
-          4. 主动适应食物重量变化，降低演示风险
-          5. 开发量适中（PID 控制器 + 重量估计算法），适合原型阶段
-          6. 可与后续视觉/触觉方案叠加演进
+        '
+      effort: medium
+    - id: option-e-tactile-dexterous
+      trigger: '触觉传感器硬件就绪且厨房环境适应性验证通过后， 增加灵巧手触觉反馈，提升抓取精细度和安全边界。
 
-          实现路径：
-          - Phase 1: 示教空锅倾倒轨迹，记录关节角度序列
-          - Phase 2: 集成关节力矩传感器，实现空锅重量基线标定
-          - Phase 3: 实现 PID 重量反馈控制器，在示教轨迹基础上实时调节倾倒速度
-          - Phase 4: 加入食物测试，标定不同食物重量的 PID 参数
-          - Phase 5: 加入异常检测（重量变化异常 → 停止/提示）
-      fallback:
-        id: option-a-teach-replay
-        name: 纯示教轨迹
-        strategy: direct-use
-        rationale: >
-          如果力控集成遇到不可预见困难（如关节力矩传感器数据访问受限、
-          力矩噪声过大、实时性不满足），退回到纯示教轨迹方案。
-          此时必须确保：
-          1. 每次演示的食物量和类型完全一致
-          2. 锅具位置和姿态精确重复
-          3. 餐盘位置固定
-          4. 留有充足的安全裕度
-      future_evolution:
-        - id: option-d-hybrid-force-vision
-          trigger: >
-            力控方案稳定运行后，增加视觉作为辅助通道。
-            主要解决餐盘位置偏差和飞溅检测两个痛点。
-          effort: medium
-        - id: option-e-tactile-dexterous
-          trigger: >
-            触觉传感器硬件就绪且厨房环境适应性验证通过后，
-            增加灵巧手触觉反馈，提升抓取精细度和安全边界。
-          effort: high
+        '
+      effort: high
+  conditions:
+  - 先完成锅把抓取确认 Spike，再启动倾倒反馈 Spike。
+  - 保留固定场景示教轨迹作为可回退基线。
+  - id: S0-interface
+    action: 记录关节位置、速度、力矩/effort、控制周期和通信时间戳；验证掉线/延迟行为
+    pass: 接口可读、时间戳单调、更新率/延迟有统计结果
+  - id: S1-empty-pan
+    action: 空锅在 3 个抓取重复、3 个倾角段运行；建立重力/摩擦/姿态基线
+    pass: 估计信号重复性和异常阈值可计算
+  - id: S2-known-load
+    action: 加入已知质量的非食品安全模拟物，分 3 个质量档重复倾倒
+    pass: 质量趋势单调，局部修正不会造成振荡或超限
+  - id: S3-liquid
+    action: 使用可控液体验证论文方法在本机上的误差和延迟
+    pass: 形成项目实测指标；不直接采用论文 ±10 ml 作为门槛
+  - id: S4-solid-plus-sauce
+    action: 使用近似芦笋虾仁的固体+少量汤汁，记录卡料、洒落、落盘完整性和盘位变化
+    pass: 形成演示场景成功率和失败分类；若观测不足，维持保守回放+人工确认
+  contrary_evidence:
+  - id: finding-liquid-to-solid-extrapolation
+    classification: implementation-drift
+    statement: '原调研将“液体实验约 ±10 ml”写成固体+汤汁项目性能依据，证据强度不足；应改为方向性参考， 项目性能必须通过实际锅具和菜品实验建立。
 
-    # 六、方案失效条件
-    invalidation_conditions:
-      - condition: 关节力矩传感器数据不可用或噪声过大无法用于重量估计
-        fallback: option-a-teach-replay
-      - condition: 锅具手柄抓取姿态导致力矩数据失真（灵巧手抓取方式引入额外力矩）
-        fallback: option-a-teach-replay 或需增加腕部 F/T 传感器
-      - condition: 实时控制循环无法满足力控闭环的延迟要求
-        fallback: option-a-teach-replay + 离线优化轨迹
+      '
+  - id: finding-moveit-force-boundary
+    classification: traceability-gap
+    statement: '原调研未清晰区分 MoveIt 轨迹/伺服层与底层 effort/torque/F-T 控制层； 后续工程说明必须显式定义接口所有权、更新率、时延、限幅和停机责任。
 
-    # 七、开放问题
-    open_questions:
-      - question: KP200 锅具手柄的具体尺寸、重量和抓取点？
-        impact: 影响抓取策略和力矩基线标定
-        suggested_action: 获取 KP200 技术规格或实物测量
-        authority: C（需用户确认）
-      - question: 机器人关节力矩传感器的数据接口和采样频率？
-        impact: 影响力控 PID 控制器的设计和参数
-        suggested_action: 查阅机器人 SDK 文档或联系供应商
-        authority: B（自主调研）
-      - question: 倾倒过程中是否需要双臂协同？（一臂持锅倾倒，另一臂辅助固定餐盘或锅盖）
-        impact: 影响任务分解和运动规划
-        suggested_action: 确认场景设计中餐盘是否需要辅助固定
-        authority: C（需用户确认）
-      - question: 芦笋虾仁的具体重量范围和汤汁比例？
-        impact: 影响 PID 参数标定
-        suggested_action: 从菜谱或试验获取数据
-        authority: B（自主获取）
+      '
+  - id: finding-solid-food-observability
+    classification: missing-test
+    statement: '仅凭重量变化不能可靠判定固体菜块是否卡在锅沿、是否已全部落盘或是否发生局部洒落； 必须增加落料/卡料/盘位异常的可观察信号或保守状态机。
 
-    # 八、证据日志
-    evidence_log:
-      - source: arXiv:2310.18473
-        fact: PID + 关节力矩传感器可实现 ±10ml 倾倒精度
-        retrieval_date: 2026-07-21
-        confidence: high
-      - source: arXiv:2503.17501
-        fact: 灵巧手触觉反馈可处理倾倒过程中重心变化
-        retrieval_date: 2026-07-21
-        confidence: high
-      - source: MoveIt 2 官方文档
-        fact: MoveIt 2 支持 Cartesian 路径规划（computeCartesianPath）
-        retrieval_date: 2026-07-21
-        confidence: high
-      - source: arXiv:2407.01755
-        fact: 厨房场景中触觉感知可用于液体倾倒控制
-        retrieval_date: 2026-07-21
-        confidence: medium
+      '
+  - 液体论文中的 ±10ml 结果不能直接作为固体+汤汁装盘性能承诺。
+  - MoveIt 2 规划/伺服与底层 effort/torque/F-T 控制边界必须在工程说明中明确。
+  confidence: 0.65
+  decision_ref: DEC-001
+  sources:
+  - group: academic
+    items:
+    - id: arXiv:2310.18473
+      title: 'Pouring by Feel: An Analysis of Tactile and Proprioceptive Sensing for
+        Accurate Pouring'
+      authors: Pedro Piacenza, Daewon Lee, Volkan Isler
+      year: 2023
+      venue: arXiv (cs.RO)
+      summary: '使用 PID 控制器 + 机器人关节力矩传感器估计倾倒出的液体重量。 仅靠本体感知（无需外部 F/T 传感器）即可达到 ±10ml
+        精度。 在 novel 位置和不同抓取方式下均表现鲁棒。
 
-    # 九、深度调研补充（2026-07-22）
-    deep_research:
-      decision_question: >
-        在 KP200 长柄锅、固体菜品+少量汤汁、固定餐盘和原型演示条件下，
-        应采用何种分层控制方案，才能在不把液体实验结论过度外推的前提下，
-        兼顾演示可靠性、异常可停机性和后续升级空间？
-      included_scope:
-        - 倾倒轨迹生成与局部修正
-        - 关节力矩/腕部 F/T 的可用性与估重边界
-        - MoveIt 2、MoveIt Servo、ros2_control 的职责边界
-        - 固体+汤汁倾倒的失效模式和最小验证实验
-      excluded_scope:
-        - KP200 未公开或未提供的具体机械尺寸、负载和 SDK 保证
-        - 量产级食品卫生、整机安全认证和最终视觉识别系统
-        - 直接把学术论文实验指标作为本项目验收指标
-      sources:
-        - id: arxiv-2310-18473-api
-          url: https://export.arxiv.org/api/query?id_list=2310.18473
-          retrieval_date: 2026-07-22
-          fact: >
-            论文摘要描述的是使用机器人自身关节力矩传感器估计容器重量变化，
-            以 PID 监督水的精确倾倒；摘要报告平均约 10 ml 误差，且测试了新位置和不同抓取。
-          limitation: >
-            摘要对象是 water / source container 的液体倾倒，不是固体菜品、汤汁、锅具或餐盘装盘；
-            因此只能证明方法方向可行，不能证明本项目的装盘成功率或防洒率。
-          confidence: high
-        - id: arxiv-pouring-search-api
-          url: https://export.arxiv.org/api/query?search_query=all:%22robotic%20pouring%22&start=0&max_results=10
-          retrieval_date: 2026-07-22
-          fact: >
-            相关工作覆盖视觉液流检测、音频/触觉融合、液体高度估计、饮料倾倒和倾倒洒落原因分析；
-            研究对象普遍是液体或可流动物料。
-          limitation: >
-            多模态液体感知不等价于炒菜固体块状物的落料检测；厨房噪声、蒸汽、油污和遮挡会改变可靠性。
-          confidence: medium
-        - id: moveit-servo-official
-          url: https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html
-          retrieval_date: 2026-07-22
-          fact: >
-            MoveIt Servo 接收关节速度、末端速度或末端位姿命令，提供奇异位形检查、碰撞检查、平滑和关节限制；
-            其基本硬件要求是能够接受关节位置或速度的控制器以及快速准确的编码器反馈。
-          limitation: >
-            MoveIt Servo 本身不是针对 KP200 的重量估计器，也不是自动获得关节力矩闭环的保证；
-            力矩控制仍需由机器人驱动器/控制器边界提供。
-          confidence: high
-        - id: moveit-hybrid-planning-official
-          url: https://moveit.picknik.ai/main/doc/examples/hybrid_planning/hybrid_planning_tutorial.html
-          retrieval_date: 2026-07-22
-          fact: >
-            MoveIt Hybrid Planning 将较慢的全局规划与较快的局部规划结合，支持在线局部约束和事件反应，
-            局部规划器可接收传感器并输出 JointTrajectory 或 Float64MultiArray。
-          limitation: >
-            这提供软件架构扩展点，不代表局部规划器自动具备稳定的实时力控；实时性和安全仍取决于控制器、线程和硬件。
-          confidence: high
-        - id: ros2-control-hardware-interface-official
-          url: https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/hardware_interface_types_userdoc.html
-          retrieval_date: 2026-07-22
-          fact: >
-            ros2_control 可声明关节 command/state interfaces，也可声明独立 sensor state interfaces；
-            硬件组件组支持故障传播，适合把关节状态、传感器和执行器纳入统一边界。
-          limitation: >
-            声明接口不等于机器人厂商已经暴露该接口；KP200 机器人 SDK、采样频率、时延和权限必须实测或向供应商确认。
-          confidence: high
-        - id: ros2-control-pid-official
-          url: https://control.ros.org/rolling/doc/ros2_controllers/pid_controller/doc/userdoc.html
-          retrieval_date: 2026-07-22
-          fact: >
-            ros2_control PID Controller 按 reference/state/command interface 组合工作，并支持输出限幅、积分限幅、抗饱和和状态发布；
-            它是通用 PID 组件，不自动完成“由关节力矩估计锅内剩余重量并控制倾倒”的业务算法。
-          limitation: >
-            本项目需要额外的估重、滤波、重力补偿、倾角映射、状态机和异常逻辑，不能只配置一个 PID controller。
-          confidence: high
-        - id: ros2-control-admittance-official
-          url: https://control.ros.org/rolling/doc/ros2_controllers/admittance_controller/doc/userdoc.html
-          retrieval_date: 2026-07-22
-          fact: >
-            Admittance Controller 面向 TCP F/T 传感器的零力/导纳控制，要求运动学插件、传感器 frame、重力补偿和质量/阻尼/刚度参数；
-            可与 JointTrajectoryController 链接。
-          limitation: >
-            它更适合接触顺应性，而非直接替代“锅内食物质量变化”估计；若无腕部 F/T 或等价可靠信号，不能假设可直接使用。
-          confidence: high
-        - id: ros2-control-ft-broadcaster-official
-          url: https://control.ros.org/rolling/doc/ros2_controllers/force_torque_sensor_broadcaster/doc/userdoc.html
-          retrieval_date: 2026-07-22
-          fact: >
-            FT broadcaster 可将 force/torque state interfaces 发布为 WrenchStamped，并支持过滤链和坐标变换。
-          limitation: >
-            该能力解决数据发布与过滤，不解决传感器安装、厨房温度/油污防护、重力补偿和锅具模型标定。
-          confidence: high
-      corrected_findings:
-        - id: finding-liquid-to-solid-extrapolation
-          classification: implementation-drift
-          statement: >
-            原调研将“液体实验约 ±10 ml”写成固体+汤汁项目性能依据，证据强度不足；应改为方向性参考，
-            项目性能必须通过实际锅具和菜品实验建立。
-        - id: finding-moveit-force-boundary
-          classification: traceability-gap
-          statement: >
-            原调研未清晰区分 MoveIt 轨迹/伺服层与底层 effort/torque/F-T 控制层；
-            后续工程说明必须显式定义接口所有权、更新率、时延、限幅和停机责任。
-        - id: finding-solid-food-observability
-          classification: missing-test
-          statement: >
-            仅凭重量变化不能可靠判定固体菜块是否卡在锅沿、是否已全部落盘或是否发生局部洒落；
-            必须增加落料/卡料/盘位异常的可观察信号或保守状态机。
-      revised_recommendation:
-        primary:
-          id: option-f-layered-teach-plus-limited-feedback
-          name: 示教轨迹基线 + 受限重量反馈局部修正
-          strategy: spike-first-then-wrapper-adapter
-          rationale: >
-            保留示教轨迹对固定厨房场景的可复现性；只在经过标定和限幅的局部变量上使用重量/力矩反馈，
-            例如减速、暂停、继续或小范围调整倾角，而不是直接用估重 PID 驱动整条轨迹。
-            这样降低模型误差、重心突变和固体卡料导致的发散风险，并保留后续接入视觉/腕部 F/T 的边界。
-          layers:
-            - layer: global-motion
-              owner: MoveIt 2 / MoveIt Task Constructor
-              responsibility: 站位、避障、抓取后到盘位的碰撞约束轨迹
-            - layer: local-motion
-              owner: MoveIt Servo 或项目自有局部轨迹修正器
-              responsibility: 仅输出受限的姿态/速度/倾角微调，具备暂停和降速
-            - layer: signal-estimation
-              owner: project pouring adapter
-              responsibility: 关节力矩或 F/T 读取、滤波、重力/空锅基线补偿、重量变化趋势估计
-            - layer: task-safety
-              owner: task state machine
-              responsibility: 抓取失败、卡料、超力矩、盘位异常、超时、通信丢失时停止并转人工
-          acceptance_gate_before_feedback:
-            - 空锅重复采样的估重偏差和噪声已量化
-            - 已知增量负载下估重单调性和重复性通过
-            - 力矩/状态接口更新率与时间戳满足控制周期要求
-            - 无菜、液体、固体+汤汁三类工况均完成低速安全试验
-            - 异常阈值触发后能在安全姿态停止，不继续盲目倾倒
-        fallback:
-          id: option-a-teach-replay
-          change_from_previous: >
-            仍保留为回退，但必须增加速度上限、工作空间/碰撞约束、超时、急停和人工确认；
-            不再把“纯回放”描述成无额外安全控制的完整方案。
-      minimal_validation_spike:
-        name: KP200 模拟负载分级倾倒 Spike
-        objective: 验证反馈信号是否足以支持受限局部修正，而非直接证明最终装盘成功
-        stages:
-          - id: S0-interface
-            action: 记录关节位置、速度、力矩/effort、控制周期和通信时间戳；验证掉线/延迟行为
-            pass: 接口可读、时间戳单调、更新率/延迟有统计结果
-          - id: S1-empty-pan
-            action: 空锅在 3 个抓取重复、3 个倾角段运行；建立重力/摩擦/姿态基线
-            pass: 估计信号重复性和异常阈值可计算
-          - id: S2-known-load
-            action: 加入已知质量的非食品安全模拟物，分 3 个质量档重复倾倒
-            pass: 质量趋势单调，局部修正不会造成振荡或超限
-          - id: S3-liquid
-            action: 使用可控液体验证论文方法在本机上的误差和延迟
-            pass: 形成项目实测指标；不直接采用论文 ±10 ml 作为门槛
-          - id: S4-solid-plus-sauce
-            action: 使用近似芦笋虾仁的固体+少量汤汁，记录卡料、洒落、落盘完整性和盘位变化
-            pass: 形成演示场景成功率和失败分类；若观测不足，维持保守回放+人工确认
-        stop_conditions:
-          - 力矩/估重信号越界或突变
-          - 锅体/末端姿态偏离安全窗口
-          - 盘位丢失或发生碰撞风险
-          - 卡料尝试超过一次或超过预设时限
-          - 控制循环抖动、通信超时或急停链路异常
-      confidence:
-        recommendation: medium
-        reason: >
-          分层架构和软件能力有官方资料支持，但 KP200 硬件接口、锅具动力学、固体落料观测和项目验收数据尚未实测。
+        '
+      relevance: 核心技术参考 — 力感知闭环倾倒控制
+    - id: arXiv:2503.17501
+      title: Shear-based Grasp Control for Multi-fingered Underactuated Tactile Robotic
+        Hands
+      authors: Christopher J. Ford et al.
+      year: 2025
+      venue: IEEE Transactions on Robotics (Special Section on Tactile Robotics)
+      summary: '使用指尖触觉传感器的剪切力控制实现动态倾倒。 特别处理了倾倒过程中重心变化导致的抓取力调整。 灵巧手 + 触觉反馈实现类人操作。
 
-    # 十、关键前置动作：锅把抓取确认深度调研（2026-07-22）
-    grasp_precondition:
-      decision_question: >
-        在锅把尺寸、材质、温度和锅具质心尚未完全确认的条件下，如何让灵巧手可靠抓住 KP200 锅把，
-        并在进入转运/倾倒前用可观测证据确认抓取稳定？
-      core_conclusion: >
-        抓锅把必须独立为一个带状态输出的原子动作。推荐“视觉几何定位 + 预抓取姿态 + 包络式多指夹持 +
-        接触/力矩联合确认 + 受控短距离试抬升”的五段式流程。仅凭手指闭合角度、夹爪到位或单次力矩读数，
-        都不足以证明锅把已抓稳。
-      why_this_is_critical: >
-        锅具的风险不是只承受竖直重量，还要承受长柄产生的倾覆力矩、转运加速度、倾倒时质心移动和可能的卡料冲击。
-        抓取点、手指接触几何、摩擦条件和腕部姿态会共同决定滑移、旋转和脱手风险；抓取失败必须在锅体仍有支撑时被发现。
-      grasp_sequence:
-        - stage: 0_geometry_and_safety_gate
-          action: >
-            识别锅把轴线、可抓取长度、截面/直径、端部、锅体方向和高温禁区；检查机器人工作空间、碰撞模型、
-            手部可达性、负载和腕部姿态余量。
-          evidence_required:
-            - 锅把位姿置信度
-            - 抓取区域温度状态
-            - 锅把几何或模板匹配结果
-        - stage: 1_pre_grasp
-          action: >
-            让手掌/手指接近方向与锅把轴线和截面法向匹配，保留安全间隙；优先抓取远离锅体高温区、
-            但仍有足够包络长度和抗倾覆力矩的区段，不默认“越靠末端越好”。
-          design_note: >
-            抓取点需在热安全、力矩、手指行程和后续倾倒可达性之间折中；必须通过实物测量，不应凭照片猜尺寸。
-        - stage: 2_compliant_close
-          action: >
-            采用低速、限力、带接触检测的闭合；优先使用掌面/多指包络接触或专用锅把适配夹具，
-            避免只靠两个硬点指尖夹持光滑圆柱把手。
-          design_note: >
-            若现有灵巧手无法提供可重复的包络接触或夹持力反馈，工程上应优先增加可更换的锅把夹具/软质高摩擦衬垫，
-            而不是继续用软件补偿一个先天不稳定的抓取界面。
-        - stage: 3_contact_and_load_confirmation
-          action: >
-            联合检查指尖接触分布、手指位置/力矩、腕部或关节负载趋势以及锅把相对位姿；
-            检查是否出现单侧接触、快速闭合、夹持力饱和、锅把转动或异常摩擦滑移。
-          forbidden_shortcut: 仅用“手指到位/电机电流超过阈值”作为成功判据
-        - stage: 4_controlled_micro_lift
-          action: >
-            在锅具仍接近安全支撑面的条件下，沿预定安全方向低速抬升一个小距离并短暂停留，
-            观察相对滑移、姿态变化、力矩突变和关节负载；通过后才输出 grasp_confirmed。
-          safety_note: >
-            试抬升不是甩动或大幅加速度测试；其目的只是暴露未接触、滑移和明显承载不足，
-            具体高度、速度和停留时间必须由负载与安全评估确定。
-      grasp_modes:
-        - id: mode-a-dedicated-handle-gripper
-          name: 专用锅把适配夹具/软衬垫
-          recommendation: preferred-if-allowed
-          fit: >
-            对固定 KP200 和原型演示最有利；通过包络、止挡和高摩擦材料把几何不确定性转化为可控接口。
-          tradeoffs: >
-            需要确认不遮挡锅把、不受高温/油污影响，并保留快速释放和清洁维护能力；会降低通用性。
-        - id: mode-b-dexterous-enveloping-grasp
-          name: 灵巧手多指包络抓取
-          recommendation: primary-software-path
-          fit: >
-            可发挥现有灵巧手能力，适合锅把截面和抓取区稳定可识别的场景。
-          tradeoffs: >
-            对指尖接触模型、触觉/力反馈、手指同步和油污条件敏感；必须做试抬升验证。
-        - id: mode-c-two-arm-cooperative-grasp
-          name: 双臂协同持锅
-          recommendation: conditional
-          fit: >
-            当锅具负载大、锅把细长或单手腕部力矩余量不足时可降低单臂负荷。
-          tradeoffs: >
-            显著增加同步、碰撞、协调和释放复杂度；不能因为机器人有双臂就默认使用。
-            第二只手若只是扶锅体，可能进入高温区或干扰倾倒路径。
-        - id: mode-d-suction_or_magnetic
-          name: 吸附/磁吸辅助
-          recommendation: generally-not-primary
-          fit: >
-            只有锅把表面、材料和结构明确满足条件时才可考虑。
-          tradeoffs: >
-            磁性、曲面、油污、温度和剥离载荷会限制可靠性；不应作为未知锅把的默认方案。
-      confirmation_signals:
-        required:
-          - 视觉/几何：手指与锅把相对位姿、抓取区域和锅把是否离开支撑面的变化
-          - 手部：各手指位置、闭合行程、接触或触觉分布、夹持力/电流（若可标定）
-          - 机器人负载：关节 effort/力矩或腕部 F/T 的姿态补偿后趋势
-          - 动态：微抬升期间的滑移、锅把旋转、姿态变化、超时和通信状态
-        minimum_acceptance: >
-          至少需要“接触/闭合证据 + 受控微抬升负载证据 + 无明显相对滑移”三类证据组合；
-          任一证据缺失时只能输出 grasp_unverified，不得进入倾倒。
-      failure_recovery:
-        - failure: 定位置信度不足
-          action: 退回安全位 → 重拍/重新定位 → 仍失败则人工介入
-        - failure: 接触分布不完整或手指行程异常
-          action: 停止闭合 → 释放到支撑面 → 更换预抓取姿态，仅允许一次重试
-        - failure: 微抬升滑移或姿态突变
-          action: 立即降回支撑面 → 保持锅体稳定 → 释放 → 检查锅把/手部油污和抓取点
-        - failure: 超温/超负载/通信丢失
-          action: 禁止转运；按设备安全策略停机并人工介入
-      recommended_validation:
-        name: 锅把抓取确认 Spike
-        stages:
-          - 采集 KP200 锅把尺寸、材料、温度、支撑方式和可抓取区
-          - 使用空锅进行视觉定位、不同抓取点和不同手指预形状重复测试
-          - 使用安全等效负载模拟最坏锅内质量与质心，进行低速微抬升
-          - 对比指尖/电机/关节力矩/腕部 F/T/视觉相对位姿信号
-          - 再用冷却后的真实锅具和近似菜品做低速测试
-        outputs:
-          - 可重复的抓取姿态和手指预形状
-          - 抓取确认阈值与拒绝条件
-          - 单手、双手和专用夹具的成功率/失败分类
-          - 进入倾倒动作所需的 grasp_confirmed 数据契约
-      confidence:
-        level: medium
-        known: >
-          触觉反馈可用于动态重心变化下的抓取调节，且官方控制框架支持分层运动与传感器接口。
-        unknown: >
-          KP200 锅把真实几何、材料、温度、机器人灵巧手型号、指尖传感器能力、负载余量和 SDK 接口。
+        '
+      relevance: 灵巧手触觉反馈技术参考
+    - id: arXiv:2407.01755
+      title: An Intelligent Robotic System for Perceptive Pancake Batter Stirring
+        and Precise Pouring
+      authors: Xinyuan Luo, Shengmiao Jin, Hung-Jui Huang, Wenzhen Yuan
+      year: 2024
+      venue: IROS 2024
+      summary: '集成触觉感知与控制的机器人面糊倾倒系统。 可估计水粉比和液位，精确倒入任意形状。
+
+        '
+      relevance: 厨房场景触觉感知倾倒参考
+    - id: arXiv:2408.01366
+      title: 'Play to the Score: Stage-Guided Dynamic Multi-Sensory Fusion for Robotic
+        Manipulation'
+      authors: Ruoxuan Feng, Di Hu, Wenke Ma, Xuelong Li
+      year: 2024
+      venue: CoRL 2024 (oral)
+      summary: '多感官融合（视觉+听觉+触觉）的模仿学习框架。 在倾倒任务中动态调整各模态优先级。
+
+        '
+      relevance: 高级融合方案参考（适合后续阶段）
+    - id: arXiv:2505.11680
+      title: 'Grounded Task Axes: Zero-Shot Semantic Skill Generalization'
+      authors: M. Yunus Seker, Shobhit Aggarwal, Oliver Kroemer
+      year: 2025
+      summary: '将操作技能分解为任务轴控制器（位置/力控制）。 在倾倒任务中验证了轴控制器的鲁棒迁移能力。
+
+        '
+      relevance: 控制框架设计参考
+  - group: frameworks
+    items:
+    - name: MoveIt 2
+      capability: Cartesian 路径规划
+      relevance: 实现倾倒运动轨迹的基本框架
+      evidence: MoveIt 2 官方文档确认支持 computeCartesianPath 规划笛卡尔空间路径
+    - name: ROS 2 Control
+      capability: 力/力矩控制接口
+      relevance: 支持阻抗/导纳控制器实现力控倾倒
+      evidence: ros2_control 框架支持多种控制器类型，可通过 joint torque 接口获取力信息
+  - id: arxiv-2310-18473-api
+    url: https://export.arxiv.org/api/query?id_list=2310.18473
+    retrieval_date: '2026-07-22'
+    fact: '论文摘要描述的是使用机器人自身关节力矩传感器估计容器重量变化， 以 PID 监督水的精确倾倒；摘要报告平均约 10 ml 误差，且测试了新位置和不同抓取。
+
+      '
+    limitation: '摘要对象是 water / source container 的液体倾倒，不是固体菜品、汤汁、锅具或餐盘装盘； 因此只能证明方法方向可行，不能证明本项目的装盘成功率或防洒率。
+
+      '
+    confidence: high
+  - id: arxiv-pouring-search-api
+    url: https://export.arxiv.org/api/query?search_query=all:%22robotic%20pouring%22&start=0&max_results=10
+    retrieval_date: '2026-07-22'
+    fact: '相关工作覆盖视觉液流检测、音频/触觉融合、液体高度估计、饮料倾倒和倾倒洒落原因分析； 研究对象普遍是液体或可流动物料。
+
+      '
+    limitation: '多模态液体感知不等价于炒菜固体块状物的落料检测；厨房噪声、蒸汽、油污和遮挡会改变可靠性。
+
+      '
+    confidence: medium
+  - id: moveit-servo-official
+    url: https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html
+    retrieval_date: '2026-07-22'
+    fact: 'MoveIt Servo 接收关节速度、末端速度或末端位姿命令，提供奇异位形检查、碰撞检查、平滑和关节限制； 其基本硬件要求是能够接受关节位置或速度的控制器以及快速准确的编码器反馈。
+
+      '
+    limitation: 'MoveIt Servo 本身不是针对 KP200 的重量估计器，也不是自动获得关节力矩闭环的保证； 力矩控制仍需由机器人驱动器/控制器边界提供。
+
+      '
+    confidence: high
+  - id: moveit-hybrid-planning-official
+    url: https://moveit.picknik.ai/main/doc/examples/hybrid_planning/hybrid_planning_tutorial.html
+    retrieval_date: '2026-07-22'
+    fact: 'MoveIt Hybrid Planning 将较慢的全局规划与较快的局部规划结合，支持在线局部约束和事件反应， 局部规划器可接收传感器并输出
+      JointTrajectory 或 Float64MultiArray。
+
+      '
+    limitation: '这提供软件架构扩展点，不代表局部规划器自动具备稳定的实时力控；实时性和安全仍取决于控制器、线程和硬件。
+
+      '
+    confidence: high
+  - id: ros2-control-hardware-interface-official
+    url: https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/hardware_interface_types_userdoc.html
+    retrieval_date: '2026-07-22'
+    fact: 'ros2_control 可声明关节 command/state interfaces，也可声明独立 sensor state interfaces；
+      硬件组件组支持故障传播，适合把关节状态、传感器和执行器纳入统一边界。
+
+      '
+    limitation: '声明接口不等于机器人厂商已经暴露该接口；KP200 机器人 SDK、采样频率、时延和权限必须实测或向供应商确认。
+
+      '
+    confidence: high
+  - id: ros2-control-pid-official
+    url: https://control.ros.org/rolling/doc/ros2_controllers/pid_controller/doc/userdoc.html
+    retrieval_date: '2026-07-22'
+    fact: 'ros2_control PID Controller 按 reference/state/command interface 组合工作，并支持输出限幅、积分限幅、抗饱和和状态发布；
+      它是通用 PID 组件，不自动完成“由关节力矩估计锅内剩余重量并控制倾倒”的业务算法。
+
+      '
+    limitation: '本项目需要额外的估重、滤波、重力补偿、倾角映射、状态机和异常逻辑，不能只配置一个 PID controller。
+
+      '
+    confidence: high
+  - id: ros2-control-admittance-official
+    url: https://control.ros.org/rolling/doc/ros2_controllers/admittance_controller/doc/userdoc.html
+    retrieval_date: '2026-07-22'
+    fact: 'Admittance Controller 面向 TCP F/T 传感器的零力/导纳控制，要求运动学插件、传感器 frame、重力补偿和质量/阻尼/刚度参数；
+      可与 JointTrajectoryController 链接。
+
+      '
+    limitation: '它更适合接触顺应性，而非直接替代“锅内食物质量变化”估计；若无腕部 F/T 或等价可靠信号，不能假设可直接使用。
+
+      '
+    confidence: high
+  - id: ros2-control-ft-broadcaster-official
+    url: https://control.ros.org/rolling/doc/ros2_controllers/force_torque_sensor_broadcaster/doc/userdoc.html
+    retrieval_date: '2026-07-22'
+    fact: 'FT broadcaster 可将 force/torque state interfaces 发布为 WrenchStamped，并支持过滤链和坐标变换。
+
+      '
+    limitation: '该能力解决数据发布与过滤，不解决传感器安装、厨房温度/油污防护、重力补偿和锅具模型标定。
+
+      '
+    confidence: high
+  retrieved_at: '2026-07-22'
+  updated_at: '2026-07-28'

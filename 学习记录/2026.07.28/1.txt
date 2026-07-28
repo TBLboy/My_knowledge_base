@@ -1,0 +1,882 @@
+我已经初步阅读并解压了这个项目。
+
+项目概览
+
+项目名： ilflow (Imitation Learning Flow)
+
+这是一个基于 Diffusion Policy 的机器人模仿学习（Imitation Learning）框架，主要使用：
+
+Python 3.10
+PyTorch
+Hydra 配置管理
+Zarr 数据集
+OpenCV
+torchvision
+
+目前仓库大约 211 个文件。
+
+整体架构
+
+从目录来看，代码组织比较清晰：
+
+ilflow/
+│
+├── configs/              # 配置
+├── src/
+│   ├── builder/          # 构建器
+│   ├── data/             # 数据读取与预处理
+│   ├── engine/           # 训练流程
+│   ├── model/
+│   │    ├── backbones
+│   │    ├── networks
+│   │    ├── schedulers
+│   │    └── components
+│   └── policy/           # Diffusion Policy
+│
+├── test/
+│    └── train_dp.py      # 训练入口
+│
+└── utils/
+
+整个工程基本遵循：
+
+Dataset
+   ↓
+Builder
+   ↓
+DiffusionPolicy
+   ↓
+Trainer
+核心模块
+1. Data（数据层）
+
+负责：
+
+Zarr 数据读取
+padding
+downsample
+normalization
+sampler
+
+对应目录：
+
+src/data/
+
+里面主要包括
+
+dataset.py
+sampler.py
+padding.py
+normalizer.py
+2. Model（模型层）
+
+包括四部分：
+
+backbone
+
+视觉编码器
+
+ResNet18
+ResNet34
+...
+
+还有机器人状态编码器。
+
+networks
+
+真正预测 diffusion noise 的网络，例如
+
+DiffusionMLP
+MLP
+schedulers
+
+DDPM Scheduler
+
+负责：
+
+forward diffusion
+reverse diffusion
+timestep
+components
+
+一些基础组件，例如
+
+Sinusoidal Position Encoding
+3. Policy
+
+整个项目最重要的一层：
+
+src/policy/diffusion_policy.py
+
+一般会包含两个核心接口：
+
+compute_loss()
+
+训练
+
+以及
+
+get_action()
+
+推理
+
+可以理解成整个算法的"大脑"。
+
+4. Engine
+src/engine/trainer.py
+
+负责：
+
+train loop
+optimizer.step()
+validation
+logging
+
+不会关心模型细节。
+
+配置文件
+
+配置文件是：
+
+configs/dp.yaml
+
+里面定义了：
+
+数据集：
+
+dataset_path
+
+机器人维度：
+
+state_dim = 7
+action_dim = 8
+
+图像：
+
+32 × 32 RGB
+
+Diffusion Horizon：
+
+obs_horizon = 2
+pred_horizon = 4
+action_horizon = 2
+
+视觉 Backbone：
+
+resnet18
+
+以及：
+
+state embedding
+time embedding
+hidden dim
+
+等等训练超参数。
+
+当前工程状态
+
+仓库作者已经建立了一个 .project-log，说明这是一个正在持续开发的工程。
+
+日志显示：
+
+已完成项目初步分析
+已整理业务逻辑
+下一步准备建立 requirement baseline
+
+说明这套代码还在持续完善。
+
+我的第一印象
+
+优点：
+
+模块划分清晰
+Builder + Policy + Engine 解耦
+配置集中（Hydra）
+后续容易扩展 Transformer、UNet 等模型
+
+不足（目前能看到的）：
+
+README 缺失
+Evaluator 看起来尚未完成
+Data Schema（action/state/image 对应关系）仍标注"待补充"
+注释较多，但工程文档还不完整
+我建议接下来的阅读顺序
+
+为了最快理解整个框架，我建议按下面的顺序阅读：
+
+test/train_dp.py —— 项目入口，了解训练流程。
+src/engine/trainer.py —— 训练循环如何组织。
+src/policy/diffusion_policy.py —— 核心算法实现。
+src/data/dataset.py —— 数据如何组织成模型输入。
+src/model/networks/diffusion_mlp.py —— 扩散网络结构。
+src/model/schedulers/ddpm_scheduler.py —— DDPM 的前向/反向扩散过程。
+src/model/backbones/ —— 图像和机器人状态编码器。
+
+这样阅读效率最高，也最容易建立整体认识。
+
+如果你的目标是真正吃透这个项目，我也可以带你做一次源码级阅读：逐个文件讲解每个类、每个函数的输入输出、调用关系，以及对应的 Diffusion Policy 数学原理。
+
+你判断得对：trainer.py 不需要改，只要新的 Policy 继续提供 compute_loss(batch) 接口即可。下面我们直接进入 diffusion_policy.py，紧扣实际代码逐段阅读。
+
+思考了 10s
+
+对，trainer.py 不需要修改。只要新的 Policy 遵守同一个接口：
+
+loss = policy.compute_loss(batch)
+
+Trainer 就可以继续工作。
+
+现在进入下一个核心文件：
+
+src/policy/diffusion_policy.py
+
+这次我们严格按照实际源码阅读。
+
+1. 这个文件处于什么位置？
+
+目前调用链已经走到：
+
+train_dp.py
+    ↓
+UniversalRunner.run()
+    ↓
+for batch in dataloader
+    ↓
+policy.compute_loss(batch)
+    ↓
+DiffusionPolicy.compute_loss()
+
+这个文件负责两条不同流程：
+
+训练：
+compute_loss(batch)
+
+推理：
+get_action(batch)
+
+所以 DiffusionPolicy 不是单纯的一层神经网络，而是把以下组件组织起来：
+
+视觉编码器
++ 状态编码器
++ 噪声预测网络
++ DDPM Scheduler
++ 训练损失逻辑
++ 推理去噪逻辑
+2. 导入部分
+
+源码开头：
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from utils.dim_parser import ModelDims
+
+前三个比较标准。
+
+torch
+
+用于创建噪声、随机时间步和张量操作。
+
+torch.nn as nn
+
+用于让 DiffusionPolicy 继承：
+
+nn.Module
+torch.nn.functional as F
+
+这里主要用于最后计算：
+
+F.mse_loss(...)
+
+最后一行：
+
+from utils.dim_parser import ModelDims
+
+在当前文件里实际上没有直接使用 ModelDims，因此这是一个未使用的导入，可以删除，不影响代码运行。
+
+3. 类定义
+class DiffusionPolicy(nn.Module):
+
+它继承了 nn.Module。
+
+这意味着 DiffusionPolicy 可以获得 PyTorch 模型的标准能力，例如：
+
+policy.to(device)
+policy.train()
+policy.eval()
+policy.parameters()
+policy.state_dict()
+
+这很重要，因为 Trainer 会调用：
+
+self.policy.to(device)
+self.policy.train()
+
+Optimizer 也需要：
+
+policy.parameters()
+
+假如 DiffusionPolicy 不继承 nn.Module，这些机制就不能自然工作。
+
+4. 初始化方法
+
+源码：
+
+def __init__(
+    self,
+    vision_encoder,
+    state_encoder,
+    network,
+    scheduler,
+    dims
+):
+    super().__init__()
+
+    self.vision_encoder = vision_encoder
+    self.state_encoder = state_encoder
+    self.network = network
+    self.scheduler = scheduler
+    self.dims = dims
+
+这个初始化函数没有自己创建任何具体网络，而是从外部接收已经构建好的组件。
+
+这些组件来自：
+
+src/builder/policy_builder.py
+
+对应关系是：
+
+policy = DiffusionPolicy(
+    vision_encoder=vision_enc,
+    state_encoder=state_enc,
+    network=noise_network,
+    scheduler=scheduler,
+    dims=dims,
+)
+
+也就是说，Builder 负责“造零件”，Policy 负责“使用零件”。
+
+每个组件分别做什么？
+vision_encoder
+self.vision_encoder = vision_encoder
+
+接收机器人看到的图像：
+
+[B, obs_horizon, C, H, W]
+
+输出视觉特征：
+
+[B, obs_horizon × vision_feature_dim]
+
+例如源码注释中的：
+
+输入：[8, 2, 3, 32, 32]
+输出：[8, 2 × 256]
+state_encoder
+self.state_encoder = state_encoder
+
+接收机器人状态，例如关节位置：
+
+[B, obs_horizon, state_dim]
+
+输出状态特征：
+
+[B, obs_horizon × state_feature_dim]
+
+例如：
+
+输入：[8, 2, 7]
+输出：[8, 2 × 64]
+network
+self.network = network
+
+这是扩散模型中真正负责预测噪声的神经网络。
+
+当前项目使用的是：
+
+DiffusionMLP
+
+它接收：
+
+带噪动作
++ diffusion timestep
++ observation condition
+
+输出：
+
+预测噪声
+
+要特别注意：
+
+DiffusionPolicy 是完整算法，而 network 只是其中负责预测噪声的神经网络。
+
+scheduler
+self.scheduler = scheduler
+
+Scheduler 负责扩散过程中的数学规则。
+
+训练时：
+
+scheduler.add_noise(...)
+
+给真实动作添加指定程度的噪声。
+
+推理时：
+
+scheduler.step(...)
+
+从当前噪声动作中逐步去噪。
+
+它不负责学习参数，而是负责控制扩散过程。
+
+dims
+self.dims = dims
+
+它保存各部分展开后的维度，例如：
+
+flat_action_dim
+flat_vision_dim
+flat_state_dim
+
+假设：
+
+pred_horizon = 4
+action_dim = 8
+
+那么：
+
+flat_action_dim = 4 × 8 = 32
+
+这样代码就不用在多个地方重复计算维度。
+
+5. 为什么这些模块必须赋值给 self？
+
+例如，为什么不能只写：
+
+vision_encoder = vision_encoder
+
+而必须写：
+
+self.vision_encoder = vision_encoder
+
+一个重要原因是：当一个 nn.Module 被赋值为另一个 nn.Module 的成员时，PyTorch 会自动注册它。
+
+也就是：
+
+self.vision_encoder = vision_encoder
+self.state_encoder = state_encoder
+self.network = network
+
+这些子模型会自动成为 DiffusionPolicy 的子模块。
+
+因此：
+
+policy.parameters()
+
+会自动收集：
+
+vision_encoder 的参数
++ state_encoder 的参数
++ network 的参数
+
+同理：
+
+policy.to("cuda")
+
+会把这些子模块全部搬到 GPU。
+
+可以把结构理解成：
+
+DiffusionPolicy
+├── vision_encoder
+├── state_encoder
+└── network
+
+而 Scheduler 很可能没有可训练参数，所以它主要作为算法组件存在。
+
+6. 训练入口 compute_loss
+
+接下来是这个文件最重要的方法：
+
+def compute_loss(self, batch):
+
+整体流程可以先压缩成：
+
+从 batch 取数据
+    ↓
+编码图像和机器人状态
+    ↓
+生成随机噪声和随机时间步
+    ↓
+给真实动作加噪
+    ↓
+网络预测噪声
+    ↓
+预测噪声和真实噪声计算 MSE
+
+对应源码的五个阶段：
+
+# 1. 准备数据
+# 2. 编码条件
+# 3. 动态生成已知 noise
+# 4. 网络预测
+# 5. Loss
+7. 第一阶段：从 batch 中取数据
+actions = batch['action']
+img = batch['img_global']
+qpos = batch['robot_qpos']
+B = actions.shape[0]
+
+这个 batch 就是 Trainer 从 DataLoader 中拿到的：
+
+for batch in self.dataloader:
+    loss = self.policy.compute_loss(batch)
+
+其中：
+
+actions = batch['action']
+
+是真实动作序列，即训练目标。
+
+形状：
+
+[B, pred_horizon, action_dim]
+
+源码给出的例子是：
+
+[8, 4, 8]
+
+含义分别是：
+
+8：batch size
+4：预测未来 4 个时间步
+8：每一步动作有 8 个维度
+img = batch['img_global']
+
+是历史图像观测，形状：
+
+[B, obs_horizon, C, H, W]
+
+例子：
+
+[8, 2, 3, 32, 32]
+
+表示：
+
+8 个样本
+每个样本包含 2 帧历史图像
+每帧 3 个颜色通道
+图像尺寸为 32 × 32
+qpos = batch['robot_qpos']
+
+是历史机器人状态，形状：
+
+[B, obs_horizon, state_dim]
+
+例如：
+
+[8, 2, 7]
+
+表示每个样本包含最近两个时间步的机器人状态，每步状态是 7 维。
+
+B = actions.shape[0]
+
+取出 batch size。
+
+后面生成随机时间步和 reshape 都需要这个值。
+
+8. 第二阶段：编码观测条件
+vision_feat = self.vision_encoder(img)
+state_feat = self.state_encoder(qpos)
+
+图像和机器人状态不能直接与动作拼接，因为：
+
+图像是五维张量；
+状态是三维张量；
+动作网络需要固定长度的特征向量。
+
+因此先分别编码。
+
+数据流是：
+
+img
+ ↓ vision_encoder
+vision_feat
+
+qpos
+ ↓ state_encoder
+state_feat
+
+然后：
+
+global_cond = torch.cat(
+    [vision_feat, state_feat],
+    dim=-1
+)
+
+沿最后一个维度拼接。
+
+假设：
+
+vision_feat：[8, 512]
+state_feat：[8, 128]
+
+那么拼接后：
+
+global_cond：[8, 640]
+
+global_cond 的含义是：
+
+对当前机器人所处环境和自身状态的综合描述。
+
+它是扩散模型的条件信息。
+
+没有这个条件，模型只能无条件地产生动作；有了条件，模型才能根据图像和机器人状态预测合适的动作。
+
+9. 第三阶段：生成训练目标噪声
+noise = torch.randn_like(actions)
+
+它生成一个与真实动作形状完全相同的高斯噪声：
+
+actions：[B, pred_horizon, action_dim]
+noise：  [B, pred_horizon, action_dim]
+
+例如二者都是：
+
+[8, 4, 8]
+
+randn_like 生成的每个值近似来自标准正态分布：
+
+N(0, 1)
+
+接下来随机选择扩散时间步：
+
+t = torch.randint(
+    0,
+    self.scheduler.timesteps,
+    (B,),
+    device=actions.device
+)
+
+假设：
+
+scheduler.timesteps = 100
+B = 8
+
+可能得到：
+
+t = [5, 72, 13, 99, 42, 8, 56, 21]
+
+这里有一个非常关键的设计：
+
+同一个 batch 中的每条样本，可以处在不同的噪声程度。
+
+例如：
+
+样本 1：t=5，只有少量噪声
+样本 2：t=72，噪声很多
+样本 3：t=99，几乎接近纯噪声
+
+这样模型才能学习各种噪声阶段的去噪任务。
+
+然后：
+
+noisy_actions = self.scheduler.add_noise(
+    actions,
+    noise,
+    t
+)
+
+Scheduler 根据时间步 t 将噪声加入真实动作。
+
+概念上可以理解为：
+
+noisy_action
+    =
+保留一部分真实 action
+    +
+加入一部分 noise
+
+时间步越大，一般噪声比例越高。
+
+数据流：
+
+真实动作 actions
++ 已知噪声 noise
++ 随机时间步 t
+        ↓
+scheduler.add_noise()
+        ↓
+带噪动作 noisy_actions
+
+特别重要的是：这里的噪声是代码自己生成的，所以它是已知答案。
+
+因此网络的训练任务就是：
+
+输入带噪动作
+预测刚才加入的 noise
+10. 第四阶段：展开动作
+
+源码：
+
+noisy_flat = noisy_actions.view(B, -1)
+
+原始形状：
+
+[B, pred_horizon, action_dim]
+
+展开后：
+
+[B, pred_horizon × action_dim]
+
+例如：
+
+[8, 4, 8]
+    ↓
+[8, 32]
+
+因为当前噪声网络是 MLP，所以需要将时间维和动作维展平。
+
+源码第 43 行的注释写成了：
+
+(8, 28)
+
+这与前面的：
+
+pred_horizon=4
+action_dim=8
+
+不一致。正确结果应该是：
+
+4 × 8 = 32
+
+所以这里是注释错误，不是代码计算错误。
+
+11. 网络预测噪声
+pred_noise = self.network(
+    noisy_flat,
+    t,
+    global_cond
+)
+
+输入包括三个部分：
+
+noisy_flat：现在这条动作被污染成什么样
+t：当前污染到了哪个程度
+global_cond：机器人现在看到了什么、处于什么状态
+
+输出：
+
+pred_noise
+
+形状应为：
+
+[B, pred_horizon × action_dim]
+
+例如：
+
+[8, 32]
+
+为什么一定要告诉网络 t？
+
+因为同一个 noisy_action 在不同时间步下代表的噪声程度不同。网络必须知道当前处于哪个扩散阶段，才能判断应该去掉多少噪声。
+
+12. 第五阶段：计算 Loss
+
+最后：
+
+return F.mse_loss(
+    pred_noise,
+    noise.view(B, -1)
+)
+
+真实噪声原本形状是：
+
+[B, pred_horizon, action_dim]
+
+先展开为：
+
+[B, pred_horizon × action_dim]
+
+这样才能和：
+
+pred_noise
+
+形状一致。
+
+训练目标是：
+
+网络预测的噪声 ≈ 代码实际加入的噪声
+
+因此使用均方误差：
+
+MSE(pred_noise, true_noise)
+
+Loss 越小，说明网络越能识别动作中加入的噪声。
+
+13. 一张完整训练流图
+batch
+│
+├── img_global ──→ vision_encoder ──→ vision_feat ─┐
+│                                                  │
+├── robot_qpos ──→ state_encoder ───→ state_feat ──┼→ global_cond
+│                                                  │
+└── action ────────────────┐                       │
+                           │                       │
+                    生成随机 noise                 │
+                           │                       │
+                    随机采样 timestep t            │
+                           │                       │
+                           ▼                       │
+                  scheduler.add_noise              │
+                           │                       │
+                           ▼                       │
+                     noisy_action                  │
+                           │                       │
+                         flatten                   │
+                           │                       │
+                           └──────┬────────────────┘
+                                  ▼
+                         DiffusionMLP
+                   (noisy_action, t, condition)
+                                  │
+                                  ▼
+                            pred_noise
+                                  │
+                                  ▼
+                       MSE(pred_noise, noise)
+                                  │
+                                  ▼
+                                loss
+
+然后 loss 返回 Trainer：
+
+DiffusionPolicy.compute_loss()
+    ↓
+Trainer
+    ↓
+loss.backward()
+    ↓
+optimizer.step()
+14. 当前代码中已经能发现的问题
+
+先记录三个问题，暂时不展开修改：
+
+ModelDims 被导入但没有使用。
+noisy_flat 的注释写成 (8, 28)，实际应为 (8, 32)。
+推理方法中存在硬编码的动作维度 7，但训练注释显示 action_dim=8；而且 self.normalizer 在初始化中被注释掉了，get_action() 却仍然调用它。
+
+因此目前可以初步判断：
+
+compute_loss() 的训练主流程基本完整，但 get_action() 推理流程还没有完全整理好。
+
+下一步最合理的是继续深入：
+
+self.network(noisy_flat, t, global_cond)
+
+也就是阅读：
+
+src/model/networks/diffusion_mlp.py
+
+因为我们现在已经知道给它的三个输入是什么，接下来要弄清楚它如何把“带噪动作、时间步、观测条件”组合起来预测噪声。

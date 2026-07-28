@@ -1,2 +1,157 @@
-version: "0.2.1"
-questions: []
+version: '0.4'
+questions:
+- id: Q-001
+  title: KP200 锅把尺寸、重量和抓取点
+  status: open
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-002
+  - TASK-004
+  context: 影响抓取姿态、夹具选择和力矩基线。
+  recommendation: 获取技术规格或完成实物测量
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-002
+  title: 倾倒过程是否需要双臂协同
+  status: open
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-002
+  - TASK-004
+  context: 影响任务分解、同步控制和碰撞规划。
+  recommendation: 确认餐盘是否需要辅助固定，并以单臂最坏负载评估为准
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-003
+  title: 机器人关节力矩接口和采样频率
+  status: open
+  authority: B
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-003
+  context: 影响受限重量反馈和局部修正实现。
+  recommendation: 查阅机器人 SDK 或联系供应商
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-004
+  title: 芦笋虾仁重量范围和汤汁比例
+  status: open
+  authority: B
+  impact: medium
+  uncertainty: high
+  rework_cost: medium
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-003
+  context: 影响负载分级、参数标定和失败分类。
+  recommendation: 从菜谱或安全实验获取范围
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-005
+  title: effort/关节力矩或腕部 F/T 的更新率与延迟
+  status: open
+  authority: B
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-003
+  context: 影响控制周期、滤波和安全限幅。
+  recommendation: 完成接口实测并记录时间戳
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-006
+  title: 固体落料完整性、卡料和盘外洒落的观测信号
+  status: open
+  authority: C
+  impact: critical
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-003
+  - TASK-004
+  context: 重量变化不能单独证明固体已完整落盘。
+  recommendation: 定义人工确认、视觉信号或保守状态机的验收组合
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-007
+  title: 灵巧手型号、触觉/夹持力接口和专用夹具许可
+  status: open
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-002
+  context: 决定多指包络抓取是否可行。
+  recommendation: 确认现有末端能力及可更换夹具约束
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null
+- id: Q-008
+  title: KP200 锅把材质、摩擦和热安全区域
+  status: open
+  authority: C
+  impact: high
+  uncertainty: high
+  rework_cost: high
+  related_business_logic:
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-002
+  context: 影响抓取可靠性、热安全和夹具材料选择。
+  recommendation: 完成锅把实物测量和温度确认
+  alternatives: []
+  answer: null
+  source_refs:
+  - .project-log-legacy-20260728/current-session.md
+  created_at: '2026-07-22'
+  answered_at: null

@@ -1,5 +1,15 @@
 # Current Session
 
+- Project Log 已从旧 v0.2 结构迁移到运行时 v0.4 模板。
+- 旧日志原样保存在 `.project-log-legacy-20260728/`，不得删除。
+- 当前目标：`GOAL-001`；当前阶段：`solution-research`；下一步：用户审阅 MVP 后执行 `TASK-002`。
+- 2026-07-28 已完成 Project Log v0.2 → 运行时 v0.4 迁移；新结构校验通过。
+- Loop 状态：`waiting-user`，原生 Goal 仍未绑定；这不影响项目日志迁移结果。
+
+## Legacy Session Snapshot
+
+# Current Session
+
 - 当前阶段：solution-research（深度调研完成，待用户审阅）
 - 当前目标：老板电器炒菜机器人「倾倒入盘（大）- 炒菜出锅呈盘」技术方案调研
 - 当前任务：审阅修正版分层倾倒控制方案，并决定是否启动验证 Spike
