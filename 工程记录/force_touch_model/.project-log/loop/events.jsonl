@@ -5,3 +5,5 @@
 {"schema_version":1,"event_id":"LE-000004","time":"2026-07-27T10:51:32Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-024","status":"valid"}
 {"schema_version":1,"event_id":"LE-000005","time":"2026-07-27T11:04:40Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-025","status":"failed"}
 {"schema_version":1,"event_id":"LE-000006","time":"2026-07-27T11:04:40Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-026","status":"valid"}
+{"schema_version":1,"event_id":"LE-000007","time":"2026-07-28T08:39:26Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-037","status":"valid"}
+{"schema_version":1,"event_id":"LE-000008","time":"2026-07-28T08:41:00Z","run_id":null,"type":"state-repaired","reason":"Aligned workflow from stale business-intent/null-task state to verification/TASK-019; external .project-log boundary confirmed intentional.","previous_state":{"phase":"business-intent","task_id":null},"aligned_state":{"phase":"verification","task_id":"TASK-019","status":"active"}}

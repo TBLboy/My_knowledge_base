@@ -1080,3 +1080,288 @@ tasks:
     - 确认正式训练恢复策略：从原始 checkpoint-30000 重新训练 30000 steps，或从 005600/pretrained_model 继续剩余约 24400 steps。
   created_at: '2026-07-27T21:47:30+08:00'
   updated_at: '2026-07-27T21:47:30+08:00'
+- id: TASK-016
+  title: 从官方 GR00T N1.7 预训练模型启动 LeRobot 微调并接入 W&B
+  kind: task
+  parent_id: TASK-015
+  phase: verification
+  goal: 将 LeRobot GR00T 训练 preset 的初始化 checkpoint 切换到本地官方 NVIDIA GR00T N1.7 base，并开启 W&B 指标监控，同时确保官方 base 对当前 13D grouped feature 数据可完成真实训练更新。
+  status: done
+  priority: high
+  risk: high
+  authority: A
+  owner: agent
+  tags:
+  - groot
+  - lerobot
+  - official-pretrained
+  - wandb
+  - grouped-features
+  related_business_logic: []
+  acceptance_refs:
+  - EV-030
+  - EV-031
+  - EV-032
+  related_decisions: []
+  depends_on:
+  - TASK-015
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - /mnt/data/gr00t-finetune/models/gr00t_n1_base
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  outputs:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - src/lerobot/policies/groot/processor_groot.py
+  - tests/policies/groot/test_groot_n1_7.py
+  plan:
+  - 将 raw checkpoint 设置为本地官方 GR00T N1.7 base_model_path
+  - 保留已验证的 24 GiB GPU BF16、梯度累积和 paged AdamW 参数
+  - 开启 W&B online 配置并关闭大模型 artifact 自动上传
+  - 修复 grouped feature names 展平，确保 13D action relative stats 能匹配 40-step horizon
+  - 完成 1-step CUDA 训练和 W&B offline 初始化 smoke
+  done_when:
+  - preset 默认使用官方 base 而不是旧 checkpoint-30000
+  - 完整 LeRobot 入口完成至少 1 个真实 optimizer update
+  - W&B offline 初始化通过，online 未登录时明确阻止并给出登录指令
+  - 目标单元测试、ruff 和 shell 语法检查通过
+  verification:
+    status: passed
+    commands:
+    - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
+    - /home/tbl/miniforge3/envs/lerobot/bin/python -m ruff check src/lerobot/policies/groot/processor_groot.py tests/policies/groot/test_groot_n1_7.py
+    - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/policies/groot/test_groot_n1_7.py -k 'resolves_grouped_feature_names or relative_action_training_processors or pack_inputs_raises_when_relative_groups_cannot_normalize'
+    - temporary official-base LeRobot steps=1/save_checkpoint=false CUDA smoke
+    - temporary W&B-enabled offline steps=0 initialization smoke
+    - temporary online W&B auth guard smoke
+    evidence:
+    - EV-030
+    - EV-031
+    - EV-032
+    limitations:
+    - 当前环境没有 W&B API key，因此未实际向 wandb.ai online 项目上传；正式训练前必须执行一次 wandb login。
+    - 未启动正式 30000 steps 长训练，未验证最终收敛和真实机器人 rollout。
+    - W&B model artifact 默认关闭，checkpoint 保存在本地 OUTPUT_DIR；如需上传需显式改为 --wandb.disable_artifact=false。
+  result:
+    summary: 训练 preset 已切换到本地官方 GR00T N1.7 base，保留已验证的显存和优化器参数，启用 W&B 指标配置；同时修复 LeRobot grouped feature names 导致 official base relative-action stats 维度推断错误的问题。官方 base 在目标 GPU 完成 1-step 真实训练更新，W&B offline 初始化通过。
+    changed_files:
+    - examples/groot/finetune_right_o6_13d_lerobot.sh
+    - src/lerobot/policies/groot/processor_groot.py
+    - tests/policies/groot/test_groot_n1_7.py
+    - .project-log/
+    deviations:
+    - 未更改原始 checkpoint、原始数据集或已存在的旧训练输出。
+    follow_ups:
+    - 用户执行 LeRobot 环境的 wandb login 后启动正式 30000 steps 训练。
+  created_at: '2026-07-28T11:52:00+08:00'
+  updated_at: '2026-07-28T11:52:00+08:00'
+- id: TASK-017
+  title: 官方 GR00T base 的 LeRobot 训练保存与 W&B 最小闭环验证
+  kind: task
+  parent_id: TASK-016
+  phase: verification
+  goal: 在不启动正式长训练的前提下，验证官方 GR00T N1.7 base、LeRobot 数据集、Processor、真实 CUDA forward/backward、optimizer 更新、checkpoint 保存、training_state 保存和 W&B 指标同步的完整链路。
+  status: done
+  priority: high
+  risk: high
+  authority: A
+  owner: agent
+  tags:
+  - groot
+  - lerobot
+  - checkpoint
+  - wandb
+  related_business_logic: []
+  acceptance_refs:
+  - EV-034
+  - EV-035
+  related_decisions: []
+  depends_on:
+  - TASK-016
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - /mnt/data/gr00t-finetune/models/gr00t_n1_base
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  outputs:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_e2e_smoke_20260728/checkpoints/000001
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2/checkpoints/000010
+  plan:
+  - 运行官方 base 1-step checkpoint-save smoke
+  - 验证策略、optimizer、scheduler、RNG 和 step 文件可读
+  - 运行 10-step W&B online smoke 使训练指标至少记录一次
+  - 查询 W&B run 状态和 summary
+  done_when:
+  - EV-034 和 EV-035 均通过
+  - 未修改原始数据、官方 base 或正式训练输出
+  verification:
+    status: passed
+    commands:
+    - PYTORCH_ALLOC_CONF=expandable_segments:True RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=1 SAVE_FREQ=1 SAVE_CHECKPOINT=true OUTPUT_DIR=/mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_e2e_smoke_20260728 JOB_NAME=right_o6_13d_official_e2e_smoke bash examples/groot/finetune_right_o6_13d_lerobot.sh
+    - PYTORCH_ALLOC_CONF=expandable_segments:True RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=10 SAVE_FREQ=10 SAVE_CHECKPOINT=true OUTPUT_DIR=/mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2 JOB_NAME=right_o6_13d_official_wandb_smoke_v2 bash examples/groot/finetune_right_o6_13d_lerobot.sh
+    - safetensors.safe_open validation
+    - W&B API query of run 5jlg6v6b
+    evidence:
+    - EV-034
+    - EV-035
+    limitations:
+    - 未启动正式 30000 steps；未验证收敛、评估和真实机器人 rollout。
+    - W&B artifact 上传关闭；需从本地 output 目录读取 checkpoint。
+  result:
+    summary: 官方 base 到 LeRobot 训练、保存和 W&B 指标同步的最小闭环已通过。可以进入正式训练，但正式训练仍需独立监控显存、loss、checkpoint 保存和 W&B 状态。
+    changed_files:
+    - .project-log/verification/evidence.yaml
+    - .project-log/tasks/task-list.yaml
+    deviations:
+    - 额外执行了 10-step smoke，以确保 log_freq=10 的训练指标实际进入 W&B；没有覆盖正式训练目录。
+    follow_ups:
+    - 启动正式 30000 steps 训练前确认 output_dir 为空且不复用 smoke 目录。
+    - 训练期间观察 train/loss、train/grad_norm、train/lr、train/gpu_mem_gb 和 checkpoint 保存日志。
+  created_at: '2026-07-28T13:05:30+08:00'
+  updated_at: '2026-07-28T13:05:30+08:00'
+- id: TASK-018
+  title: 建立测试产物验证后清理规则并同步 Vibe Coding 工作记录
+  kind: task
+  parent_id: TASK-017
+  phase: implementation
+  goal: 在全局和项目 Agent 规则中强制测试输出生命周期管理，清理当前临时测试产物，并将规则和结论记录在 Project Log。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - workflow
+  - test-cleanup
+  - project-log
+  related_business_logic: []
+  acceptance_refs:
+  - EV-036
+  related_decisions:
+  - DEC-005
+  depends_on:
+  - TASK-017
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-workflow-update
+  - a-project-log
+  - a-verification
+  spec_ref: null
+  inputs:
+  - /home/tbl/.codex/AGENTS.md
+  - AGENTS.md
+  - .project-log/
+  outputs:
+  - /home/tbl/.codex/AGENTS.md
+  - AGENTS.md
+  - .project-log/
+  plan:
+  - 备份全局和项目 Agent 文件
+  - 加入测试、smoke、dry-run 和临时实验产物清理规则
+  - 删除已完成验证的外部测试输出，仅保留用户指定的 checkpoint-30000
+  - 更新 Project Log 并执行工作流校验
+  done_when:
+  - 两个 Agent 文件均包含清理规则
+  - 测试输出按用户要求清理
+  - Project Log 记录结论和保留边界
+  - Project Log validation passed
+  verification:
+    status: passed
+    commands:
+    - grep -n '测试产物必须主动清理' /home/tbl/.codex/AGENTS.md
+    - grep -n '测试产物清理规则' AGENTS.md
+    - find /mnt/data/gr00t-finetune/outputs -type f
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    evidence:
+    - EV-036
+    limitations:
+    - 全局 Agent 文件不在项目 Git 仓库中，无法随项目 remote 一起 push。
+  result:
+    summary: 已建立测试产物验证后清理规则；当前 outputs 仅保留用户明确要求的独立 GR00T checkpoint-30000；结论和清理证据已写入 Project Log。
+    changed_files:
+    - /home/tbl/.codex/AGENTS.md
+    - AGENTS.md
+    - .project-log/
+    deviations:
+    - 未删除 `/mnt/data/gr00t-finetune/models/gr00t_n1_base`、`cosmos_reason2_2b`、数据集或用户指定的 checkpoint-30000。
+    follow_ups:
+    - 后续每次测试结束后先清理外部输出，再报告验证结论。
+  created_at: '2026-07-28T13:25:00+08:00'
+  updated_at: '2026-07-28T13:25:00+08:00'
+- id: TASK-019
+  title: 正式 GR00T 训练监控与最终验收
+  kind: task
+  parent_id: TASK-017
+  phase: verification
+  goal: 监控官方 GR00T N1.7 base 在 LeRobot 上的正式 30000-step 微调，确认 checkpoint、training_state、W&B 指标和最终运行结果。
+  status: in-progress
+  priority: high
+  risk: high
+  authority: A
+  owner: shared
+  tags:
+  - groot
+  - lerobot
+  - formal-training
+  - checkpoint
+  - wandb
+  related_business_logic: []
+  acceptance_refs:
+  - EV-037
+  related_decisions: []
+  depends_on:
+  - TASK-017
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - /mnt/data/gr00t-finetune/models/gr00t_n1_base
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7
+  outputs:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/
+  - W&B run 7qfmd9v5
+  plan:
+  - 持续监控正式训练进程、loss、grad_norm、显存和 W&B 状态
+  - 检查后续 checkpoint 及 training_state 可读性
+  - 训练结束后验证最终 checkpoint、W&B summary 和恢复路径
+  done_when:
+  - 正式训练达到 30000 steps 或记录明确的终止处置
+  - 最终 checkpoint 和 training_state 文件可读
+  - W&B run 状态与最终指标摘要已记录
+  - 未发现未处置的 checkpoint 保存或恢复错误
+  verification:
+    status: partial
+    commands:
+    - ps -eo pid,etime,cmd
+    - tail -n 80 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
+    - safetensors.safe_open validation after final checkpoint
+    evidence:
+    - EV-037
+    limitations:
+    - 正式训练尚未完成，当前不能判断最终收敛或真实机器人成功率。
+    - 最终 checkpoint、恢复训练和真实机器人 rollout 尚未验证。
+  result:
+    summary: 正式训练已启动并运行中，首个 005600 checkpoint 已保存；等待后续 checkpoint 和最终验收。
+    changed_files: []
+    deviations: []
+    follow_ups:
+    - 训练结束后补充最终验证证据并将 TASK-019 更新为 done。
+  created_at: '2026-07-28T16:35:00+08:00'
+  updated_at: '2026-07-28T16:35:00+08:00'

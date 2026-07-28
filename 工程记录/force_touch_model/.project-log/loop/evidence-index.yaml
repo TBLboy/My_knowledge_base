@@ -265,3 +265,23 @@ evidence:
   recorded_at: '2026-07-27T13:47:30Z'
   invalidated_at: null
   invalidation_reason: null
+- id: EV-037
+  kind: runtime-observation
+  subject: 正式 GR00T N1.7 LeRobot 训练运行中，首个 checkpoint 已保存
+  status: valid
+  command: ps -p 300129 -o pid,stat,etime,pcpu,rss,cmd; tail -n 80 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
+  result_ref: PID 300129 active; training output reached approximately step 9939/30000
+    at 2026-07-28 16:31; checkpoints/005600 training_step.json reports step 5600;
+    W&B run 7qfmd9v5 active
+  covers:
+    files: []
+    requirements: []
+    tasks:
+    - TASK-019
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-28T08:39:26Z'
+  invalidated_at: null
+  invalidation_reason: null

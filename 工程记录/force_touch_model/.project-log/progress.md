@@ -72,3 +72,32 @@
 - 证据：EV-013、EV-014、EV-015；Project Log 校验通过；ruff 通过。
 - 边界：未执行正式训练、GPU forward/显存吞吐、checkpoint resume 或真实机器人 rollout。
 - 下一步：用户手动运行短训练 smoke test；释放 GPU 后补充 GPU 验证。
+
+
+## 2026-07-28T11:52:00+08:00 切换官方 GR00T N1.7 base 并接入 W&B
+
+- 状态：训练 preset 配置和最小验证已完成，正式长训练尚未启动。
+- Checkpoint：默认从 `/mnt/data/gr00t-finetune/models/gr00t_n1_base` 通过 `--policy.base_model_path` 加载官方 raw GR00T N1.7 base；不使用旧的 `checkpoint-30000`。
+- 参数：沿用目标 RTX 4090 已验证配置：batch=1、梯度累积=8、effective batch=8、lr=5e-5、warmup=1500、constant_with_warmup、paged AdamW 8-bit、BF16、gradient checkpointing；只训练 projector、action diffusion head、VLLN。
+- W&B：默认启用 online 项目 `lerobot-gr00t-right-o6-13d`，默认关闭大模型 artifact 上传，仅同步训练指标；当前机器尚未登录 W&B。
+- 代码修复：LeRobot grouped feature `names` 字典现在按组顺序展平为标量动作名，解决官方 base + `new_embodiment` + relative action stats 的 13D/40-step 维度匹配问题。
+- 验证：官方 base 真实 CUDA 1-step 训练通过；W&B offline 初始化通过；online 未认证时脚本提前退出；3 个针对性 Groot 测试、ruff、shell 语法通过。
+- 产物：`examples/groot/finetune_right_o6_13d_lerobot.sh`、`src/lerobot/policies/groot/processor_groot.py`、`tests/policies/groot/test_groot_n1_7.py`。
+- 限制：未启动正式 30000 steps，未验证最终收敛/真实部署；正式开始前需要 W&B 登录。
+
+
+## 2026-07-28T12:00:00+08:00 完成 W&B 登录
+
+- 状态：已完成。
+- 操作：使用用户提供的 API key 在 `/home/tbl/miniforge3/envs/lerobot` 环境执行 W&B 登录。
+- 验证：`wandb.api.api_key` 可读；凭据写入 `/home/tbl/.netrc`，权限为 600。
+- 安全：未将 API key 写入项目日志；由于 key 已出现在会话消息中，建议训练完成后在 W&B 设置中撤销并重新生成。
+- 下一步：可直接启动官方 GR00T N1.7 的 LeRobot 正式微调。
+
+## 2026-07-28T13:25:00+08:00 建立测试产物清理规则
+
+- 状态：已完成。
+- 规则：测试、smoke、dry-run 和临时实验输出验证结束后主动清理；只在 Project Log 中保留结论、命令、失败原因、清理结果和最小必要线索。
+- Agent 文件：已更新 `/home/tbl/.codex/AGENTS.md` 与项目 `AGENTS.md`。
+- 清理：`/mnt/data/gr00t-finetune/outputs` 仅保留用户指定的独立 GR00T `checkpoint-30000`；未删除官方 base、Cosmos backbone 和数据集。
+- 验证：EV-036；Project Log validation passed。

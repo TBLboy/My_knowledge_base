@@ -1,6 +1,6 @@
 version: '0.4'
 mode: standard
-current_phase: business-intent
+current_phase: verification
 active_goal: null
 phase_order:
 - business-intent
@@ -17,15 +17,15 @@ phase_order:
 - distillation
 phases:
   business-intent:
-    status: active
-    gate_status: open
+    status: completed
+    gate_status: passed
     required_artifacts: []
     exit_conditions:
     - goal and target outcome are stated
     evidence: []
   business-clarification:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/business-logic/atoms.yaml
     - .project-log/business-logic/clarification.yaml
@@ -37,8 +37,8 @@ phases:
     - future solution choices are routed to solution research
     evidence: []
   requirement-baseline:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/requirements/baseline.yaml
     exit_conditions:
@@ -46,24 +46,24 @@ phases:
     - active atoms have acceptance criteria
     evidence: []
   solution-research:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/research/solution-research.yaml
     exit_conditions:
     - material technical choices have evidence or are explicitly not required
     evidence: []
   architecture-decision:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/architecture/architecture.yaml
     exit_conditions:
     - ownership interfaces data and failure boundaries are sufficient for decomposition
     evidence: []
   task-decomposition:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/tasks/task-list.yaml
     exit_conditions:
@@ -71,29 +71,32 @@ phases:
     - in-scope atoms are covered or intentionally deferred
     evidence: []
   engineering-spec:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/specs
     exit_conditions:
     - non-trivial ready tasks have implementation-ready specs
     evidence: []
   implementation:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts: []
     exit_conditions:
     - planned outputs exist
     - deviations are recorded
     evidence: []
   verification:
-    status: pending
-    gate_status: not-evaluated
+    status: active
+    gate_status: open
     required_artifacts:
     - .project-log/verification/evidence.yaml
     exit_conditions:
     - completion conditions have evidence or exact limitations are recorded
-    evidence: []
+    evidence:
+    - EV-034
+    - EV-035
+    - EV-037
   alignment:
     status: pending
     gate_status: not-evaluated
@@ -132,4 +135,4 @@ return_edges:
 - from: alignment
   to: implementation
   reason: implementation or test drift
-last_updated: '2026-07-27T09:47:08+08:00'
+last_updated: '2026-07-28T16:35:00+08:00'

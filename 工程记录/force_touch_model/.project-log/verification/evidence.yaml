@@ -525,3 +525,143 @@ evidence:
   - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_checkpoint_save_smoke_20260727_d/checkpoints/000001
   - src/lerobot/optim/optimizers.py
   - tests/optim/test_optimizers.py
+- id: EV-030
+  task_id: TASK-016
+  business_logic:
+  - 官方 GR00T N1.7 base 必须能通过 LeRobot 的当前 processor 和 13D grouped action dataset 完成真实训练更新。
+  acceptance_criteria:
+  - official base_model_path 加载成功
+  - grouped feature names 展平后 relative-action stats 与 40-step/13D action 匹配
+  - 目标 RTX 4090 完成 1 个真实 optimizer update 且无 OOM/维度异常
+  result: passed
+  level: 3
+  commands:
+  - RUN_TRAINING=1 WANDB_ENABLE=false TOTAL_STEPS=1 SAVE_CHECKPOINT=false bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m ruff check src/lerobot/policies/groot/processor_groot.py tests/policies/groot/test_groot_n1_7.py
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/policies/groot/test_groot_n1_7.py -k 'resolves_grouped_feature_names or relative_action_training_processors or pack_inputs_raises_when_relative_groups_cannot_normalize'
+  result_ref: 官方 base /mnt/data/gr00t-finetune/models/gr00t_n1_base 加载成功；dataset 47250 frames、148 episodes；effective batch=8；1 step 在约 2.26s 完成。
+  limitations:
+  - 仅为 1-step smoke，不代表 30000 steps 收敛。
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - src/lerobot/policies/groot/processor_groot.py
+  - tests/policies/groot/test_groot_n1_7.py
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_base_smoke_20260728_b
+- id: EV-031
+  task_id: TASK-016
+  business_logic:
+  - 训练指标必须能由 LeRobot 训练入口初始化并交给 W&B logger。
+  acceptance_criteria:
+  - W&B enabled offline 初始化成功
+  - 训练配置包含项目名、run name、notes 和 offline/online mode
+  result: passed
+  level: 2
+  commands:
+  - RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=offline TOTAL_STEPS=0 SAVE_CHECKPOINT=false bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  result_ref: LeRobot 输出 Logs will be synced with wandb，offline run 初始化完成并正常结束。
+  limitations:
+  - offline smoke 未向 W&B 云端同步。
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728
+- id: EV-032
+  task_id: TASK-016
+  business_logic:
+  - online W&B 未认证时不能让正式训练在远端日志不确定的状态下启动。
+  acceptance_criteria:
+  - online 未登录时脚本提前退出
+  - 输出明确的 wandb login 指令和 offline fallback
+  result: passed
+  level: 2
+  commands:
+  - RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=0 SAVE_CHECKPOINT=false bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  result_ref: 脚本以 exit_code=1 提前退出，并提示 /home/tbl/miniforge3/envs/lerobot/bin/python -m wandb login 或 WANDB_MODE=offline。
+  limitations:
+  - 未提供或写入用户的 W&B API key。
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+
+- id: EV-033
+  task_id: TASK-016
+  business_logic:
+  - 相关 GR00T 测试应在环境具备所需模型缓存或网络时通过；环境问题不得伪装成代码通过。
+  acceptance_criteria:
+  - 运行 LeRobot GR00T integration test 并记录结果与环境限制
+  result: failed
+  level: 2
+  commands:
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/policies/groot/test_groot_lerobot.py tests/policies/groot/test_groot_n1_7.py -x
+  result_ref: "test_lerobot_groot_inference 失败于 Hugging Face 缓存中只有不完整 snapshot 且当前网络不可达，transformers 找不到 model.safetensors；不是本轮官方本地 base smoke 使用的路径。"
+  limitations:
+  - 失败来源归类为 environment；本轮针对 grouped feature names 的 3 个目标测试仍全部通过。
+  artifacts:
+  - tests/policies/groot/test_groot_lerobot.py
+  - /home/tbl/.cache/huggingface/hub/models--nvidia--GR00T-N1.7-3B
+- id: EV-034
+  task_id: TASK-017
+  business_logic:
+  - 官方 GR00T N1.7 base 必须能够通过统一 LeRobot 入口完成真实训练更新并保存可读取的策略权重和完整训练状态。
+  acceptance_criteria:
+  - 从本地官方 base 完成 1 个 optimizer update
+  - checkpoints/000001/pretrained_model 生成完整模型和 processor 文件
+  - checkpoints/000001/training_state 生成 optimizer、scheduler、RNG 和 step 状态
+  - training_step.json 的 step 为 1
+  - safetensors 文件能够被 safe_open 读取
+  result: passed
+  level: 3
+  commands:
+  - PYTORCH_ALLOC_CONF=expandable_segments:True RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=1 SAVE_FREQ=1 SAVE_CHECKPOINT=true OUTPUT_DIR=/mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_e2e_smoke_20260728 JOB_NAME=right_o6_13d_official_e2e_smoke bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  - safetensors.safe_open validation of model, optimizer and RNG files
+  result_ref: "官方 base 训练 1 step 完成；生成 9.3 GB model.safetensors、3.3 GB optimizer_state.safetensors、scheduler_state.json、rng_state.safetensors 和 training_step.json；step=1。"
+  limitations:
+  - 1-step smoke 不能证明收敛质量或真实机器人部署。
+  - 该 run 的 log_freq=10，因此仅用于 W&B 初始化和 checkpoint-save 闭环，不产生训练指标摘要。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_e2e_smoke_20260728/checkpoints/000001
+- id: EV-035
+  task_id: TASK-017
+  business_logic:
+  - 训练指标必须能够从统一 LeRobot 训练入口同步到 W&B，且本地 checkpoint 保存不能阻断训练结束。
+  acceptance_criteria:
+  - 官方 base 完成多步真实 optimizer update
+  - W&B online run 状态为 finished
+  - W&B 至少出现 train/loss、train/grad_norm、train/lr 和训练吞吐指标
+  - 对应 checkpoint 的 training_step 与训练步数一致
+  result: passed
+  level: 3
+  commands:
+  - PYTORCH_ALLOC_CONF=expandable_segments:True RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=10 SAVE_FREQ=10 SAVE_CHECKPOINT=true OUTPUT_DIR=/mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2 JOB_NAME=right_o6_13d_official_wandb_smoke_v2 bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  - W&B API query for run 5jlg6v6b
+  - checkpoint file and training_step validation for /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2/checkpoints/000010
+  result_ref: "W&B run finished；summary 包含 train/loss=1.0985298223793507、train/grad_norm=0.0514892578125、train/lr=1.5416666666666674e-07、train/samples_per_s=52.683015623746186；checkpoint step=10。"
+  limitations:
+  - 10-step smoke 只验证链路和日志写入，不代表模型性能。
+  - W&B model artifact 保持关闭；模型和训练状态保存在本地输出目录。
+  artifacts:
+  - https://wandb.ai/026itaciya-11/lerobot-gr00t-right-o6-13d/runs/5jlg6v6b
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2/checkpoints/000010
+- id: EV-036
+  task_id: TASK-018
+  business_logic:
+  - 测试、smoke test 和临时实验产生的外部输出必须在验证结束后清理，测试结论和最小必要线索保存在 Project Log。
+  acceptance_criteria:
+  - 全局 `/home/tbl/.codex/AGENTS.md` 包含测试产物清理规则
+  - 项目 `AGENTS.md` 包含测试产物清理规则
+  - 当前验证留下的 smoke、临时训练和历史未保留 output 已清理
+  - Project Log 记录规则、清理结果和保留边界
+  - Project Log 校验通过
+  result: passed
+  level: 3
+  commands:
+  - grep -n '测试产物必须主动清理' /home/tbl/.codex/AGENTS.md
+  - grep -n '测试产物清理规则' AGENTS.md
+  - find /mnt/data/gr00t-finetune/outputs -type f
+  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  result_ref: "全局和项目规则均存在；outputs 仅保留用户明确要求的独立 GR00T checkpoint-30000；Project Log validation passed。"
+  limitations:
+  - 全局 `/home/tbl/.codex/AGENTS.md` 位于项目 Git 仓库之外，不能通过本项目 remote push；已创建本地备份并更新文件。
+  artifacts:
+  - /home/tbl/.codex/AGENTS.md
+  - AGENTS.md
+  - .project-log/
+  - /home/tbl/.codex/backups/vibe-global-update-20260728-132240-test-artifact-cleanup/

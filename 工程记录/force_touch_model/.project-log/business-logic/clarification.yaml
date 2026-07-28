@@ -1,5 +1,5 @@
 version: "0.4"
-status: draft
+status: passed
 functional_business_logic:
   actors: []
   scenarios: []
@@ -20,7 +20,7 @@ alignment:
   unknowns: []
   decisions_required: []
 gate:
-  status: open
+  status: passed
   blocking_unknowns: []
-  notes: null
-updated_at: null
+  notes: 本增量只涉及 LeRobot/GR00T 训练基础设施、checkpoint 保存和 W&B 指标验证，不新增或改变用户可感知的产品业务行为；后续若扩大到真实机器人控制行为，必须重新打开业务澄清。
+updated_at: '2026-07-28T16:42:00+08:00'

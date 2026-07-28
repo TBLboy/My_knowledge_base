@@ -186,3 +186,95 @@ decisions:
   supersedes: []
   created_at: '2026-07-27T18:51:00+08:00'
   updated_at: '2026-07-27T18:51:00+08:00'
+- id: DEC-005
+  title: 测试输出默认在验证后清理，仅保留 Project Log 证据
+  category: process
+  status: active
+  authority: A
+  user_approval: approved
+  related_tasks:
+  - TASK-018
+  related_business_logic: []
+  context: 测试、smoke test 和临时实验会产生大型 checkpoint、模型权重、日志和缓存；长期保留这些输出会占用存储并把测试证据与业务资产混在一起。
+  hypothesis: 将测试产物生命周期限定为验证期间，结束后删除外部输出，只在 Project Log 中保存结论、命令、失败原因、清理结果和最小必要线索，可以保留可追溯性并避免存储堆积。
+  options:
+  - name: 长期保留全部测试输出
+    benefits:
+    - 可直接重复查看原始产物
+    costs:
+    - 持续占用磁盘
+    - 测试垃圾与正式模型混杂
+    risks:
+    - 后续清理困难且容易误用旧模型
+  - name: 验证后清理测试输出，仅保留 Project Log 线索（选择）
+    benefits:
+    - 释放存储
+    - 测试证据集中且可审计
+    costs:
+    - 如需复现必须重新运行测试
+    risks:
+    - 清理前若未记录路径和结论会损失追溯信息
+  decision: "在全局和项目 AGENTS.md 中加入测试产物清理规则；验证结束后删除 smoke、dry-run 和临时实验输出，Project Log 只记录最小必要证据。"
+  reason_summary:
+  - 用户明确要求测试结束后主动清理数据和 output。
+  - 当前 smoke 输出已验证完成，保留它们没有业务价值。
+  conditions:
+  - 正式数据、正式模型和用户明确要求保留的资产不得删除。
+  - 清理前必须记录测试结论、关键路径、失败原因和清理结果。
+  action: 更新全局 `/home/tbl/.codex/AGENTS.md`、项目 `AGENTS.md`，清理当前 smoke 输出，并把规则变更记录到 Project Log。
+  expected_result: 后续 Agent 在测试结束时主动清理外部测试产物，验证结论集中保存在 Project Log。
+  reversal_plan: 如用户需要保留特定测试资产，明确指定路径并将其标记为正式/长期保留资产。
+  observation: 两个 AGENTS.md 已加入规则；当前 smoke、旧 LeRobot continued 输出和历史 checkpoint 已按用户要求清理；Project Log 校验通过。
+  actual_result: successful
+  outcome_status: successful
+  lesson: 测试输出是临时证据，不应自动升级为长期项目资产；可复核性应依赖最小元数据和 Project Log，而不是堆积大文件。
+  evidence:
+  - EV-036
+  supersedes: []
+  created_at: '2026-07-28T13:25:00+08:00'
+  updated_at: '2026-07-28T13:25:00+08:00'
+- id: DEC-006
+  title: 外部项目根作为 Project Log 唯一存储位置
+  category: process
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks:
+  - TASK-019
+  related_business_logic: []
+  context: 代码仓库位于内层 lerobot_v1.0，用户已将 .project-log 移到外部项目根并在其外包裹工程目录，以避免工程记录和后续生成文件污染代码仓库。
+  hypothesis: 将外部项目根的 .project-log 作为唯一工程记录源，可以隔离代码仓库变更，同时保持 Loop、任务、验证和归档的可恢复性。
+  options:
+  - name: 将 Project Log 放回代码仓库
+    benefits:
+    - 代码与工程记录同仓库版本化
+    costs:
+    - 工程记录会进入代码仓库提交范围
+    risks:
+    - 后续记录和生成文件污染代码仓库
+  - name: 保留外部项目根的 Project Log（选择）
+    benefits:
+    - 工程记录与代码仓库隔离
+    - 归档脚本可直接以外部项目根为项目边界
+    costs:
+    - 代码仓库 Git 状态不能代表完整项目状态
+    risks:
+    - 进入内层仓库工作时必须显式使用外部项目根运行 Loop 工具
+  decision: 外部项目根 `.project-log/` 是本项目唯一工程记录源，不迁回 `lerobot_v1.0`。
+  reason_summary:
+  - 用户明确要求避免工程记录污染代码仓库。
+  - 当前 Loop 与归档工具均可从外部项目根运行。
+  conditions:
+  - 所有 Project Log、Loop 和归档命令使用 `/home/tbl/Project/force_touch_model` 作为 root。
+  - 内层代码仓库提交不得包含外部 Project Log。
+  action: 将外部 `.project-log/` 作为后续恢复、校验和归档的权威路径，并在会话记录中固定该边界。
+  expected_result: Project Log 归档不受内层代码仓库 Git 状态影响，Loop 状态可从外部项目根恢复。
+  reversal_plan: 仅在用户明确要求代码与工程记录合并版本化时，将 Project Log 迁回代码仓库并更新所有工具 root。
+  observation: 用户确认外部日志布局是有意设计；本次不再将其作为工作流漂移处理。
+  actual_result: 外部 Project Log 边界已确认。
+  outcome_status: successful
+  lesson: 项目工作区与代码仓库可以是不同边界；恢复和归档必须使用用户定义的项目根，而不是自动使用 Git 根。
+  evidence: []
+  supersedes: []
+  created_at: '2026-07-28T16:42:00+08:00'
+  updated_at: '2026-07-28T16:42:00+08:00'

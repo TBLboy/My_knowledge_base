@@ -221,3 +221,19 @@ entries:
   evidence:
   - EV-024
   knowledge_candidate: false
+- id: TRACE-013
+  task_id: TASK-018
+  timestamp: '2026-07-28T13:25:00+08:00'
+  context: 用户要求把测试和 smoke test 产生的输出在验证结束后清理，避免 checkpoint、日志和临时目录长期占用存储，并把结论保留在 Project Log。
+  hypothesis: 修改全局与项目 Agent 规则，并清理本轮已完成验证留下的输出，可以同时建立后续行为约束和释放磁盘空间。
+  decision_ref: DEC-005
+  action: 备份两个 AGENTS.md；加入测试产物清理规则；删除本轮 smoke、旧 LeRobot continued、历史独立 checkpoint 和重复模型；在 Project Log 中记录规则、决策、验证和清理结果。
+  expected_result: 两个 Agent 文件包含一致的清理规则；输出目录只保留用户明确要求的独立 GR00T checkpoint-30000；Project Log 校验通过。
+  observation: 全局 `/home/tbl/.codex/AGENTS.md` 与项目 `AGENTS.md` 已更新；`/mnt/data/gr00t-finetune/outputs` 仅保留独立 GR00T `checkpoint-30000`；磁盘从约 97 GB 可用增加到约 168 GB；Project Log validation passed。
+  actual_result: 规则更新与清理完成；本次未删除官方 base、Cosmos backbone、数据集或用户明确保留的 checkpoint。
+  delta: 新增全局和项目级测试产物生命周期规则；清理之前仅用于验证的输出，不改变正式训练代码和模型内容。
+  lesson: 测试结论应沉淀到 Project Log，测试大文件应在验证后删除；只有正式业务资产和用户明确指定的回滚点长期保留。
+  next_adjustment: 后续每次运行 smoke、dry-run 或临时实验时，在报告结果前执行产物盘点和清理，并把清理结果作为验证证据。
+  evidence:
+  - EV-036
+  knowledge_candidate: true

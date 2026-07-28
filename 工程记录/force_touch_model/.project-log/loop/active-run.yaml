@@ -1,11 +1,14 @@
 schema_version: 1
 run_id: null
 goal_id: null
-phase: business-intent
+phase: verification
 clarification_domain: null
-task_id: null
+task_id: TASK-019
 status: active
-next_action: null
+next_action:
+  kind: monitor-training
+  subject: TASK-019
+  statement: 监控正式 30000-step 训练，确认后续 checkpoint、最终 W&B summary 和恢复可读性
 counters:
   task_attempts: 0
   same_failure_count: 0
@@ -21,5 +24,5 @@ native_goal:
   thread_goal_id: null
   last_known_status: null
   last_synced_at: null
-last_event_id: LE-000006
-updated_at: '2026-07-27T11:04:40Z'
+last_event_id: LE-000008
+updated_at: '2026-07-28T08:41:00Z'
