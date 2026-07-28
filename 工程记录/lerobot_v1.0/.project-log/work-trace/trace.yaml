@@ -86,3 +86,138 @@ entries:
   evidence:
   - EV-009
   knowledge_candidate: false
+- id: TRACE-005
+  task_id: TASK-006
+  timestamp: '2026-07-27T14:00:00+08:00'
+  context: 用户要求整理外部学习记录“今日任务.md”，并补充 LeRobot Feature、三种 Mask、132 维 state/action 容器、padding 原理、GrootConfig、GrootPolicy/GR00TN17 关系以及 action horizon 与机器人控制频率的深入解释。
+  hypothesis: 将原始口语化记录重组为按架构、接口、模型适配和时间尺度递进的 Markdown 章节，并使用当前 LeRobot 源码事实校正术语，可以让学习记录具备快速复习和后续实验设计价值。
+  decision_ref: null
+  action: 备份原文件，重写学习记录结构，保留老板电器结论，补充 7 个问题的解释和 action horizon 数值例子、滚动时域、频率协调方案。
+  expected_result: 目标文件结构连续、代码块闭合、核心问题均有可查章节；不修改 LeRobot 产品代码。
+  observation: 目标文件已整理为 1421 行，包含 2 个主模块、21 个 LeRobot 学习小节；代码围栏数量为 184 且成对闭合；原文件备份为 今日任务.md.bak。
+  actual_result: 文档整理完成；Feature、state_mask/action_mask/attention_mask、padding、132 维、GrootConfig、GrootPolicy/GR00TN17 和 action horizon 均已补充；控制频率部分加入 20/30/50/100 Hz 时间换算、重规划和多频率触觉控制示例。
+  delta: 相对原文件，标题从不连续编号改为连续章节；删除重复和破损表格/引号；新增约 570 行结构化说明；未修改 LeRobot 源码。
+  lesson: 对 VLA 接入的理解必须同时绑定数据语义、张量 shape 和真实时间尺度；只讨论模型名或维度而不记录频率与动作表示，无法形成可复现实验。
+  next_adjustment: 后续若开始模型实验，应为每个模型建立 dataset_fps、robot_control_hz、inference_hz、horizon、chunk_size、n_action_steps 和 action representation 记录，并先完成无触觉基线。
+  evidence:
+  - EV-010
+  knowledge_candidate: false
+- id: TRACE-006
+  task_id: TASK-007
+  timestamp: '2026-07-27T16:00:00+08:00'
+  context: 用户补充说明已下载 VLM backbone，并要求继续评估独立 GR00T 微调结果能否迁移到当前 LeRobot。
+  hypothesis: 如果 checkpoint 的 GR00T N1.7 结构、embodiment/modality 统计、VLM processor 资产和当前 LeRobot Processor 契约一致，则可以复用权重并改用 LeRobot 训练器；若数据版本不兼容，则训练迁移仍需先重建 Dataset。
+  decision_ref: null
+  action: 只读检查独立工程、数据、checkpoint 和本地 Cosmos backbone；用当前 LeRobot Processor 对单样本执行 pack、padding、mask、VLM encode 和 action decode；输出迁移评估报告。
+  expected_result: 明确可复用部分、阻塞项、实际验证边界和最小迁移路径；不修改原始数据、模型或 LeRobot 产品源码。
+  observation: checkpoint-30000 的 model_type 为 Gr00tN1d7，action horizon 为 40，13D 数据和 new_embodiment 配置一致；本地 backbone 可被 Processor 读取；单样本输出为 state [1,1,132]、action [1,40,132]、mask [1,40,132]，解码输出为 [1,16,13]；原始数据为 v2.1，当前 LeRobot DatasetMetadata 拒绝直接读取。
+  actual_result: 迁移方向成立，但需要 v2.1 到 v3.0 数据重建，以及 Processor 使用本地 backbone 路径；不建议复制独立 Trainer/DataLoader。
+  delta: 新增独立 GR00T 迁移评估报告、EV-011/EV-012 和可执行的三阶段迁移路线；未修改产品源码和原始数据。
+  lesson: 模型权重兼容不等于训练工作流兼容；VLA 迁移必须同时验证 checkpoint 结构、processor 资产、数据版本、action horizon/mask 和训练器语义。
+  next_adjustment: 用户确认后先只转换一个 episode 为 Dataset v3，随后执行 LeRobotDataset + Processor + model forward smoke test，再决定是否全量转换和训练。
+  evidence:
+  - EV-011
+  - EV-012
+  knowledge_candidate: false
+- id: TRACE-007
+  task_id: TASK-008
+  timestamp: '2026-07-27T20:00:00+08:00'
+  context: 用户授权按评估计划继续，将独立 GR00T 数据和 checkpoint 迁移到当前 LeRobot，但明确不启动正式微调。
+  hypothesis: 只要重建当前 Dataset v3、让 Processor 从 checkpoint 读取本地 backbone，并用当前 GrootPolicy 加载独立权重，就能在不复制独立 Trainer 的前提下闭环验证训练前链路。
+  decision_ref: null
+  action: 修改 Processor assets 的 backbone 路径传递；新增只读 v2.1->v3 转换脚本；先做单 episode smoke，再完成 148 episode 全量转换；执行 Dataset/Processor/postprocessor/checkpoint/CPU action forward 验证。
+  expected_result: 新 v3 数据可读取，Processor 输出 132D/40步容器和正确 mask，checkpoint 对迁移样本输出 16x13 action；不修改源数据/checkpoint，不启动训练。
+  observation: 全量新数据为 v3.0、148 episodes、47250 frames、30 FPS；三路视频和 13D state/action 可读取；Processor 自动使用 /mnt/data/gr00t-finetune/models/cosmos_reason2_2b；CPU load report 仅缺失未使用 lm_head.weight；最小 forward 输出 finite [1,16,13]。
+  actual_result: 数据、Processor、policy wrapper 和独立微调 checkpoint 已完成最小闭环；迁移已从“评估可行”进入“可在 LeRobot 上继续训练探索”。
+  delta: 相对 TASK-007，新增 v3 全量数据、Processor 源码适配、CPU 模型加载和 action forward 证据；未启动 lerobot-train，未改变原始数据和 checkpoint。
+  lesson: VLA 迁移验收必须把 Dataset 版本、processor 资产、mask/horizon、权重加载和真实 forward 串成一条可执行链路；仅比较 config 或 safetensors 索引不足以证明可训练。
+  next_adjustment: 用户手动执行短训练 smoke test；释放 GPU 后再测 GPU 显存、吞吐、checkpoint resume 和真实 rollout。
+  evidence:
+  - EV-013
+  - EV-014
+  - EV-015
+  knowledge_candidate: false
+- id: TRACE-008
+  task_id: TASK-009
+  timestamp: '2026-07-27T21:00:00+08:00'
+  context: 用户要求把独立 GR00T 中已验证的微调参数迁移到 LeRobot，并停止 Ollama，但不要自动启动正式训练。
+  hypothesis: 读取独立运行的 experiment config，并在 LeRobot 训练器中补齐 optimizer-update 级梯度累积和 paged AdamW 注册，就能生成可手动确认的等价训练入口；任何未验证的 gradient checkpointing 能力必须显式保留为边界。
+  decision_ref: null
+  action: 审计独立 FinetuneConfig/experiment_cfg；新增 TrainPipelineConfig.gradient_accumulation_steps、accumulate-aware training loop 和 PagedAdamW8bitConfig；生成安全模板；运行配置解析、toy accumulation、Groot loss smoke；停止 Ollama 并核对 GPU。
+  expected_result: 参数模板默认不训练；关键配置可解析；loss finite；Ollama 停止；不修改原始数据和 checkpoint。
+  observation: 独立配置确认 global_batch_size=1、gradient_accumulation_steps=8、max_steps=30000、lr=5e-5、constant scheduler、warmup_steps=1500、paged_adamw_8bit、bf16、save_steps=5600；LeRobot 配置解析成功；toy accumulation 2 micro-batch 只更新一次；Groot loss=0.016918182373046875 且 finite；Ollama/llama-server 已停止，GPU used=680 MiB/free=23393 MiB。
+  actual_result: 关键参数已迁移并落到手动模板，训练循环具备对应 accumulation 语义；formal fine-tune 未启动；gradient checkpointing 和 bitsandbytes 安装状态仍是明确边界。
+  delta: 相对 TASK-008，新增训练参数适配源码、paged AdamW registry、手动训练模板、训练前 loss/accumulation 验证和 GPU 资源释放；未执行 optimizer.step 的正式 GR00T 训练。
+  lesson: “参数已经写进命令”与“训练语义已验证”必须分开记录；对 3B VLA 训练，显存优化器和 activation checkpointing 不是可默认假设的细节。
+  next_adjustment: 安装 bitsandbytes 后先运行短训练 smoke，再验证 checkpoint 保存/resume、GPU 吞吐和真实机器人 rollout。
+  evidence:
+  - EV-016
+  - EV-017
+  - EV-018
+  knowledge_candidate: false
+- id: TRACE-009
+  task_id: TASK-010
+  timestamp: '2026-07-27T22:35:00+08:00'
+  context: 上一轮迁移已完成参数模板和梯度累积，但 gradient checkpointing 与 bitsandbytes 仍记录为未验证边界；用户要求完成迁移和最小验证，不启动正式微调。
+  hypothesis: 为 GrootConfig 增加 gradient_checkpointing 并调用原生 Transformers/Diffusers protocol，同时在目标 LeRobot 环境确认 bitsandbytes，能够把剩余训练前兼容性边界验证到运行时。
+  decision_ref: null
+  action: 新增 GrootConfig.gradient_checkpointing、GrootPolicy._enable_gradient_checkpointing 和模板参数；确认 bitsandbytes 0.50.0；运行 CUDA PagedAdamW one-parameter step、真实 GR00T checkpoint + v3 Dataset GPU forward/backward smoke；未执行正式训练。
+  expected_result: gradient checkpointing 实际启用；paged AdamW 可用；真实 loss/backward 和 gradients finite；不写 checkpoint、不启动 lerobot-train。
+  observation: 真实 GPU smoke 的 loss=0.025316519662737846，537/537 个可训练参数获得 finite gradients；PagedAdamW8bit lr=5e-5 的 CUDA one-parameter step finite；Ollama/llama-server 仍无进程。
+  actual_result: 训练前迁移边界已补齐并通过最小运行时验证；正式微调仍未启动。
+  delta: 相对 TASK-009，新增 gradient checkpointing 配置/运行时启用、bitsandbytes 环境确认、GPU backward smoke 和 optimizer CUDA step 证据。
+  lesson: 不能用“配置可解析”替代“真实模型运行时可用”；对 3B VLA，正式训练与单 batch GPU backward 必须分别记录。
+  next_adjustment: 用户手动启动正式微调后，独立验证 checkpoint 保存/恢复、吞吐、峰值显存和 rollout。
+  evidence:
+  - EV-019
+  - EV-020
+  knowledge_candidate: false
+- id: TRACE-010
+  task_id: TASK-011
+  timestamp: '2026-07-27T22:50:00+08:00'
+  context: 用户担心 GR00T 微调脚本与 LeRobot 训练流程不统一。
+  hypothesis: 当前 shell 文件只是参数包装器，若把其实际执行入口切换为 pyproject 注册的 lerobot-train，即可统一训练引擎，同时保留 GR00T 参数预设和安全 dry-run。
+  decision_ref: null
+  action: 审计 pyproject.toml、lerobot_train.py 和现有模板；将模板 CMD 的第一项改为当前环境的 lerobot-train 可执行入口；增加入口存在性检查；报告中补充直接 lerobot-train 命令。
+  expected_result: dry-run 打印的实际命令为 lerobot-train；不启动正式训练；训练逻辑仍由 LeRobot 原生训练器承载。
+  observation: dry-run 输出为 /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train；CLI help 正常显示 Groot、gradient accumulation 和 paged_adamw_8bit 参数；shell 语法通过。
+  actual_result: 训练入口已统一到 LeRobot，项目脚本只保留参数预设和安全检查。
+  delta: 相对 TASK-010，去除了模板对 python -m lerobot.scripts.lerobot_train 的直接调用，改为 LeRobot 安装的 console entrypoint；未改变训练算法或参数语义。
+  lesson: “统一训练框架”与“保留项目参数模板”并不冲突，关键是自定义文件不能复制训练循环。
+  next_adjustment: 用户手动运行统一入口后，再验证完整训练行为。
+  evidence:
+  - EV-021
+  knowledge_candidate: false
+- id: TRACE-011
+  task_id: TASK-012
+  timestamp: '2026-07-27T18:45:00+08:00'
+  context: 用户要求使用独立 GR00T checkpoint-30000 继续微调，并先修改配置、做最小测试，不自动启动正式训练。
+  hypothesis: 将 raw checkpoint-30000 设置为 GrootConfig.base_model_path，能够复用 GR00T 原生分片权重加载器并继续使用 LeRobot lerobot-train。
+  decision_ref: DEC-003
+  action: 修改 examples/groot/finetune_right_o6_13d_lerobot.sh 的初始化路径；保留 dry-run；用 GrootPolicy(config) 加载 checkpoint 并对真实 v3 数据执行 forward；运行项目日志校验。
+  expected_result: 模板指向 checkpoint-30000；模型加载成功；loss finite；不写入原始 checkpoint、不启动正式训练。
+  observation: CUDA 加载成功，只有未使用的 backbone.model.lm_head.weight 缺失提示；loss=0.04111609607934952 finite；batch state=(1,1,132)、action=(1,40,132)、action_mask=(1,40,132)；Project Log validation passed。
+  actual_result: 已完成 checkpoint 权重初始化路径切换和最小验证；未恢复独立 optimizer/scheduler/RNG/step 状态。
+  delta: 相对 TASK-011，仅改变训练初始化 checkpoint 和输出目录命名；训练入口、微调超参和数据集不变。
+  lesson: raw model checkpoint 与 LeRobot-native checkpoint 的加载路径不同；验证必须覆盖实际 GrootPolicy(config) 构造，而不能只看 shell 参数。
+  next_adjustment: 用户手动运行包装器启动正式微调；训练后另行验证保存的 LeRobot checkpoint 和恢复能力。
+  evidence:
+  - EV-022
+  - EV-023
+  knowledge_candidate: false
+- id: TRACE-012
+  task_id: TASK-013
+  timestamp: '2026-07-27T18:51:00+08:00'
+  context: 用户执行正式包装器后在 TrainPipelineConfig.validate 因 policy.repo_id 缺失失败。
+  hypothesis: GrootConfig 默认 push_to_hub=true，而本地训练模板没有显式关闭 Hub 上传，因此 cfg.validate 在任何模型训练前拒绝启动。
+  decision_ref: DEC-004
+  action: 在模板中加入 --policy.push_to_hub=false；用临时 steps=0/save_checkpoint=false 版本执行完整 lerobot-train 初始化。
+  expected_result: 配置验证、数据集、checkpoint、optimizer 和 scheduler 初始化成功；不执行 optimizer update。
+  observation: cfg.validate 通过；checkpoint-30000 分片加载成功；optimizer/scheduler 创建成功；num_learnable_params=1620515968；0 step 正常结束。
+  actual_result: 配置错误已修复；此前用户命令在 validation 阶段退出，没有启动正式训练。
+  delta: 相对 TASK-012，新增 policy.push_to_hub=false，并补充了完整入口 steps=0 验证。
+  lesson: 之前的直接 policy forward smoke 和 dry-run 没有覆盖完整 TrainPipelineConfig.validate，这属于验证范围不足而非模型加载失败。
+  next_adjustment: 用户重新执行包装器启动正式 30000 steps 微调。
+  evidence:
+  - EV-024
+  knowledge_candidate: false

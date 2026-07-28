@@ -1,2 +1,7 @@
 
 {"schema_version":1,"event_id":"LE-000001","time":"2026-07-27T02:56:06Z","run_id":null,"type":"work-unit-started","task_id":"TASK-004","phase":"business-intent","summary":"Read-only codebase exploration for the LeRobot code map."}
+{"schema_version":1,"event_id":"LE-000002","time":"2026-07-27T10:45:28Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-022","status":"valid"}
+{"schema_version":1,"event_id":"LE-000003","time":"2026-07-27T10:45:28Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-023","status":"valid"}
+{"schema_version":1,"event_id":"LE-000004","time":"2026-07-27T10:51:32Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-024","status":"valid"}
+{"schema_version":1,"event_id":"LE-000005","time":"2026-07-27T11:04:40Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-025","status":"failed"}
+{"schema_version":1,"event_id":"LE-000006","time":"2026-07-27T11:04:40Z","run_id":null,"type":"evidence-recorded","evidence_id":"EV-026","status":"valid"}

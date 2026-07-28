@@ -87,3 +87,181 @@ evidence:
   recorded_at: '2026-07-27T09:47:08+08:00'
   invalidated_at: null
   invalidation_reason: null
+- id: EV-022
+  kind: scripted-validation
+  subject: 训练模板改为从 raw GR00T checkpoint-30000 初始化，并保持 dry-run 默认
+  status: valid
+  command: bash -n examples/groot/finetune_right_o6_13d_lerobot.sh && bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  result_ref: 脚本输出 INITIAL_CHECKPOINT_PATH=.../checkpoint-30000；未调用 lerobot-train
+  covers:
+    files:
+    - examples/groot/finetune_right_o6_13d_lerobot.sh
+    requirements:
+    - 模板必须使用 checkpoint-30000 作为 GrootPolicy 的 base_model_path，且默认不启动正式训练
+    tasks:
+    - TASK-012
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      examples/groot/finetune_right_o6_13d_lerobot.sh: 357c14fdb8da3a91f119f02ab186f9058dbef2c514b4607a45a92a33c70d521d
+  recorded_at: '2026-07-27T10:45:28Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-023
+  kind: runtime-smoke
+  subject: GrootPolicy 直接从 checkpoint-30000 初始化并完成真实 v3 数据 forward
+  status: valid
+  command: PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python <direct GrootPolicy(config)
+    forward smoke>
+  result_ref: loaded_device=cuda:0；loss=0.04111609607934952 finite=True；state=(1,1,132),
+    action=(1,40,132), action_mask=(1,40,132)
+  covers:
+    files:
+    - examples/groot/finetune_right_o6_13d_lerobot.sh
+    requirements:
+    - 训练实际初始化路径必须能加载 checkpoint-30000，并对 v3 数据产生 finite loss
+    tasks:
+    - TASK-012
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      examples/groot/finetune_right_o6_13d_lerobot.sh: 357c14fdb8da3a91f119f02ab186f9058dbef2c514b4607a45a92a33c70d521d
+  recorded_at: '2026-07-27T10:45:28Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-024
+  kind: runtime-smoke
+  subject: 完整 lerobot-train 配置校验（steps=0）通过，含 Hub 推送关闭和 checkpoint 初始化
+  status: valid
+  command: 临时替换 steps=0/save_checkpoint=false 后 RUN_TRAINING=1 执行包装器
+  result_ref: cfg.validate 通过；policy checkpoint-30000 加载；optimizer/scheduler 创建；num_learnable_params=1620515968；Training
+    0 step；End of training
+  covers:
+    files:
+    - examples/groot/finetune_right_o6_13d_lerobot.sh
+    requirements:
+    - 正式入口在不执行训练更新的情况下必须完成 cfg.validate、数据集、policy、optimizer 和 scheduler 初始化
+    tasks:
+    - TASK-013
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      examples/groot/finetune_right_o6_13d_lerobot.sh: d4cc29624419bb8caaccce2c966cacc8605287e8e89e705bf812816ff3c08d11
+  recorded_at: '2026-07-27T10:51:32Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-025
+  kind: runtime-failure
+  subject: 原始全 FP32 训练配置在 RTX 4090 首个 batch OOM
+  status: failed
+  command: RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  result_ref: CUDA OOM at cross_attention_dit.py:360; GPU 23.51 GiB, only 80.75 MiB
+    free; no checkpoint written
+  covers:
+    files:
+    - examples/groot/finetune_right_o6_13d_lerobot.sh
+    requirements:
+    - 训练配置必须在目标 24 GiB GPU 完成首个 optimizer update
+    tasks:
+    - TASK-014
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      examples/groot/finetune_right_o6_13d_lerobot.sh: 01bfe9d641e75c9d9e8eb8b3c74fa5f74a7c90e81f082cdb5abb154c0a1a3129
+  recorded_at: '2026-07-27T11:04:40Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-026
+  kind: runtime-smoke
+  subject: BF16 backbone memory fix passes one complete LeRobot optimizer update
+  status: valid
+  command: temporary steps=1/save_checkpoint=false wrapper with policy.load_bf16=true
+    and policy.model_params_fp32=false
+  result_ref: 1/1 optimizer update completed; 2.11s/step; checkpoint-30000 loaded;
+    no OOM; intended output untouched
+  covers:
+    files:
+    - src/lerobot/policies/groot/configuration_groot.py
+    - src/lerobot/policies/groot/modeling_groot.py
+    - examples/groot/finetune_right_o6_13d_lerobot.sh
+    requirements:
+    - 训练配置必须在目标 24 GiB GPU 完成首个 optimizer update
+    tasks:
+    - TASK-014
+  version_binding:
+    git_commit: d5d1874377096e93725ea7cde1036a84a016f470
+    diff_hash: ead75f03cfb7e9c807c703bd76a6a91858c34668e4b55fa018cde7d7435c59a9
+    file_hashes:
+      src/lerobot/policies/groot/configuration_groot.py: a1cc83891589965de3a307bdb40131fe54fb4400a6e5aa901bee20eaf3b2e550
+      src/lerobot/policies/groot/modeling_groot.py: bbdf7ebcba67ad1bd5d806ab562ab593e7d9ef7ad37a493a1d9d4ded59a5e384
+      examples/groot/finetune_right_o6_13d_lerobot.sh: 01bfe9d641e75c9d9e8eb8b3c74fa5f74a7c90e81f082cdb5abb154c0a1a3129
+  recorded_at: '2026-07-27T11:04:40Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-027
+  kind: runtime-failure
+  subject: 原始 PagedAdamW8bit checkpoint 保存因 Python int step 失败
+  status: failed
+  command: RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  result_ref: .project-log/verification/evidence.yaml#EV-027
+  covers:
+    files:
+    - src/lerobot/optim/optimizers.py
+    requirements:
+    - PagedAdamW8bit 的非 tensor optimizer state 必须可保存
+    tasks:
+    - TASK-015
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-27T12:57:04Z'
+  invalidated_at: null
+  invalidation_reason: superseded by EV-029
+- id: EV-028
+  kind: runtime-failure
+  subject: 第二版 optimizer 保存修复因 bitsandbytes qmap 共享 storage 失败
+  status: failed
+  command: real 1-step LeRobot GR00T checkpoint-save smoke before shared-storage fix
+  result_ref: .project-log/verification/evidence.yaml#EV-028
+  covers:
+    files:
+    - src/lerobot/optim/optimizers.py
+    requirements:
+    - safetensors 保存不得包含重复 storage alias
+    tasks:
+    - TASK-015
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-27T13:47:13Z'
+  invalidated_at: null
+  invalidation_reason: superseded by EV-029
+- id: EV-029
+  kind: runtime-smoke
+  subject: 修复后真实 GR00T 1-step checkpoint 保存和 optimizer state 读取通过
+  status: valid
+  command: real 1-step LeRobot GR00T checkpoint-save smoke + load_optimizer_state_dict
+  result_ref: .project-log/verification/evidence.yaml#EV-029
+  covers:
+    files:
+    - src/lerobot/optim/optimizers.py
+    - src/lerobot/utils/constants.py
+    - src/lerobot/common/train_utils.py
+    - tests/optim/test_optimizers.py
+    requirements:
+    - 真实 GR00T checkpoint 必须能保存完整 training_state 并读回 optimizer state
+    tasks:
+    - TASK-015
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-27T13:47:30Z'
+  invalidated_at: null
+  invalidation_reason: null

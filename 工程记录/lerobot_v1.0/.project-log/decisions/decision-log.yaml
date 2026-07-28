@@ -93,3 +93,96 @@ decisions:
   supersedes: []
   created_at: '2026-07-27T11:48:34+08:00'
   updated_at: '2026-07-27T11:48:34+08:00'
+- id: DEC-003
+  title: raw GR00T checkpoint 通过 base_model_path 进入 LeRobot 微调
+  category: architecture
+  status: active
+  authority: A
+  user_approval: approved
+  related_tasks:
+  - TASK-012
+  related_business_logic: []
+  context: 独立 checkpoint-30000 是原生 Isaac-GR00T 分片 checkpoint，config.json 不包含 LeRobot policy 所需的 type 字段。
+  hypothesis: 将 checkpoint-30000 作为 GrootConfig.base_model_path，可以由 GR00T 原生 from_pretrained 加载分片权重，同时保持 LeRobot lerobot-train 作为训练循环；直接使用 --policy.path 会走 LeRobot config 解析并失败。
+  options:
+  - name: 使用 --policy.path 加载
+    benefits:
+    - 语义上接近 LeRobot 原生 checkpoint
+    costs:
+    - 当前 raw checkpoint 缺少 LeRobot type/config 结构
+    risks:
+    - 无法通过 PreTrainedConfig.from_pretrained 解析
+  - name: 使用 --policy.base_model_path 加载 raw checkpoint（选择）
+    benefits:
+    - 复用 GR00T 原生分片权重加载器
+    - 不修改原始 checkpoint
+    - 训练循环仍统一使用 lerobot-train
+    costs:
+    - 不恢复独立训练器的 optimizer/scheduler/RNG/step 状态
+    risks:
+    - 需要把独立训练器状态另行适配到 LeRobot resume 格式
+  decision: "使用 --policy.base_model_path=/mnt/data/.../checkpoint-30000，以 checkpoint 权重初始化一个新的 LeRobot 微调运行。"
+  action: 修改 examples/groot/finetune_right_o6_13d_lerobot.sh 的 INITIAL_CHECKPOINT_PATH，并运行最小 CUDA forward smoke。
+  expected_result: checkpoint-30000 可由 GrootPolicy(config) 加载，真实 v3 数据的 forward loss 为 finite，且正式训练不启动。
+  reason_summary:
+  - checkpoint config.json 没有 LeRobot `type` 字段。
+  - GrootPolicy(config) 真实 CUDA forward 已通过。
+  conditions:
+  - 不修改原始 checkpoint
+  - 正式训练由用户手动启动
+  reversal_plan: 将 INITIAL_CHECKPOINT_PATH 改回基础模型目录即可从基础 GR00T 重新开始。
+  observation: checkpoint 分片权重加载成功；唯一提示是 checkpoint 缺失未使用的 backbone.model.lm_head.weight；loss=0.04111609607934952 且 finite。
+  actual_result: 训练模板已切换并完成最小运行时验证。
+  outcome_status: successful
+  lesson: “从 checkpoint 权重初始化”与“恢复训练器完整状态”是两个不同能力；raw GR00T checkpoint 适合前者，后者需要额外格式适配。
+  evidence:
+  - EV-022
+  - EV-023
+  supersedes: []
+  created_at: '2026-07-27T18:45:00+08:00'
+  updated_at: '2026-07-27T18:45:00+08:00'
+- id: DEC-004
+  title: 本地微调默认关闭 Hugging Face Hub 推送
+  category: process
+  status: active
+  authority: A
+  user_approval: approved
+  related_tasks:
+  - TASK-013
+  related_business_logic: []
+  context: LeRobot PreTrainedConfig 默认 push_to_hub=true；本次训练输出到本地，用户没有提供 Hugging Face policy.repo_id。
+  hypothesis: 显式传入 policy.push_to_hub=false 可以让本地训练不要求 repo_id，同时保留本地 checkpoint 保存。
+  options:
+  - name: 设置 policy.repo_id 并上传 Hub
+    benefits:
+    - 可自动上传模型和 checkpoint
+    costs:
+    - 需要 Hub 登录、仓库命名和网络
+    risks:
+    - 可能产生公开/私有仓库和数据上传影响
+  - name: 本地训练关闭 push_to_hub（选择）
+    benefits:
+    - 不需要 repo_id 或 Hub 凭证
+    - 保持训练和 checkpoint 全部落地本机
+    costs:
+    - 不自动同步 Hub
+    risks:
+    - 需要用户自行备份输出目录
+  decision: "在 GR00T 本地微调模板中加入 --policy.push_to_hub=false。"
+  action: 修改 examples/groot/finetune_right_o6_13d_lerobot.sh，并运行完整 steps=0 初始化 smoke。
+  expected_result: cfg.validate、dataset、policy、optimizer、scheduler 初始化通过，0 step 正常结束。
+  reason_summary:
+  - 用户当前要求本地训练，不要求上传 Hub。
+  - 失败信息明确来自 push_to_hub=true 且 policy.repo_id 缺失。
+  conditions:
+  - 如需 Hub 上传，用户必须提供 policy.repo_id 并启用 push_to_hub。
+  reversal_plan: 删除该参数或改为 --policy.push_to_hub=true，并增加 --policy.repo_id=<hub-repo-id>。
+  observation: 加入参数后完整入口通过 cfg.validate，checkpoint-30000 加载、optimizer/scheduler 创建和 0 step 结束均成功。
+  actual_result: 本地训练配置已修复。
+  outcome_status: successful
+  lesson: dry-run 只能验证命令拼接，不能覆盖 TrainPipelineConfig.validate；正式启动前应执行 steps=0 的完整初始化 smoke。
+  evidence:
+  - EV-024
+  supersedes: []
+  created_at: '2026-07-27T18:51:00+08:00'
+  updated_at: '2026-07-27T18:51:00+08:00'

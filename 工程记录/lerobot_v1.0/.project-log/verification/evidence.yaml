@@ -167,3 +167,361 @@ evidence:
   - .gitignore
   - CODE_MAP.md
   - /home/tbl/.codex/config.toml
+- id: EV-010
+  task_id: TASK-006
+  business_logic:
+  - 学习记录需要保留老板电器当前结论，并系统解释 LeRobot/VLA/GR00T 接入的关键概念。
+  - action horizon 的说明必须能够联系控制频率、数据帧率和真实时间，并给出可计算示例。
+  acceptance_criteria:
+  - 目标文件存在且包含连续的结构化章节
+  - 用户提出的 7 个问题均有对应解释
+  - action horizon 章节包含频率换算、滚动时域和协调方案
+  - 原文件有可恢复备份
+  - 未修改 LeRobot 产品代码
+  result: passed
+  level: 2
+  commands:
+  - cp -p '/home/tbl/Project/工作经历汇总/学习记录/2026.07.27/今日任务.md' '/home/tbl/Project/工作经历汇总/学习记录/2026.07.27/今日任务.md.bak'
+  - wc -l '/home/tbl/Project/工作经历汇总/学习记录/2026.07.27/今日任务.md'
+  - grep -nE '^#|^##|^###' '/home/tbl/Project/工作经历汇总/2026.07.27/今日任务.md'
+  - awk '/^```/{n++} END{if (n % 2 != 0) exit 1; print n " balanced code fences"}' '/home/tbl/Project/工作经历汇总/学习记录/2026.07.27/今日任务.md'
+  limitations:
+  - 未执行专用 Markdown 渲染器；验证采用标题、代码围栏、关键章节和文件备份检查。
+  - 目标文件位于 LeRobot 工作区之外，未纳入该仓库 Git diff。
+  artifacts:
+  - /home/tbl/Project/工作经历汇总/学习记录/2026.07.27/今日任务.md
+  - /home/tbl/Project/工作经历汇总/学习记录/2026.07.27/今日任务.md.bak
+- id: EV-011
+  task_id: TASK-007
+  business_logic:
+  - 独立 GR00T checkpoint 和本地 VLM backbone 能被当前 LeRobot 的 GR00T Processor 解释并承接。
+  acceptance_criteria:
+  - checkpoint 配置、embodiment、13D state/action、action horizon 和统计信息可读取
+  - 本地 Cosmos-Reason2-2B backbone 的 tokenizer/image/video processor 可读取
+  - 单样本 preprocessor 和 postprocessor shape/semantic smoke test 通过
+  result: passed
+  level: 2
+  commands:
+  - /home/tbl/miniforge3/envs/gr00t_n1/bin/python /tmp/read_old_sample.py
+  - CUDA_VISIBLE_DEVICES='' /home/tbl/miniforge3/envs/lerobot/bin/python /tmp/test_groot_pack.py
+  - /home/tbl/miniforge3/envs/lerobot/bin/python inspect checkpoint config and safetensors index
+  limitations:
+  - Processor smoke test未执行实际GR00T模型forward。
+  - action smoke test使用独立 loader读取的单episode样本，而不是当前LeRobot v3 Dataset。
+  artifacts:
+  - /mnt/data/gr00t-finetune/models/cosmos_reason2_2b
+  - /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/checkpoint-30000
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+- id: EV-012
+  task_id: TASK-007
+  business_logic:
+  - 当前 LeRobot 训练工作流必须使用兼容的 Dataset v3；不能把 v2.1 数据静默当作 v3 使用。
+  acceptance_criteria:
+  - 现有数据被确认是 v2.1
+  - 当前 LeRobot DatasetMetadata 明确拒绝该格式
+  - 缺失的 legacy episodes stats 文件被确认
+  result: passed
+  level: 2
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python inspect meta/info.json and meta files
+  - /home/tbl/miniforge3/envs/lerobot/bin/python LeRobotDatasetMetadata local-root smoke check
+  - grep -R "BackwardCompatibilityError\|episodes_stats.jsonl" -n src/lerobot/datasets src/lerobot/scripts
+  limitations:
+  - 未执行全量 v2.1 -> v3.0 转换。
+  artifacts:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d/meta/info.json
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d/meta
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+- id: EV-013
+  task_id: TASK-008
+  business_logic:
+  - 独立 GR00T 数据必须以当前 LeRobot v3 Dataset 形式进入训练工作流，且不能修改原始 v2.1 数据。
+  acceptance_criteria:
+  - 新 Dataset codebase_version 为 v3.0
+  - 新 Dataset 有 148 episodes 和 47250 frames
+  - LeRobotDatasetMetadata、LeRobotDataset 和三路视频均可读取
+  - state/action/task shape 与源数据语义一致
+  result: passed
+  level: 3
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python examples/dataset/convert_gr00t_v21_to_v30.py --episodes 1
+  - /home/tbl/miniforge3/envs/lerobot/bin/python examples/dataset/convert_gr00t_v21_to_v30.py --episodes 148
+  - /home/tbl/miniforge3/envs/lerobot/bin/python full-v3 metadata/readback smoke
+  limitations:
+  - 视频重新编码为 H.264；未要求逐字节复现原 MP4，仅验证帧数、shape 和可读性。
+  artifacts:
+  - examples/dataset/convert_gr00t_v21_to_v30.py
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30_smoke
+- id: EV-014
+  task_id: TASK-008
+  business_logic:
+  - GR00T raw checkpoint 的 Processor 必须优先使用 checkpoint 携带的本地 backbone 配置，并保持 padding、mask 和 action decode 语义。
+  acceptance_criteria:
+  - Processor 自动选取本地 Cosmos backbone
+  - 13D state/action 被打包为 132D 容器
+  - 16 步有效 action 被放入 40 步 chunk 并生成正确 mask
+  - postprocessor 解码为 16x13 action
+  result: passed
+  level: 3
+  commands:
+  - HF_HUB_OFFLINE=1 /home/tbl/miniforge3/envs/lerobot/bin/python full-v3 Processor/postprocessor smoke
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m ruff check src/lerobot/policies/groot/processor_groot.py examples/dataset/convert_gr00t_v21_to_v30.py
+  limitations: []
+  artifacts:
+  - src/lerobot/policies/groot/processor_groot.py
+  - /mnt/data/gr00t-finetune/models/cosmos_reason2_2b
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+- id: EV-015
+  task_id: TASK-008
+  business_logic:
+  - 迁移验收至少需要证明独立 checkpoint 能在当前 LeRobot policy wrapper 中加载并对迁移后的数据输出 action chunk；不能以静态文件存在代替运行证据。
+  acceptance_criteria:
+  - GrootPolicy checkpoint CPU load 成功
+  - 仅有已知未使用 lm_head 缺失，不出现模型结构加载错误
+  - v3 Dataset 经 Processor 后执行 predict_action_chunk 成功
+  - 输出为 finite 的 [1,16,13] tensor
+  result: passed
+  level: 3
+  commands:
+  - HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES='' /home/tbl/miniforge3/envs/lerobot/bin/python GrootPolicy CPU load smoke
+  - HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 CUDA_VISIBLE_DEVICES='' /home/tbl/miniforge3/envs/lerobot/bin/python v3 Dataset -> Processor -> predict_action_chunk smoke
+  limitations:
+  - 未执行 GPU forward、吞吐和显存基准。
+  - 未执行正式训练或真实机器人 rollout。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/checkpoint-30000
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+- id: EV-016
+  task_id: TASK-009
+  business_logic:
+  - 微调参数迁移必须以独立 GR00T 已实际运行的配置为事实来源，不能以默认值猜测。
+  acceptance_criteria:
+  - 读取独立 experiment_cfg/config.yaml
+  - 记录 batch/accumulation/steps/lr/scheduler/optimizer/bf16/checkpoint/save/eval 参数
+  - LeRobot 手动模板包含对应设置并默认不执行训练
+  result: passed
+  level: 3
+  commands:
+  - sed -n '1,260p' /home/tbl/Project/gr00t-finetune/gr00t_n1/gr00t/configs/finetune_config.py
+  - cat /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/experiment_cfg/config.yaml
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python /tmp/parse_groot_args.py
+  - bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  limitations:
+  - 模板中的 native gradient_checkpointing 参数没有静默传入，因为当前 GrootPolicy 没有经过验证的运行时开关。
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+  - /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/experiment_cfg/config.yaml
+- id: EV-017
+  task_id: TASK-009
+  business_logic:
+  - 梯度累积必须在不启动正式训练的情况下证明 optimizer update 发生在完整 micro-batch 窗口之后。
+  acceptance_criteria:
+  - 2 个 micro-batch 只执行 1 次参数更新
+  - Dataset -> Processor -> GrootPolicy.forward 产生 finite loss
+  - 未执行 backward/optimizer.step 的正式 GR00T 训练
+  result: passed
+  level: 3
+  commands:
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python /tmp/test_accumulation_runtime.py
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python /tmp/groot_lerobot_loss_smoke.py
+  limitations:
+  - 仅对 toy policy 运行了 accumulation runtime smoke；未执行实际 Groot optimizer step。
+  artifacts:
+  - src/lerobot/configs/train.py
+  - src/lerobot/scripts/lerobot_train.py
+  - src/lerobot/optim/optimizers.py
+- id: EV-018
+  task_id: TASK-009
+  business_logic:
+  - 用户明确要求停止 Ollama，以释放训练所需 GPU 资源；不能误杀其他 GPU 进程。
+  acceptance_criteria:
+  - Ollama serve 和 llama-server 均不再运行
+  - nvidia-smi 只剩非训练桌面进程，且显存显著释放
+  - 未启动 lerobot-train 或独立 GR00T 微调
+  result: passed
+  level: 3
+  commands:
+  - systemctl --user stop ollama.service
+  - systemctl stop ollama.service
+  - kill Ollama serve/llama-server PIDs 1098 and 2831
+  - pgrep -af '[o]llama|[l]lama-server'
+  - nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader
+  limitations:
+  - Zed editor remained as a non-training GPU process using about 139 MiB.
+  artifacts:
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+- id: EV-019
+  task_id: TASK-010
+  business_logic:
+  - 已迁移的训练参数必须具备真实运行时依赖和最小 optimizer 可用性，不能只停留在 CLI 字符串层面。
+  acceptance_criteria:
+  - LeRobot 环境可导入 bitsandbytes
+  - paged_adamw_8bit 在 CUDA 参数上可构建并完成一次有限值更新
+  - GrootConfig 可解析 gradient_checkpointing=true
+  result: passed
+  level: 3
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -c 'import bitsandbytes as bnb; print(bnb.__version__)'
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python CUDA PagedAdamW8bit one-parameter build/step smoke
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python draccus GrootConfig/TrainPipelineConfig parse with --policy.gradient_checkpointing=true
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/optim/test_optimizers.py tests/policies/groot/test_groot_training_optim_contract.py
+  limitations:
+  - 未执行完整训练循环或对完整 GrootPolicy 参数执行 optimizer.step。
+  artifacts:
+  - src/lerobot/optim/optimizers.py
+  - src/lerobot/policies/groot/configuration_groot.py
+  - src/lerobot/policies/groot/modeling_groot.py
+  - /home/tbl/miniforge3/envs/lerobot/lib/python3.12/site-packages/bitsandbytes
+- id: EV-020
+  task_id: TASK-010
+  business_logic:
+  - 迁移后的实际 GR00T policy 必须能在目标 GPU 环境完成最小训练链路，但不能以此冒充正式微调完成。
+  acceptance_criteria:
+  - 使用真实 v3 Dataset、Processor 和独立 checkpoint 完成 GPU forward
+  - loss finite
+  - gradient_checkpointing=true 实际启用且 backward 成功
+  - 所有可训练参数获得 finite gradients
+  - 测试不保存 checkpoint、不执行 optimizer.step、不启动正式训练
+  result: passed
+  level: 3
+  commands:
+  - PYTHONPATH=src CUDA_VISIBLE_DEVICES=0 /home/tbl/miniforge3/envs/lerobot/bin/python examples/groot/smoke_test_right_o6_13d_lerobot.py
+  - nvidia-smi --query-gpu=memory.used,memory.free --format=csv,noheader,nounits
+  - pgrep -af '[o]llama|[l]lama-server'
+  limitations:
+  - 仅为单 batch smoke；未测完整吞吐、峰值显存、长时间稳定性、checkpoint 保存/恢复或真实机器人 rollout。
+  artifacts:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/checkpoint-30000
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+- id: EV-021
+  task_id: TASK-011
+  business_logic:
+  - 训练流程应统一由 LeRobot 官方训练入口承载，项目自定义脚本只能保存参数预设，不能再实现独立训练循环。
+  acceptance_criteria:
+  - pyproject.toml 将 lerobot-train 注册到 lerobot.scripts.lerobot_train:main
+  - GR00T 参数模板实际调用 lerobot-train 可执行入口
+  - lerobot-train help 可解析 Groot、梯度累积和 paged AdamW 参数
+  - dry-run 不启动训练
+  result: passed
+  level: 3
+  commands:
+  - grep -n 'lerobot-train="lerobot.scripts.lerobot_train:main"' pyproject.toml
+  - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
+  - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  limitations:
+  - 未启动正式训练；统一入口的长时间训练行为留给用户手动运行验证。
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
+  - pyproject.toml
+- id: EV-022
+  task_id: TASK-012
+  business_logic:
+  - 训练模板必须从独立 GR00T checkpoint-30000 初始化，并且默认不能自动启动正式训练。
+  acceptance_criteria:
+  - policy.base_model_path 指向 checkpoint-30000
+  - dry-run 输出正确路径且不调用 lerobot-train
+  - shell 语法通过
+  result: passed
+  level: 3
+  commands:
+  - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
+  - bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  limitations: []
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+- id: EV-023
+  task_id: TASK-012
+  business_logic:
+  - LeRobot 的实际 GrootPolicy 初始化路径必须能加载 checkpoint-30000 并处理真实 v3 数据。
+  acceptance_criteria:
+  - GrootPolicy(config) 从 checkpoint-30000 加载成功
+  - state/action/action_mask 形状正确
+  - forward loss finite
+  result: passed
+  level: 3
+  commands:
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python direct GrootPolicy(config) forward smoke
+  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  limitations:
+  - 单 batch smoke；未执行 optimizer.step、正式训练、保存恢复或真实 rollout。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/checkpoint-30000
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+- id: EV-024
+  task_id: TASK-013
+  business_logic:
+  - 本地 LeRobot 训练入口必须完成配置、数据集、模型、optimizer 和 scheduler 初始化，不因默认 Hub 上传配置缺失而提前失败。
+  acceptance_criteria:
+  - policy.push_to_hub=false 后 cfg.validate 通过
+  - checkpoint-30000 能被正式入口初始化
+  - optimizer 和 scheduler 创建成功
+  - steps=0 正常结束且不执行训练更新
+  result: passed
+  level: 2
+  commands:
+  - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
+  - bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  - 临时将 steps 改为 0、save_checkpoint 改为 false 后 RUN_TRAINING=1 执行包装器
+  limitations:
+  - 未执行正式 30000 steps 训练、长时间吞吐、checkpoint 保存恢复或 Hub 上传。
+  artifacts:
+  - examples/groot/finetune_right_o6_13d_lerobot.sh
+  - /mnt/data/gr00t-finetune/outputs/gr00t_n1_right_o6_13d_retrain/gr00t_n1_right_o6_13d_full_20k/checkpoint-30000
+- id: EV-027
+  task_id: TASK-015
+  business_logic:
+  - PagedAdamW8bit checkpoint 必须保存其 Python 标量 optimizer state，不能因 safetensors 只接受 tensor 而失败。
+  acceptance_criteria:
+  - state/step 等非 tensor leaf 可写入 sidecar 并恢复
+  result: failed
+  level: 3
+  commands:
+  - RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh
+  result_ref: step 5600 保存 checkpoint 时，safetensors 报 Key state/493/step expected torch.Tensor but received int；pretrained_model 已写入，training_state 不完整。
+  limitations:
+  - 该失败发生在修复前版本；不能用该 checkpoint 的 training_state 做精确 resume。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_continued_20k/checkpoints/005600
+- id: EV-028
+  task_id: TASK-015
+  business_logic:
+  - Checkpoint serialization 必须处理 bitsandbytes 在多个参数间共享的 qmap tensor storage。
+  acceptance_criteria:
+  - safetensors 保存不因共享 qmap tensor alias 失败
+  result: failed
+  level: 3
+  commands:
+  - real 1-step LeRobot GR00T checkpoint-save smoke before shared-storage fix
+  result_ref: Python int 已旁路后，safetensors 报 Some tensors share memory，涉及 __bnb_optimizer_quant_state__/qmap1 和 qmap2。
+  limitations:
+  - 该失败发生在第二版修复（仅处理非 tensor leaf）上；未污染原始 checkpoint-30000。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_checkpoint_save_smoke_20260727_c
+- id: EV-029
+  task_id: TASK-015
+  business_logic:
+  - 真实 LeRobot GR00T 训练必须能够保存可读取的 optimizer、scheduler、RNG 和 step 状态。
+  acceptance_criteria:
+  - 真实 GR00T 1-step 训练完成
+  - training_state 同时包含 tensor state、metadata sidecar、scheduler、RNG 和 training step
+  - load_optimizer_state_dict 能读回 state/step
+  result: passed
+  level: 3
+  commands:
+  - real 1-step LeRobot GR00T checkpoint-save smoke from checkpoints/005600/pretrained_model
+  - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python load_optimizer_state_dict on /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_checkpoint_save_smoke_20260727_d/checkpoints/000001/training_state
+  result_ref: 1/1 update completed；training_state contains optimizer_state.safetensors (3295120408 bytes), optimizer_state_metadata.json (13457 bytes), optimizer_param_groups.json, scheduler_state.json, rng_state.safetensors and training_step.json；537 optimizer states loaded，step=[1]。
+  limitations:
+  - 仅为 1-step checkpoint-save smoke；不代表正式 30000 steps 已完成。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_checkpoint_save_smoke_20260727_d/checkpoints/000001
+  - src/lerobot/optim/optimizers.py
+  - tests/optim/test_optimizers.py
