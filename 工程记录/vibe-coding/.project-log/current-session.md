@@ -1,10 +1,10 @@
 # Current Session
 
 - Current phase: verification
-- Current goal: maintain and release the Codex Vibe Coding framework source
-- Current task: TASK-004 — optional MCP catalog and CodeGraph integration (done)
-- Confirmed facts: Vibe Coding 0.4.1 is installed globally; optional MCP catalog contains codegraph and vibe-toolbelt; new installs default to core-only; current Codex state selects codegraph; LeRobot CodeGraph index is up to date.
-- Active decisions: DEC-001 — optional MCPs are declarative and opt-in; CodeGraph stays outside the LeRobot Python environment.
-- Blocking items: none for installation or CLI verification
-- Recent evidence: MCP-001 through MCP-005
-- Next step: restart Codex or the Zed ACP Thread and confirm CodeGraph MCP tools are exposed in the new session.
+- Current goal: keep the Vibe Coding workflow rules and centralized project-log archive synchronized.
+- Current task: update the `a-project-log-archive` routing and Git push proxy rule, then archive this project's latest `.project-log/`.
+- Confirmed facts: `a-project-log-archive` is present in the repository and local Skill tree; the source prompt and global `/home/tbl/.codex/AGENTS.md` contain the same routing; commit `f333be9` contains the Git push proxy rule.
+- Active decisions: archive replaces the existing `My_knowledge_base/工程记录/vibe-coding/.project-log/` with this project's latest copy, then commits and pushes the knowledge base.
+- Blocking items: none known.
+- Recent evidence: `git diff --check` passed; the Vibe Coding repository was pushed successfully through `127.0.0.1:10808`.
+- Next step: run `a-project-log-archive` for `/home/tbl/Project/vibe-coding` and verify the archived copy.
