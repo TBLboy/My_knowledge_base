@@ -111,3 +111,32 @@
 - W&B run 7qfmd9v5 状态 finished，summary 已查询并记录。
 - 模型训练实验记录表.xlsx 工作表1 E01 已更新为 completed，含最终指标和结论。
 - TASK-019 已完成；项目日志已归档。
+## 2026-07-29 完成全量 Open-Loop 评估
+
+- 使用 8 episodes（#9,27,46,64,83,101,120,138），共 2323 个有效帧，对 6 个 checkpoint（005600→030000）进行 open-loop 评估。
+- 评估在模型 relative-normalized action space 下进行，对比 pred_action vs preprocessor 输出的 GT action，取前 13 维计算 MAE/RMSE。
+- 修复了 `ds.episodes` 返回 None 的已知 bug（delta_timestamps 模式下 `ds.episodes` 为 None，改用 `ds.meta.episodes[ep_idx]` + `dataset_from_index/to_index`）。
+- 修复了 `policy_preprocessor.json` 路径问题（新 checkpoint 结构存储在 `pretrained_model/` 内，需传 `str(pd_dir)` 而非 `str(ckpt_dir)`）。
+- 评估脚本：`/tmp/open_loop_eval.py`；结果 JSON：`/tmp/open_loop_eval_results.json`。
+
+**Open-Loop 指标汇总：**
+
+| Checkpoint | step0_MAE | full_MAE | step0_RMSE | full_RMSE |
+|------------|-----------|----------|------------|-----------|
+| 005600     | 0.0907    | 0.1019   | 0.1136     | 0.1315    |
+| 011200     | 0.0740    | 0.0817   | 0.0950     | 0.1093    |
+| 016800     | 0.0647    | 0.0724   | 0.0830     | 0.0951    |
+| 022400     | 0.0589    | 0.0649   | 0.0763     | 0.0859    |
+| 028000     | 0.0591    | 0.0647   | 0.0750     | 0.0849    |
+| 030000     | 0.0570    | 0.0626   | 0.0734     | 0.0829    |
+
+**关键发现：**
+1. MAE 从 5600 到 22400 持续下降，之后趋于平台期（22400→30000 仅改善 ~0.002），约 22K 步后收敛。
+2. 所有 checkpoint 推理时间稳定在 ~0.063s/frame。
+3. 维度分析：dim7 最难（0.0768@30000），dim8/dim10/dim11 最优（0.0459/0.0491/0.0487）。
+4. 时间步分析：误差随预测未来步数增大而增大，但最终模型 t=0→t=35 增幅仅 ~0.009（5600 为 ~0.018），长程预测能力改善明显。
+5. 评估总耗时 ~20 分钟（1188s），6 个 checkpoint × 2323 帧。
+
+**验证：** EV-040（Open-Loop 评估完成，结果有效）
+
+**下一步：** 可将 open-loop 指标回填到实验记录表 E01 的 core metrics 列
