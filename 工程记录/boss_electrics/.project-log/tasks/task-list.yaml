@@ -462,3 +462,66 @@ tasks:
     follow_ups: []
   created_at: '2026-07-28'
   updated_at: '2026-07-28'
+- id: TASK-009
+  title: 固化源码驱动的代码讲解方法为可复用 Codex Skill
+  kind: task
+  parent_id: null
+  phase: distillation
+  goal: 将已验证的“具体运行时间线、状态变量生命周期、源码逐行解释、最后概念抽象”讲解方法沉淀为可复用且有触发边界的全局 Skill
+  status: done
+  priority: medium
+  risk: low
+  authority: B
+  owner: agent
+  tags:
+  - code-learning
+  - skill
+  - distillation
+  related_business_logic: []
+  acceptance_refs: []
+  related_decisions: []
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - b-skill-authoring
+  inputs:
+  - .project-log/docs/source-code-learning.md
+  - .project-log/distillation/candidates.yaml
+  - 用户于 2026-07-29 确认的源码讲解偏好
+  outputs:
+  - /home/tbl/.codex/skills/b-source-code-tutoring/SKILL.md
+  - .project-log/evals/source-code-tutoring.yaml
+  - 可复用的源码讲解结构与触发边界
+  plan: []
+  done_when:
+  - Skill 明确以真实源码、具体输入、运行时间线和状态变量为讲解起点
+  - Skill 规定在源码解释后才使用工程模式或类比
+  - Skill 能处理逐行函数讲解和异步调用链追踪
+  - Skill 对短术语问题不自动展开为完整教程
+  - Skill 通过结构校验，且项目日志引用有效
+  verification:
+    status: passed
+    commands:
+    - python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ~/.codex/skills/b-source-code-tutoring
+    - VIBE_PYTHON loopctl validate
+    evidence:
+    - /home/tbl/.codex/skills/b-source-code-tutoring/SKILL.md
+    - .project-log/evals/source-code-tutoring.yaml
+    - .project-log/distillation/candidates.yaml
+    limitations:
+    - 评测样例已定义，但尚未在新的独立代码库教学会话中执行端到端人工评测。
+  result:
+    summary: 已创建全局 b-source-code-tutoring Skill，并以明确触发方式固化用户确认的源码学习方法。
+    changed_files:
+    - /home/tbl/.codex/skills/b-source-code-tutoring/SKILL.md
+    - /home/tbl/.codex/skills/b-source-code-tutoring/agents/openai.yaml
+    - /home/tbl/.codex/skills/b-source-code-tutoring/references/teaching-template.md
+    - .project-log/docs/source-code-learning.md
+    - .project-log/evals/source-code-tutoring.yaml
+    - .project-log/distillation/candidates.yaml
+    deviations: []
+    follow_ups:
+    - 后续继续阅读 TaskPlanner 时按该 Skill 的时间线、状态表和源码锚点格式进行。
+  created_at: '2026-07-29'
+  updated_at: '2026-07-29'

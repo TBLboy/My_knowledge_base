@@ -17,6 +17,26 @@ entries:
   - .project-log/research/solution-research.yaml
   - .project-log/decisions/decision-log.yaml
   knowledge_candidate: true
+- id: TRACE-009
+  task_id: TASK-008
+  timestamp: '2026-07-29'
+  context: 用户复习 `test_gripper` 完整时间线后，明确表示“时间线 + 状态变量变化表 + 最后抽象思路”的讲解方式最容易形成内部理解。
+  hypothesis: 先还原真实运行时序，再追踪状态变量的写入和读取，最后做概念抽象，比先讲设计模式更能帮助用户理解源码实现。
+  decision_ref: null
+  action: 将该结构固化到源码学习文档、项目进度和当前会话记录，作为后续代码讲解的固定模板。
+  expected_result: 后续每个代码模块都能从具体输入、函数调用、状态变化和下游消费讲起，避免只停留在职责说明或拟人化类比。
+  observation: 用户明确认可 `test_gripper` 的时间线和变量状态变化表，并要求记录这种讲解方式。
+  actual_result: 已更新 `.project-log/docs/source-code-learning.md`、`.project-log/progress.md`、`.project-log/current-session.md`。
+  delta: 讲解规范从“源码事实 + 概念类比”进一步具体化为“运行时间线 + 状态生命周期 + 最后抽象”。
+  lesson: 对异步 ROS 任务系统，时间线和状态变量生命周期是理解调度行为的核心证据。
+  next_adjustment: 下一段继续用该模板讲解 `TestGripperPolicy.select_next_goal()` 及 Action 结果回调。
+  evidence:
+  - .project-log/docs/source-code-learning.md
+  - .project-log/progress.md
+  - .project-log/current-session.md
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/test_gripper_policy.py
+  knowledge_candidate: true
 - id: TRACE-002
   task_id: TASK-007
   timestamp: '2026-07-28'
@@ -35,6 +55,26 @@ entries:
   - .project-log/business-logic/atoms.yaml
   - .project-log/requirements/baseline.yaml
   knowledge_candidate: false
+- id: TRACE-008
+  task_id: TASK-008
+  timestamp: '2026-07-29'
+  context: 用户在阅读 TaskPlanner 源码后指出，仅用模块职责和拟人化类比会造成表层理解，真正需要的是把概念逐项映射到源码实现。
+  hypothesis: 如果将 Orchestrator、任务状态、Policy、定时器门控和 Action 路由都绑定到具体类、方法、属性、运行时值和下游调用，用户可以建立可复现的内部执行模型，而不是只记住流程口号。
+  decision_ref: null
+  action: 复核当前源码中的 `_on_start_task`、`_prepare_start_task_context`、`_clear_runtime_state`、`_on_tick`、`_generate_goal_by_task_type`、`_build_gripper_action_goal` 和 MotionExecutor 的 API 路由，新增源码学习笔记并记录后续讲解规范。
+  expected_result: 固化一条可复习的 `StartTask → Policy → PlannedStep → ExecuteTask.Goal → MotionExecutor API` 代码链，并纠正示意代码与真实实现之间的差异。
+  observation: `TaskPlannerNode` 通过上下文属性、1 秒 timer、状态/忙标志门控和 Policy 实例组织调度；`_build_gripper_action_goal` 实际只填 `arm_type/action_name`，而 `task_id` 位于外层 Goal；执行端通过 `task_type` 查找 `_apis`。
+  actual_result: 新增 `.project-log/docs/source-code-learning.md`，更新 progress/current-session，并约定后续解释必须从源码事实展开，再使用概念类比辅助记忆。
+  delta: 从“说明架构概念”调整为“源码驱动的逐行、逐对象、逐调用链教学”。
+  lesson: 概念类比只能作为最后的记忆压缩；理解工程实现必须追踪对象创建、字段填充、状态变化和下游消费。
+  next_adjustment: 继续从 `TestGripperPolicy.select_next_goal()` 读到 TaskPlanner 结果回调，再进入 MotionExecutor 的 `_execute_task_cb()` 和 `GripperActionApi`。
+  evidence:
+  - .project-log/docs/source-code-learning.md
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/test_gripper_policy.py
+  - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  knowledge_candidate: true
 - id: TRACE-004
   task_id: TASK-007
   timestamp: '2026-07-28'
@@ -129,3 +169,23 @@ entries:
   - .project-log/current-session.md
   - .project-log/business-logic/open-questions.yaml
   knowledge_candidate: false
+- id: TRACE-010
+  task_id: TASK-009
+  timestamp: '2026-07-29'
+  context: 用户要求把已确认有效的源码讲解方法提炼成可复用、通用的 Codex Skill，供后续阅读不同工程时重复使用。
+  hypothesis: 将讲解顺序、事实约束、逐行解释要求、状态表模板和非触发边界写入 Skill，可以避免后续退回到只讲模块职责或拟人化类比的表层讲解。
+  decision_ref: null
+  action: 创建全局 `b-source-code-tutoring` Skill、教学模板和显式触发说明；编写正常调用链、逐行回调和短术语非触发三类评测样例；同步项目学习笔记与蒸馏候选。
+  expected_result: 用户在任何仓库中要求深入读源码时，都可以复用“运行时间线 + 状态变量表 + 源码实现 + 最后抽象”的讲解流程。
+  observation: 用户已明确认可 `test_gripper` 的完整时间线和关键变量状态变化总表，且明确要求未来讲解必须落到代码实现、对象赋值、调用关系和下游消费。
+  actual_result: 全局 Skill 已创建，`quick_validate.py` 结构校验通过；项目日志校验在本次记录更新后重新执行。
+  delta: 从项目内一次性学习笔记升级为带触发边界、模板和评测用例的全局可复用 Skill。
+  lesson: 对复杂异步系统的教学，抽象模式应作为对源码事实的压缩总结，而不是讲解入口；固定时间线和状态生命周期能显著降低调用链理解的断层。
+  next_adjustment: 使用该 Skill 继续追踪 `TestGripperPolicy.select_next_goal()`、Planner 的结果回调和 MotionExecutor 的执行路由，并在新的源码讲解会话中人工检查评测样例。
+  evidence:
+  - /home/tbl/.codex/skills/b-source-code-tutoring/SKILL.md
+  - /home/tbl/.codex/skills/b-source-code-tutoring/references/teaching-template.md
+  - .project-log/evals/source-code-tutoring.yaml
+  - .project-log/distillation/candidates.yaml
+  - .project-log/docs/source-code-learning.md
+  knowledge_candidate: true

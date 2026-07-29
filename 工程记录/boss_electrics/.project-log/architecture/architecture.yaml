@@ -6,16 +6,17 @@ architectures:
   related_business_logic:
   - BL-PLATING-001
   - BL-GRASP-001
-  decision_refs:
+decision_refs:
   - DEC-003
   - DEC-005
   - DEC-006
   - DEC-007
   - DEC-008
+  - DEC-009
   components:
   - name: BossElectricsPourPolicy
     repository: kitchen_robot_home
-    responsibility: 按 V1 固定阶段推进任务，消费感知结果，沿锅把 PCA 主轴计算抓取偏置，并构造中心坐标系 C 下的类型化目标。
+    responsibility: 按 V1 多阶段驱动模式推进任务：Phase 1 从感知结果预生成抓取→提锅→底盘移动步骤，Phase 2 在底盘移动后动态读取餐盘检测结果计算倾倒接近和增量回放步骤；沿锅把 PCA 主轴计算抓取偏置，构造中心坐标系 C 下的类型化目标。
   - name: PourTaskTarget message
     repository: kitchen_robot_home/dexbot_interfaces
     responsibility: 显式承载感知引用、frame_id、抓取目标、餐盘中心、倾倒偏置、两个 TCP 参数、手部参数和轨迹引用。

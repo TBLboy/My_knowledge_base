@@ -1,5 +1,50 @@
 ## 当前会话（2026-07-28 第二轮）
 
+## 当前会话（2026-07-29 源码学习）
+
+- 用户要求从源码内部建立架构理解，反对只停留在模块职责和抽象流程层面。
+- 已完成的源码阅读链：`_on_start_task()`、`_prepare_start_task_context()`、`_clear_runtime_state()`、`_on_tick()`、`_generate_goal_by_task_type()`、`_build_gripper_action_goal()`。
+- 已用 `test_gripper` 具体追踪：`StartTask(task_type="test_gripper")` 如何创建 `TestGripperPolicy`，定时器如何门控，Policy 如何返回 `PlannedStep(plan_type="gripper_action", action_name="张开", arm_type=1)`，Planner 如何构造 `ExecuteTask.Goal`。
+- 已确认 `ExecuteTask.Goal` 是 ROS 2 Action 的 Goal 消息对象，外层 `task_id` 标识任务，`task_type` 负责下游路由，`target` 携带具体动作参数。
+- 已确认当前真实源码中 `_build_gripper_action_goal()` 只填 `TaskTarget.arm_type/action_name`，没有填 `TaskTarget.task_id/object_id/class_name`；此前示意讲解已纠正。
+- 已记录学习方法：每个概念必须落到具体类、方法、属性、调用关系、输入值、输出对象和下游消费；先源码事实，再概念类比。
+- 用户进一步确认偏好的讲解结构：`完整任务时间线 → 关键状态变量变化表 → 工程思路总结`。已将 `test_gripper` 的时间线和变量表作为后续讲解模板。
+- 复习笔记：`.project-log/docs/source-code-learning.md`
+- 下一步：继续阅读 `TestGripperPolicy.select_next_goal()` 和结果回调，再进入 MotionExecutor 的 ActionServer 路由。
+- 用户要求将已确认的讲解方法抽象为可复用资产；已创建并安装全局显式触发 Skill：`/home/tbl/.codex/skills/b-source-code-tutoring/`。
+- Skill 固化的顺序为：`具体输入 → 真实运行时间线 → 状态变量生命周期 → 源码逐行实现 → 下游消费/结果回调 → 最后工程概念抽象`；结构校验已通过，评测样例位于 `.project-log/evals/source-code-tutoring.yaml`。
+
+## 技术选型进行中（2026-07-29）
+
+- 完成 TestGripperPolicy 完整源码阅读，对比分析 TestHeartPolicy（场景感知 plan）和 PeelApplePolicy（CSV/运动学生成）。
+- 发现 V1 流程存在两段时序约束：底盘移动前锅把可见、底盘移动后餐盘才进入视野。
+- 确认 Policy 不需要预生成全部步骤：`select_next_goal()` 每次被调用的特性 + `_world` 持续更新 + `update_step_status` 提供反馈 → 一个 Policy 内分阶段生成即可。
+- 已记录 DEC-009，更新架构描述。
+- 下一步：确认 WorldState 中餐盘检测结果的字段契约和感知组输出 Topic。
+
+## 完整调用链串讲已记录（2026-07-29）
+- 应用户要求，完成了从 `__init__` 到 `_on_result` 的完整 9 阶段时间线串讲，覆盖：初始化 → StartTask → 门控 → Policy 决策 → Goal 构建 → 发送 + 闭包注册 → Goal Handle 确认 → 等待空转 → 结果回调 → 步骤状态更新 → 任务结束。
+- 记录了 9 个阶段的完整代码路径，每个阶段都附带了具体源码行号和变量值。
+- 记录了关键变量生命周期总表（11 个变量在 5 个时间点的值）。
+- 总结了四个属性层面（上下文层/运行状态层/门控标志层/代际保护层）的工程划分。
+- 添加了源码路径索引，供后续快速定位关键函数行号。
+- 完整记录已追加到 `.project-log/docs/source-code-learning.md`（307→842行）。
+- 当前状态：TASK-008 仍在进行中，产品代码未修改。
+- 下一步（用户待确认）：继续读 MotionExecutor 端的 ActionServer 路由，还是切换到其他方向。
+- 
+## 参数配置模式调查（2026-07-29）
+- 调查了现有代码的参数管理方式：ROS 2 参数系统 + YAML 配置文件，集中在 `dexbot_bringup/config/`，按子系统分目录。
+- 当前 `TaskPlannerNode` 是唯一裸启动的核心节点（无 parameters= 参数文件），所有值硬编码在 `__init__` 中。
+- V1 技术参数（抓取偏置、等待位置、倾倒偏置、锅具 TCP、home 位姿等）可遵循现有模式：
+  - 创建 `dexbot_bringup/config/pan_pour/pan_pour_params.yaml`
+  - 在 `TaskPlannerNode.__init__()` 中添加 `declare_parameter()` 声明
+  - 在 `dexrob_full.launch.py` 中为 task_planner_node 添加 `parameters=[pan_pour_config]`
+- 参数命名采用分层结构，如 `pan_pour.grasp_offset`，Policy 内部通过 Node 的参数接口读取。
+- 此项属于技术选型发现，待进入 engineering-landing 阶段后再实现，当前不修改产品代码。
+
+
+---
+
 - 当前阶段：solution-research（技术选型）
 - 当前目标：`GOAL-001`；TASK-007 已完成，TASK-008 进行中
 - 本轮完成：

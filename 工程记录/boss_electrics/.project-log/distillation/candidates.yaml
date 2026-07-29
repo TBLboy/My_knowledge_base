@@ -1,2 +1,29 @@
 version: '0.4'
-candidates: []
+candidates:
+- id: DISTILL-001
+  statement: 以“具体运行时间线 → 状态变量生命周期 → 源码逐行实现 → 最后概念抽象”的顺序讲解代码，能比先给模块职责或拟人化类比更有效地帮助用户建立内部执行模型。
+  context: 适用于用户明确希望深入阅读陌生代码、跟踪异步调用链、理解状态变量和准备后续技术选型或实现的场景。
+  applicability:
+  - 交互式源码阅读
+  - 异步、事件驱动、状态机或多进程/多节点系统
+  - 用户要求逐行解释、调用链追踪或深入理解架构
+  exclusions:
+  - 一句话术语定义
+  - 以缺陷发现为目标的代码审查
+  - 未选定具体执行路径的泛化架构概述
+  evidence:
+  - TRACE-008
+  - TRACE-009
+  - .project-log/docs/source-code-learning.md
+  - 用户于 2026-07-29 明确确认该讲解结构
+  counterexamples:
+  - 对简单、封闭的 API 问题使用完整时间线会造成不必要的篇幅。
+  confidence: high
+  risk_if_generalized_incorrectly: 在用户只需要快速答案时，可能把简单解释不必要地扩展成长教程。
+  proposed_target: b-source-code-tutoring Skill
+  approval_requirement: 用户已明确请求将此方法抽象为可复用通用 Skill。
+  evaluation_plan:
+  - 用真实的异步任务路径验证是否包含源码锚点、时间线、状态表和下游消费。
+  - 用简短术语询问验证该 Skill 不应被自动触发。
+  status: approved-rule
+  encoded_asset: /home/tbl/.codex/skills/b-source-code-tutoring

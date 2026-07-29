@@ -176,6 +176,77 @@ decisions:
   supersedes: []
   created_at: '2026-07-28'
   updated_at: '2026-07-28'
+- id: DEC-009
+  title: V1 Policy 支持多阶段动态步骤生成，不强制预生成全部步骤
+  category: architecture
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks:
+  - TASK-008
+  - TASK-004
+  related_business_logic:
+  - BL-PLATING-001
+  context: |
+    V1 业务逻辑中存在一个根本性的时序约束：锅把位置在任务启动时可由感知获得，但餐盘在底盘移动前不在相机视野内。
+    这意味着 (1) 抓取目标、(2) 提锅到准备倾倒姿态在任务启动时可预生成，
+    但 (3) 底盘移动后的倾倒点计算、(4) 锅具 TCP 平移接近、(5) 增量回放只能在底盘移动完成、餐盘进入视野后才能计算。
+    现有 TestGripperPolicy/PeelAppleCsvPolicy/TestHeartPolicy 均采用一次性预生成所有步骤的模式（_cached_steps 或 _task_plan），
+    但 BasePolicy 接口（select_next_goal 每次被调用、update_step_status 注入结果、_world 持续更新）并不要求预生成。
+  hypothesis: |
+    一个 Policy 内部通过 _phase 状态区分两段，第一阶段预生成（抓取→提锅→底盘移动），
+    第二阶段在底盘移动完成后动态读取 WorldState 中的餐盘位置计算结果，可以容纳 V1 流程而不需要拆成多个 Policy 或修改 Planner 路由。
+  options:
+  - name: 单 Policy 多阶段动态生成
+    benefits:
+    - 不改 task_type 路由，不改 _initialize_policy，不改 _on_tick
+    - 一个文件覆盖 V1 全流程，步骤间状态由 _phase 显式管理
+    - 第二阶段可在 WAIT_PLATE 子阶段通过 hold_step 等待感知更新
+    costs:
+    - Policy 内部需要显式的相位状态管理，相比纯预生成多一层分支
+    risks:
+    - 若 Phase 2 的感知等待周期过长（plate 检测延迟 > 数秒），hold_step 空转可能增加复位复杂度
+  - name: 拆为两个任务/Policy
+    benefits:
+    - 每个 Policy 职责更单一
+    costs:
+    - 需要新增 task_type、新增 StartTask 路由、两任务间状态传递和 handoff 机制
+    - 当前架构没有"任务链"或"子任务"机制，需要大量改动 Planner
+    risks:
+    - 两任务间的抓取状态、臂位姿、底盘协同状态需要跨任务持久化，复杂度远高于单 Policy 内 _phase
+  decision: |
+    采用"单 Policy 多阶段动态生成"方案。
+    PanPourPolicy 内部维护 _phase 状态，第一阶段从感知获取锅把位置后预生成（抓取→提锅→底盘移动）步骤列表，
+    第二阶段在底盘移动完成后从 _world.objects 读取餐盘检测结果，动态计算倾倒点并生成后续步骤。
+    两阶段之间的等待通过"保持当前位姿"的笛卡尔空转步骤实现，不阻塞 Planner 定时器循环。
+    不改 PlannerNode、不改 _initialize_policy、不改 task_type 路由。
+  reason_summary:
+  - select_next_goal() 被 Planner 的 _on_tick 反复调用，每次可以返回不同逻辑生成的步骤
+  - update_step_status() 在每步完成后注入 COMPLETED/FAILED，Policy 可据此感知阶段推进
+  - _world（WorldState）由 PerceptionReceiver 持续更新，Policy 在任何 _on_tick 时刻都能读到最新感知结果
+  - 现有架构中 PeelApplePolicy（10000 步运动学生成）和 TestHeartPolicy（场景感知 plan()）已展示两种不同的步骤生成时机，本例是第三种阶段混合生成
+  conditions:
+  - Phase 2 的 plate 检测依赖感知组模型将餐盘结果发布到 WorldState.objects
+  - 若底盘移动后 plate 在合理时间内未出现，Policy 必须设置超限终止而非无限 hold
+  - 参数（抓取偏置、倾倒偏置、TCP 位姿）必须参数化注入，不能在 Policy 内硬编码
+  - 后续加入异常处理时，Phase 1 和 Phase 2 各自需要独立的失败回退逻辑，统一在 _phase 矩阵中管理
+  action: TASK-008 中将该模式纳入技术选型输出
+  expected_result: V1 的 Policy 以单文件、两阶段模式承载全流程，不改 Planner 路由；代码可读性和扩展性满足团队共同开发需求。
+  reversal_plan: 若 Policy 内部 _phase 分支复杂度超出可控范围（超过 5 个相位状态或大量跨阶段共享变量），则重新评估是否需要拆为多个 Policy 并引入任务链机制。
+  observation: null
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/test_gripper_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/test_heart_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/peel_apple_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/base_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - .project-log/business-logic/clarification.yaml
+  supersedes: []
+  created_at: '2026-07-29'
+  updated_at: '2026-07-29'
 - id: DEC-002
   title: 锅把抓取确认作为倾倒安全闸门
   category: technical

@@ -10,3 +10,4 @@ Active goal: `GOAL-001`
 - `TASK-006` 完成两个仓库第一轮代码架构接管与事实地图 — `done`
 - `TASK-007` 澄清 V1 倾倒入盘业务逻辑并完成与两个仓库的双向对齐 — `in-progress`
 - `TASK-008` 基于业务澄清和代码边界进行技术选型并形成实现方案 — `pending`
+- `TASK-009` 固化源码驱动的代码讲解方法为可复用 Codex Skill — `done`
