@@ -112,10 +112,8 @@ evidence:
   kind: runtime-smoke
   subject: GrootPolicy 直接从 checkpoint-30000 初始化并完成真实 v3 数据 forward
   status: valid
-  command: PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python <direct GrootPolicy(config)
-    forward smoke>
-  result_ref: loaded_device=cuda:0；loss=0.04111609607934952 finite=True；state=(1,1,132),
-    action=(1,40,132), action_mask=(1,40,132)
+  command: PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python <direct GrootPolicy(config) forward smoke>
+  result_ref: loaded_device=cuda:0；loss=0.04111609607934952 finite=True；state=(1,1,132), action=(1,40,132), action_mask=(1,40,132)
   covers:
     files:
     - examples/groot/finetune_right_o6_13d_lerobot.sh
@@ -136,8 +134,7 @@ evidence:
   subject: 完整 lerobot-train 配置校验（steps=0）通过，含 Hub 推送关闭和 checkpoint 初始化
   status: valid
   command: 临时替换 steps=0/save_checkpoint=false 后 RUN_TRAINING=1 执行包装器
-  result_ref: cfg.validate 通过；policy checkpoint-30000 加载；optimizer/scheduler 创建；num_learnable_params=1620515968；Training
-    0 step；End of training
+  result_ref: cfg.validate 通过；policy checkpoint-30000 加载；optimizer/scheduler 创建；num_learnable_params=1620515968；Training 0 step；End of training
   covers:
     files:
     - examples/groot/finetune_right_o6_13d_lerobot.sh
@@ -158,8 +155,7 @@ evidence:
   subject: 原始全 FP32 训练配置在 RTX 4090 首个 batch OOM
   status: failed
   command: RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh
-  result_ref: CUDA OOM at cross_attention_dit.py:360; GPU 23.51 GiB, only 80.75 MiB
-    free; no checkpoint written
+  result_ref: CUDA OOM at cross_attention_dit.py:360; GPU 23.51 GiB, only 80.75 MiB free; no checkpoint written
   covers:
     files:
     - examples/groot/finetune_right_o6_13d_lerobot.sh
@@ -179,10 +175,8 @@ evidence:
   kind: runtime-smoke
   subject: BF16 backbone memory fix passes one complete LeRobot optimizer update
   status: valid
-  command: temporary steps=1/save_checkpoint=false wrapper with policy.load_bf16=true
-    and policy.model_params_fp32=false
-  result_ref: 1/1 optimizer update completed; 2.11s/step; checkpoint-30000 loaded;
-    no OOM; intended output untouched
+  command: temporary steps=1/save_checkpoint=false wrapper with policy.load_bf16=true and policy.model_params_fp32=false
+  result_ref: 1/1 optimizer update completed; 2.11s/step; checkpoint-30000 loaded; no OOM; intended output untouched
   covers:
     files:
     - src/lerobot/policies/groot/configuration_groot.py
@@ -268,11 +262,9 @@ evidence:
 - id: EV-037
   kind: runtime-observation
   subject: 正式 GR00T N1.7 LeRobot 训练运行中，首个 checkpoint 已保存
-  status: valid
+  status: stale
   command: ps -p 300129 -o pid,stat,etime,pcpu,rss,cmd; tail -n 80 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
-  result_ref: PID 300129 active; training output reached approximately step 9939/30000
-    at 2026-07-28 16:31; checkpoints/005600 training_step.json reports step 5600;
-    W&B run 7qfmd9v5 active
+  result_ref: PID 300129 active; training output reached approximately step 9939/30000 at 2026-07-28 16:31; checkpoints/005600 training_step.json reports step 5600; W&B run 7qfmd9v5 active
   covers:
     files: []
     requirements: []
@@ -283,5 +275,45 @@ evidence:
     diff_hash: null
     file_hashes: {}
   recorded_at: '2026-07-28T08:39:26Z'
+  invalidated_at: null
+  invalidation_reason: superseded by EV-039
+- id: EV-038
+  kind: runtime-observation
+  subject: 正式 GR00T N1.7 LeRobot 训练运行中，已回填统一实验记录表 E01
+  status: stale
+  command: ps -p 300129 -o pid,stat,etime,cmd; tail -n 3 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log; unzip -t 模型训练实验记录表.xlsx
+  result_ref: .project-log/verification/evidence.yaml#EV-038 PID 300129 active; output reached approximately step 13925/30000 at 2026-07-28 17:44; checkpoints/005600 and checkpoints/011200 have complete training_state; W&B run 7qfmd9v5 active; worksheet1 E01 contains the current protocol and state
+  covers:
+    files:
+    - 模型训练实验记录表.xlsx
+    requirements:
+    - 当前正式基线实验必须可作为后续变量实验的统一对照
+    tasks:
+    - TASK-019
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-28T09:46:00Z'
+  invalidated_at: null
+  invalidation_reason: superseded by EV-039
+- id: EV-039
+  kind: runtime-completion
+  subject: 正式 GR00T N1.7 LeRobot 训练完整结束，结果已记录至 E01 并归档
+  status: valid
+  command: ps -p 300129; safetensors safe_open; W&B API run.summary
+  result_ref: .project-log/verification/evidence.yaml#EV-039
+  covers:
+    files:
+    - 模型训练实验记录表.xlsx
+    requirements:
+    - 基线实验已完成可作为对照
+    tasks:
+    - TASK-019
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes: {}
+  recorded_at: '2026-07-29T02:00:00Z'
   invalidated_at: null
   invalidation_reason: null

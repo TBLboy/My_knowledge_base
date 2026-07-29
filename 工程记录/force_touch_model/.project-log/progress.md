@@ -101,3 +101,21 @@
 - Agent 文件：已更新 `/home/tbl/.codex/AGENTS.md` 与项目 `AGENTS.md`。
 - 清理：`/mnt/data/gr00t-finetune/outputs` 仅保留用户指定的独立 GR00T `checkpoint-30000`；未删除官方 base、Cosmos backbone 和数据集。
 - 验证：EV-036；Project Log validation passed。
+
+## 2026-07-28T17:46:00+08:00 回填实验记录表
+
+- 状态：进行中；已完成当前正式 GR00T 基线实验的表格登记。
+- 记录：`模型训练实验记录表.xlsx` 工作表1 `E01`；内容覆盖训练协议、数据处理、模型结构、指标、W&B run、最新 checkpoint 和当前运行状态。
+- 当前运行：PID `300129`，约 `13925/30000` steps；最新完整 checkpoint 为 `011200`，W&B run 为 `7qfmd9v5`。
+- 证据：EV-038；表格通过压缩包、XML 和 LibreOffice 验证。
+- 下一步：继续监控正式训练，完成后回填最终指标、恢复训练和 rollout 验证结果。
+
+## 2026-07-29T10:00:00+08:00 训练完成检查与归档
+
+- 状态：已完成。
+- 正式 GR00T N1.7 微调 30000/30000 steps 完成。
+- 最终指标：loss=0.026、grad_norm=0.075、吞吐 60.4 samples/s、显存 14.24 GB。
+- Checkpoint：5600/11200/16800/22400/28000/030000（各 ~12GB），last/ → 030000。
+- W&B：run 7qfmd9v5 finished。
+- 实验记录：模型训练实验记录表.xlsx E01 为已完成。
+- 证据：EV-039；项目日志已归档。

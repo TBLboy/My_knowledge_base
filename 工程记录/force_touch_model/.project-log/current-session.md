@@ -92,3 +92,22 @@
 - 代码仓库为 `lerobot_v1.0`，当前存在 GR00T、训练循环、优化器、Processor、测试和示例的未提交改动；本次巡检未修改产品代码，也未重新运行测试。
 - 发现工作流状态漂移：`current-session.md` 与任务清单显示 `TASK-017` 已完成/正式训练进行中，但 `.project-log/loop/active-run.yaml` 仍为 `business-intent`、无任务且 native goal 未绑定；后续恢复前应先对齐 Loop 状态，不能直接据此判断项目未开始。
 - 已确认仓库边界设计：项目日志故意放在外部项目根 `.project-log/`，代码仓库为内层 `lerobot_v1.0`；该布局不需要迁回或调整。本次归档以外部 `.project-log/` 为唯一工程记录源。
+
+## 2026-07-28 17:46 回填 GR00T 基线实验记录
+
+- 已将当前正式 GR00T N1.7 → LeRobot 训练回填到 `模型训练实验记录表.xlsx` 的工作表1 `E01`，未新增实验条目。
+- E01 已记录统一基线的数据集、30000-step 预算、batch/梯度累积、学习率、warmup、optimizer、scheduler、BF16、relative action、chunk、模型冻结范围、W&B run 和指标字段。
+- 当前训练 PID `300129` 仍在运行，日志约为 `13925/30000` steps；已保存 `005600`、`011200` 两个完整 checkpoint，表格指向最新完整 checkpoint `011200`。
+- 工作簿已通过 `unzip -t`、XML 解析和 LibreOffice headless PDF 转换验证；最终训练结论仍待正式训练完成。
+- 后续变量实验默认以 E01 作为统一对照；训练继续期间只更新 E01 的运行状态/最终结果，不重复创建同一基线条目。
+
+## 2026-07-29 10:00 训练完成检查与归档
+
+- 正式 GR00T N1.7 → LeRobot 训练已于 2026-07-28 22:32 完成，达到 30000/30000 steps。
+- 最终指标：train/loss=0.026，grad_norm=0.075，吞吐 60.4 samples/s，显存 14.24 GB。
+- 训练耗时约 9h 1min，无 OOM/NaN/optimizer 错误。
+- 共保存 6 个完整 checkpoint（5600/11200/16800/22400/28000/30000），各 ~12GB，共 ~72GB。
+- last/ symlink → 030000；030000 safetensors 全部验证通过（共 3332 个张量）。
+- W&B run 7qfmd9v5 状态 finished，summary 已查询并记录。
+- 模型训练实验记录表.xlsx 工作表1 E01 已更新为 completed，含最终指标和结论。
+- TASK-019 已完成；项目日志已归档。

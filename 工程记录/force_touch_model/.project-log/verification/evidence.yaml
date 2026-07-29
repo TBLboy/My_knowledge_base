@@ -40,8 +40,7 @@ evidence:
   level: 3
   commands:
   - uv run --no-project --python 3.12 --with PyYAML --with jsonschema python runtime/scripts/validate_package.py --root /home/tbl/Project/vibe-coding
-  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --python 3.12 --with pytest --with PyYAML --with jsonschema python -m pytest -q
-    tests
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --python 3.12 --with pytest --with PyYAML --with jsonschema python -m pytest -q tests
   - render_subagent_prompt.py --role {all 8 registered roles}
   limitations:
   - 测试结果为 16 passed, 1 skipped, 4 subtests passed；跳过项是历史 0.3.0 archive 不在源代码工作区。
@@ -58,8 +57,7 @@ evidence:
   result: passed
   level: 3
   commands:
-  - uv run --no-project --python 3.12 --with PyYAML --with jsonschema python scripts/global_installer.py verify --codex-home
-    ~/.codex --without-mcp
+  - uv run --no-project --python 3.12 --with PyYAML --with jsonschema python scripts/global_installer.py verify --codex-home ~/.codex --without-mcp
   limitations:
   - 系统默认 Python 3.10.12 执行 verify 会因缺少 tomllib 被拒绝；框架文档明确要求 Python 3.11+。
   artifacts:
@@ -580,7 +578,6 @@ evidence:
   - 未提供或写入用户的 W&B API key。
   artifacts:
   - examples/groot/finetune_right_o6_13d_lerobot.sh
-
 - id: EV-033
   task_id: TASK-016
   business_logic:
@@ -591,7 +588,7 @@ evidence:
   level: 2
   commands:
   - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/policies/groot/test_groot_lerobot.py tests/policies/groot/test_groot_n1_7.py -x
-  result_ref: "test_lerobot_groot_inference 失败于 Hugging Face 缓存中只有不完整 snapshot 且当前网络不可达，transformers 找不到 model.safetensors；不是本轮官方本地 base smoke 使用的路径。"
+  result_ref: test_lerobot_groot_inference 失败于 Hugging Face 缓存中只有不完整 snapshot 且当前网络不可达，transformers 找不到 model.safetensors；不是本轮官方本地 base smoke 使用的路径。
   limitations:
   - 失败来源归类为 environment；本轮针对 grouped feature names 的 3 个目标测试仍全部通过。
   artifacts:
@@ -612,7 +609,7 @@ evidence:
   commands:
   - PYTORCH_ALLOC_CONF=expandable_segments:True RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=1 SAVE_FREQ=1 SAVE_CHECKPOINT=true OUTPUT_DIR=/mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_e2e_smoke_20260728 JOB_NAME=right_o6_13d_official_e2e_smoke bash examples/groot/finetune_right_o6_13d_lerobot.sh
   - safetensors.safe_open validation of model, optimizer and RNG files
-  result_ref: "官方 base 训练 1 step 完成；生成 9.3 GB model.safetensors、3.3 GB optimizer_state.safetensors、scheduler_state.json、rng_state.safetensors 和 training_step.json；step=1。"
+  result_ref: 官方 base 训练 1 step 完成；生成 9.3 GB model.safetensors、3.3 GB optimizer_state.safetensors、scheduler_state.json、rng_state.safetensors 和 training_step.json；step=1。
   limitations:
   - 1-step smoke 不能证明收敛质量或真实机器人部署。
   - 该 run 的 log_freq=10，因此仅用于 W&B 初始化和 checkpoint-save 闭环，不产生训练指标摘要。
@@ -633,7 +630,7 @@ evidence:
   - PYTORCH_ALLOC_CONF=expandable_segments:True RUN_TRAINING=1 WANDB_ENABLE=true WANDB_MODE=online TOTAL_STEPS=10 SAVE_FREQ=10 SAVE_CHECKPOINT=true OUTPUT_DIR=/mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2 JOB_NAME=right_o6_13d_official_wandb_smoke_v2 bash examples/groot/finetune_right_o6_13d_lerobot.sh
   - W&B API query for run 5jlg6v6b
   - checkpoint file and training_step validation for /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_official_wandb_smoke_20260728_v2/checkpoints/000010
-  result_ref: "W&B run finished；summary 包含 train/loss=1.0985298223793507、train/grad_norm=0.0514892578125、train/lr=1.5416666666666674e-07、train/samples_per_s=52.683015623746186；checkpoint step=10。"
+  result_ref: W&B run finished；summary 包含 train/loss=1.0985298223793507、train/grad_norm=0.0514892578125、train/lr=1.5416666666666674e-07、train/samples_per_s=52.683015623746186；checkpoint step=10。
   limitations:
   - 10-step smoke 只验证链路和日志写入，不代表模型性能。
   - W&B model artifact 保持关闭；模型和训练状态保存在本地输出目录。
@@ -657,7 +654,7 @@ evidence:
   - grep -n '测试产物清理规则' AGENTS.md
   - find /mnt/data/gr00t-finetune/outputs -type f
   - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
-  result_ref: "全局和项目规则均存在；outputs 仅保留用户明确要求的独立 GR00T checkpoint-30000；Project Log validation passed。"
+  result_ref: 全局和项目规则均存在；outputs 仅保留用户明确要求的独立 GR00T checkpoint-30000；Project Log validation passed。
   limitations:
   - 全局 `/home/tbl/.codex/AGENTS.md` 位于项目 Git 仓库之外，不能通过本项目 remote push；已创建本地备份并更新文件。
   artifacts:
@@ -665,3 +662,78 @@ evidence:
   - AGENTS.md
   - .project-log/
   - /home/tbl/.codex/backups/vibe-global-update-20260728-132240-test-artifact-cleanup/
+- id: EV-038
+  task_id: TASK-019
+  business_logic:
+  - 当前正式 GR00T 基线实验及其运行变量必须回填到统一实验记录表，供后续变量实验对照和复用。
+  acceptance_criteria:
+  - 工作表1 的 E01 已标记为进行中并填写当前正式训练协议
+  - 训练数据、模型、优化器、调度器、动作协议和冻结范围已记录
+  - W&B run、当前运行状态和最新完整 checkpoint 已记录
+  - 表格压缩包、XML 和 LibreOffice 打开验证通过
+  result: passed
+  level: 3
+  commands:
+  - ps -p 300129 -o pid,stat,etime,cmd
+  - tail -n 3 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
+  - unzip -t 模型训练实验记录表.xlsx
+  - LibreOffice headless convert-to pdf validation of 模型训练实验记录表.xlsx
+  result_ref: E01 已回填；训练 PID 300129 仍运行，约 13925/30000 steps；最新完整 checkpoint 为 011200；W&B run 为 7qfmd9v5；工作簿 XML 可解析且 LibreOffice 成功转换为 PDF。
+  limitations:
+  - 正式训练尚未完成，E01 当前结论仍为进行中。
+  - 最终收敛、W&B summary、完整恢复训练和真实机器人 rollout 尚未验证。
+  artifacts:
+  - 模型训练实验记录表.xlsx
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/005600
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/011200
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
+- id: EV-039
+  task_id: TASK-019
+  business_logic:
+  - 正式 30000-step 训练必须按预设配置完整结束，所有 checkpoint 持久化，关键指标可查。
+  acceptance_criteria:
+  - 训练进程已退出且无 OOM/NaN/optimizer 错误
+  - 最终 30000 step checkpoint 完整保存，safetensors 验证通过
+  - W&B run 状态为 finished，包含最终 train/loss、grad_norm、吞吐和显存指标
+  - 030000 checkpoint 的 training_step.json 记录 step=30000
+  - E01 已更新为 completed 并记录最终结论
+  result: passed
+  level: 3
+  commands:
+  - ps -p 300129 2>/dev/null || echo 'training process exited'
+  - tail -n 5 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
+  - safetensors safe_open on 030000/pretrained_model/model.safetensors (1030 tensors), optimizer_state.safetensors (2286 tensors)
+  - 'W&B API run.summary: loss=0.0259, grad_norm=0.0752, samples_per_s=60.4, runtime=32563s'
+  - unzip -t && validation of 模型训练实验记录表.xlsx
+  result_ref: 'Training completed at 30000/30000 steps on 2026-07-28 22:32 CST; checkpoints: 5600/11200/16800/22400/28000/030000 (~12GB each); W&B run 7qfmd9v5 state=finished; E01 updated to completed.'
+  limitations:
+  - 未进行真实机器人 rollout 评估。
+  - optimizer 完整恢复能力未独立验证（030000 已包含 optimizer_state.safetensors）。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/030000
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5
+  - 模型训练实验记录表.xlsx
+- id: EV-039
+  task_id: TASK-019
+  business_logic:
+  - 正式 30000-step 训练必须按预设配置完整结束，所有 checkpoint 持久化，关键指标可查。
+  acceptance_criteria:
+  - 训练进程已退出且无 OOM/NaN/optimizer 错误
+  - 最终 30000 step checkpoint 完整保存，safetensors 验证通过
+  - W&B run 状态为 finished，包含最终 train/loss、grad_norm、吞吐和显存指标
+  - 030000 checkpoint 的 training_step.json 记录 step=30000
+  - E01 已更新为 completed 并记录最终结论
+  result: passed
+  level: 3
+  commands:
+  - ps -p 300129 2>/dev/null || echo 'training process exited'
+  - tail -n 5 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/030000/training_state/training_step.json
+  - safetensors safe_open on 030000 (1030+2286+8 tensors)
+  - 'W&B API run.summary: loss=0.0259, grad_norm=0.075, samples_per_s=60.4'
+  result_ref: Training completed 30000/30000 steps 2026-07-28 22:32 CST; checkpoints 5600-030000 ~12GB each; W&B 7qfmd9v5 finished; E01 completed.
+  limitations:
+  - 未进行真实机器人 rollout 评估。
+  - optimizer 完整恢复能力未独立验证。
+  artifacts:
+  - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/030000
+  - 模型训练实验记录表.xlsx

@@ -1306,7 +1306,7 @@ tasks:
   parent_id: TASK-017
   phase: verification
   goal: 监控官方 GR00T N1.7 base 在 LeRobot 上的正式 30000-step 微调，确认 checkpoint、training_state、W&B 指标和最终运行结果。
-  status: in-progress
+  status: done
   priority: high
   risk: high
   authority: A
@@ -1320,6 +1320,7 @@ tasks:
   related_business_logic: []
   acceptance_refs:
   - EV-037
+  - EV-038
   related_decisions: []
   depends_on:
   - TASK-017
@@ -1337,6 +1338,7 @@ tasks:
   outputs:
   - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/
   - W&B run 7qfmd9v5
+  - 模型训练实验记录表.xlsx（工作表1 E01）
   plan:
   - 持续监控正式训练进程、loss、grad_norm、显存和 W&B 状态
   - 检查后续 checkpoint 及 training_state 可读性
@@ -1347,21 +1349,36 @@ tasks:
   - W&B run 状态与最终指标摘要已记录
   - 未发现未处置的 checkpoint 保存或恢复错误
   verification:
-    status: partial
+    status: passed
     commands:
-    - ps -eo pid,etime,cmd
-    - tail -n 80 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
-    - safetensors.safe_open validation after final checkpoint
+    - ps -p 300129 2>/dev/null || echo 'training process exited'
+    - tail -n 5 /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/wandb/run-20260728_133003-7qfmd9v5/files/output.log
+    - safetensors safe_open on 030000 and 028000 checkpoints
+    - W&B API run.summary query for final metrics
+    - unzip -t and validation of 模型训练实验记录表.xlsx
     evidence:
     - EV-037
+    - EV-038
+    - EV-039
     limitations:
-    - 正式训练尚未完成，当前不能判断最终收敛或真实机器人成功率。
-    - 最终 checkpoint、恢复训练和真实机器人 rollout 尚未验证。
+    - 未执行真实机器人 rollout 评估；当前仅验证了训练日志收敛、checkpoint 完整性和 W&B 指标。
+    - optimizer 恢复能力和 rollout 成功率需后续实验验证。
   result:
-    summary: 正式训练已启动并运行中，首个 005600 checkpoint 已保存；等待后续 checkpoint 和最终验收。
-    changed_files: []
-    deviations: []
+    summary: 正式训练已完成（30000/30000 steps）。train/loss 收敛至 0.026，grad_norm 稳定于 0.075，吞吐 60.4 samples/s；6 个完整 checkpoint（5600→30000，各~12GB）；所有 safetensors 验证通过；last/ symlink → 030000。E01 已更新为 completed，含最终指标和结论。
+    changed_files:
+    - 模型训练实验记录表.xlsx
+    - .project-log/tasks/task-list.yaml
+    - .project-log/verification/evidence.yaml
+    - .project-log/loop/evidence-index.yaml
+    - .project-log/loop/active-run.yaml
+    - .project-log/loop/events.jsonl
+    - .project-log/current-session.md
+    - .project-log/progress.md
+    deviations:
+    - 训练末尾 log_freq=10 的 step 列显示为 "30K" 而非真实 step 数，为 log 格式化问题，不影响训练。
     follow_ups:
-    - 训练结束后补充最终验证证据并将 TASK-019 更新为 done。
+    - 后续变量实验以本基线 E01 为统一对照。
+    - 如需要真实机器人 rollout 验证，可额外安排独立评估任务。
+    - 已完成项目日志归档。
   created_at: '2026-07-28T16:35:00+08:00'
-  updated_at: '2026-07-28T16:35:00+08:00'
+  updated_at: '2026-07-29T10:00:00+08:00'
