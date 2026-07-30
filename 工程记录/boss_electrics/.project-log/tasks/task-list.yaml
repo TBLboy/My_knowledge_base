@@ -109,7 +109,7 @@ tasks:
     deviations: []
     follow_ups: []
   created_at: '2026-07-22'
-  updated_at: '2026-07-28'
+  updated_at: '2026-07-29'
 - id: TASK-003
   title: 验证 KP200 倾倒反馈信号与分层控制边界
   kind: spike
@@ -165,11 +165,11 @@ tasks:
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
 - id: TASK-004
-  title: V1 跑通锅把朝左固定场景下左手抓锅、倾倒入盘和放回原位的完整任务链
+  title: V1 跑通锅把朝左固定场景下左手抓锅至倾倒入盘的最小任务链
   kind: task
   parent_id: TASK-001
   phase: task-decomposition
-  goal: 在不依赖右手锅铲辅助的前提下，跑通锅把朝左固定场景的感知结果订阅、左手抓锅、准备倾倒、底盘协同、倾倒入盘和放回原位完整闭环
+  goal: 在不依赖右手锅铲辅助的前提下，跑通锅把朝左固定场景的感知结果订阅、左手抓锅、准备倾倒、底盘协同和倾倒入盘最小闭环；放回、张手和 home 保持后续插槽。
   status: pending
   priority: high
   risk: high
@@ -208,13 +208,14 @@ tasks:
   - 异常处理扩展位置，不进入当前 V1 骨架
   plan: []
   done_when:
-  - 从锅把朝左的专属初始状态或上游移交状态启动，可重复完成感知结果消费、左手抓取、提锅、底盘移动、倾倒、必要的轻微抖动和放回
+  - 从锅把朝左的专属初始状态或上游移交状态启动，可重复完成感知结果消费、左手抓取、提锅、底盘移动、倾倒和必要的轻微抖动
   - 抓取闭合完成前锅体保持安全支撑；当前 V1 初版不执行抓取确认
   - 左臂抓取 TCP 和锅具 TCP 的坐标转换关系在执行前可验证
   - 底盘移动期间左臂保持准备倾倒姿态，倾倒定位平移期间保持锅具 TCP 姿态
   - 右手锅铲不参与 V1，且不成为 V1 任务链的前置条件
   - 当前 V1 只验证动作流程按顺序执行，不增加落料验收和异常处理规则
-  - 运行参数、固定姿态、TCP 数值和放回/home 具体参数可后续填写，不阻塞流程骨架
+  - 放回锅具、张开灵巧手和恢复 home 仅保留后续扩展位置，不是当前 V1 最小闭环的完成条件
+  - 运行参数、固定姿态、TCP 数值和倾倒轨迹参数可后续填写，不阻塞流程骨架
   - 明确 V1 不支持的变量，并输出 V2 右手锅铲辅助的迭代入口
   verification:
     status: not-run
@@ -412,7 +413,7 @@ tasks:
   parent_id: TASK-007
   phase: solution-research
   goal: 在业务规则和当前技术事实稳定后，比较 V1 业务链在两个仓库中的承载方式
-  status: in-progress
+  status: done
   priority: high
   risk: high
   authority: B
@@ -429,6 +430,7 @@ tasks:
   - BL-PLATING-001-AC-002
   related_decisions:
   - DEC-003
+  - DEC-011
   depends_on:
   - TASK-007
   blocked_by: []
@@ -451,6 +453,372 @@ tasks:
   - 明确数据契约、状态机、失败边界、部署/版本关系和测试策略
   - 未经用户批准不进入两个仓库的产品代码实现
   verification:
+    status: passed
+    commands:
+    - rg -n 'MoveCartesian|TaskTarget|ExecuteTask|toolset|flangeInBase' kitchen_robot_home robot_motion_executor
+    evidence:
+    - .project-log/decisions/decision-log.yaml#DEC-009
+    - .project-log/decisions/decision-log.yaml#DEC-011
+    - .project-log/decisions/decision-log.yaml#DEC-013
+    - .project-log/decisions/decision-log.yaml#DEC-014
+    limitations:
+    - 实际安装的 robot_driver deb、感知字段和底盘接口尚未在 ROS 运行时验证。
+  result:
+    summary: 用户已确认动态 PanPourPolicy、现有 ExecuteTask/TaskTarget 复用、Planner 内部 TCP→法兰反解、base-frame flange 控制约定、独立 YAML 参数和法兰增量回放适配路线。
+    changed_files: []
+    deviations: []
+    follow_ups:
+    - 进入 TASK-010，先补齐动态 Policy 的 WAIT/COMPLETE 调度语义。
+    - 将感知字段、底盘接口和实机回放能力作为独立集成任务，不以静态代码推断替代实测。
+  created_at: '2026-07-28'
+  updated_at: '2026-07-30'
+- id: TASK-010
+  title: 在 Planner 中区分动态等待与任务完成
+  kind: task
+  parent_id: TASK-004
+  phase: implementation
+  goal: 让动态 V1 Policy 能在等待底盘完成或餐盘感知时保留任务上下文，而不把无动作状态错误标记为成功结束。
+  status: done
+  priority: critical
+  risk: medium
+  authority: B
+  owner: agent
+  tags:
+  - plating
+  - planner
+  - state-machine
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-009
+  - DEC-013
+  - DEC-015
+  depends_on:
+  - TASK-008
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  inputs:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/base_policy.py
+  outputs:
+  - 私有调度结果类型或兼容适配层
+  - "`WAIT`、`EXECUTE`、`COMPLETE` 的明确处理路径"
+  - 对现有静态 Policy 的兼容测试
+  plan:
+  - 定义不进入 ROS 消息层的调度结果语义
+  - "仅在 `COMPLETE` 路径清理 active task"
+  - "在 `WAIT` 路径更新可查询 phase 并保留上下文"
+  - 为兼容 Policy 和动态等待添加单元测试
+  done_when:
+  - "旧 Policy 返回 `None` 时仍按现有语义结束任务"
+  - "动态 Policy 可以返回 `WAIT`，且 `_active_task_id`、robot state 和 Policy 实例均被保留"
+  - "`WAIT` 不调用 `_send_execute_task_goal()`，不设置机械臂 busy 标志"
+  - 状态查询和日志可区分等待原因、执行中和已完成
+  verification:
+    status: passed
+    commands:
+    - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+    - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && colcon build --symlink-install --packages-select dexbot_task_planner
+    evidence:
+    - EVID-TASK-010-001
+    limitations:
+    - 未启动真实 ROS 节点、MotionExecutor 或硬件；本任务只验证 Planner 私有调度分支。
+    - 包级 pytest 的 flake8/pep257 测试扫描整个工作区，因既有 3,173 条 flake8 问题和 SDK 文档问题失败；新增定向测试与本次新增文件 lint 均通过。
+  result:
+    summary: 新增私有 PolicyDecision 调度结果，兼容旧 Policy 的 PlannedStep/BimanualStep/None 返回值，并在 Planner 中显式处理 EXECUTE、WAIT、COMPLETE 和非法返回值。
+    changed_files:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/policy_decision.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/base_policy.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/conftest.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/test_policy_decision.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+    deviations: []
+    follow_ups:
+    - 进入 TASK-011，建立独立 pan_pour 参数模板和纯 SE(3) 变换模块。
+  created_at: '2026-07-30'
+  updated_at: '2026-07-30'
+- id: TASK-011
+  title: 建立 V1 参数与中心坐标转换的可测试基础模块
+  kind: task
+  parent_id: TASK-004
+  phase: implementation
+  goal: 将 V1 专属 TCP、偏置、固定姿态和 C→左臂 base 法兰计算从 Policy 分支中分离为受 YAML 驱动、可单位测试的纯计算模块。
+  status: done
+  priority: high
+  risk: high
+  authority: B
+  owner: agent
+  tags:
+  - plating
+  - configuration
+  - kinematics
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-005
+  - DEC-013
+  - DEC-014
+  depends_on:
+  - TASK-010
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  inputs:
+  - kitchen_robot_home/scripts/generate_robot_center_frames.py
+  - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml
+  outputs:
+  - "`pan_pour_params.yaml` 参数占位模板"
+  - TCP→法兰、C→B 与 PCA 偏置的纯计算模块
+  - 参数完整性、单位和矩阵方向的单元测试
+  plan:
+  - "定义不写入 `toolset.end` 的 V1 TCP 参数结构"
+  - 将配置读取与 SE(3) 计算分离
+  - 参数缺失或非法时在 Planner 启动/执行前报告错误
+  - 用已知变换覆盖抓取 TCP 与锅具 TCP 两条计算链
+  done_when:
+  - "V1 参数由独立 launch 注入的 YAML 提供，不修改全局 `robot_params.yaml`"
+  - 抓取目标和倾倒目标均能由 C 下 TCP 目标反解为 B 下法兰目标
+  - 计算模块不依赖 ROS 运行时或真实 robot_driver
+  - 默认/占位参数不会被静默当作可执行实机参数
+  verification:
+    status: passed
+    commands:
+    - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+    - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && colcon build --symlink-install --packages-select dexbot_bringup dexbot_task_planner
+    - cd kitchen_robot_home && git diff --check
+    evidence:
+    - EVID-TASK-011-001
+    limitations:
+    - 未启动真实 ROS 节点、MotionExecutor、目标 robot_driver deb 或硬件。
+    - 标定和工位参数仍为 configured=false 的占位值；此模块不能产生允许实机执行的参数集。
+  result:
+    summary: 新增独立 pan_pour ROS 参数模板、纯 SE(3) 变换模块和 Planner 参数加载入口；模块通过 T_C_TCP @ inverse(T_F_TCP) 再乘 T_B_C 产生左臂 base 下法兰目标，并在执行验证前拒绝未标定模板。
+    changed_files:
+    - .project-log/specs/TASK-011.md
+    - kitchen_robot_home/src/dexbot_bringup/config/pan_pour/pan_pour_params.yaml
+    - kitchen_robot_home/src/dexbot_bringup/launch/dexrob_full.launch.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/pan_pour_kinematics.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/test_pan_pour_kinematics.py
+    deviations: []
+    follow_ups:
+    - 等待感知组字段契约和底盘组接口后执行 TASK-012 的 PanPourPolicy 动态阶段编排。
+    - 完成实际中心标定和两个 TCP 标定后，才可将 pan_pour.configured 设为 true。
+  created_at: '2026-07-30'
+  updated_at: '2026-07-30'
+- id: TASK-012
+  title: 接入 PanPourPolicy 的动态阶段编排骨架
+  kind: task
+  parent_id: TASK-004
+  phase: implementation
+  goal: 在 TaskPlanner 中接入单个 PanPourPolicy，使其按已确认 V1 阶段产生左臂抓取、闭合、提锅、等待、倾倒接近和倾倒回放目标。
+  status: blocked
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - plating
+  - planner
+  - policy
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-009
+  - DEC-013
+  - DEC-015
+  depends_on:
+  - TASK-010
+  - TASK-011
+  blocked_by:
+  - 感知组尚未提供锅把抓取点、PCA 方向、餐盘中心及其中心坐标系表达的最终字段契约
+  - 底盘组尚未提供移动开始、完成、失败和超时的 ROS 接口契约
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  inputs:
+  - TASK-010 的调度语义
+  - TASK-011 的参数与变换模块
+  - 感知组和底盘组接口契约
+  outputs:
+  - "`pan_pour` task_type 及 Policy 注册"
+  - "显式 `_phase` 状态和步骤状态追踪"
+  - 每个阶段的 goal 构造和等待原因
+  plan:
+  - 用模拟/契约测试驱动每个 phase 的转移
+  - 等待感知字段适配后接入真实锅把与餐盘输入
+  - 等待底盘接口后接入真实移动完成屏障
+  - 等待 TASK-013 提供倾倒回放适配器后完成该阶段接续
+  done_when:
+  - 任务可以在不预生成全部步骤的前提下跨阶段推进
+  - "感知与底盘未就绪时返回可观测 `WAIT`，不结束任务"
+  - V1 不引入抓取确认、落料验收、异常回退或右手锅铲动作
+  - 阶段目标发送前均已转换为左臂 base 下的法兰位姿
+  verification:
+    status: passed
+    commands:
+    - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+    - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_interfaces dexbot_bringup dexbot_task_planner
+    - cd kitchen_robot_home && python3 -m compileall -q src/dexbot_task_planner/dexbot_task_planner
+    - cd kitchen_robot_home && git diff --check
+    evidence:
+    - EVID-TASK-012-001
+    limitations:
+    - 已验证的是带未来适配器输入的确定性 Policy 骨架，不是完整 ROS 集成闭环。
+    - 感知、底盘和倾倒回放接口尚未具备，任务在这些边界保持 WAIT。
+    - 未启动真实 ROS 节点、MotionExecutor、目标 RobotDriver 或硬件。
+  result:
+    summary: PanPourPolicy 已注册为 pan_pour task_type，并以单个 _phase 动态推进抓取、闭手、准备倾倒、底盘等待、餐盘等待和倾倒接近；缺失外部契约时显式 WAIT，不伪造 ROS Action 或完整轨迹。
+    changed_files:
+    - .project-log/specs/TASK-012.md
+    - kitchen_robot_home/src/dexbot_bringup/config/pan_pour/pan_pour_params.yaml
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/pan_pour_kinematics.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/__init__.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/test_pan_pour_policy.py
+    deviations: []
+    follow_ups:
+    - 感知组给出锅把抓取点、PCA 方向、餐盘中心、frame_id 与新鲜度契约后，实现 Planner 感知适配器。
+    - 底盘组给出移动生命周期 ROS 契约后，实现底盘阶段屏障。
+    - TASK-013 提供相对法兰回放 Skill 后，将 waiting_for_pour_replay_adapter 接续为真实执行步骤。
+  created_at: '2026-07-30'
+  updated_at: '2026-07-30'
+- id: TASK-013
+  title: 实现并验证法兰增量倾倒轨迹回放适配器
+  kind: spike
+  parent_id: TASK-004
+  phase: implementation
+  goal: 在 MotionExecutor 内通过现有 RobotDriver 链路读取当前左臂法兰位姿，展开受版本控制的法兰增量轨迹，并执行倾倒回放。
+  status: blocked
+  priority: high
+  risk: critical
+  authority: B
+  owner: shared
+  tags:
+  - plating
+  - executor
+  - trajectory
+  - robot-driver
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-011
+  - DEC-013
+  - DEC-014
+  depends_on:
+  - TASK-011
+  blocked_by:
+  - 目标 robot_driver deb 的 GetArmPose 服务名称、返回参考系和法兰语义尚未在目标运行时实测
+  - V1 倾倒轨迹资产尚未采集、处理和版本化
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  inputs:
+  - flange_motion_editor 的相对轨迹算法
+  - 目标 robot_driver 的运行时服务能力
+  outputs:
+  - 轨迹文件 schema 和解析器（已完成）
+  - "`T_current @ Delta_i` 航点展开实现（已完成）"
+  - 通过现有 MoveCartesian 链路的专用 Skill
+  - 实机 replay spike 证据
+  plan:
+  - 用静态矩阵测试轨迹展开和 RPY 转换（已完成）
+  - 先在目标 deb 上确认当前位姿服务和 frame 语义
+  - 接入 Executor Skill，不建立独立 xCore 连接
+  - 低速实机验证起点对齐、取消、反馈和失败传播
+  done_when:
+  - Skill 不直连 xCore，不与 RobotDriver 争抢控制器
+  - 相对轨迹只以法兰增量表达，执行前由当前法兰位姿展开
+  - 轨迹 frame、单位、姿态顺序、版本和起点语义均被校验
+  - 实机证据确认 GetArmPose 和 MoveCartesian 的输入输出可组合
+  verification:
+    status: partial-passed
+    commands:
+    - cd robot_motion_executor/src/dexbot_motion_executor && PYTHONPATH="$PWD" PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q test/test_flange_delta_trajectory.py
+    - cd robot_motion_executor/src/dexbot_motion_executor && PYTHONPATH="$PWD" python3 -m compileall -q dexbot_motion_executor/entities/flange_delta_trajectory.py
+    - cd robot_motion_executor && git diff --check
+    evidence:
+    - EVID-TASK-013-001
+    limitations:
+    - 当前机器未安装目标 robot_driver deb，无法完成运行时验证。
+    - 未采集、处理或版本化真实 V1 倾倒轨迹；当前只验证 schema 和 SE(3) 数学。
+    - 未创建 MotionExecutor Skill、ROS 客户端或硬件运动。
+  result:
+    summary: 已完成独立于 ROS 和 Driver 的版本化法兰增量轨迹模块：严格校验 spatial_only/flangeInBase/m/rad/xyz/initial_flange 资产契约，并使用 T_current @ Delta_i 展开绝对法兰航点。正式 Skill 与运行时验证仍被目标 Driver 和真实轨迹资产阻塞。
+    changed_files:
+    - .project-log/specs/TASK-013.md
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/flange_delta_trajectory.py
+    - robot_motion_executor/src/dexbot_motion_executor/test/test_flange_delta_trajectory.py
+    - robot_motion_executor/src/dexbot_motion_executor/package.xml
+    deviations: []
+    follow_ups:
+    - 在目标 robot_driver deb 运行时确认当前法兰位姿服务和 MoveCartesian 语义。
+    - 采集、处理并版本化 V1 真实法兰增量倾倒轨迹资产。
+    - 以上两项具备后，在 MotionExecutor Skill 边界接入本模块，复用现有 RobotDriver 调用链。
+  created_at: '2026-07-30'
+  updated_at: '2026-07-30'
+- id: TASK-014
+  title: 接入底盘阶段屏障并完成跨组集成验证
+  kind: task
+  parent_id: TASK-004
+  phase: implementation
+  goal: 让 Planner 在左臂进入准备倾倒位后请求底盘移动，并且只在底盘成功完成后开始餐盘感知与倾倒阶段。
+  status: blocked
+  priority: high
+  risk: high
+  authority: C
+  owner: shared
+  tags:
+  - plating
+  - base
+  - integration
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-009
+  depends_on:
+  - TASK-010
+  blocked_by:
+  - 底盘组尚未发布 ROS 2 action/service 及其目标、完成、失败、超时和取消契约
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  inputs:
+  - 底盘组正式接口说明和部署版本
+  outputs:
+  - Planner 内的底盘客户端/适配器
+  - 底盘完成屏障和状态可观测性
+  - 联合测试记录
+  plan:
+  - 按底盘组正式 action/service 建立最小客户端
+  - 为 start/done/failed/timeout/cancel 显式建模
+  - 在等待期间禁止发送新的左臂 goal
+  - 用联合系统验证餐盘进入视野后的 phase 转移
+  done_when:
+  - 左臂准备倾倒动作完成后才发送底盘移动请求
+  - "底盘未完成时 Planner 处于 `WAIT_BASE`，左臂不再运动"
+  - 底盘失败/超时能通过现有任务失败路径可观察地返回
+  - 底盘完成后才允许消费餐盘检测并生成倾倒目标
+  verification:
     status: not-run
     commands: []
     evidence: []
@@ -460,8 +828,72 @@ tasks:
     changed_files: []
     deviations: []
     follow_ups: []
-  created_at: '2026-07-28'
-  updated_at: '2026-07-28'
+  created_at: '2026-07-30'
+  updated_at: '2026-07-30'
+- id: TASK-015
+  title: 验证 V1 左手倾倒入盘最小动作闭环
+  kind: task
+  parent_id: TASK-004
+  phase: verification
+  goal: 在固定锅把朝左场景中，验证 V1 按顺序运行感知、抓取、提锅、底盘协同、倾倒接近和法兰增量倾倒回放。
+  status: pending
+  priority: critical
+  risk: critical
+  authority: C
+  owner: shared
+  tags:
+  - plating
+  - verification
+  - hardware
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-002
+  related_decisions:
+  - DEC-003
+  - DEC-005
+  - DEC-006
+  - DEC-011
+  - DEC-013
+  - DEC-014
+  depends_on:
+  - TASK-012
+  - TASK-013
+  - TASK-014
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  inputs:
+  - 经版本控制的 V1 参数和轨迹资产
+  - 感知、底盘、Planner、Executor 与 robot_driver 的部署版本
+  outputs:
+  - 逐阶段运行证据
+  - 失败分类和已知限制
+  - V1 是否达到“动作流程闭环”范围的结论
+  plan:
+  - 先验证无实机动作的参数、转换和 Action 路由
+  - 按低速、可停止条件完成每个动作阶段
+  - 收集状态、目标摘要和 Action 结果
+  - 明确不把轨迹完成误报为抓取成功或落料成功
+  done_when:
+  - 所有已实现阶段按 V1 顺序调用且结果可追溯
+  - 当前 V1 的不验证项明确记录为抓取确认、落料验收、异常回退和 V2 右手锅铲
+  - 实机限制、失败和未验证项写入 verification evidence
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-30'
+  updated_at: '2026-07-30'
 - id: TASK-009
   title: 固化源码驱动的代码讲解方法为可复用 Codex Skill
   kind: task

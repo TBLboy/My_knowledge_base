@@ -1,6 +1,6 @@
 version: '0.4'
 mode: prototype
-current_phase: business-clarification
+current_phase: implementation
 active_goal: GOAL-001
 phase_order:
 - business-intent
@@ -25,8 +25,8 @@ phases:
     evidence:
     - .project-log/goals/active-goal.yaml
   business-clarification:
-    status: active
-    gate_status: open
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/business-logic/atoms.yaml
     - .project-log/business-logic/clarification.yaml
@@ -49,48 +49,53 @@ phases:
     - .project-log/requirements/baseline.yaml
     - .project-log/requirements.md
   solution-research:
-    status: reopened
-    gate_status: open
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/research/solution-research.yaml
     exit_conditions:
     - material technical choices have evidence or are explicitly not required
     evidence:
     - .project-log/research/solution-research.yaml
-    notes: 倾倒控制研究和 V1/V2 业务边界仍有效；因代码事实暴露业务承载未知，先回到 business-clarification，再恢复技术选型和 Spike。
+    notes: 倾倒控制研究和 V1/V2 业务边界仍有效；因代码事实暴露业务承载未知，先回到 business-clarification，再恢复技术选型和
+      Spike。
   architecture-decision:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/architecture/architecture.yaml
     exit_conditions:
     - ownership interfaces data and failure boundaries are sufficient for decomposition
-    evidence: []
+    evidence:
+    - .project-log/architecture/architecture.yaml
   task-decomposition:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/tasks/task-list.yaml
     exit_conditions:
     - next ready task can be selected mechanically
     - in-scope atoms are covered or intentionally deferred
-    evidence: []
+    evidence:
+    - .project-log/tasks/task-list.yaml
   engineering-spec:
-    status: pending
-    gate_status: not-evaluated
+    status: completed
+    gate_status: passed
     required_artifacts:
     - .project-log/specs
     exit_conditions:
     - non-trivial ready tasks have implementation-ready specs
-    evidence: []
+    evidence:
+    - .project-log/specs/TASK-010.md
   implementation:
-    status: pending
-    gate_status: not-evaluated
+    status: active
+    gate_status: passed
     required_artifacts: []
     exit_conditions:
     - planned outputs exist
     - deviations are recorded
-    evidence: []
+    evidence:
+    - .project-log/verification/evidence.yaml
   verification:
     status: pending
     gate_status: not-evaluated
@@ -124,10 +129,9 @@ phases:
     - lessons are classified without silently becoming permanent rules
     evidence: []
 open_gates:
-- V1 业务原子与两个仓库代码行为完成双向对齐
-- 锅把抓取确认、倾倒完整性和暂停恢复语义澄清
-- 两仓库源码/deb/overlay 交付边界确认
-- 技术选型批准前不得修改产品代码
+- TASK-011 的独立 V1 参数模板和中心坐标变换模块
+- 感知组最终字段契约、底盘组 ROS 接口与目标 Driver 实机验证
+- 法兰增量轨迹资产采集与 RobotDriver 回放 Spike
 return_edges:
 - from: solution-research
   to: business-clarification
@@ -144,4 +148,4 @@ return_edges:
 - from: alignment
   to: implementation
   reason: implementation or test drift
-last_updated: '2026-07-28'
+last_updated: '2026-07-30'

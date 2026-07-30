@@ -1,9 +1,18 @@
 # Loop Handoff
 
-- Goal: `GOAL-001`
-- Phase: `solution-research`
-- Task: `TASK-002`（V1 锅把抓取与抓取确认 Spike，ready）
+- Goal: GOAL-001 - 完成老板电器炒菜机器人 3.3 倾倒入盘（大）的技术方案调研，按 V1 左手单臂固定场景无抓取确认基础闭环、V2 右手锅铲辅助的两版本路线推进，并为后续抓取确认能力预留入口。
+- Phase: implementation
+- Task: TASK-011
+- Run status: active
 - Native Goal: unbound
-- Evidence: `.project-log/requirements/baseline.yaml`, `.project-log/decisions/decision-log.yaml`, `.project-log/loop/events.jsonl`
-- Blockers: 锅把实物参数、灵巧手/夹具能力和 V1 倾倒完整性观测信号
-- Next action: 执行 `TASK-002`；通过后实现 V1 `TASK-004`，再评估 V2 `TASK-005`
+- Valid evidence: EVID-TASK-010-001, EVID-TASK-011-001
+- Stale evidence: none
+- Open C questions: Q-001, Q-007, Q-008
+- Next action: 等待感知组最终字段契约与底盘组 ROS 接口后，接入 PanPourPolicy 动态阶段编排
+
+## Counters
+
+- task_attempts: 0/4
+- same_failure_count: 0/2
+- no_progress_count: 0/2
+- loop_decisions: 4/40

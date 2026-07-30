@@ -1,2 +1,87 @@
 version: '0.4'
-evidence: []
+evidence:
+- id: EVID-TASK-010-001
+  task_id: TASK-010
+  business_logic:
+  - BL-PLATING-001
+  acceptance_criteria:
+  - BL-PLATING-001-AC-002
+  result: passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && colcon build --symlink-install --packages-select dexbot_task_planner
+  artifacts:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/policy_decision.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_policy_decision.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  limitations:
+  - 未执行真实 ROS 节点、MotionExecutor 或硬件集成。
+  - 工作区全包 lint 基线不通过，失败与本次变更无关。
+- id: EVID-TASK-011-001
+  task_id: TASK-011
+  business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_criteria:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-002
+  result: passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && colcon build --symlink-install --packages-select dexbot_bringup dexbot_task_planner
+  - cd kitchen_robot_home && git diff --check
+  artifacts:
+  - kitchen_robot_home/src/dexbot_bringup/config/pan_pour/pan_pour_params.yaml
+  - kitchen_robot_home/src/dexbot_bringup/launch/dexrob_full.launch.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/pan_pour_kinematics.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_pan_pour_kinematics.py
+  limitations:
+  - 未启动真实 ROS 节点、MotionExecutor、目标 robot_driver deb 或硬件。
+  - 中心标定、抓取 TCP、锅具 TCP 与姿态参数仍为不可执行的占位值，pan_pour.configured=false。
+  - 构建生成的 build/、install/、log/ 以及 Python 缓存已在验证后删除。
+- id: EVID-TASK-012-001
+  task_id: TASK-012
+  business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_criteria:
+  - BL-GRASP-001-AC-001
+  - BL-PLATING-001-AC-002
+  result: passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_interfaces dexbot_bringup dexbot_task_planner
+  - cd kitchen_robot_home && python3 -m compileall -q src/dexbot_task_planner/dexbot_task_planner
+  - cd kitchen_robot_home && git diff --check
+  artifacts:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  limitations:
+  - 测试使用显式的未来适配器输入，不代表当前 ScenePerception 已提供锅把或餐盘语义。
+  - 未接入底盘 ROS 接口或相对法兰回放 Skill，Policy 在这些边界返回 WAIT。
+  - 未启动真实 ROS 节点、MotionExecutor、目标 RobotDriver 或硬件。
+- id: EVID-TASK-013-001
+  task_id: TASK-013
+  business_logic:
+  - BL-PLATING-001
+  acceptance_criteria:
+  - BL-PLATING-001-AC-002
+  result: partial-passed
+  level: 2
+  commands:
+  - cd robot_motion_executor/src/dexbot_motion_executor && PYTHONPATH="$PWD" PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q test/test_flange_delta_trajectory.py
+  - cd robot_motion_executor/src/dexbot_motion_executor && PYTHONPATH="$PWD" python3 -m compileall -q dexbot_motion_executor/entities/flange_delta_trajectory.py
+  - cd robot_motion_executor && git diff --check
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/flange_delta_trajectory.py
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_flange_delta_trajectory.py
+  limitations:
+  - 仅验证离线 YAML schema、单位/坐标约定和 SE(3) 展开数学；没有真实 V1 轨迹资产。
+  - 未验证目标 Driver 的 GetArmPose/MoveCartesian 运行时语义，未创建或运行 MotionExecutor Skill。
+  - 未执行 ROS 节点、Driver 或硬件测试。

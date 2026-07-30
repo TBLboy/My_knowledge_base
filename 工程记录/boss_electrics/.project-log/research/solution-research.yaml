@@ -509,10 +509,10 @@ studies:
   strategy: wrapper-adapter
   recommendation:
     strategy: wrapper-adapter
-    choice: 采用 option-b；由主仓库 TaskPlanner 负责业务阶段和中心坐标系目标构造，由执行仓库新增领域 Skill/Adapter 负责把类型化目标转换为现有 MotionPrimitive 和 RobotDriver 调用。底盘保持姿态通过主仓库的底盘适配器和阶段屏障编排，不把底盘动作伪装成 arm MotionPrimitive。
+    choice: 采用“现有 ExecuteTask + 显式 FlangeMotionTarget + 执行侧单一坐标适配器”；由主仓库 TaskPlanner 负责业务阶段和中心坐标系下的法兰目标构造，由执行仓库负责将 T_C_F 转换为 RobotDriver 所需的 T_B_F，再转换为现有 MotionPrimitive。底盘保持姿态通过主仓库的底盘适配器和阶段屏障编排，不把底盘动作伪装成 arm MotionPrimitive。
     rationale:
     - 保留现有 ExecuteTask 生命周期、取消和反馈机制
-    - 新消息显式表达坐标系、TCP、偏置和轨迹，不污染通用 TaskTarget
+    - 最小运动目标消息显式表达法兰目标和参考坐标系，不把 plate、PCA、偏置等业务字段下沉到 Executor
     - 业务状态留在 TaskPlanner，硬件调用留在 MotionExecutor/RobotDriver
     - 既可先实现 V1 动作骨架，也为后续验收和异常分支保留扩展边界
     trajectory_choice: 不直接把现有 RECORD_PATH 当作 V1 回放契约；现有 PathRecordSkill 只适合作为示教采集工具。V1 运行时优先采用带锅具 TCP 局部坐标语义的显式轨迹文件和 PLAY_RELATIVE_PATH 适配器，待底层控制器原生回放坐标语义确认后再决定是否复用。
@@ -527,7 +527,7 @@ studies:
   - 现有 PathRecordSkill 能录制路径，但当前代码未形成锅具 TCP 局部坐标的运行时回放契约
   - 现有 ExecuteTask/RobotDriver 接口只覆盖机械臂和灵巧手，未提供底盘协同动作契约
   confidence: 0.84
-  decision_ref: DEC-008
+    decision_ref: DEC-012
   sources:
   - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
   - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
@@ -539,3 +539,153 @@ studies:
   - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml
   retrieved_at: '2026-07-28'
   updated_at: '2026-07-28'
+- id: RES-003
+  status: complete
+  problem: 评估 cucumber 工程中的 flange_motion_editor 是否能够作为老板电器 V1 锅具 TCP 局部增量倾倒轨迹的录制、存储和回放方案。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  constraints:
+  - V1 倾倒动作采用锅具 TCP 局部坐标系录制回放
+  - 业务目标在机器人中心坐标系 C 下计算，不能把法兰基座坐标系作为业务坐标系
+  - 运行时必须纳入现有 TaskPlanner → ExecuteTask → MotionExecutor → RobotDriver 链路
+  - 不能让独立 SDK 连接与 robot_driver 同时争抢同一机械臂
+  - 轨迹需要可检查、可版本管理，并保留速度、加速度和安全限幅入口
+  candidates:
+  - id: option-7a-direct-flange-motion-editor
+    name: 直接运行 flange_motion_editor 脚本
+    category: direct-use
+    description: 直接使用脚本生成 delta.yaml，并在运行时由脚本通过 LbotRobot/xCore SDK 获取当前法兰位姿、计算绝对路径和调用 RT 笛卡尔路径。
+    requirement_fit:
+      rating: medium
+      note: 对物理动作复现是匹配的：锅具与法兰刚性连接，法兰完成示教轨迹即可带动锅具；但脚本仍绕过现有 ROS 2 执行链。
+    integration_cost: low
+    maintenance_cost: high
+    performance:
+      rating: medium
+      note: 具备 RT 笛卡尔路径调用，但无法据此证明与现有 RobotDriver 的并发、反馈和取消契约兼容。
+    reliability:
+      rating: low
+      note: README 明确要求停止对应 xcore 控制节点，和在线 robot_driver 的独占连接边界冲突。
+    debuggability: medium
+    lock_in: medium
+    safety_risk: high
+    project_fit:
+      rating: low
+      note: 不作为 V1 运行时方案。
+  - id: option-7b-relative-trajectory-adapter
+    name: 复用增量轨迹算法和文件格式，新增法兰相对轨迹回放适配器
+    category: wrapper-adapter
+    description: 保留现成方案的 YAML delta 轨迹、SE(3) 处理和空间重采样思路；在项目执行仓库内根据锅具 TCP 目标计算法兰起始位姿，再负责中心坐标转换、RobotDriver 调用、反馈、取消和限幅。
+    requirement_fit:
+      rating: high
+      note: 锅具与法兰刚性连接时，法兰局部轨迹即可表达并复现锅具动作，同时可以接入现有 MotionExecutor 的 Skill/Primitive 边界。
+    integration_cost: medium
+    maintenance_cost: medium
+    performance:
+      rating: high
+      note: 轨迹点在执行前一次性生成，实际实时执行仍交给 RobotDriver/控制器。
+    reliability:
+      rating: medium
+      note: 需要先验证起始位姿对齐、姿态约定、底层路径接口以及 driver 占用边界。
+    debuggability: high
+    lock_in: low
+    safety_risk: medium
+    project_fit:
+      rating: high
+      note: 推荐作为 V1 选型七的落地路线，但在实现前必须完成最小 replay Spike。
+  - id: option-7c-controller-native-relative-replay
+    name: 复用控制器命名路径并扩展相对 TCP 回放
+    category: controller-extension
+    description: 继续使用 PathRecordSkill 的 startRecordPath/saveRecordPath/replayPath，在控制器层确认或扩展局部 TCP 语义。
+    requirement_fit:
+      rating: unknown
+      note: 当前代码没有暴露路径点、frame_id、TCP 引用或相对坐标语义，无法证明控制器原生能力满足要求。
+    integration_cost: unknown
+    maintenance_cost: high
+    performance:
+      rating: unknown
+      note: 需要 xCore 控制器接口和版本资料确认。
+    reliability:
+      rating: unknown
+      note: 轨迹语义不可见，难以做离线检查和版本审计。
+    debuggability: low
+    lock_in: high
+    safety_risk: medium
+    project_fit:
+      rating: low-medium
+      note: 只有在控制器官方确认 TCP 相对回放语义并提供可控 ROS 适配后再考虑。
+  evidence:
+  - source: /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/process_flange_motion.py:229
+    fact: compute_delta_trajectory 计算 Delta_i = inverse(T0) @ Ti，输入轨迹来自法兰 pose6。
+  - source: /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/process_flange_motion.py:243
+    fact: 输出文件的 coordinate_system 固定写为 flangeInBase，未表达锅具 TCP 或机器人中心坐标系 C。
+  - source: /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/spatial_replay.py:40
+    fact: 回放将当前法兰位姿与每个增量右乘，形成 T_current @ Delta_i 的绝对法兰轨迹。
+  - source: /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/sdk_robot.py:93
+    fact: 回放调用 robot.move_rt_cartesian_path，属于直连 SDK/LbotRobot 的执行路径。
+  - source: /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/README.md:64
+    fact: 现成方案要求采集和回放使用 flangeInBase，并提示运行前停止对应臂的 xcore 控制节点。
+  - source: robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py:46
+    fact: 现有 PathRecordSkill 只把 object_id/class_name 作为控制器命名路径，并生成 RECORD_PATH 原语。
+  - source: robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py:692
+    fact: MotionExecutor 根据 task_type 查找 Skill，由 Skill 生成 MotionPrimitive 后统一执行。
+  - source: robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py:55
+    fact: 当前 MotionPrimitive 只有 path_name/path_params 等命名路径字段，没有相对轨迹文件、frame_id 或 TCP 变换字段。
+  - source: kitchen_robot_home/src/dexbot_interfaces/action/FollowCartesianTrajectory.action:1
+    fact: 工程已有笛卡尔轨迹 Action 定义，但当前 MotionExecutor 源码没有发现其实际接入路径。
+  interpretation:
+  - 现成方案的可复用核心是“显式 YAML 空间增量轨迹 + SE(3) 变换 + 运行时生成绝对法兰路径”；法兰而不是锅具 TCP 并不妨碍物理动作复现，因为锅具与法兰是刚体连接。
+  - 录制得到 Delta_F 后，运行时只要将法兰起始位姿对齐到期望的锅具 TCP 起始位姿，即可让锅具按同一刚体轨迹运动：T_C_F_start = T_C_P_start @ T_P_F，T_C_F_i = T_C_F_start @ Delta_F_i，T_C_P_i = T_C_F_i @ T_F_P。
+  - Delta_F 与锅具 TCP 局部增量 Delta_P 的数值表达可能因 TCP 外参发生共轭变化，但这不是 V1 物理回放的必要条件；只有需要把轨迹资产严格标注为锅具 TCP 局部增量或跨工具比较时才需要显式转换。
+  - 因此，V1 可以直接把法兰局部增量作为执行轨迹，锅具 TCP 的主要职责是参与起始位姿计算，而不是参与每个轨迹点的重新表达。
+  - 由于现有脚本要求独占 SDK 连接，运行时应把算法和数据格式移植/封装到 MotionExecutor 或其适配层，不应让 TaskPlanner 直接启动脚本控制机械臂。
+  strategy: wrapper-adapter
+  recommendation:
+    strategy: wrapper-adapter
+    choice: 可以用。采用“复用法兰增量算法和文件格式、项目内新增回放适配器”的方式；不直接运行现成脚本，也不直接把现有 PathRecordSkill 当作显式轨迹文件回放。
+    rationale:
+    - 现成方案已经解决轨迹采集后的去噪、平滑、空间重采样和 SE(3) 增量提取，适合做 V1 轨迹资产基础。
+    - 显式 YAML 文件便于团队共同开发、审查、版本管理和离线可视化。
+    - 适配器可以用锅具 TCP 计算法兰起始位姿，再执行法兰增量轨迹；不需要在每个轨迹点上重复做锅具 TCP 变换。
+    - 适配器可以把锅具 TCP、中心坐标 C、机械臂法兰和 RobotDriver 的边界集中在执行侧，不污染 PanPourPolicy 的业务编排。
+    - 现有 MotionExecutor 已有 Skill → MotionPrimitive → RobotDriver 的执行边界，新增 PLAY_RELATIVE_PATH 类原语比绕过 ROS 2 链路更可控。
+    trajectory_semantics:
+      recommended_file_semantic: flange_relative_se3_with_rigid_pan_attachment
+      runtime_formula: T_C_F_start = T_C_P_start @ T_P_F; T_C_F_i = T_C_F_start @ Delta_F_i; T_C_P_i = T_C_F_i @ T_F_P
+      required_inputs:
+      - 期望锅具 TCP 起始位姿 T_C_P_start
+      - 固定锅具 TCP 到法兰的变换 T_F_P 及其逆变换 T_P_F
+      - 轨迹文件中的 Delta_F_i、速度、加速度和限幅参数
+      - RobotDriver 接受的法兰/笛卡尔路径接口
+    integration_boundary:
+      planner: 选择轨迹文件和阶段，不负责展开轨迹点、不直接调用 SDK。
+      motion_executor: 校验轨迹元数据，根据锅具 TCP 目标计算法兰起始位姿，调用 RobotDriver，并回传 Action 结果。
+      robot_driver: 负责底层路径执行、控制器实时插值、硬件状态和停止能力。
+  conditions:
+  - 最小 Spike 必须在两个不同起始位姿下验证同一 Delta_F 文件在刚体连接锅具后复现预期锅具运动；同时验证不同锅具 TCP 参数下的起始位姿对齐。
+  - 必须确认抓取完成后锅具与法兰之间的连接刚性和 TCP 外参在整个回放过程中保持不变。
+  - 必须确认 pose6 的 RPY 顺序、单位、矩阵乘法方向与现有 RobotDriver 完全一致。
+  - 必须确认中心坐标 C 到左臂执行坐标的标定加载和变换方向，并集中在单一适配模块。
+  - 必须确认 RobotDriver 的笛卡尔路径接口支持路径点、速度/加速度、取消、超时和失败结果。
+  - 必须解决 driver 与独立 SDK 的连接占用问题；正式运行时不得并行直连同一机械臂。
+  - 轨迹执行限幅和停止责任必须在进入真实机器人测试前明确。
+  contrary_evidence:
+  - 现成方案的轨迹元数据不是锅具 TCP 语义，但这不阻碍刚体连接下的物理轨迹复现；新增代码主要用于起始位姿对齐和执行链适配。
+  - 现成脚本是命令行/直连 SDK 工具，不是 ROS 2 Skill 或 Action 适配器。
+  - 当前 MotionPrimitive 没有相对轨迹文件字段，且 FollowCartesianTrajectory action 尚未在 MotionExecutor 中接入。
+  - RobotDriver 的 move_rt_cartesian_path 服务定义不在当前两个仓库源码中，接口细节仍需底盘/驱动组确认。
+  confidence: 0.93
+  decision_ref: DEC-011
+  sources:
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/README.md
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/process_flange_motion.py
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/spatial_replay.py
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/sdk_robot.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py
+  - kitchen_robot_home/src/dexbot_interfaces/action/FollowCartesianTrajectory.action
+  retrieved_at: '2026-07-29'
+  updated_at: '2026-07-29'

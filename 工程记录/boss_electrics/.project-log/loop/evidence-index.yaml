@@ -1,2 +1,54 @@
 schema_version: 1
-evidence: []
+evidence:
+- id: EVID-TASK-010-001
+  kind: focused-test-and-build
+  subject: Planner WAIT/EXECUTE/COMPLETE 私有调度语义
+  status: valid
+  command: cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash
+    && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_policy_decision.py
+    src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  result_ref: 12 focused tests passed; dexbot_task_planner build passed
+  covers:
+    files:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/policy_decision.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/test_policy_decision.py
+    - kitchen_robot_home/src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+    requirements:
+    - BL-PLATING-001-AC-002
+    tasks:
+    - TASK-010
+  version_binding:
+    git_commit: 9de887a28e4935d188c51538c387d8e4cc5f68c2
+    diff_hash: 591a790abf322c2500eb66ee46634c29766b441360e4810451e12e6250eb1243
+    file_hashes:
+      kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/policy_decision.py: e4070d18ff7d0c95db8ca48c7314517524b49e5298a6a44957f93851d863f064
+      kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py: 6c3b30e5fb79e7b678c0927fc366c202cb70585326a9a67fc272cfba6053e840
+      kitchen_robot_home/src/dexbot_task_planner/test/test_policy_decision.py: 46b822bd7ef07a8d5505795190e83213ae728eafc4741167d9c44d3136482ab8
+      kitchen_robot_home/src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py: dbc08cd0d3a2412d14f00a3dbbe09ea17386edafc5f3c78edb2dd1c3c10a34e0
+  recorded_at: '2026-07-30T05:29:20Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EVID-TASK-011-001
+  kind: verification
+  subject: TASK-011 pan_pour 参数和 SE(3) 变换模块
+  status: valid
+  command: 21 focused tests passed; colcon build dexbot_bringup dexbot_task_planner
+    passed; git diff --check passed
+  result_ref: .project-log/verification/evidence.yaml#EVID-TASK-011-001
+  covers:
+    files:
+    - .project-log/verification/evidence.yaml
+    requirements:
+    - BL-GRASP-001-AC-001
+    - BL-PLATING-001-AC-002
+    tasks:
+    - TASK-011
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      .project-log/verification/evidence.yaml: 9b80e335761cfcc9c2aaf9de44330f8d4a4671f6a9397185c9deec922439ffaf
+  recorded_at: '2026-07-30T05:44:36Z'
+  invalidated_at: null
+  invalidation_reason: null

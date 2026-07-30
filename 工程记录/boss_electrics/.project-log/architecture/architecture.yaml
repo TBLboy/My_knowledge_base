@@ -6,20 +6,21 @@ architectures:
   related_business_logic:
   - BL-PLATING-001
   - BL-GRASP-001
-decision_refs:
+  decision_refs:
   - DEC-003
   - DEC-005
   - DEC-006
   - DEC-007
   - DEC-008
+  - DEC-013
   - DEC-009
   components:
   - name: BossElectricsPourPolicy
     repository: kitchen_robot_home
     responsibility: 按 V1 多阶段驱动模式推进任务：Phase 1 从感知结果预生成抓取→提锅→底盘移动步骤，Phase 2 在底盘移动后动态读取餐盘检测结果计算倾倒接近和增量回放步骤；沿锅把 PCA 主轴计算抓取偏置，构造中心坐标系 C 下的类型化目标。
-  - name: PourTaskTarget message
+  - name: Existing ExecuteTask/TaskTarget contract
     repository: kitchen_robot_home/dexbot_interfaces
-    responsibility: 显式承载感知引用、frame_id、抓取目标、餐盘中心、倾倒偏置、两个 TCP 参数、手部参数和轨迹引用。
+    responsibility: 复用现有公共消息；V1 在本任务内部约定 move_cartesian/cartesian_trajectory 的笛卡尔数组表示左臂 base frame 下的法兰位姿，不新增领域消息。
   - name: CenterFrameTransformAdapter
     repository: kitchen_robot_home
     responsibility: 复用左右臂 base 与相机标定文件生成的中心坐标系配置，完成输入到 C 的统一和 C 到执行坐标的单一转换。
@@ -30,8 +31,8 @@ decision_refs:
     repository: robot_motion_executor
     responsibility: 将类型化目标转换为现有笛卡尔移动、手部角度/力矩和轨迹播放 MotionPrimitive。
   - name: TCPAndTrajectoryAdapter
-    repository: robot_motion_executor
-    responsibility: 根据参数化抓取 TCP/锅具 TCP 和锅具 TCP 局部增量轨迹构造执行器所需航点；具体 driver frame 转换集中在此处。
+    repository: kitchen_robot_home/robot_motion_executor
+    responsibility: Planner 侧把业务计算得到的中心坐标系 C 目标转换为左臂 base frame B 下的法兰目标；Executor 侧只负责展开左臂 base 下的法兰增量回放并复用 RobotDriver。
   - name: RobotDriver gateway
     repository: robot_motion_executor/kitchen_robot_home
     responsibility: 复用现有 MoveCartesian、MoveJoints、灵巧手服务和停止主题；不承担 V1 业务状态。
@@ -40,10 +41,10 @@ decision_refs:
     type: ROS 2 message
     direction: perception_group -> kitchen_robot_home
     contract: 提供有效性、时间戳、锅把中心/抓取点/PCA 主轴及其 source frame；在 planner 边界归一为 C。
-  - name: ExecuteTask typed target
+  - name: Existing ExecuteTask flange convention
     type: ROS 2 action
     direction: kitchen_robot_home -> robot_motion_executor
-    contract: 在现有 ExecuteTask 上增加可选 PourTaskTarget；保留通用 TaskTarget 兼容路径，task_type 标识 V1 领域 Skill。
+    contract: 不增加消息字段；V1 约定目标在进入 MotionExecutor 前已转换为左臂 base frame B 下的法兰位姿，中心坐标系 C 只存在于业务计算和上游转换阶段。
   - name: Base motion adapter
     type: ROS 2 action/service adapter
     direction: kitchen_robot_home -> base_group
@@ -52,16 +53,16 @@ decision_refs:
     type: YAML/configuration
     direction: configuration -> planner/executor
     contract: 抓取 TCP、锅具 TCP 的位置和姿态可配置；锅具 TCP 是锅上固定参考点。
-  - name: Relative pour trajectory
+  - name: Relative flange trajectory
     type: versioned trajectory file
     direction: configuration -> BossElectricsPourSkill
-    contract: 轨迹点相对于锅具 TCP 表达，包含姿态、顺序和必要的回放参数；运行时由适配器转换为 arm 执行航点。
+    contract: 轨迹点相对于录制起始法兰表达，包含姿态、顺序和必要的回放参数；运行时从 C 下的法兰起始位姿展开为 arm 执行航点，锅具通过刚体连接跟随。
   data_flows:
   - 感知组发布 ScenePerception -> planner 读取最新有效信息 -> 将锅把字段转换到 C -> 计算 grasp_target_C
-  - planner 读取餐盘中心 plate_center_C 和 pour_offset_C -> 计算 pour_point_C -> 构造 PourTaskTarget
+  - planner 读取餐盘中心 plate_center_C 和 pour_offset_C -> 计算 pour_point_C -> 构造 C 下法兰目标
   - planner 发送抓取/提锅阶段 goal -> executor skill -> MotionPrimitive -> RobotDriver
   - planner 发送底盘目标 -> BaseMotionAdapter -> 底盘组；收到完成后进入餐盘目标和倾倒阶段
-  - executor 根据 pan_tcp_pose 和 relative trajectory -> 计算 arm 执行航点 -> RobotDriver
+  - executor 根据左臂 base B 下的当前法兰位姿和 relative flange trajectory 展开绝对法兰航点 -> RobotDriver
   - 当前 V1 不产生落料验收结果和异常业务分支；接口保留后续字段和阶段扩展位
   state_and_concurrency:
   - TaskPlanner 是 V1 业务状态唯一拥有者；Executor 只拥有单个 ExecuteTask goal 的原语执行状态。
@@ -70,7 +71,7 @@ decision_refs:
   - 当前不实现业务级重试、幂等恢复和异常分支；后续扩展必须重新定义状态和验收。
   failure_paths:
   - 感知未就绪：V1 保持未启动/等待占位，不进入抓取目标计算。
-  - 类型化目标缺失或 frame_id 非 C：边界拒绝该 goal，并记录接口错误。
+  - 目标未在 Planner 侧完成 C→B 转换或目标 frame 语义不明：不得直接发送，需在边界报告接口错误。
   - 底盘适配器未提供完成信号：技术选型/Spike 阻塞底盘协同实现，不静默假定完成。
   - TCP 或轨迹参数缺失：在构造执行目标前报告配置缺失，不由 executor 猜测默认业务值。
   - 其他执行失败：V1 仅沿现有 action/primitive 失败返回链路退出；不新增自动重试或回退。
@@ -80,12 +81,33 @@ decision_refs:
   - 每个阶段记录 task_id、frame_id、目标摘要、TCP 名称/版本、轨迹名称/版本和 goal 结果。
   - 记录中心坐标转换输入来源、时间戳和最终执行 frame，便于复现坐标错误。
   deployment_and_compatibility:
-  - 接口消息变更需要主仓库和执行仓库同步构建、版本化和回滚。
-  - 现有通用 TaskTarget 和其他 task_type 保持兼容；V1 使用独立 task_type 和可选 PourTaskTarget。
+  - 本方案不修改 ExecuteTask/TaskTarget；现有通用 TaskTarget 和其他 task_type 保持兼容。
   - 首阶段只更新项目配置、接口、planner policy、executor skill 和针对性测试，不修改底层 SDK。
   open_questions:
   - 底盘组实际 action/service 名称、完成事件和超时字段。
   - 现有 driver/控制器能否按显式锅具 TCP 局部轨迹执行，或需要 replay spike。
-  - 感知组最终消息字段、发布 frame 和时间戳一致性。
+  - 感知组最终确认锅把/餐盘字段如何映射到现有 ScenePerception/ObjectDetection，以及发布 frame、有效性和新鲜度一致性。
+  perception_boundary:
+  - status: confirmed
+    path: ScenePerception -> TaskPlannerNode._on_scene() -> WorldState -> PanPourPolicy
+    rule: 正式流程复用 Planner 现有路径 A；PanPourPolicy 使用已注入的 WorldState，不直接订阅 ROS topic。
+    rejected_for_now:
+    - 老板电器专用 PerceptionBridge
+    - Policy 内第二套感知缓存
+    - 直接把通用 ObjectDetection.pose 擅自解释为锅把或餐盘业务字段
+    pending_external_contract:
+    - 锅把抓取点
+    - 锅把 PCA 主轴
+    - 餐盘中心
+    - source frame 与中心坐标系转换责任
+    - 有效性、置信度和新鲜度规则
+    evidence:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:281-311
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+    - kitchen_robot_home/src/dexbot_interfaces/msg/ObjectDetection.msg
+    owner: 感知组
+    next_action: 等待感知组提供最终字段契约后，在 Planner 现有 WorldState 写入边界接入最小映射
+  updated_at: '2026-07-30'
   created_at: '2026-07-28'
   updated_at: '2026-07-28'

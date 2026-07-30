@@ -1,62 +1,21 @@
-version: '0.4'
 decisions:
-- id: DEC-001
-  title: 倾倒控制采用分层、受限反馈路线
-  category: technical
-  status: proposed
+- action: task-pouring-validation-spike
+  actual_result: null
   authority: B
-  user_approval: pending
-  related_tasks:
-  - TASK-001
-  - TASK-003
-  related_business_logic:
-  - BL-PLATING-001
-  context: '论文证据主要针对液体倾倒，不能直接证明固体+汤汁装盘；MoveIt 2 负责规划/伺服边界， ros2_control 提供通用接口和控制器能力，但
-    KP200 的真实 effort/F-T 接口与时延未确认。
-
-    '
-  hypothesis: '将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”， 在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
-
-    '
-  options:
-  - name: 推荐方案
-    benefits:
-    - '将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”， 在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
-
-      '
-    costs: []
-    risks:
-    - KP200 无可用且稳定的力矩/effort/F-T 信号
-    - 估重在已知负载 Spike 中不单调或重复性不足
-    - 局部修正引发姿态振荡、超力矩或碰撞风险
-    - 固体卡料和落盘完整性无法由现有信号观测
-  - name: 回退方案
-    benefits:
-    - 保留安全限幅、超时、急停和人工确认
-    costs:
-    - 适应性较低
-    risks:
-    - 固定轨迹对状态变化敏感
-  decision: '将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”， 在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
-
-    '
-  reason_summary:
-  - '论文证据主要针对液体倾倒，不能直接证明固体+汤汁装盘；MoveIt 2 负责规划/伺服边界， ros2_control 提供通用接口和控制器能力，但 KP200
-    的真实 effort/F-T 接口与时延未确认。
-
-    '
+  category: technical
   conditions:
   - KP200 无可用且稳定的力矩/effort/F-T 信号
   - 估重在已知负载 Spike 中不单调或重复性不足
   - 局部修正引发姿态振荡、超力矩或碰撞风险
   - 固体卡料和落盘完整性无法由现有信号观测
-  action: task-pouring-validation-spike
-  expected_result: 在真实接口和安全 Spike 前不承诺超出证据范围的全轨迹自适应控制。
-  reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: '论文证据主要针对液体倾倒，不能直接证明固体+汤汁装盘；MoveIt 2 负责规划/伺服边界， ros2_control 提供通用接口和控制器能力，但
+    KP200 的真实 effort/F-T 接口与时延未确认。
+
+    '
+  created_at: '2026-07-22'
+  decision: '将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”， 在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
+
+    '
   evidence:
   - https://export.arxiv.org/api/query?id_list=2310.18473
   - https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html
@@ -64,179 +23,332 @@ decisions:
   - https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/hardware_interface_types_userdoc.html
   - https://control.ros.org/rolling/doc/ros2_controllers/pid_controller/doc/userdoc.html
   - https://control.ros.org/rolling/doc/ros2_controllers/admittance_controller/doc/userdoc.html
-  supersedes: []
-  created_at: '2026-07-22'
-  updated_at: '2026-07-28'
-- id: DEC-005
-  title: V1 倾倒点采用中心坐标系餐盘中心加 xyz 偏置
-  category: business
-  status: active
-  authority: C
-  user_approval: approved
-  related_tasks:
-  - TASK-007
-  - TASK-008
+  expected_result: 在真实接口和安全 Spike 前不承诺超出证据范围的全轨迹自适应控制。
+  hypothesis: '将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”， 在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
+
+    '
+  id: DEC-001
+  lesson: null
+  observation: null
+  options:
+  - benefits:
+    - '将原“力感知 PID 闭环倾倒”修正为“示教轨迹基线 + 受限重量/力矩反馈局部修正”， 在接口和低速 Spike 通过前不承诺全轨迹力控；纯示教轨迹作为带安全限幅和停机状态机的回退。
+
+      '
+    costs: []
+    name: 推荐方案
+    risks:
+    - KP200 无可用且稳定的力矩/effort/F-T 信号
+    - 估重在已知负载 Spike 中不单调或重复性不足
+    - 局部修正引发姿态振荡、超力矩或碰撞风险
+    - 固体卡料和落盘完整性无法由现有信号观测
+  - benefits:
+    - 保留安全限幅、超时、急停和人工确认
+    costs:
+    - 适应性较低
+    name: 回退方案
+    risks:
+    - 固定轨迹对状态变化敏感
+  outcome_status: not-observed
+  reason_summary:
+  - '论文证据主要针对液体倾倒，不能直接证明固体+汤汁装盘；MoveIt 2 负责规划/伺服边界， ros2_control 提供通用接口和控制器能力，但 KP200
+    的真实 effort/F-T 接口与时延未确认。
+
+    '
   related_business_logic:
   - BL-PLATING-001
+  related_tasks:
+  - TASK-001
+  - TASK-003
+  reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
+  status: proposed
+  supersedes: []
+  title: 倾倒控制采用分层、受限反馈路线
+  updated_at: '2026-07-28'
+  user_approval: pending
+- action: TASK-008
+  actual_result: null
+  authority: C
+  category: business
+  conditions:
+  - 明确中心坐标系的原点、轴向、发布来源和时间同步
+  - 明确底层执行从中心坐标系到机械臂基坐标的转换边界
+  - 偏置参数必须可记录、可版本化和可回退
   context: 用户于 2026-07-28 明确 V1 倾倒点的计算方式，并要求项目所有业务操作统一使用机器人中心坐标系。
+  created_at: '2026-07-28'
+  decision: V1 倾倒点使用机器人中心坐标系 C 表达，计算公式为 pour_point_C = plate_center_C + pour_offset_C，其中
+    pour_offset_C 是 C 下可调的 [dx, dy, dz]；所有业务目标和中间位姿统一使用 C，机械臂基坐标仅作为底层执行转换结果。
+  evidence:
+  - 用户于 2026-07-28 补充 V1 倾倒点和统一坐标系规则
+  - .project-log/business-logic/atoms.yaml
+  expected_result: 形成以中心坐标系为业务事实源的接口和执行承载方案。
   hypothesis: 使用中心坐标系下餐盘中心加可调 xyz 偏置，可以在固定场景中稳定定义倾倒点，并避免业务逻辑绑定某一机械臂基坐标系。
+  id: DEC-005
+  lesson: null
+  observation: null
   options:
-  - name: 中心坐标系餐盘中心加偏置
-    benefits:
+  - benefits:
     - 业务坐标统一
     - 偏置可调，便于现场微调
     - 不绑定左臂或右臂基坐标
     costs:
     - 需要维护中心坐标系到执行坐标系的转换
+    name: 中心坐标系餐盘中心加偏置
     risks:
     - 中心坐标系定义、发布和时间同步不准确会影响全链路
-  decision: V1 倾倒点使用机器人中心坐标系 C 表达，计算公式为 pour_point_C = plate_center_C + pour_offset_C，其中 pour_offset_C 是 C 下可调的 [dx, dy, dz]；所有业务目标和中间位姿统一使用 C，机械臂基坐标仅作为底层执行转换结果。
+  outcome_status: not-observed
   reason_summary:
   - 用户明确要求所有项目操作统一转换到机器人中心坐标系。
   - V1 采用中心点加偏置可压缩变量，并支持现场微调。
-  conditions:
-  - 明确中心坐标系的原点、轴向、发布来源和时间同步
-  - 明确底层执行从中心坐标系到机械臂基坐标的转换边界
-  - 偏置参数必须可记录、可版本化和可回退
-  action: TASK-008
-  expected_result: 形成以中心坐标系为业务事实源的接口和执行承载方案。
-  reversal_plan: 若中心坐标系不能提供稳定转换，则暂停接口实现并重新评估统一坐标基准，不得静默改用某一机械臂基坐标。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
-  evidence:
-  - 用户于 2026-07-28 补充 V1 倾倒点和统一坐标系规则
-  - .project-log/business-logic/atoms.yaml
-  supersedes: []
-  created_at: '2026-07-28'
-  updated_at: '2026-07-28'
-- id: DEC-008
-  title: V1 技术承载优先采用类型化 PourTaskTarget 加现有 ExecuteTask
-  category: technical
-  status: proposed
-  authority: C
-  user_approval: pending
-  related_tasks:
-  - TASK-008
-  - TASK-004
   related_business_logic:
   - BL-PLATING-001
-  - BL-GRASP-001
-  context: 现有主链已经具备 TaskPlanner、ExecuteTask、MotionExecutor、Skill、MotionPrimitive 和 RobotDriver 分层，但通用 TaskTarget、Pose3D 和现有 path_record 尚未表达 V1 的中心坐标系、两个 TCP、PCA 偏置、底盘协同和锅具 TCP 局部回放。
-  hypothesis: 在现有 ExecuteTask 上增加可选的类型化 PourTaskTarget，并由 planner policy 与 executor skill 分别拥有业务编排和硬件原语转换，可以用较小边界承载 V1，同时避免通用字段语义漂移。
-  options:
-  - name: 复用通用 TaskTarget
-    benefits:
-    - 接口改动少
-    costs:
-    - 坐标系和阶段字段隐含在 task_type/数组位置中
-    risks:
-    - 团队共同开发时容易产生字段复用和坐标误解
-  - name: ExecuteTask 携带 PourTaskTarget
-    benefits:
-    - 复用现有 action 生命周期和取消机制
-    - 领域数据契约类型明确
-    - 不污染通用 TaskTarget
-    costs:
-    - 需要同步更新接口包、planner 和 executor
-    risks:
-    - 属于公开接口变化，需要用户和团队共同批准并版本化
-  - name: 新增独立 ExecutePourTask action
-    benefits:
-    - 领域边界最清晰
-    costs:
-    - 重复 action server 生命周期、反馈、取消和部署配置
-    risks:
-    - 增加双入口维护和发布复杂度
-  decision: '提议采用“类型化 PourTaskTarget + 现有 ExecuteTask”方案：主仓库 TaskPlanner 负责 V1 阶段、中心坐标 C 下的目标计算和底盘阶段屏障；执行仓库 BossElectricsPourSkill 负责把目标转换为现有 MotionPrimitive；锅具 TCP 局部轨迹通过独立回放适配器执行。该决策在用户批准前保持 proposed，不修改产品代码。'
-  reason_summary:
-  - 现有 ExecuteTask 已是两仓库间稳定的执行边界
-  - 通用 TaskTarget 不足以安全表达 V1 领域语义
-  - 业务状态不应下沉到 MotionExecutor controller
-  - 现有 PathRecordSkill 只有录制能力，不能直接视为锅具 TCP 局部回放契约
+  related_tasks:
+  - TASK-007
+  - TASK-008
+  reversal_plan: 若中心坐标系不能提供稳定转换，则暂停接口实现并重新评估统一坐标基准，不得静默改用某一机械臂基坐标。
+  status: active
+  supersedes: []
+  title: V1 倾倒点采用中心坐标系餐盘中心加 xyz 偏置
+  updated_at: '2026-07-28'
+  user_approval: approved
+- action: TASK-008
+  actual_result: null
+  authority: C
+  category: technical
   conditions:
   - 用户批准接口形态和跨仓库同步变更
   - 底盘组提供最小移动完成/失败/超时接口
   - 轨迹回放先通过最小 replay spike 确认局部 TCP 语义
   - 中心坐标转换只能由单一适配模块负责，禁止业务模块各自转换
-  action: TASK-008
-  expected_result: 形成可实施的 V1 类型化数据契约、阶段编排和执行适配器方案。
-  reversal_plan: 若现有 ExecuteTask 无法兼容领域目标或 action 版本协同成本过高，再评估独立 ExecutePourTask action；不得退回到隐式数组字段复用。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: 现有主链已经具备 TaskPlanner、ExecuteTask、MotionExecutor、Skill、MotionPrimitive 和
+    RobotDriver 分层，但通用 TaskTarget、Pose3D 和现有 path_record 尚未表达 V1 的中心坐标系、两个 TCP、PCA
+    偏置、底盘协同和锅具 TCP 局部回放。
+  created_at: '2026-07-28'
+  decision: 提议采用“类型化 PourTaskTarget + 现有 ExecuteTask”方案：主仓库 TaskPlanner 负责 V1 阶段、中心坐标
+    C 下的目标计算和底盘阶段屏障；执行仓库 BossElectricsPourSkill 负责把目标转换为现有 MotionPrimitive；锅具 TCP
+    局部轨迹通过独立回放适配器执行。该决策在用户批准前保持 proposed，不修改产品代码。
   evidence:
   - .project-log/research/solution-research.yaml
   - .project-log/architecture/architecture.yaml
   - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
   - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
   - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
-  supersedes: []
-  created_at: '2026-07-28'
-  updated_at: '2026-07-28'
-- id: DEC-009
-  title: V1 Policy 支持多阶段动态步骤生成，不强制预生成全部步骤
-  category: architecture
-  status: active
-  authority: B
-  user_approval: not-required
+  expected_result: 形成可实施的 V1 类型化数据契约、阶段编排和执行适配器方案。
+  hypothesis: 在现有 ExecuteTask 上增加可选的类型化 PourTaskTarget，并由 planner policy 与 executor
+    skill 分别拥有业务编排和硬件原语转换，可以用较小边界承载 V1，同时避免通用字段语义漂移。
+  id: DEC-008
+  lesson: null
+  observation: null
+  options:
+  - benefits:
+    - 接口改动少
+    costs:
+    - 坐标系和阶段字段隐含在 task_type/数组位置中
+    name: 复用通用 TaskTarget
+    risks:
+    - 团队共同开发时容易产生字段复用和坐标误解
+  - benefits:
+    - 复用现有 action 生命周期和取消机制
+    - 领域数据契约类型明确
+    - 不污染通用 TaskTarget
+    costs:
+    - 需要同步更新接口包、planner 和 executor
+    name: ExecuteTask 携带 PourTaskTarget
+    risks:
+    - 属于公开接口变化，需要用户和团队共同批准并版本化
+  - benefits:
+    - 领域边界最清晰
+    costs:
+    - 重复 action server 生命周期、反馈、取消和部署配置
+    name: 新增独立 ExecutePourTask action
+    risks:
+    - 增加双入口维护和发布复杂度
+  outcome_status: not-observed
+  reason_summary:
+  - 现有 ExecuteTask 已是两仓库间稳定的执行边界
+  - 通用 TaskTarget 不足以安全表达 V1 领域语义
+  - 业务状态不应下沉到 MotionExecutor controller
+  - 现有 PathRecordSkill 只有录制能力，不能直接视为锅具 TCP 局部回放契约
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
   related_tasks:
   - TASK-008
   - TASK-004
+  reversal_plan: 若现有 ExecuteTask 无法兼容领域目标或 action 版本协同成本过高，再评估独立 ExecutePourTask action；不得退回到隐式数组字段复用。
+  status: superseded
+  supersedes: []
+  title: V1 技术承载优先采用类型化 PourTaskTarget 加现有 ExecuteTask
+  updated_at: '2026-07-28'
+  user_approval: superseded_by_refined_recommendation
+- action: TASK-008
+  actual_result: null
+  alternatives_rejected:
+  - 仅复用通用 TaskTarget 并靠 task_type 隐式约定坐标系：改动最小，但团队共同开发时容易产生语义漂移。
+  - 使用完整 PourTaskTarget 承载业务字段：类型清晰，但会把 Planner 业务数据和 Executor 运动数据耦合在同一消息中。
+  - 新增 ExecutePourTask.action：边界清晰但重复 Action 生命周期、反馈、取消和部署维护。
+  authority: C
+  category: technical
+  conditions:
+  - 明确 FlangeMotionTarget 的最小字段和兼容策略。
+  - 确认 T_C_B 的方向、左臂/右臂 base 变换和 RobotDriver 的实际输入 frame。
+  - 确认所有笛卡尔目标的姿态单位、RPY 顺序和法兰定义一致。
+  - 轨迹回放适配器使用同一法兰目标契约；法兰增量回放从 T_C_F_start 展开。
+  context: 用户提出所有业务计算在机器人中心坐标系 C 中完成，TCP 仅用于将期望 TCP 位姿反解为法兰位姿，Planner 最终下发法兰目标；现有
+    Executor/RobotDriver 的笛卡尔数据约定为机械臂 base frame。
+  created_at: '2026-07-29'
+  decision:
+  - PanPourPolicy 在中心坐标系 C 下完成感知结果、抓取偏置、餐盘偏置和目标位姿计算。
+  - Planner 通过固定 TCP 外参将目标 TCP 位姿转换为法兰目标位姿，业务语义统一为“控制法兰”。
+  - Planner 到 Executor 的目标契约显式表示“法兰位姿，表达在 C 中”；建议增加最小类型化 FlangeMotionTarget，而不是把锅具业务字段整体下沉为
+    PourTaskTarget。
+  - 继续复用现有 ExecuteTask Action；旧 TaskTarget 和旧 task_type 保持兼容，V1 使用新的显式法兰目标字段/路由。
+  - Executor 侧设置唯一坐标适配边界，将 T_C_F 转换为 RobotDriver 所需的 T_B_F；RobotDriver 只接收机械臂 base
+    frame 下的法兰目标。
+  - TCP 外参、中心标定、速度和安全限幅属于配置/执行适配职责，不由 Planner 和 Executor 重复计算。
+  evidence:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/trajectory.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/pose3d.py
+  - kitchen_robot_home/src/dexbot_interfaces/srv/MoveCartesian.srv
+  - kitchen_robot_home/src/dexbot_interfaces/action/ExecuteTask.action
+  - kitchen_robot_home/src/dexbot_interfaces/msg/TaskTarget.msg
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  expected_result: 形成一个可版本化、可校验、能复用现有 ExecuteTask 和 MotionPrimitive 的 Planner-Executor
+    运动目标契约。
+  id: DEC-012
+  lesson: null
+  observation: 已实现私有 PolicyDecision；定向测试覆盖旧返回值兼容、WAIT 保留任务且不发送 Action、COMPLETE 清理任务、非法返回进入 ERROR，以及重复 WAIT 抑制 Info 日志。
+  outcome_status: observed
+  reason_summary:
+  - 统一控制对象为法兰后，抓锅、抬锅、准备倾倒和轨迹回放都采用同一目标语义。
+  - 业务计算保持在 C，避免左右臂 base 坐标系进入业务 Policy。
+  - 只在执行边界做一次 C→B 转换，符合现有 Pose3D/CartesianWaypoint 的 base-frame 约定。
+  - 不新增独立 Action，也不把 plate、PCA、grasp_offset 等业务数据耦合到 MotionExecutor。
   related_business_logic:
   - BL-PLATING-001
-  context: |
-    V1 业务逻辑中存在一个根本性的时序约束：锅把位置在任务启动时可由感知获得，但餐盘在底盘移动前不在相机视野内。
-    这意味着 (1) 抓取目标、(2) 提锅到准备倾倒姿态在任务启动时可预生成，
-    但 (3) 底盘移动后的倾倒点计算、(4) 锅具 TCP 平移接近、(5) 增量回放只能在底盘移动完成、餐盘进入视野后才能计算。
-    现有 TestGripperPolicy/PeelAppleCsvPolicy/TestHeartPolicy 均采用一次性预生成所有步骤的模式（_cached_steps 或 _task_plan），
-    但 BasePolicy 接口（select_next_goal 每次被调用、update_step_status 注入结果、_world 持续更新）并不要求预生成。
-  hypothesis: |
-    一个 Policy 内部通过 _phase 状态区分两段，第一阶段预生成（抓取→提锅→底盘移动），
-    第二阶段在底盘移动完成后动态读取 WorldState 中的餐盘位置计算结果，可以容纳 V1 流程而不需要拆成多个 Policy 或修改 Planner 路由。
-  options:
-  - name: 单 Policy 多阶段动态生成
-    benefits:
-    - 不改 task_type 路由，不改 _initialize_policy，不改 _on_tick
-    - 一个文件覆盖 V1 全流程，步骤间状态由 _phase 显式管理
-    - 第二阶段可在 WAIT_PLATE 子阶段通过 hold_step 等待感知更新
-    costs:
-    - Policy 内部需要显式的相位状态管理，相比纯预生成多一层分支
-    risks:
-    - 若 Phase 2 的感知等待周期过长（plate 检测延迟 > 数秒），hold_step 空转可能增加复位复杂度
-  - name: 拆为两个任务/Policy
-    benefits:
-    - 每个 Policy 职责更单一
-    costs:
-    - 需要新增 task_type、新增 StartTask 路由、两任务间状态传递和 handoff 机制
-    - 当前架构没有"任务链"或"子任务"机制，需要大量改动 Planner
-    risks:
-    - 两任务间的抓取状态、臂位姿、底盘协同状态需要跨任务持久化，复杂度远高于单 Policy 内 _phase
-  decision: |
-    采用"单 Policy 多阶段动态生成"方案。
-    PanPourPolicy 内部维护 _phase 状态，第一阶段从感知获取锅把位置后预生成（抓取→提锅→底盘移动）步骤列表，
-    第二阶段在底盘移动完成后从 _world.objects 读取餐盘检测结果，动态计算倾倒点并生成后续步骤。
-    两阶段之间的等待通过"保持当前位姿"的笛卡尔空转步骤实现，不阻塞 Planner 定时器循环。
-    不改 PlannerNode、不改 _initialize_policy、不改 task_type 路由。
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-008
+  reversal_plan: 若 RobotDriver 能原生接受带 frame_id 的中心坐标目标，则将 C→B 转换下沉到 driver adapter；若接口无法增加类型化字段，再退回到显式
+    task_type 约定并增加严格校验。
+  status: superseded
+  supersedes:
+  - DEC-008
+  title: V1 使用中心坐标系下的法兰运动目标作为 Planner-Executor 契约
+  updated_at: '2026-07-29'
+  user_approval: superseded_by_no_new_interface
+- action: TASK-008
+  actual_result: null
+  alternatives_rejected:
+  - 直接把 C 下目标发送给现有 MoveCartesian：服务没有 frame_id，下游会按 base frame 解释，存在坐标错误。
+  - 新增 FlangeMotionTarget 或 PourTaskTarget：公共接口变化超出本子任务边界，当前证据不足以证明必要。
+  - Skill 直接连接 xCore 回放：会与 robot_driver 争用同一控制器连接，且绕过统一停止、反馈和取消链路。
+  authority: C
+  category: technical
+  conditions:
+  - 已确认：lbot_robot_xcore.py:1954 _query_cartesian_pose → posture(CoordinateType.flangeInBase)
+    → flangeInBase
+  - 已确认：lbot_robot_xcore.py:355-363 move_to_pose_target → target_flan → _flange_to_end_pose()
+    → 输入为法兰
+  - 已确认：lbot_robot_xcore.py:1964-1978 _flange_to_end_pose() 和 1983-1998 _end_to_flange_pose()
+    双向转换, 依赖 toolset
+  - 已确认：toolset.ref 通过 setToolset() 发送 xCore 控制器，定义 endInRef 参考坐标系原点
+  - 已确认：luoshi_arm.py:298 运动完成后用 cartPosture(endInRef) 验证；luoshi_arm.py:106-130 setToolset()
+  - 已确认：ShHai 完整 robot_driver_node 源码与 boss_electrics SDK 适配器语义完全一致
+  context: '源码确认 robot_motion_executor 的 Pose3D 和 CartesianWaypoint 都声明为 base frame，
+
+    MoveCartesian.srv 没有 frame_id，MotionExecutorNode 也不会做中心坐标系识别或转换。
+
+    因此不能把机器人中心坐标系 C 下的数值直接当作执行目标发送，除非底层配置明确把该 frame
+
+    配置成 driver 的输入基准；当前 robot_params.yaml 和中心坐标生成脚本不足以证明这一点。
+
+    '
+  decision: '业务层仍在机器人中心坐标系 C 下计算感知目标、抓取偏置和餐盘倾倒点；在 Planner 侧通过
+
+    已有标定变换把目标转换为左臂 base frame B 下的法兰位姿 T_B_F，再复用现有 ExecuteTask、
+
+    TaskTarget 和 move_cartesian/cartesian_trajectory 路由。V1 不新增 FlangeMotionTarget、
+
+    PourTaskTarget 或独立 Action。本文的“法兰目标”是本子任务的内部语义约定，不改变公共消息。
+
+    '
+  evidence:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/pose3d.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/trajectory.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - kitchen_robot_home/src/dexbot_interfaces/srv/MoveCartesian.srv
+  - kitchen_robot_home/src/dexbot_interfaces/srv/GetArmPose.srv
+  - kitchen_robot_home/src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py
+  - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor
+  expected_result: 在不改公共消息的前提下，形成可实现且坐标语义单一的 V1 承载方案。
+  id: DEC-013
+  lesson: 公共消息字段没有 frame_id 时，坐标系约定必须落在已有边界并配套运行时验证，不能仅凭字段名推断。
+  observation: 三个接口问题全部被两个仓库的源码确凿回答。不需要问架构组。详见 current-session.md
+  outcome_status: partially-observed
   reason_summary:
-  - select_next_goal() 被 Planner 的 _on_tick 反复调用，每次可以返回不同逻辑生成的步骤
-  - update_step_status() 在每步完成后注入 COMPLETED/FAILED，Policy 可据此感知阶段推进
-  - _world（WorldState）由 PerceptionReceiver 持续更新，Policy 在任何 _on_tick 时刻都能读到最新感知结果
-  - 现有架构中 PeelApplePolicy（10000 步运动学生成）和 TestHeartPolicy（场景感知 plan()）已展示两种不同的步骤生成时机，本例是第三种阶段混合生成
+  - 复用已有公共接口，避免为一个子任务改变团队共享 ROS 2 消息架构。
+  - 满足现有 Executor 的 base-frame 约定，并把中心坐标系转换收敛在一个上游边界。
+  - 法兰与锅具在抓取后刚体连接，回放法兰增量即可带动锅具完成对应运动，不需要逐点改写为锅具 TCP。
+  - 当前 GetArmPose.srv 虽已存在，但其注释写 TCP；不同 SDK/Driver 实现对 end/flange 语义存在差异，必须在目标 deb
+    版本上实测确认。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-008
+  replay_decision: '倾倒轨迹继续复用 flange_motion_editor 的 flangeInBase 增量数据。倾倒 Skill 只通过现有
+
+    ExecuteTask 发送回放信号/轨迹引用；执行层读取左臂当前法兰位姿，在左臂 base frame 下展开
+
+    T_current * Delta_i，并通过现有 RobotDriver MoveCartesian 链路逐点执行。禁止 Skill 或
+
+    MotionExecutor 直接打开独立 xCore 连接绕过 RobotDriver。若当前安装的 driver 没有可确认的
+
+    当前法兰位姿接口，则相对回放尚不能实现，只能先做固定绝对轨迹验证或等待 Driver 提供接口。
+
+    '
+  reversal_plan: 若目标 driver 的实际语义与本约定不一致，先调整适配层或配置并记录版本，不把错误语义扩散到 Policy；只有确认现有接口无法承载后，才重新评估公共消息变化。
+  status: active
+  supersedes:
+  - DEC-012
+  title: V1 复用现有 ExecuteTask，内部约定左臂 base 下的法兰目标
+  user_approval: approved
+  updated_at: '2026-07-30'
+- action: TASK-008 中将该模式纳入技术选型输出
+  actual_result: null
+  authority: B
+  category: architecture
   conditions:
   - Phase 2 的 plate 检测依赖感知组模型将餐盘结果发布到 WorldState.objects
   - 若底盘移动后 plate 在合理时间内未出现，Policy 必须设置超限终止而非无限 hold
   - 参数（抓取偏置、倾倒偏置、TCP 位姿）必须参数化注入，不能在 Policy 内硬编码
   - 后续加入异常处理时，Phase 1 和 Phase 2 各自需要独立的失败回退逻辑，统一在 _phase 矩阵中管理
-  action: TASK-008 中将该模式纳入技术选型输出
-  expected_result: V1 的 Policy 以单文件、两阶段模式承载全流程，不改 Planner 路由；代码可读性和扩展性满足团队共同开发需求。
-  reversal_plan: 若 Policy 内部 _phase 分支复杂度超出可控范围（超过 5 个相位状态或大量跨阶段共享变量），则重新评估是否需要拆为多个 Policy 并引入任务链机制。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: 'V1 业务逻辑中存在一个根本性的时序约束：锅把位置在任务启动时可由感知获得，但餐盘在底盘移动前不在相机视野内。
+
+    这意味着 (1) 抓取目标、(2) 提锅到准备倾倒姿态在任务启动时可预生成，
+
+    但 (3) 底盘移动后的倾倒点计算、(4) 锅具 TCP 平移接近、(5) 增量回放只能在底盘移动完成、餐盘进入视野后才能计算。
+
+    现有 TestGripperPolicy/PeelAppleCsvPolicy/TestHeartPolicy 均采用一次性预生成所有步骤的模式（_cached_steps
+    或 _task_plan），
+
+    但 BasePolicy 接口（select_next_goal 每次被调用、update_step_status 注入结果、_world 持续更新）并不要求预生成。
+
+    '
+  created_at: '2026-07-29'
+  decision: '采用"单 Policy 多阶段动态生成"方案。
+
+    PanPourPolicy 内部维护 _phase 状态，第一阶段从感知获取锅把位置后预生成（抓取→提锅→底盘移动）步骤列表，
+
+    第二阶段在底盘移动完成后从 _world.objects 读取餐盘检测结果，动态计算倾倒点并生成后续步骤。
+
+    两阶段之间的等待通过"保持当前位姿"的笛卡尔空转步骤实现，不阻塞 Planner 定时器循环。
+
+    不改 PlannerNode、不改 _initialize_policy、不改 task_type 路由。
+
+    '
   evidence:
   - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/test_gripper_policy.py
   - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/test_heart_policy.py
@@ -244,208 +356,256 @@ decisions:
   - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/base_policy.py
   - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
   - .project-log/business-logic/clarification.yaml
-  supersedes: []
-  created_at: '2026-07-29'
-  updated_at: '2026-07-29'
-- id: DEC-002
-  title: 锅把抓取确认作为倾倒安全闸门
-  category: technical
-  status: superseded
-  authority: B
-  user_approval: superseded_by_user_clarification
-  related_tasks:
-  - TASK-002
-  - TASK-004
-  related_business_logic:
-  - BL-GRASP-001
-  context: '锅具承受的不仅是重力，还包括长柄倾覆力矩、转运加速度、倾倒时质心变化和卡料冲击； 单一闭合到位或电机电流信号不足以证明稳定抓取。固定 KP200
-    原型优先评估专用锅把适配夹具/软衬垫， 灵巧手多指包络作为软件主路径，双臂协同仅在负载/力矩评估证明单手不足时启用。
+  expected_result: V1 的 Policy 以单文件、两阶段模式承载全流程，不改 Planner 路由；代码可读性和扩展性满足团队共同开发需求。
+  hypothesis: '一个 Policy 内部通过 _phase 状态区分两段，第一阶段预生成（抓取→提锅→底盘移动），
+
+    第二阶段在底盘移动完成后动态读取 WorldState 中的餐盘位置计算结果，可以容纳 V1 流程而不需要拆成多个 Policy 或修改 Planner 路由。
 
     '
-  hypothesis: '将锅把抓取确认独立为倾倒动作的前置安全闸门；采用“视觉定位 + 多指/专用夹具抓取 + 接触/负载联合确认 + 受控微抬升”的流程。未输出
-    grasp_confirmed 时，不得转运锅具或进入倾倒。
-
-    '
+  id: DEC-009
+  lesson: null
+  observation: null
   options:
-  - name: 推荐方案
-    benefits:
-    - '将锅把抓取确认独立为倾倒动作的前置安全闸门；采用“视觉定位 + 多指/专用夹具抓取 + 接触/负载联合确认 + 受控微抬升”的流程。未输出 grasp_confirmed
-      时，不得转运锅具或进入倾倒。
-
-      '
-    costs: []
-    risks:
-    - 锅把无法被可靠定位或温度不满足接近条件
-    - 灵巧手/夹具无法提供可重复接触和承载确认
-    - 微抬升验证无法在安全支撑面附近执行
-    - 单手负载/倾覆力矩超出安全余量且未提供合格双臂方案
-  - name: 回退方案
-    benefits:
-    - 保留安全限幅、超时、急停和人工确认
+  - benefits:
+    - 不改 task_type 路由，不改 _initialize_policy，不改 _on_tick
+    - 一个文件覆盖 V1 全流程，步骤间状态由 _phase 显式管理
+    - 第二阶段可在 WAIT_PLATE 子阶段通过 hold_step 等待感知更新
     costs:
-    - 适应性较低
+    - Policy 内部需要显式的相位状态管理，相比纯预生成多一层分支
+    name: 单 Policy 多阶段动态生成
     risks:
-    - 固定轨迹对状态变化敏感
-  decision: '原方案不再作为当前 V1 必选规则；抓取确认保留为可插拔步骤，是否启用、判断信号和失败回退另行确定。
-
-    '
+    - 若 Phase 2 的感知等待周期过长（plate 检测延迟 > 数秒），hold_step 空转可能增加复位复杂度
+  - benefits:
+    - 每个 Policy 职责更单一
+    costs:
+    - 需要新增 task_type、新增 StartTask 路由、两任务间状态传递和 handoff 机制
+    - 当前架构没有"任务链"或"子任务"机制，需要大量改动 Planner
+    name: 拆为两个任务/Policy
+    risks:
+    - 两任务间的抓取状态、臂位姿、底盘协同状态需要跨任务持久化，复杂度远高于单 Policy 内 _phase
+  outcome_status: not-observed
   reason_summary:
-  - '锅具承受的不仅是重力，还包括长柄倾覆力矩、转运加速度、倾倒时质心变化和卡料冲击； 单一闭合到位或电机电流信号不足以证明稳定抓取。固定 KP200 原型优先评估专用锅把适配夹具/软衬垫，
-    灵巧手多指包络作为软件主路径，双臂协同仅在负载/力矩评估证明单手不足时启用。
-
-    '
+  - select_next_goal() 被 Planner 的 _on_tick 反复调用，每次可以返回不同逻辑生成的步骤
+  - update_step_status() 在每步完成后注入 COMPLETED/FAILED，Policy 可据此感知阶段推进
+  - _world（WorldState）由 PerceptionReceiver 持续更新，Policy 在任何 _on_tick 时刻都能读到最新感知结果
+  - 现有架构中 PeelApplePolicy（10000 步运动学生成）和 TestHeartPolicy（场景感知 plan()）已展示两种不同的步骤生成时机，本例是第三种阶段混合生成
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  - TASK-004
+  reversal_plan: 若 Policy 内部 _phase 分支复杂度超出可控范围（超过 5 个相位状态或大量跨阶段共享变量），则重新评估是否需要拆为多个
+    Policy 并引入任务链机制。
+  status: active
+  supersedes: []
+  title: V1 Policy 支持多阶段动态步骤生成，不强制预生成全部步骤
+  updated_at: '2026-07-29'
+  user_approval: not-required
+- action: TASK-008
+  actual_result: null
+  alternatives_rejected:
+  - 直接运行现成脚本：绕过现有执行链并存在 driver/SDK 争抢风险。
+  - 直接复用 PathRecordSkill：路径点、frame、TCP 和相对坐标语义不可见，无法满足 V1 契约。
+  - 立即开发全新轨迹编辑器：重复已有采集和处理能力，当前没有必要。
+  authority: B
+  category: technical
+  conditions:
+  - Spike 验证两个不同起始位姿和锅具 TCP 参数下的起始对齐及锅具刚体轨迹一致性。
+  - 确认抓取后锅具与法兰之间不存在回差或相对滑动。
+  - 确认 RPY、单位、矩阵方向、中心坐标标定和 RobotDriver 路径接口。
+  - 明确执行取消、超时、限幅和 driver 独占连接责任。
+  context: 用户提供 cucumber 工程中的 flange_motion_editor，要求评估其是否可用于 V1 锅具 TCP 局部增量轨迹录制、存储和回放。
+  created_at: '2026-07-29'
+  decision:
+  - 可以复用 flange_motion_editor 的显式 YAML 轨迹、空间处理、SE(3) 增量提取和运行时路径展开思路。
+  - 不直接运行其直连 xCore/LbotRobot 的脚本，也不直接把现有 PathRecordSkill 的控制器命名路径当作锅具 TCP 回放契约。
+  - 在 robot_motion_executor 内增加项目拥有的法兰相对轨迹回放适配边界；锅具 TCP 用于计算法兰起始位姿，适配器负责中心坐标到执行坐标转换、RobotDriver
+    调用、反馈、取消和限幅。
+  - 选型七在用户批准前保持 proposed，正式实现前先完成最小 replay Spike。
+  evidence:
+  - .project-log/research/solution-research.yaml#RES-003
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/process_flange_motion.py
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/spatial_replay.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  expected_result: 得到可在两个仓库边界内实现的锅具 TCP 相对轨迹回放契约；若 Spike 失败则回到 TASK-008 比较控制器原生回放或其他轨迹承载方案。
+  id: DEC-011
+  lesson: null
+  observation: 已实现私有 PolicyDecision；定向测试覆盖旧返回值兼容、WAIT 保留任务且不发送 Action、COMPLETE 清理任务、非法返回进入 ERROR，以及重复 WAIT 抑制 Info 日志。
+  outcome_status: observed
+  reason_summary:
+  - 现成方案的数据表达和增量数学与 V1 的录制回放需求高度匹配。
+  - 锅具和法兰在抓取后是刚体连接，法兰轨迹完成预期运动即可带动锅具完成同一刚体运动；因此不需要把每个法兰增量重新转换成锅具 TCP 增量。
+  - 锅具 TCP 仍用于由期望锅具起始位姿反解法兰起始位姿，并参与中心坐标 C 到执行坐标的边界转换。
+  - 其运行时直连 SDK，和现有 robot_driver 的连接所有权、ROS 2 Action 生命周期及取消反馈不一致。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-008
+  reversal_plan: 若 TCP 变换、坐标约定、RobotDriver 接口或安全限幅验证不通过，则不采用该适配路线，保留现成方案作为离线示教参考。
+  status: active
+  supersedes: []
+  title: 选型七采用现成增量轨迹方案的适配复用路线
+  updated_at: '2026-07-30'
+  user_approval: approved
+- action: task-pan-handle-grasp-spike
+  actual_result: null
+  authority: B
+  category: technical
   conditions:
   - 锅把无法被可靠定位或温度不满足接近条件
   - 灵巧手/夹具无法提供可重复接触和承载确认
   - 微抬升验证无法在安全支撑面附近执行
   - 单手负载/倾覆力矩超出安全余量且未提供合格双臂方案
-  action: task-pan-handle-grasp-spike
-  expected_result: 在真实接口和安全 Spike 前不承诺超出证据范围的全轨迹自适应控制。
-  reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: '锅具承受的不仅是重力，还包括长柄倾覆力矩、转运加速度、倾倒时质心变化和卡料冲击； 单一闭合到位或电机电流信号不足以证明稳定抓取。固定 KP200
+    原型优先评估专用锅把适配夹具/软衬垫， 灵巧手多指包络作为软件主路径，双臂协同仅在负载/力矩评估证明单手不足时启用。
+
+    '
+  created_at: '2026-07-22'
+  decision: '原方案不再作为当前 V1 必选规则；抓取确认保留为可插拔步骤，是否启用、判断信号和失败回退另行确定。
+
+    '
   evidence:
   - https://arxiv.org/abs/2503.17501
   - https://moveit.picknik.ai/main/doc/examples/realtime_servo/realtime_servo_tutorial.html
   - https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/hardware_interface_types_userdoc.html
-  supersedes: []
-  created_at: '2026-07-22'
-  updated_at: '2026-07-28'
-- id: DEC-004
-  title: V1 抓取确认暂留为可选步骤插槽
-  category: business
-  status: superseded
-  authority: C
-  user_approval: superseded_by_user_clarification
-  related_tasks:
-  - TASK-007
-  - TASK-004
+  expected_result: 在真实接口和安全 Spike 前不承诺超出证据范围的全轨迹自适应控制。
+  hypothesis: '将锅把抓取确认独立为倾倒动作的前置安全闸门；采用“视觉定位 + 多指/专用夹具抓取 + 接触/负载联合确认 + 受控微抬升”的流程。未输出
+    grasp_confirmed 时，不得转运锅具或进入倾倒。
+
+    '
+  id: DEC-002
+  lesson: null
+  observation: null
+  options:
+  - benefits:
+    - '将锅把抓取确认独立为倾倒动作的前置安全闸门；采用“视觉定位 + 多指/专用夹具抓取 + 接触/负载联合确认 + 受控微抬升”的流程。未输出 grasp_confirmed
+      时，不得转运锅具或进入倾倒。
+
+      '
+    costs: []
+    name: 推荐方案
+    risks:
+    - 锅把无法被可靠定位或温度不满足接近条件
+    - 灵巧手/夹具无法提供可重复接触和承载确认
+    - 微抬升验证无法在安全支撑面附近执行
+    - 单手负载/倾覆力矩超出安全余量且未提供合格双臂方案
+  - benefits:
+    - 保留安全限幅、超时、急停和人工确认
+    costs:
+    - 适应性较低
+    name: 回退方案
+    risks:
+    - 固定轨迹对状态变化敏感
+  outcome_status: not-observed
+  reason_summary:
+  - '锅具承受的不仅是重力，还包括长柄倾覆力矩、转运加速度、倾倒时质心变化和卡料冲击； 单一闭合到位或电机电流信号不足以证明稳定抓取。固定 KP200 原型优先评估专用锅把适配夹具/软衬垫，
+    灵巧手多指包络作为软件主路径，双臂协同仅在负载/力矩评估证明单手不足时启用。
+
+    '
   related_business_logic:
   - BL-GRASP-001
-  - BL-PLATING-001
-  context: 用户于 2026-07-28 进一步澄清，左手闭合后是否通过触觉等信号确认抓取暂时不是 V1 基础流程的必需环节。
-  hypothesis: 将抓取确认设计为后续可插拔能力，先完成基础抓取、提锅、底盘移动、倾倒和放回流程；避免在确认接口未定时阻塞 V1 业务闭环。
-  options:
-  - name: 当前 V1 采用可选插槽
-    benefits:
-    - 不阻塞基础闭环
-    - 为后续触觉或负载判断保留扩展入口
-    costs:
-    - 当前 V1 对抓取稳定性的自动判定能力有限
-    risks:
-    - 若实际抓取能力不足，可能在缺少确认闸门时带来安全风险
-  decision: 原方案不作为当前 V1 初版实施规则；抓取确认不进入当前 V1 状态链，后续版本再重新评估是否加入。
-  reason_summary:
-  - 用户明确要求先打通基础流程，抓取确认不是当前必需环节。
-  - 灵巧手闭合关节角度和力矩参数会先由执行团队提供，触觉接口尚未作为当前前置条件。
+  related_tasks:
+  - TASK-002
+  - TASK-004
+  reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
+  status: superseded
+  supersedes: []
+  title: 锅把抓取确认作为倾倒安全闸门
+  updated_at: '2026-07-28'
+  user_approval: superseded_by_user_clarification
+- action: TASK-007
+  actual_result: null
+  authority: C
+  category: business
   conditions:
   - 闭合前仍需保持锅具安全支撑
   - 任何触觉/负载确认能力接入前不得将其行为默认为既定业务规则
   - 后续若确认抓取稳定性不足，必须重新打开该决策并补充阻断/回退规则
-  action: TASK-007
-  expected_result: 当前 V1 先跑通不含抓取确认的基础流程，同时保留后续扩展入口。
-  reversal_plan: 若实测显示基础流程需要自动抓取确认才能满足安全要求，则回到业务澄清并重新定义 V1 闸门。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: 用户于 2026-07-28 进一步澄清，左手闭合后是否通过触觉等信号确认抓取暂时不是 V1 基础流程的必需环节。
+  created_at: '2026-07-28'
+  decision: 原方案不作为当前 V1 初版实施规则；抓取确认不进入当前 V1 状态链，后续版本再重新评估是否加入。
   evidence:
   - 用户于 2026-07-28 补充 V1 流程
+  expected_result: 当前 V1 先跑通不含抓取确认的基础流程，同时保留后续扩展入口。
+  hypothesis: 将抓取确认设计为后续可插拔能力，先完成基础抓取、提锅、底盘移动、倾倒和放回流程；避免在确认接口未定时阻塞 V1 业务闭环。
+  id: DEC-004
+  lesson: null
+  observation: null
+  options:
+  - benefits:
+    - 不阻塞基础闭环
+    - 为后续触觉或负载判断保留扩展入口
+    costs:
+    - 当前 V1 对抓取稳定性的自动判定能力有限
+    name: 当前 V1 采用可选插槽
+    risks:
+    - 若实际抓取能力不足，可能在缺少确认闸门时带来安全风险
+  outcome_status: not-observed
+  reason_summary:
+  - 用户明确要求先打通基础流程，抓取确认不是当前必需环节。
+  - 灵巧手闭合关节角度和力矩参数会先由执行团队提供，触觉接口尚未作为当前前置条件。
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-007
+  - TASK-004
+  reversal_plan: 若实测显示基础流程需要自动抓取确认才能满足安全要求，则回到业务澄清并重新定义 V1 闸门。
+  status: superseded
   supersedes:
   - DEC-002
-  created_at: '2026-07-28'
+  title: V1 抓取确认暂留为可选步骤插槽
   updated_at: '2026-07-28'
-- id: DEC-006
-  title: V1 初版不执行锅把抓取确认
-  category: business
-  status: active
+  user_approval: superseded_by_user_clarification
+- action: TASK-004
+  actual_result: null
   authority: C
-  user_approval: approved
-  related_tasks:
-  - TASK-004
-  - TASK-007
-  related_business_logic:
-  - BL-PLATING-001
-  - BL-GRASP-001
-  context: 用户于 2026-07-28 明确先跑通不含抓取确认的基础版本，抓取确认暂不进入当前 V1 实现。
-  hypothesis: 先移除未定的触觉/承载判断和失败回退分支，可以缩短 V1 基础链路，优先验证感知消费、TCP 控制、底盘协同、倾倒和放回。
-  options:
-  - name: V1 初版不执行抓取确认
-    benefits:
-    - 状态链更短，便于快速跑通闭环
-    - 不被未确定的触觉接口和失败语义阻塞
-    costs:
-    - 当前版本缺少自动抓取稳定性确认
-    risks:
-    - 必须强化闭合参数、低速动作和安全停止约束
-  decision: 当前 V1 初版在灵巧手闭合后直接进入提锅和准备倾倒，不执行抓取确认；抓取确认作为后续迭代任务，不进入当前 V1 验收。
-  reason_summary:
-  - 用户明确要求先跑通无抓取确认版本。
-  - 抓取确认所需触觉/承载信号、失败回退和闸门语义尚未确定。
+  category: business
   conditions:
   - 闭合前锅体保持安全支撑
   - 提锅、移动和倾倒必须保留速度、超时、急停和人工接管约束
   - 后续加入抓取确认时必须重新定义状态链、验收和失败回退
-  action: TASK-004
-  expected_result: V1 基础闭环不包含抓取确认，并能独立验证主流程。
-  reversal_plan: 若无确认版本在低速安全测试中暴露不可接受风险，重新打开抓取确认决策并暂停扩大 V1 变量。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: 用户于 2026-07-28 明确先跑通不含抓取确认的基础版本，抓取确认暂不进入当前 V1 实现。
+  created_at: '2026-07-28'
+  decision: 当前 V1 初版在灵巧手闭合后直接进入提锅和准备倾倒，不执行抓取确认；抓取确认作为后续迭代任务，不进入当前 V1 验收。
   evidence:
   - 用户于 2026-07-28 补充 V1 范围
   - .project-log/requirements/baseline.yaml
-  supersedes:
-  - DEC-004
-  created_at: '2026-07-28'
-  updated_at: '2026-07-28'
-- id: DEC-003
-  title: 老板电器倾倒入盘采用两版本固定场景单臂 MVP 路线
-  category: technical
-  status: active
-  authority: C
-  user_approval: approved
+  expected_result: V1 基础闭环不包含抓取确认，并能独立验证主流程。
+  hypothesis: 先移除未定的触觉/承载判断和失败回退分支，可以缩短 V1 基础链路，优先验证感知消费、TCP 控制、底盘协同、倾倒和放回。
+  id: DEC-006
+  lesson: null
+  observation: null
+  options:
+  - benefits:
+    - 状态链更短，便于快速跑通闭环
+    - 不被未确定的触觉接口和失败语义阻塞
+    costs:
+    - 当前版本缺少自动抓取稳定性确认
+    name: V1 初版不执行抓取确认
+    risks:
+    - 必须强化闭合参数、低速动作和安全停止约束
+  outcome_status: not-observed
+  reason_summary:
+  - 用户明确要求先跑通无抓取确认版本。
+  - 抓取确认所需触觉/承载信号、失败回退和闸门语义尚未确定。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
   related_tasks:
   - TASK-004
-  - TASK-005
-  related_business_logic:
-  - BL-GRASP-001
-  - BL-PLATING-001
-  context: '2026-07-27 锅具和锅铲测试显示，锅把朝左时左手抓取和倾倒较可行；右手锅铲当前存在抓取、放置、有效辅助和碰撞风险，暂不适合作为第一版主体功能。固定场景能压缩变量，便于尽快验证任务链；模型路线当前成功率和数据成本不确定，视觉伺服适合解决锅把定位和局部对位，但不应承担菜品完整倾倒判断；录制回放适合第一版，但必须配合初始状态、碰撞/速度限制、超时、急停和失败回退。
-
-    '
-  hypothesis: '将实施拆成两个版本：V1 以锅把朝左为固定场景，由左手完成锅把识别、抓取确认、餐盘定位、移动、倾倒、必要的轻微抖动和放回原位，先打通完整闭环；V2 在 V1 闭环稳定后，再评估并加入右手锅铲抓取、放置和辅助动作。V1 不等待、不依赖右手锅铲能力。
-
-    '
-  options:
-  - name: 推荐方案
-    benefits:
-    - 'V1 采用锅把朝左的固定场景左手单臂闭环：视觉定位锅把和餐盘，执行抓取确认、移动、倾倒、必要轻微抖动和放回原位；V2 再迭代右手锅铲辅助。
-
-      '
-    costs: []
-    risks:
-    - 固定场景仍存在不可接受的锅把定位漂移或餐盘位置漂移
-    - 单臂在最坏负载下无法稳定抓取或试抬升
-    - 录制轨迹存在碰撞、超力矩或明显洒落
-    - 任务失败后无法安全回到支撑面/人工接管
-    - V2 右手锅铲仍可能存在抓取不稳、动作无效或与锅沿碰撞
-  - name: 回退方案
-    benefits:
-    - 保留安全限幅、超时、急停和人工确认
-    costs:
-    - 适应性较低
-    risks:
-    - 固定轨迹对状态变化敏感
-  decision: '确定采用两版本路线。V1 以锅把朝左为固定场景，不考虑右手锅铲辅助，先由左手独立完成锅把感知结果消费、抓取、准备倾倒、底盘协同、餐盘定位、移动到倾倒位、倾倒、必要的轻微抖动、放回原位和失败接管，形成完整可重复闭环；抓取确认暂留可选插槽，不作为当前 V1 基础流程必经条件；V2 在 V1 闭环完成并稳定后，再继续迭代右手锅铲抓取、放置、辅助动作及其碰撞和落料效果。
-
-    '
-  reason_summary:
-  - '锅把朝左时已观察到左手抓取和倾倒较可行；右手锅铲仍有抓取、放置、有效辅助和碰撞风险，推迟到 V2 可降低 V1 变量和交付风险。'
-  - '固定场景能压缩变量，便于尽快验证任务链；感知结果订阅和录制回放适合 V1，但必须配合初始状态、TCP 标定、碰撞/速度限制、超时、急停和失败回退。'
+  - TASK-007
+  reversal_plan: 若无确认版本在低速安全测试中暴露不可接受风险，重新打开抓取确认决策并暂停扩大 V1 变量。
+  status: active
+  supersedes:
+  - DEC-004
+  title: V1 初版不执行锅把抓取确认
+  updated_at: '2026-07-28'
+  user_approval: approved
+- action: task-mvp-plating-pipeline
+  actual_result: null
+  authority: C
+  category: technical
   conditions:
   - V1 不把右手锅铲辅助作为前置条件、主体功能或验收条件
   - V1 不把抓取确认作为当前基础流程的必经前置条件
@@ -454,67 +614,295 @@ decisions:
   - 单臂在最坏负载下无法稳定抓取或试抬升
   - 录制轨迹存在碰撞、超力矩或明显洒落
   - 任务失败后无法安全回到支撑面/人工接管
-  action: task-mvp-plating-pipeline
-  expected_result: V1 先获得不依赖右手锅铲的完整可重复闭环；V2 再基于 V1 数据评估右手锅铲辅助是否带来可验证收益。
-  reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: '2026-07-27 锅具和锅铲测试显示，锅把朝左时左手抓取和倾倒较可行；右手锅铲当前存在抓取、放置、有效辅助和碰撞风险，暂不适合作为第一版主体功能。固定场景能压缩变量，便于尽快验证任务链；模型路线当前成功率和数据成本不确定，视觉伺服适合解决锅把定位和局部对位，但不应承担菜品完整倾倒判断；录制回放适合第一版，但必须配合初始状态、碰撞/速度限制、超时、急停和失败回退。
+
+    '
+  created_at: '2026-07-22'
+  decision: '确定采用两版本路线。V1 以锅把朝左为固定场景，不考虑右手锅铲辅助，先由左手独立完成锅把感知结果消费、抓取、准备倾倒、底盘协同、餐盘定位、移动到倾倒位、倾倒、必要的轻微抖动、放回原位和失败接管，形成完整可重复闭环；抓取确认暂留可选插槽，不作为当前
+    V1 基础流程必经条件；V2 在 V1 闭环完成并稳定后，再继续迭代右手锅铲抓取、放置、辅助动作及其碰撞和落料效果。
+
+    '
   evidence:
   - 方案1.md
   - /home/tbl/Project/My_knowledge_base/学习记录/2026.07.27/今日任务.md
   - 用户于 2026-07-28 确认两版本实施方案
   - .project-log/research/solution-research.yaml#grasp_precondition
   - DEC-004
-  supersedes: []
-  created_at: '2026-07-22'
-  updated_at: '2026-07-28'
-- id: DEC-007
-  title: V1 先搭建无验收、无异常处理的动作流程骨架
-  category: business
-  status: active
-  authority: C
-  user_approval: approved
-  related_tasks:
-  - TASK-007
-  - TASK-008
-  - TASK-004
-  related_business_logic:
-  - BL-PLATING-001
-  - BL-GRASP-001
-  context: 用户于 2026-07-28 进一步明确，当前目标是先搭建并打通 V1 动作流程框架；具体参数、固定姿态、TCP 数值、放回方式和异常处理不应阻塞前段流程。
-  hypothesis: 将流程骨架与验收、异常和参数标定分离，可以先验证跨仓库主链和动作编排，再逐步补齐现场参数与安全增强逻辑。
+  expected_result: V1 先获得不依赖右手锅铲的完整可重复闭环；V2 再基于 V1 数据评估右手锅铲辅助是否带来可验证收益。
+  hypothesis: '将实施拆成两个版本：V1 以锅把朝左为固定场景，由左手完成锅把识别、抓取确认、餐盘定位、移动、倾倒、必要的轻微抖动和放回原位，先打通完整闭环；V2
+    在 V1 闭环稳定后，再评估并加入右手锅铲抓取、放置和辅助动作。V1 不等待、不依赖右手锅铲能力。
+
+    '
+  id: DEC-003
+  lesson: null
+  observation: null
   options:
-  - name: 先实现动作流程骨架
-    benefits:
-    - 不被落料验收、异常语义和未确定参数阻塞
-    - 便于团队先联调感知、规划、执行、底盘和轨迹接口
-    costs:
-    - 当前版本不提供落料质量判断和异常自动处理
+  - benefits:
+    - 'V1 采用锅把朝左的固定场景左手单臂闭环：视觉定位锅把和餐盘，执行抓取确认、移动、倾倒、必要轻微抖动和放回原位；V2 再迭代右手锅铲辅助。
+
+      '
+    costs: []
+    name: 推荐方案
     risks:
-    - 必须明确这是流程联调版本，不得误认为生产级闭环
-  decision: V1 当前只打通从感知结果消费、左手抓取、提锅、底盘协同、倾倒到后续放回/home 占位的动作流程；不加入菜品落盘验收、异常检查、自动重试或回退处理。具体参数数值、固定姿态、TCP 位姿、放回规则和 home 位置作为待填写或后续确定内容，不阻塞前段流程。
+    - 固定场景仍存在不可接受的锅把定位漂移或餐盘位置漂移
+    - 单臂在最坏负载下无法稳定抓取或试抬升
+    - 录制轨迹存在碰撞、超力矩或明显洒落
+    - 任务失败后无法安全回到支撑面/人工接管
+    - V2 右手锅铲仍可能存在抓取不稳、动作无效或与锅沿碰撞
+  - benefits:
+    - 保留安全限幅、超时、急停和人工确认
+    costs:
+    - 适应性较低
+    name: 回退方案
+    risks:
+    - 固定轨迹对状态变化敏感
+  outcome_status: not-observed
   reason_summary:
-  - 用户明确当前阶段优先搭建框架并跑通流程。
-  - 落料验收、异常处理和现场参数尚未确定，提前固化会增加无效返工。
+  - 锅把朝左时已观察到左手抓取和倾倒较可行；右手锅铲仍有抓取、放置、有效辅助和碰撞风险，推迟到 V2 可降低 V1 变量和交付风险。
+  - 固定场景能压缩变量，便于尽快验证任务链；感知结果订阅和录制回放适合 V1，但必须配合初始状态、TCP 标定、碰撞/速度限制、超时、急停和失败回退。
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-004
+  - TASK-005
+  reversal_plan: 若接口、重复性或安全限幅验证不通过，回退到固定场景示教轨迹并暂停反馈闭环扩展。
+  status: active
+  supersedes: []
+  title: 老板电器倾倒入盘采用两版本固定场景单臂 MVP 路线
+  updated_at: '2026-07-28'
+  user_approval: approved
+- action: TASK-008
+  actual_result: null
+  authority: C
+  category: business
   conditions:
   - 当前实现和演示必须标注为 V1 动作流程骨架，不代表完整安全闭环或落料验收闭环
   - 抓取偏置沿锅把主轴 PCA 向量定义在机器人中心坐标系 C 下
   - 抓取 TCP 和锅具 TCP 的位置、姿态支持参数化
   - 倾倒增量动作采用锅具 TCP 坐标系下的录制回放
   - 放回/home 和异常处理保留扩展位置，后续单独补齐
-  action: TASK-008
-  expected_result: 技术选型围绕最小动作流程骨架展开，不把未确认参数、落料验收或异常处理静默升级为当前 V1 前置条件。
-  reversal_plan: 若后续真实设备联调证明某项参数或异常处理是动作流程安全运行的硬前置，再回到业务澄清补充相应闸门和验收规则。
-  observation: null
-  actual_result: null
-  outcome_status: not-observed
-  lesson: null
+  context: 用户于 2026-07-28 进一步明确，当前目标是先搭建并打通 V1 动作流程框架；具体参数、固定姿态、TCP 数值、放回方式和异常处理不应阻塞前段流程。
+  created_at: '2026-07-28'
+  decision: V1 当前只打通从感知结果消费、左手抓取、提锅、底盘协同、倾倒到后续放回/home 占位的动作流程；不加入菜品落盘验收、异常检查、自动重试或回退处理。具体参数数值、固定姿态、TCP
+    位姿、放回规则和 home 位置作为待填写或后续确定内容，不阻塞前段流程。
   evidence:
   - 用户于 2026-07-28 对 1～7 项逐项确认
   - .project-log/requirements/baseline.yaml
   - .project-log/business-logic/open-questions.yaml
+  expected_result: 技术选型围绕最小动作流程骨架展开，不把未确认参数、落料验收或异常处理静默升级为当前 V1 前置条件。
+  hypothesis: 将流程骨架与验收、异常和参数标定分离，可以先验证跨仓库主链和动作编排，再逐步补齐现场参数与安全增强逻辑。
+  id: DEC-007
+  lesson: null
+  observation: null
+  options:
+  - benefits:
+    - 不被落料验收、异常语义和未确定参数阻塞
+    - 便于团队先联调感知、规划、执行、底盘和轨迹接口
+    costs:
+    - 当前版本不提供落料质量判断和异常自动处理
+    name: 先实现动作流程骨架
+    risks:
+    - 必须明确这是流程联调版本，不得误认为生产级闭环
+  outcome_status: not-observed
+  reason_summary:
+  - 用户明确当前阶段优先搭建框架并跑通流程。
+  - 落料验收、异常处理和现场参数尚未确定，提前固化会增加无效返工。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-007
+  - TASK-008
+  - TASK-004
+  reversal_plan: 若后续真实设备联调证明某项参数或异常处理是动作流程安全运行的硬前置，再回到业务澄清补充相应闸门和验收规则。
+  status: active
   supersedes: []
-  created_at: '2026-07-28'
+  title: V1 先搭建无验收、无异常处理的动作流程骨架
   updated_at: '2026-07-28'
+  user_approval: approved
+- action: TASK-008
+  actual_result: null
+  authority: B
+  category: technical
+  conditions:
+  - PanPourPolicy 的 _phase 数量和跨阶段共享状态保持可控。
+  - 中心坐标转换由单一适配模块实现，业务模块不得重复转换。
+  - 参数缺失或单位/frame 不一致时必须在实现阶段显式报错，不得猜测业务默认值。
+  - 底盘接口确定后，需要补充阶段屏障、完成/失败/超时契约。
+  context: 用户于 2026-07-29 对 V1 技术选型第 2、3、4、6 项进行初步确认；接口承载、底盘接口和轨迹回放仍分别保持未决或暂定。
+  created_at: '2026-07-29'
+  decision:
+  - 采用单个 PanPourPolicy，在 Policy 内维护 _phase，并根据 WorldState 动态生成下一阶段步骤。
+  - 所有业务目标和中间位姿统一在机器人中心坐标系 C 下计算；靠近执行器的适配层再转换到机械臂/RobotDriver 执行坐标系。
+  - 单目标、单原子动作优先复用现有 API/MotionPrimitive；只有需要拆解为多个原语的复合动作才使用 Skill。
+  - V1 技术参数采用 ROS 2 YAML 参数配置，通过 dexbot_bringup 的 launch 注入，不在 Policy 内硬编码。
+  - 底盘协同暂不定具体接口，等待底盘组提供准确的 action/service 消息后再完成接入选型；该问题当前不阻塞机械臂流程设计。
+  deferred:
+  - 暂不决定通用 TaskTarget、类型化 PourTaskTarget 或独立 ExecutePourTask.action 的接口承载方案。
+  - 暂不决定锅具 TCP 局部增量轨迹的运行时回放方案，下一步单独讨论。
+  evidence:
+  - 用户于 2026-07-29 对选型 2、3、4、6 的确认
+  - .project-log/research/solution-research.yaml#RES-002
+  - .project-log/architecture/architecture.yaml
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/base_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/motion_primitive.py
+  - kitchen_robot_home/src/dexbot_bringup/launch/dexrob_full.launch.py
+  expected_result: 在不修改产品代码的前提下，先固化 V1 业务编排和现有执行能力复用边界，继续单独解决接口与轨迹回放两个未决问题。
+  id: DEC-010
+  lesson: null
+  observation: null
+  outcome_status: not-observed
+  reason_summary:
+  - 单 Policy 多阶段模式符合锅把先可见、餐盘需底盘移动后才可见的业务时序。
+  - 中心坐标系统一计算可避免左右臂基座坐标混用。
+  - 复用现有 API/Skill/MotionPrimitive 可减少对底层 RobotDriver 的侵入。
+  - ROS 2 参数配置符合现有 dexbot_bringup 配置模式，方便团队共同调参和版本管理。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-008
+  - TASK-004
+  reversal_plan: 若实际接口、坐标转换或轨迹执行 Spike 证明当前边界不可用，回到 TASK-008 重新比较候选方案。
+  status: active
+  supersedes: []
+  title: V1 业务编排、坐标边界、执行复用和参数配置选型确认
+  updated_at: '2026-07-29'
+  user_approval: approved
+- action: TASK-008
+  actual_result: null
+  alternatives_rejected:
+  - 在 robot_params.yaml 中设置非 identity 的 toolset.end 来承载本子任务的 TCP 偏置：会修改全局共享配置，影响其他子任务
+  - 在 robot_params.yaml 中动态切换 toolset.end：需要进程间协调，且存在遗忘恢复的风险
+  - 修改 public ROS 2 消息接口来承载 TCP 参数：超出本子任务边界
+  authority: C
+  category: technical
+  conditions:
+  - toolset.end 必须保持 identity（[0,0,0, 0,0,0]），使 _flange_to_end_pose 转换成为 no-op
+  - 本子任务的自定义 TCP 参数（tcp_grasp 和 tcp_pan）定义在独立配置文件 pan_pour_params.yaml 中
+  - Planner 负责将 TCP 目标位姿反解为法兰目标位姿后下发
+  - 其他子任务若需要非 identity 的 toolset.end，需在各自的参数文件中自管理，不影响 robot_params.yaml
+  - 团队进入多人协作模式后，需要重新评估配置管理策略
+  context: 通过源码分析确认：lbot_robot_xcore.py 的 _flange_to_end_pose() 使用 toolset 将 flangeInBase
+    转换为 endInRef；luoshi_arm.py 的 initialize() 从 robot_params.yaml 读取 toolset.end.trans/rpy
+    并通过 setToolset() 写入物理机器人控制器。若其他子任务修改 toolset.end 为非 identity，会影响本子任务中所有 _flange_to_end_pose/_end_to_flange_pose
+    转换。因此约定：toolset.end 保持 identity，本子任务的 TCP 偏置在 Planner 层自管理。
+  created_at: '2026-07-30'
+  decision: toolset.end 保持 identity（左臂 [0,0,0,0,0,0]，右臂 [0,0,0,0,0,0]），不做物理 TCP 标定写入。本子任务的两个
+    TCP（tcp_grasp 灵巧手 TCP、tcp_pan 锅具 TCP）定义在 pan_pour_params.yaml 中，仅参与 Planner 层的
+    TCP→法兰反解计算。Planner 最终下发法兰目标位姿给 driver，driver 的 flange→end 转换为 no-op。当前按单人任务模式推进，多人协作时的配置冲突问题暂不处理。
+  evidence:
+  - kitchen_robot_home/src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py:337-363 move_to_pose_target
+    → target_flan = flangeInBase → _flange_to_end_pose()
+  - kitchen_robot_home/src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py:1964-1978 _flange_to_end_pose()
+    使用 self._toolset 做 FlanInBaseToEndInRef 转换
+  - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml 左臂
+    toolset.end = identity
+  - /home/tbl/Project/ShangHai_718/.../luoshi_arm.py:106-130 setToolset() 从 YAML 读取并写入物理控制器
+  - 参考仓库 robot_driver_node.py:89-121 声明 toolset.end.trans/rpy 参数
+  expected_result: 在不修改全局 robot_params.yaml 和不创建公共消息接口的前提下，PLanner 通过自管理 TCP 参数实现TCP→法兰目标反解，driver
+    始终接收法兰目标位姿。多人协作时的配置冲突风险被明确记录但暂不处理。
+  id: DEC-014
+  lesson: robot_params.yaml 是团队共享的全局配置文件，其中 toolset.end 会通过 setToolset() 写入物理机器人控制器并持久化。本子任务修改它会影响其他子任务。因此对于子任务专属的运动学参数（如
+    TCP 偏置），应放在子任务的独立配置文件中，在 Planner 层完成计算。
+  observation: null
+  outcome_status: not-observed
+  reason_summary:
+  - 平面层（Planner/Policy）和控制层（driver/SDK）之间的坐标系约定通过源码确认：driver 接收 flangeInBase，SDK 内部转换
+    endInRef。
+  - 本子任务的两个 TCP（灵巧手 TCP、锅具 TCP）是运动学计算参数，不是机器人固定硬件参数，不应写入 robot_params.yaml。
+  - 当前按单人任务模式开发，配置冲突风险被记录但暂不处理；进入团队协作后重新评估。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-008
+  reversal_plan: 若后续团队协作证明当前方案无法避免配置冲突（如 driver 进程共享、robot_params.yaml 被频繁修改），回到 TASK-008
+    重新评估配置隔离方案。
+  status: active
+  supersedes: []
+  title: V1 TCP 参数在 Planner 层自管理，toolset.end 保持 identity
+  updated_at: '2026-07-30'
+  user_approval: approved
+- action: TASK-010
+  actual_result: null
+  authority: B
+  category: architecture
+  conditions:
+  - "不修改 `ExecuteTask.action`、`TaskTarget.msg` 或任何 RobotDriver 接口。"
+  - "`WAIT` 只能表示 Planner 保留 active task 并等待外部状态，不得发送机械臂 Action。"
+  - "只有 `COMPLETE` 才能使 `_on_tick()` 清理 `_active_task_id` 并设置 `RobotState.SUCCESS`。"
+  - "`WAIT` 的状态、原因和下次检查时机必须可从 `GetTaskStatus` 或日志观察。"
+  context: "现有 `TaskPlannerNode._on_tick()` 将 `_generate_goal_by_task_type()` 返回的 `None` 无条件解释为任务完成；而 V1 必须在锅具已提起后等待底盘完成和餐盘进入视野，不能把等待误判为完成，也不应通过重复发送“保持当前位置”动作模拟等待。"
+  created_at: '2026-07-30'
+  decision: "在 Planner 内新增私有的调度结果语义，显式区分 `EXECUTE(step)`、`WAIT(reason, phase)` 和 `COMPLETE`。`PanPourPolicy` 在外部条件未满足时返回 `WAIT`；Planner 更新状态查询快照后直接返回，保留 active task；现有 Policy 的 `PlannedStep | None` 契约保持兼容，其中旧 `None` 仍表示 `COMPLETE`。"
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:451-507
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/base_policy.py:9-17
+  - .project-log/decisions/decision-log.yaml#DEC-009
+  expected_result: 动态多阶段 Policy 可以安全等待感知或底盘状态而不结束任务、不发送多余的机械臂目标，并且不破坏已有 Policy。
+  id: DEC-015
+  lesson: 在定时器驱动的调度器中，“当前没有可发动作”和“任务已经完成”必须使用不同的数据语义，不能复用空值。
+  observation: null
+  outcome_status: not-observed
+  reason_summary:
+  - V1 的餐盘感知具有阶段依赖：底盘移动前餐盘可能不在视野中。
+  - "现有 `None → SUCCESS` 仅适用于步骤列表耗尽的静态 Policy。"
+  - 内部结果对象是最小兼容改动，不会扩大跨仓库 ROS 接口。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-010
+  - TASK-012
+  reversal_plan: 若现有 Planner 后续形成全局异步任务协议，再将私有调度结果提炼为共享 Policy 接口；在此之前保持兼容适配层，避免重写所有既有 Policy。
+  status: active
+  supersedes: []
+  title: Planner 内部显式区分等待与任务完成
+  updated_at: '2026-07-30'
+  user_approval: not-required
+- action: TASK-012
+  actual_result: null
+  authority: B
+  category: architecture
+  conditions:
+  - '正式流程继续复用 `ScenePerception -> TaskPlannerNode._on_scene() -> WorldState` 的统一感知路径。'
+  - '`PanPourPolicy` 通过已有 `world=self._world` 读取感知状态，不直接订阅 ROS topic。'
+  - 不新增老板电器专用感知 topic、专用 PerceptionBridge 或第二套对象缓存，除非现有消息契约无法表达必要语义并另行批准。
+  - 感知组需要确认锅把抓取点、PCA 主轴、餐盘中心、source frame、有效性和新鲜度字段契约。
+  context: 用户确认遵从现有框架工作模式，采用路径 A；此前 PanPourPolicy 的 update_handle_detection/update_plate_center 仅可作为测试或临时适配入口，不作为正式感知链路。
+  created_at: '2026-07-30'
+  decision: '采用路径 A 作为 V1 正式感知数据流：感知节点发布 `ScenePerception`，TaskPlannerNode 的 `_on_scene()` 将有效消息写入 `WorldState.objects`，PanPourPolicy 在 `_phase` 调度时从同一个 `WorldState` 消费数据，随后复用现有 Planner -> ExecuteTask -> MotionExecutor -> RobotDriver 链路。'
+  deferred:
+  - 感知组尚未确认锅把和餐盘业务语义如何承载在现有 `ScenePerception/ObjectDetection` 字段中。
+  - 感知结果的 source frame、中心坐标系转换责任、有效性和新鲜度判定仍待感知组确认。
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:281-311
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:192-221
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:543-552
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+  - kitchen_robot_home/src/dexbot_interfaces/msg/ObjectDetection.msg
+  expected_result: 感知输入沿现有世界模型进入 Policy，避免为单个任务复制 ROS 订阅和缓存逻辑；在感知组契约到达前保持实现边界清晰，不擅自解释通用 pose 字段。
+  id: DEC-016
+  lesson: 任务专用 Policy 应复用 Planner 已有的 WorldState 作为感知入口；只有公共消息确实无法表达业务语义时，才升级为最小接口变更讨论。
+  observation: 715 参考仓库存在专用感知桥接器，但 boss_electrics 的 Planner 已在 `_on_scene()` 统一写入 `WorldState.objects`；直接复制桥接链会增加本任务自定义状态和同步边界。
+  outcome_status: not-observed
+  reason_summary:
+  - 用户明确要求遵从现有框架，尽量减少自定义内容。
+  - 当前主仓库已有 ScenePerception 订阅和 WorldState 更新路径。
+  - 真实锅把/餐盘字段契约仍由感知组提供，尚未将通用 pose 字段解释为业务语义。
+  related_business_logic:
+  - BL-PLATING-001
+  - BL-GRASP-001
+  related_tasks:
+  - TASK-012
+  - TASK-004
+  reversal_plan: 若感知组确认现有 ScenePerception/ObjectDetection 无法承载必需字段，再回到架构决策阶段评估最小消息扩展或适配层；不得静默新增第二条感知链路。
+  status: active
+  supersedes: []
+  title: V1 感知复用路径 A，Policy 读取统一 WorldState
+  updated_at: '2026-07-30'
+  user_approval: approved
+version: '0.4'

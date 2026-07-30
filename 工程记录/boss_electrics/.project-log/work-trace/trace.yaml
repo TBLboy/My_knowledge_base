@@ -1,5 +1,59 @@
 version: '0.4'
 entries:
+- id: TRACE-013
+  task_id: TASK-013
+  timestamp: '2026-07-30'
+  context: 现有路径录制能力绕过 RobotDriver，且目标 Driver 的当前法兰位姿和 MoveCartesian 运行时语义尚未实测；但法兰增量的资产格式和 SE(3) 展开数学可独立实现并验证。
+  hypothesis: 将离线轨迹资产严格限定为版本化 spatial_only/flangeInBase 增量，并只实现 T_current @ Delta_i 展开，可为后续 Skill 提供可验证输入，同时不提前假设 Driver、ROS 或硬件行为。
+  decision_ref: DEC-011
+  action: 在 robot_motion_executor 实体层新增 FlangeDeltaTrajectory，校验 frame、单位、RPY 顺序、参考系、连续索引、有限数值与 identity 首增量；为平移/转动复合、schema 拒绝和变换往返编写单元测试。
+  expected_result: 轨迹资产一旦接入运行时，Skill 可只负责获取当前法兰位姿和把已展开的绝对航点交给现有 RobotDriver 链路；不再把格式/数学歧义混入 ROS 执行路径。
+  observation: 10 项定向测试、模块编译和 diff 检查通过；当前模块没有 ROS、Driver、xCore 或硬件依赖。
+  actual_result: 离线轨迹基础完成；正式 Skill、真实轨迹资产和实机 replay spike 仍依赖目标 Driver 运行时证据，TASK-013 保持 blocked。
+  delta: 从“轨迹回放整体等待 Driver 验证”拆出为“离线资产/数学已完成，运行时接入仍显式阻塞”。
+  lesson: 对示教回放，先冻结资产参考系、单位、姿态顺序和增量组合方向，才能避免运行时把数学或文件问题误归因于机器人驱动。
+  next_adjustment: 获取目标 Driver 运行时证据与真实轨迹资产后，在 MotionExecutor Skill 边界接入本模块并做低速实机验证。
+  evidence:
+  - .project-log/verification/evidence.yaml#EVID-TASK-013-001
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/flange_delta_trajectory.py
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_flange_delta_trajectory.py
+  knowledge_candidate: false
+- id: TRACE-012
+  task_id: TASK-012
+  timestamp: '2026-07-30'
+  context: V1 需要在锅把、底盘和餐盘的分阶段外部输入之间保留任务，但现有 ScenePerception、底盘接口和倾倒回放 Skill 尚未提供可接入的正式契约。
+  hypothesis: 在单个 PanPourPolicy 内显式保存业务 phase，并把外部边界建模为 WAIT，可先验证确定的规划和坐标计算逻辑，同时避免伪造公共 ROS 接口或把未知数据解释为业务事实。
+  decision_ref: DEC-013
+  action: 新增并注册 PanPourPolicy；以显式更新方法接收未来适配器的锅把、餐盘和底盘状态；复用任务私有 TCP 参数和 Planner 内 WAIT/EXECUTE/COMPLETE 调度语义；为阶段推进、转换和等待边界编写单元测试。
+  expected_result: Policy 按结果回调逐步推进，不要求预生成全流程；每个外部依赖未就绪时均可观测地 WAIT，且不会向 MotionExecutor 发送不受支持的目标。
+  observation: 28 个定向测试和 3 个相关 ROS 包构建通过。抓取 PCA 偏置、双 TCP 法兰反解、Action 完成驱动的 phase 迁移、底盘/餐盘/回放等待和 task_type 注册均得到覆盖。
+  actual_result: 动态 Policy 骨架已实现并可本地验证；完整跨组链路仍被感知字段契约、底盘生命周期接口和相对法兰回放 Skill 阻塞，任务状态保持 blocked。
+  delta: 从“等待外部契约后才能开始 Policy”改为“先实现边界明确、可独立验证的 Policy 骨架，同时把缺失集成点显式保留为 WAIT”。
+  lesson: 对跨组机器人流程，先实现确定性编排内核并将未知接口隔离在适配边界，可减少接口猜测导致的架构漂移；但单元测试不能替代真实 ROS/Driver/硬件验证。
+  next_adjustment: 收到感知、底盘和回放接口契约后，分别接入适配器并进行 ROS 级集成验证；在现场标定前保持 configured=false。
+  evidence:
+  - .project-log/verification/evidence.yaml#EVID-TASK-012-001
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_pan_pour_policy.py
+  knowledge_candidate: false
+- id: TRACE-011
+  task_id: TASK-010
+  timestamp: '2026-07-30'
+  context: 现有 Planner 将 Policy 返回的 None 无条件解释为任务成功，但 V1 在底盘移动和餐盘进入视野之间必须保留任务并等待外部状态。
+  hypothesis: 在 Planner 私有域将 EXECUTE、WAIT、COMPLETE 显式建模，可保持静态 Policy 兼容并避免通过伪造保持动作来等待。
+  decision_ref: DEC-015
+  action: 新增 PolicyDecision 与旧返回值适配器；在 _on_tick 中分支处理等待、执行、完成和非法返回；增加纯实体与 Planner 调度分支测试。
+  expected_result: WAIT 不发送 ExecuteTask、不清理 active task，COMPLETE 保持旧成功清理语义，旧 Policy 无需修改。
+  observation: 12 项定向测试通过，验证了 WAIT/EXECUTE/COMPLETE 与非法返回；ROS 接口包和 Planner 包构建通过。
+  actual_result: Planner 已获得动态多阶段 Policy 所需的等待语义，下一阶段可在不改公共 ROS 接口的前提下实现参数和坐标变换基础模块。
+  delta: 从使用 None 同时表示“没有下一步”和“任务结束”，改为使用类型化私有调度结果表达三种语义。
+  lesson: 定时器调度器的空闲等待与业务任务完成必须独立表达；兼容适配器可避免为新任务重写所有存量 Policy。
+  next_adjustment: 执行 TASK-011，先分离参数读取和 SE(3) 计算，再接入 PanPourPolicy。
+  evidence:
+  - .project-log/verification/evidence.yaml#EVID-TASK-010-001
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/policy_decision.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  knowledge_candidate: false
 - id: TRACE-001
   task_id: TASK-001
   timestamp: '2026-07-22'
@@ -63,7 +117,7 @@ entries:
   decision_ref: null
   action: 复核当前源码中的 `_on_start_task`、`_prepare_start_task_context`、`_clear_runtime_state`、`_on_tick`、`_generate_goal_by_task_type`、`_build_gripper_action_goal` 和 MotionExecutor 的 API 路由，新增源码学习笔记并记录后续讲解规范。
   expected_result: 固化一条可复习的 `StartTask → Policy → PlannedStep → ExecuteTask.Goal → MotionExecutor API` 代码链，并纠正示意代码与真实实现之间的差异。
-  observation: `TaskPlannerNode` 通过上下文属性、1 秒 timer、状态/忙标志门控和 Policy 实例组织调度；`_build_gripper_action_goal` 实际只填 `arm_type/action_name`，而 `task_id` 位于外层 Goal；执行端通过 `task_type` 查找 `_apis`。
+  observation: "`TaskPlannerNode` 通过上下文属性、1 秒 timer、状态/忙标志门控和 Policy 实例组织调度；`_build_gripper_action_goal` 实际只填 `arm_type/action_name`，而 `task_id` 位于外层 Goal；执行端通过 `task_type` 查找 `_apis`。"
   actual_result: 新增 `.project-log/docs/source-code-learning.md`，更新 progress/current-session，并约定后续解释必须从源码事实展开，再使用概念类比辅助记忆。
   delta: 从“说明架构概念”调整为“源码驱动的逐行、逐对象、逐调用链教学”。
   lesson: 概念类比只能作为最后的记忆压缩；理解工程实现必须追踪对象创建、字段填充、状态变化和下游消费。
@@ -189,3 +243,22 @@ entries:
   - .project-log/distillation/candidates.yaml
   - .project-log/docs/source-code-learning.md
   knowledge_candidate: true
+- id: TRACE-011
+  task_id: TASK-011
+  timestamp: '2026-07-30'
+  context: V1 已确认两个任务私有 TCP、中心坐标系业务计算和法兰控制约定，但实际标定数值仍待现场确认；必须先提供不会影响共享 Driver 配置的可测试基础。
+  hypothesis: 把 YAML 参数读取、TCP→法兰 SE(3) 计算和实机执行门禁拆开，可以让后续 PanPourPolicy 复用统一的数学边界，同时防止占位值被误用于机器人控制。
+  decision_ref: DEC-013
+  action: 新建 pan_pour 参数模板、纯 RigidTransform/PanPourParameters 模块和 Planner 参数注入入口；使用已知变换、双 TCP、PCA 偏置、无效输入和占位执行门禁编写单元测试。
+  expected_result: Planner 可获得不可变任务私有参数快照；抓取和锅具 TCP 目标都能转换为左臂 base 下法兰目标，不需要修改 robot_params.yaml、Driver 或公共 ROS 接口。
+  observation: `T_B_F = T_B_C @ T_C_TCP @ inverse(T_F_TCP)` 的两条 TCP 链路、PCA 归一化偏置及未配置执行拒绝均通过测试；launch 已将 YAML 注入 task_planner_node。
+  actual_result: TASK-011 完成；21 个定向测试、两个受影响包构建和 diff 检查通过，生成的 build/install/log 与 Python 缓存已清理。
+  delta: 从“技术选型中的参数与坐标约定”变为“可单元测试、可 launch 注入、不可执行默认值受控的 Planner 基础模块”。
+  lesson: 全局 Driver toolset 与子任务 TCP 不是同一层配置；在共享机器人系统中，任务私有运动学参数应由上层显式计算并有配置门禁，不能借用全局 toolset.end。
+  next_adjustment: 等待感知字段和底盘接口契约后，接入 PanPourPolicy；实际标定完成前保持 pan_pour.configured=false。
+  evidence:
+  - .project-log/specs/TASK-011.md
+  - .project-log/verification/evidence.yaml#EVID-TASK-011-001
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/pan_pour_kinematics.py
+  - kitchen_robot_home/src/dexbot_bringup/config/pan_pour/pan_pour_params.yaml
+  knowledge_candidate: false

@@ -12,11 +12,12 @@ functional_business_logic:
   - 自动翻炒锅 KP200
   - 餐盘
   scenarios:
-  - V1 作为中间环节，在上一个环节完成并移交后，锅把朝左，由左手抓锅、移动、倾倒、必要轻微抖动、放回原位
+  - V1 作为中间环节，在上一个环节完成并移交后，锅把朝左，由左手抓锅、移动、倾倒和必要轻微抖动；放回原位、张手和 home 作为后续插槽
   - V2 在 V1 闭环稳定后评估右手锅铲抓取、放置和辅助动作
   rules:
   - 场景检查通常由上游环节完成；本子任务保留可选场景检查占位，不把它作为当前启动前置。
   - 感知模型由感知组提供，本子任务只订阅锅把中心、抓取点、主轴方向及有效性等约定信息。
+  - V1 感知正式复用现有路径 A：`ScenePerception` 经 `TaskPlannerNode._on_scene()` 写入 `WorldState`，`PanPourPolicy` 从统一 `WorldState` 消费；不为本任务创建第二套 ROS 订阅或感知缓存。
   - 抓取目标由感知抓取点沿锅把主轴 PCA 向量施加可调偏置计算，左臂通过已标定且参数化的抓取 TCP 以固定姿态到达目标。
   - V1 倾倒点由机器人中心坐标系 C 下的餐盘中心点加 C 下 xyz 三轴可调偏置得到：pour_point_C = plate_center_C + pour_offset_C。
   - 所有业务目标、中间位姿和偏置统一在机器人中心坐标系 C 下表达；机械臂基坐标系只允许作为底层执行时的转换结果。
@@ -27,7 +28,8 @@ functional_business_logic:
   - V1 当前只打通动作流程，不增加菜品完整落盘、卡料或洒落的验收规则。
   - V1 暂不实现异常检查、自动重试和回退处理，仅在流程中预留后续扩展位置。
   state_transitions:
-  - handoff-ready → optional-scene-check → perception-subscribed → grasp-target-calculated → hand-closed → lift-to-pour-ready → base-positioned → plate-target-calculated → pour-positioned → pouring → returned → hand-opened → home
+  - handoff-ready → optional-scene-check → perception-subscribed → grasp-target-calculated → hand-closed → lift-to-pour-ready → base-positioned → plate-target-calculated → pour-positioned → pouring → V1-minimum-completed
+  - future-cleanup-extension：在 V1 最小闭环稳定后，补充放回锅具、张开灵巧手和恢复 home 的具体规则或轨迹
   - hand-closed → lift-to-pour-ready；后续版本可在 hand-closed 与 lift-to-pour-ready 之间插入抓取确认
   - perception-not-ready → wait/not-started
   - future-error-handling-extension：在 V1 主流程跑通后补充异常检查、停止、重试和人工接管语义
@@ -72,6 +74,7 @@ technical_business_logic:
   - robot_driver 的真实服务语义、反馈粒度、力矩/触觉接口和 stop latch 行为需要结合驱动仓库或设备实测确认。
   data_and_state_rules:
   - planner 的 WorldState 保存最新感知对象、picked/placed 集合、整体机器人状态和左右臂独立状态。
+  - 当前 `TaskPlannerNode._on_scene()` 在 `scene_valid` 时清空并重建 `WorldState.objects`；`PanPourPolicy` 已由 Planner 以 `world=self._world` 初始化，因此正式感知接入点是 WorldState，而不是 Policy 自己订阅 topic。
   - planner 以当前 policy 状态和 goal handle 推进任务；executor 以 primitive 顺序推进单臂任务，双臂路径使用独立结果和命名屏障。
   - 当前代码没有明确的锅把中心、抓取点、锅把主轴、两个 TCP、抓取偏置、可选 grasp_confirmed 结果和菜品落盘完整性数据契约。
   consistency_and_concurrency:
@@ -123,6 +126,15 @@ alignment:
     evidence:
     - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/core/perception_receiver.py
     - kitchen_robot_home/src/dexbot_interfaces/msg/ScenePerception.msg
+  - id: ALIGN-MATCH-006
+    type: confirmed-match
+    summary: 用户确认老板电器任务遵从现有框架路径 A，Planner 统一接收感知并通过 WorldState 供 Policy 消费；不复制 715 参考仓库的专用感知桥接链路。
+    status: accepted
+    authority: C
+    evidence:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:281-311
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py:192-221
+    - .project-log/decisions/decision-log.yaml#DEC-016
   conflicts:
   - id: ALIGN-CODE-001
     type: missing-implementation

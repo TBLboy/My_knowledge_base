@@ -293,3 +293,43 @@ questions:
   - 用户于 2026-07-28 补充 V1 坐标规则
   created_at: '2026-07-28'
   answered_at: '2026-07-28'
+
+- id: OQ-008
+  title: V1 倾倒回放的 PlanType 复用问题
+  category: technical-selection
+  status: open
+  priority: P2
+  created: 2026-07-30
+  context: |+
+    PanPourPolicy 需要下发"播放法兰增量倾倒轨迹"的信号给 MotionExecutor。
+    当前 PlanType 枚举中没有专用于此的类型。
+  decision_candidate: |+
+    复用 PLAN_CARTESIAN_TRAJECTORY，在 PlannedStep 中新增可选字段 trajectory_id。
+    _build_cartesian_trajectory_goal() 检测到 trajectory_id 存在时，加载对应的增量
+    YAML 文件，获取当前法兰位姿，做 T_current @ Delta_i 展开，生成 waypoints 列表。
+    不需要新增 plan_type、不改 Action 消息。
+  expected_impact: |+
+    改动最小，只加一个可选字段。增量轨迹资产与业务代码分离，文件化管理。
+  requires: ""
+  awaiting: 用户确认 trajectory_id 的方案是否可接受
+
+- id: OQ-009
+  title: V1 底盘移动后的等待策略
+  category: technical-selection
+  status: open
+  priority: P2
+  created: 2026-07-30
+  context: |+
+    V1 没有从底盘组获取"移动完成/失败"信号的接口。
+    但业务逻辑要求底盘移动后餐盘才进入视野。
+    当前只能用一个固定等待时长来替代接口信号。
+  decision_candidate: |+
+    PanPourPolicy._phase == "hold_wait" 时：
+      1. 固定等待 N 个 tick（每个 tick ≈ 1 秒），假设底盘已走完
+      2. N 之后才开始检查 self._world.objects 中是否有餐盘
+      3. 设置 _MAX_HOLD_CYCLES 超时保护（如 30 秒），餐盘未出现则终止任务
+    即使餐盘提前可见，也要等够 N 秒才进入 Phase 2，避免"底盘还没走完就检测"。
+  expected_impact: |+
+    底盘接口到来前不影响 V1 开发，先设一个可调参数。后续接到底盘信号后重构为事件驱动。
+  requires: N 值（最短等待秒数）、MAX 值（超时秒数）
+  awaiting: 用户确认等待策略的基本方案和 N/MAX 初始值
