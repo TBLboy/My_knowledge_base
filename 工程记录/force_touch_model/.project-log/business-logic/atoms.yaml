@@ -1,3 +1,398 @@
-version: "0.2"
+version: "0.3"
 source_of_truth: true
-atoms: []
+atoms:
+  - id: BL-BENCH-001
+    title: 统一 benchmark 任务为矿泉水瓶花生倾倒
+    kind: flow
+    domain: benchmark
+    status: active
+    priority: high
+    risk: high
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "组内后续模型训练和效果比较使用统一的真实机器人任务与数据集。"
+    actors:
+      - 组内数据采集人员
+      - 模型训练人员
+      - 真机评测人员
+    trigger: "开始建立或比较一个新的策略模型时"
+    preconditions:
+      - "已准备矿泉水瓶、花生、剪刀和接收容器"
+      - "机器人和遥操作采集链路可用"
+    inputs:
+      - "矿泉水瓶花生倾倒任务示教轨迹"
+      - "任务语义描述和子任务标注"
+    rule:
+      statement: "目标任务是：机器人握住经过处理的矿泉水瓶，将瓶内花生完整倾倒到指定容器中；后续模型训练和比较原则上以该任务及其统一数据集为 benchmark。"
+    outputs:
+      - "统一 benchmark 数据集"
+      - "可在同一任务上比较的训练模型和真机结果"
+    side_effects:
+      - "后续实验结果具有跨模型可比性"
+      - "实验表中的模型迭代需要关联该 benchmark"
+    exceptions:
+      - "其他任务可用于预训练、方法验证或补充实验，但不能替代该 benchmark 的主结论"
+    failure_handling:
+      - "若任务定义、数据集或评测条件改变，应建立新版本或明确记录不可直接横向比较"
+    invariants:
+      - "比较模型时任务目标和主要评测流程保持一致"
+      - "真机成功率是 benchmark 主结果"
+    acceptance:
+      - id: BL-BENCH-001-A1
+        given: "两个候选模型使用同一 benchmark 任务和同一评测协议"
+        when: "比较模型效果"
+        then: "结果可以按统一成功率进行横向比较"
+        method: "后续 benchmark 评测记录"
+        evidence: null
+        status: not-verified
+    dependencies: []
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: "瓶口由剪刀扩大，瓶内装花生；接收容器当前会议示例为不锈钢圆形盆，具体固定配置仍需确认。"
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-BENCH-002
+    title: benchmark 采用真机部署评测
+    kind: rule
+    domain: benchmark
+    status: active
+    priority: high
+    risk: high
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "模型效果不以 open-loop 误差作为最终 benchmark 结论，而以真实机器人执行结果为主。"
+    actors:
+      - 真机评测人员
+    trigger: "完成一个 baseline 或模型迭代版本训练后"
+    preconditions:
+      - "模型能够部署到目标机器人"
+      - "评测任务和操作环境已准备"
+    inputs:
+      - "待评测模型 checkpoint"
+      - "统一 benchmark 任务"
+    rule:
+      statement: "评测必须进行真机部署和实际执行；当前主评价指标简化为成功率。"
+    outputs:
+      - "每次评测的成功/失败结果"
+      - "模型版本对应的成功率"
+    side_effects:
+      - "训练指标和 open-loop 指标只能作为诊断信息，不能替代真机成功率"
+    exceptions:
+      - "仿真、open-loop 或离线指标可用于开发筛选，但不构成最终 benchmark 结论"
+    failure_handling:
+      - "真机失败时记录失败现象和阶段，进入问题导向迭代，不直接归因于单一模型组件"
+    invariants:
+      - "不同模型的真机评测条件应尽量一致"
+      - "成功判定标准在同一轮比较中保持一致"
+    acceptance:
+      - id: BL-BENCH-002-A1
+        given: "模型已完成训练并具备部署 checkpoint"
+        when: "执行 benchmark 真机评测"
+        then: "产生按统一规则判定的成功率，而不是只报告离线损失"
+        method: "真机 rollout 记录"
+        evidence: null
+        status: not-verified
+    dependencies:
+      - BL-BENCH-001
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: "成功的直观目标是完整握住瓶子并把花生倾倒干净；抓取失败、倾倒不完整等边界判定仍需固化。"
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-DATA-001
+    title: 数据集先转换为 LeRobot v3.0 再使用官方工具标注
+    kind: data-contract
+    domain: dataset
+    status: active
+    priority: high
+    risk: medium
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "自采数据以 LeRobot 原生格式进入后续标注和训练流程。"
+    actors:
+      - 数据工程人员
+      - 标注人员
+    trigger: "完成一批遥操作数据采集后"
+    preconditions:
+      - "原始采集数据可读取"
+      - "已确定 state/action、相机和任务字段映射"
+    inputs:
+      - "组内遥操作原始数据"
+    rule:
+      statement: "原始数据先转换为 LeRobot v3.0 数据集，再使用 LeRobot 官方数据标注平台完成语义和子任务标注。"
+    outputs:
+      - "LeRobot v3.0 数据集"
+      - "可被训练和标注工具读取的轨迹与元数据"
+    side_effects:
+      - "转换脚本和字段映射必须可复现"
+    exceptions:
+      - "转换失败或字段不完整时，不得直接进入正式训练"
+    failure_handling:
+      - "保留原始数据不变，修复转换映射后重新生成 v3.0 数据集"
+    invariants:
+      - "原始采集数据不被转换过程覆盖"
+      - "v3.0 数据集中的动作、状态、视频和 episode 边界一致"
+    acceptance:
+      - id: BL-DATA-001-A1
+        given: "一批原始遥操作轨迹已采集"
+        when: "执行数据转换和官方工具读取"
+        then: "LeRobot v3.0 数据集可被读取、浏览和标注"
+        method: "转换 smoke test + 官方工具读取验证"
+        evidence: null
+        status: not-verified
+    dependencies: []
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: null
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-DATA-002
+    title: 语义标注应包含丰富对象和空间特征
+    kind: rule
+    domain: annotation
+    status: active
+    priority: high
+    risk: medium
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "语言描述不仅写动作，还应尽可能描述对象属性、相对位置、目标容器和任务结果。"
+    actors:
+      - 标注人员
+    trigger: "为一条轨迹编写语义描述时"
+    preconditions:
+      - "轨迹中的对象、位置和目标可从视频或现场记录确认"
+    inputs:
+      - "轨迹视频和机器人状态"
+      - "任务对象及环境信息"
+    rule:
+      statement: "语义标注应在可观测且真实的范围内包含对象类别、材质、相对空间位置、目标容器和动作目标等特征，例如右前方的塑料矿泉水瓶和左手边的不锈钢圆形盆。"
+    outputs:
+      - "丰富且与轨迹一致的语言描述"
+    side_effects:
+      - "为语言条件策略提供更多可学习特征"
+      - "为后续泛化实验保留语义变量"
+    exceptions:
+      - "不可从数据确认的属性不得臆造"
+    failure_handling:
+      - "描述与轨迹不一致时退回重标，不通过增加无事实依据的词汇修补"
+    invariants:
+      - "语言描述必须与轨迹实际发生的动作和场景一致"
+    acceptance:
+      - id: BL-DATA-002-A1
+        given: "轨迹包含可识别的瓶子、花生、接收容器和相对位置"
+        when: "完成语义标注"
+        then: "描述包含已确认的关键对象、空间关系和任务目标"
+        method: "标注抽检"
+        evidence: null
+        status: not-verified
+    dependencies:
+      - BL-BENCH-001
+      - BL-DATA-001
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: "丰富描述是当前策略，不等于允许随意引入轨迹中不存在的属性。"
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-DATA-003
+    title: 轨迹应支持子任务标注
+    kind: data-contract
+    domain: annotation
+    status: active
+    priority: high
+    risk: medium
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "一条完整倾倒轨迹应能够拆分为具有明确目标的阶段或子任务。"
+    actors:
+      - 标注人员
+      - 模型训练人员
+    trigger: "对完整任务轨迹进行标注时"
+    preconditions:
+      - "轨迹包含可识别的阶段边界"
+    inputs:
+      - "完整倾倒任务轨迹"
+    rule:
+      statement: "至少按拿起瓶子、移动到接收容器上方、倾倒花生三个语义阶段组织子任务标注；实际边界和是否增加阶段需结合数据确认。"
+    outputs:
+      - "完整任务级描述"
+      - "有顺序的子任务描述和对应时间区间"
+    side_effects:
+      - "支持阶段级失败分析和问题定位"
+      - "为多任务或分层策略训练留下数据接口"
+    exceptions:
+      - "无法可靠判断阶段边界时应标记待复核，不强行切分"
+    failure_handling:
+      - "子任务边界争议进入标注复核，不直接用于比较实验"
+    invariants:
+      - "子任务顺序与真实执行顺序一致"
+      - "子任务合起来覆盖完整任务，不改变原轨迹动作"
+    acceptance:
+      - id: BL-DATA-003-A1
+        given: "完整倾倒轨迹已转换为 v3.0"
+        when: "完成子任务标注"
+        then: "至少能定位抓取、移动和倾倒三个阶段"
+        method: "官方标注工具检查"
+        evidence: null
+        status: not-verified
+    dependencies:
+      - BL-DATA-001
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: null
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-DATA-004
+    title: 同一轨迹允许多个语义描述版本
+    kind: rule
+    domain: annotation
+    status: experimental
+    priority: medium
+    risk: medium
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "同一个真实执行轨迹可以配备多种等价但措辞不同的语言描述，用于增强语言表达覆盖。"
+    actors:
+      - 标注人员
+      - 模型训练人员
+    trigger: "准备语言条件训练样本时"
+    preconditions:
+      - "不同描述均指向同一条真实轨迹"
+    inputs:
+      - "同一条任务轨迹"
+      - "多个语义描述版本"
+    rule:
+      statement: "可以为同一轨迹准备不同语言描述版本；每个版本必须保持任务语义和轨迹事实一致。"
+    outputs:
+      - "一对多的轨迹-语言描述样本"
+    side_effects:
+      - "增加语言表达多样性"
+      - "可能改变样本权重和数据分布，需要在实验记录中注明"
+    exceptions:
+      - "不得使用改变目标、对象或动作顺序的描述作为同一轨迹的等价版本"
+    failure_handling:
+      - "出现语义不一致时删除或单独标记该描述版本"
+    invariants:
+      - "多版本描述共享同一真实轨迹，不复制或篡改动作数据"
+    acceptance:
+      - id: BL-DATA-004-A1
+        given: "同一轨迹存在多个候选描述"
+        when: "进入训练集"
+        then: "描述版本均通过语义一致性检查并记录版本关系"
+        method: "标注审查"
+        evidence: null
+        status: not-verified
+    dependencies:
+      - BL-DATA-002
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: "当前作为数据增强方向记录，是否默认启用以及每条轨迹的描述数量待实验决定。"
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-ITER-001
+    title: 模型优化采用真机问题导向迭代
+    kind: flow
+    domain: iteration
+    status: active
+    priority: high
+    risk: high
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-07-30 会议纪要（用户转述）"
+    description: "后续优化不预先堆叠大量变量，而是先部署 baseline，通过真机失败现象决定下一步改进。"
+    actors:
+      - 模型训练人员
+      - 真机评测人员
+    trigger: "baseline 或一个模型迭代版本完成训练并部署后"
+    preconditions:
+      - "已有可部署模型"
+      - "已有统一 benchmark 任务和成功率判定"
+    inputs:
+      - "模型 checkpoint"
+      - "真机 rollout 结果"
+      - "失败发生阶段和现象"
+    rule:
+      statement: "每轮迭代先训练并部署 baseline，再根据真机测试中观察到的具体问题提出单一或少量针对性改进，并用同一 benchmark 重新验证。"
+    outputs:
+      - "可复现的失败问题描述"
+      - "针对问题的改进实验"
+      - "改进前后的成功率对比"
+    side_effects:
+      - "实验优先级由真实失败现象驱动"
+      - "每轮迭代需要记录问题、假设、修改和验证结果"
+    exceptions:
+      - "尚未完成真机基线时，不把离线指标差异直接升级为改进方向"
+    failure_handling:
+      - "失败无法归因时先补充观测和复现，不同时修改多个无关因素"
+    invariants:
+      - "改进实验保留同一 benchmark 和成功率指标"
+      - "每次改动与一个明确问题或可证伪假设关联"
+    acceptance:
+      - id: BL-ITER-001-A1
+        given: "baseline 已在统一 benchmark 上完成真机测试"
+        when: "规划下一轮优化"
+        then: "优化方向引用具体失败现象或已记录问题，不只引用训练 loss"
+        method: "实验记录和问题追踪"
+        evidence: null
+        status: not-verified
+    dependencies:
+      - BL-BENCH-001
+      - BL-BENCH-002
+    baseline_refs:
+      - REQ-001
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: "采样频率分段提高属于可选技巧，当前不作为主要优化方向。"
+    created_at: "2026-07-30T00:00:00+08:00"
+    updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null

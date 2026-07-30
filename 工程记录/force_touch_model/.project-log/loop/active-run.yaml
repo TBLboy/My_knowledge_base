@@ -1,14 +1,14 @@
 schema_version: 1
 run_id: null
 goal_id: null
-phase: verification
+phase: business-clarification
 clarification_domain: null
-task_id: TASK-019
-status: completed
+task_id: TASK-021
+status: active
 next_action:
-  kind: none
+  kind: task
   subject: null
-  statement: Open-loop evaluation complete across 6 checkpoints; project log archived
+  statement: Begin small-scale benchmark data collection, LeRobot v3.0 conversion, and official-tool read smoke
 counters:
   task_attempts: 0
   same_failure_count: 0
@@ -25,4 +25,4 @@ native_goal:
   last_known_status: null
   last_synced_at: null
 last_event_id: LE-000011
-updated_at: '2026-07-29T15:25:00Z'
+updated_at: '2026-07-30T00:00:00+08:00'

@@ -9,8 +9,8 @@ evidence:
   result: passed
   level: 2
   commands:
-  - python3 ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
-  - python3 ~/.codex/vibe-workflow/scripts/vibe.py --root /home/tbl/Project/lerobot_v1.0 validate
+  - python3 ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
+  - python3 ~/.codex/vibe-workflow/scripts/vibe.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0 validate
   limitations: []
   artifacts:
   - .project-log/
@@ -23,9 +23,9 @@ evidence:
   result: passed
   level: 2
   commands:
-  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/lerobot_v1.0 --json restore
-  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/lerobot_v1.0 --json status
-  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/lerobot_v1.0 --json validate
+  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0 --json restore
+  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0 --json status
+  - python3 ~/.codex/vibe-workflow/scripts/loopctl.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0 --json validate
   limitations: []
   artifacts:
   - .project-log/loop/active-run.yaml
@@ -69,7 +69,7 @@ evidence:
   acceptance_criteria:
   - 旧版 lerobot 0.5.1 被移除
   - 当前仓库 lerobot 0.6.1 以 editable 模式安装
-  - 导入路径指向 /home/tbl/Project/lerobot_v1.0/src/lerobot
+  - 导入路径指向 /home/tbl/Project/force_touch_model/lerobot_v1.0/src/lerobot
   result: passed
   level: 3
   commands:
@@ -79,7 +79,7 @@ evidence:
   limitations: []
   artifacts:
   - /home/tbl/miniforge3/envs/lerobot/lib/python3.12/site-packages/lerobot-0.6.1.dist-info
-  - /home/tbl/Project/lerobot_v1.0/src/lerobot
+  - /home/tbl/Project/force_touch_model/lerobot_v1.0/src/lerobot
 - id: EV-006
   task_id: TASK-002
   business_logic:
@@ -136,13 +136,13 @@ evidence:
   - /home/tbl/miniforge3/envs/lerobot/bin/python package version/import path smoke check
   - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
   - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-record --help
-  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
   limitations:
   - 未连接真实机器人、相机、电机或仿真 benchmark；未运行训练和完整测试套件。
   - 文档描述当前代码结构，不等于对所有硬件/外部 SDK 的端到端可用性承诺。
   artifacts:
   - CODE_MAP.md
-  - /home/tbl/Project/lerobot_v1.0/src/lerobot
+  - /home/tbl/Project/force_touch_model/lerobot_v1.0/src/lerobot
   - /tmp/lerobot-train-help.txt
   - /tmp/lerobot-record-help.txt
 - id: EV-009
@@ -155,9 +155,9 @@ evidence:
   result: passed
   level: 3
   commands:
-  - codegraph status /home/tbl/Project/lerobot_v1.0
+  - codegraph status /home/tbl/Project/force_touch_model/lerobot_v1.0
   - codex mcp list
-  - git -C /home/tbl/Project/lerobot_v1.0 status --short --untracked-files=all
+  - git -C /home/tbl/Project/force_touch_model/lerobot_v1.0 status --short --untracked-files=all
   limitations:
   - 未在重启后的 ACP 会话执行 MCP tool 查询。
   artifacts:
@@ -446,7 +446,7 @@ evidence:
   level: 3
   commands:
   - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python direct GrootPolicy(config) forward smoke
-  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
   limitations:
   - 单 batch smoke；未执行 optimizer.step、正式训练、保存恢复或真实 rollout。
   artifacts:
@@ -653,7 +653,7 @@ evidence:
   - grep -n '测试产物必须主动清理' /home/tbl/.codex/AGENTS.md
   - grep -n '测试产物清理规则' AGENTS.md
   - find /mnt/data/gr00t-finetune/outputs -type f
-  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+  - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
   result_ref: 全局和项目规则均存在；outputs 仅保留用户明确要求的独立 GR00T checkpoint-30000；Project Log validation passed。
   limitations:
   - 全局 `/home/tbl/.codex/AGENTS.md` 位于项目 Git 仓库之外，不能通过本项目 remote push；已创建本地备份并更新文件。

@@ -1,2 +1,114 @@
-version: "0.2.1"
-questions: []
+version: "0.3"
+questions:
+  - id: Q-001
+    title: benchmark 数据集规模和采集覆盖范围
+    status: open
+    authority: C
+    impact: high
+    uncertainty: high
+    rework_cost: high
+    related_business_logic:
+      - BL-BENCH-001
+      - BL-DATA-001
+    related_tasks:
+      - TASK-021
+    context: "会议确定了任务，但没有确定轨迹数量、采集人员、场景变化和采集轮次。规模与覆盖范围会直接影响 baseline 和泛化结论。"
+    recommendation: "先用一批小规模数据完成转换、标注和端到端 smoke，再确定正式 benchmark 的采集规模；正式训练/测试划分按采集批次或场景隔离。"
+    alternatives:
+      - "固定场景单一采集批次：成本低，但泛化结论弱"
+      - "多人员、多摆放、多批次：成本高，但更适合 benchmark"
+    answer: null
+    source_refs:
+      - "2026-07-30 会议内容"
+    created_at: "2026-07-30T00:00:00+08:00"
+    answered_at: null
+
+  - id: Q-002
+    title: 真机成功率判定规则
+    status: open
+    authority: C
+    impact: critical
+    uncertainty: high
+    rework_cost: high
+    related_business_logic:
+      - BL-BENCH-002
+    related_tasks:
+      - TASK-023
+    context: "当前口头成功标准是完整握住瓶子并把花生倾倒干净，但还没有定义重复次数、倾倒干净阈值、超时和安全中止规则。"
+    recommendation: "采用二元成功/失败作为主指标，同时为每次 rollout 记录失败阶段、超时和安全中止原因；‘倾倒干净’先由人工目测，若一致性不足再引入称重或容器内残留计数。"
+    alternatives:
+      - "纯人工目测：部署快，但标注一致性有限"
+      - "称重或残留量阈值：客观，但增加设备和流程成本"
+    answer: null
+    source_refs:
+      - "2026-07-30 会议内容"
+    created_at: "2026-07-30T00:00:00+08:00"
+    answered_at: null
+
+  - id: Q-003
+    title: benchmark 测试条件是否包含泛化变化
+    status: open
+    authority: C
+    impact: high
+    uncertainty: high
+    rework_cost: high
+    related_business_logic:
+      - BL-BENCH-001
+      - BL-DATA-002
+    related_tasks:
+      - TASK-021
+      - TASK-023
+    context: "语义描述希望包含材质、空间位置等特征并增强泛化，但尚未决定测试时哪些对象、位置和语言表达变化必须保持或刻意变化。"
+    recommendation: "先定义固定条件 benchmark 验证基本能力，再单独增加受控变化集验证泛化，避免把基础能力和泛化能力混成一个成功率。"
+    alternatives:
+      - "只测固定场景：最容易比较 baseline"
+      - "固定场景 + 受控变化集：信息量更高，但需要更多数据和测试次数"
+    answer: null
+    source_refs:
+      - "2026-07-30 会议内容"
+    created_at: "2026-07-30T00:00:00+08:00"
+    answered_at: null
+
+  - id: Q-004
+    title: 子任务标注的训练用途
+    status: open
+    authority: B
+    impact: medium
+    uncertainty: medium
+    rework_cost: medium
+    related_business_logic:
+      - BL-DATA-003
+    related_tasks:
+      - TASK-022
+    context: "会议确定要做抓取、移动、倾倒等子任务标注，但没有确定这些标签是只用于失败分析，还是会作为模型输入或分阶段训练监督。"
+    recommendation: "第一版先作为数据元信息和失败分析依据保存，不改变 baseline 模型输入；确认标注质量后再单独设计子任务条件实验。"
+    alternatives:
+      - "先只做诊断标签：风险低，能快速建立问题定位能力"
+      - "直接作为训练监督：潜在收益高，但会改变模型和实验变量"
+    answer: null
+    source_refs:
+      - "2026-07-30 会议内容"
+    created_at: "2026-07-30T00:00:00+08:00"
+    answered_at: null
+
+  - id: Q-005
+    title: 多语言描述版本的样本权重
+    status: open
+    authority: B
+    impact: medium
+    uncertainty: medium
+    rework_cost: medium
+    related_business_logic:
+      - BL-DATA-004
+    related_tasks:
+      - TASK-022
+    context: "同一轨迹允许多种语言描述，但未确定每条轨迹的描述数量、采样方式和是否造成该轨迹重复加权。"
+    recommendation: "先保留描述版本关系并在训练 manifest 中可控开关；baseline 使用单一主描述，增强实验再比较多描述版本。"
+    alternatives:
+      - "每条轨迹随机采样一个描述：避免动作重复加权"
+      - "每个描述都作为样本：语言覆盖更高，但轨迹分布被重新加权"
+    answer: null
+    source_refs:
+      - "2026-07-30 会议内容"
+    created_at: "2026-07-30T00:00:00+08:00"
+    answered_at: null

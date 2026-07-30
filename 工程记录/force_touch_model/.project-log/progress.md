@@ -119,3 +119,37 @@
 - W&B：run 7qfmd9v5 finished。
 - 实验记录：模型训练实验记录表.xlsx E01 为已完成。
 - 证据：EV-039；项目日志已归档。
+
+## 2026-07-29T15:30:00+08:00 模板架构分析
+
+- 状态：已完成分析。
+- 内容：详细审查了 `packages/template/`（`lerobot_policy_template`）和 `packages/implementation/`（`lerobot_policy_rokae.rokae_tiny`）的代码结构。
+- 结论：
+  - 模板覆盖**完整模型**（ObservationEncoder + ActionExpert），不只是 ActionExpert head。
+  - 模板**不是 VLA**（无 VLM backbone，image/language 独立编码）。
+  - 模板**不是 DP**（无 diffusion pipeline）。
+  - 预设架构为 ACT 风格的 conditional behavior cloning with cross-attention。
+  - Action Query 机制：`chunk_size` 个可学习 embedding，通过 cross-attention 选择性从 obs tokens 提取信息。
+- 记录：已更新至 `current-session.md`。
+
+## 2026-07-29T16:00:00+08:00 LeRobot 插件发现机制详解
+
+- 状态：已完成。
+- 内容：跟踪并解释了 LeRobot 第三方策略插件发现机制的完整链路。
+  - `_choice_registry` 字典：注册名 → Config 类
+  - `register_third_party_plugins()`：`importlib.metadata.distributions()` 扫描 → `lerobot_policy_` 前缀匹配 → 动态 import → 触发 `@register_subclass`
+  - `get_policy_class()`：注册名 → Config → 命名推导 → Policy 类
+- 回答了用户关于 "为什么要安装 / 如何发现 / CLI 注册名是什么" 的疑问。
+- 记录：已更新至 `current-session.md`。
+
+## 2026-07-30T00:00:00+08:00 建立真机 benchmark 需求草案
+
+- 状态：需求草案已记录，等待关键评测细节确认。
+- benchmark 任务：统一为矿泉水瓶花生倾倒任务，使用组内遥操作采集数据。
+- 评测规则：最终以真机实际执行成功率为主；成功目标为握住瓶子并将花生倾倒干净。
+- 数据流程：原始数据 → LeRobot v3.0 → 官方工具语义/子任务标注 → baseline 训练 → 真机部署评测。
+- 标注要求：丰富但事实一致的语义描述；抓取、移动、倾倒子任务；同轨迹多语言描述作为可选增强。
+- 迭代策略：问题导向；从 baseline 真机失败现象决定下一轮改进。
+- 记录产物：`business-logic/atoms.yaml`、`requirements/baseline.yaml`、`business-logic/open-questions.yaml`、`tasks/task-list.yaml`。
+- 当前首要任务：`TASK-021`，先完成小规模采集、v3.0 转换和官方工具读取验证。
+- 当前不作为重点：分段变频采样技巧。

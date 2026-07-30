@@ -260,7 +260,7 @@ tasks:
     - /home/tbl/miniforge3/envs/lerobot/bin/python package version/import path smoke check
     - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
     - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-record --help
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-008
     limitations:
@@ -302,7 +302,7 @@ tasks:
   verification:
     status: passed
     commands:
-    - codegraph status /home/tbl/Project/lerobot_v1.0
+    - codegraph status /home/tbl/Project/force_touch_model/lerobot_v1.0
     - codex mcp list
     - git status --short --untracked-files=all
     evidence:
@@ -413,7 +413,7 @@ tasks:
   spec_ref: null
   inputs:
   - /home/tbl/Project/gr00t-finetune
-  - /home/tbl/Project/lerobot_v1.0
+  - /home/tbl/Project/force_touch_model/lerobot_v1.0
   - /mnt/data/gr00t-finetune
   outputs:
   - GR00T_LEROBOT_MIGRATION_ASSESSMENT.md
@@ -695,7 +695,7 @@ tasks:
     - PYTHONPATH=src CUDA_VISIBLE_DEVICES=0 /home/tbl/miniforge3/envs/lerobot/bin/python examples/groot/smoke_test_right_o6_13d_lerobot.py
     - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/optim/test_optimizers.py tests/policies/groot/test_groot_training_optim_contract.py
     - /home/tbl/miniforge3/envs/lerobot/bin/python -m ruff check src/lerobot/policies/groot/configuration_groot.py src/lerobot/policies/groot/modeling_groot.py tests/policies/groot/test_groot_training_optim_contract.py
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-019
     - EV-020
@@ -769,7 +769,7 @@ tasks:
     - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-train --help
     - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
     - examples/groot/finetune_right_o6_13d_lerobot.sh
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-021
     limitations:
@@ -837,7 +837,7 @@ tasks:
     - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
     - bash examples/groot/finetune_right_o6_13d_lerobot.sh
     - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python direct GrootPolicy(config) forward smoke
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-022
     - EV-023
@@ -905,7 +905,7 @@ tasks:
     - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
     - bash examples/groot/finetune_right_o6_13d_lerobot.sh
     - temporary steps=0/save_checkpoint=false wrapper execution
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-024
     limitations:
@@ -977,7 +977,7 @@ tasks:
     - temporary steps=1/save_checkpoint=false wrapper with policy.load_bf16=true and policy.model_params_fp32=false
     - bash -n examples/groot/finetune_right_o6_13d_lerobot.sh
     - RUN_TRAINING=0 bash examples/groot/finetune_right_o6_13d_lerobot.sh
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-025
     - EV-026
@@ -1057,7 +1057,7 @@ tasks:
     - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python /tmp/test_paged_optimizer_checkpoint_multi.py
     - real 1-step LeRobot GR00T checkpoint-save smoke from checkpoints/005600/pretrained_model
     - PYTHONPATH=src /home/tbl/miniforge3/envs/lerobot/bin/python load_optimizer_state_dict on saved training_state
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-027
     - EV-028
@@ -1283,7 +1283,7 @@ tasks:
     - grep -n '测试产物必须主动清理' /home/tbl/.codex/AGENTS.md
     - grep -n '测试产物清理规则' AGENTS.md
     - find /mnt/data/gr00t-finetune/outputs -type f
-    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/lerobot_v1.0
+    - /home/tbl/miniforge3/envs/vibe-coding/bin/python /home/tbl/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model/lerobot_v1.0
     evidence:
     - EV-036
     limitations:
@@ -1382,3 +1382,294 @@ tasks:
     - 已完成项目日志归档。
   created_at: '2026-07-28T16:35:00+08:00'
   updated_at: '2026-07-29T10:00:00+08:00'
+- id: TASK-020
+  title: LeRobot 自定义策略模板与注册机制分析
+  kind: research
+  parent_id: null
+  phase: architecture-decision
+  goal: 明确 template、implementation、策略注册名、第三方包发现和自定义训练脚本之间的关系。
+  status: done
+  priority: medium
+  risk: low
+  authority: A
+  owner: agent
+  tags:
+  - lerobot
+  - policy-template
+  - plugin-discovery
+  related_business_logic: []
+  acceptance_refs: []
+  related_decisions: []
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-codebase-onboarding
+  - b-source-code-tutoring
+  spec_ref: null
+  inputs:
+  - packages/README.md
+  - src/lerobot/utils/import_utils.py
+  - src/lerobot/policies/factory.py
+  outputs:
+  - 模板适用范围说明
+  - 注册和发现机制说明
+  done_when:
+  - 已说明 template 与可运行 implementation 的边界
+  - 已说明注册名如何映射到 Config、Policy、Model 和 Processor
+  - 已说明使用自定义训练脚本时可绕过注册机制
+  verification:
+    status: passed
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: 已完成代码级分析，并向用户解释 template、策略注册和自定义训练脚本的关系。
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-29T15:25:00+08:00'
+  updated_at: '2026-07-29T16:00:00+08:00'
+
+- id: TASK-021
+  title: 建立 benchmark 数据采集与数据集闭环
+  kind: task
+  parent_id: null
+  phase: business-clarification
+  goal: 完成矿泉水瓶花生倾倒任务的小规模采集、LeRobot v3.0 转换和官方工具读取验证。
+  status: ready
+  priority: critical
+  risk: high
+  authority: C
+  owner: shared
+  tags:
+  - benchmark
+  - dataset
+  - teleoperation
+  - lerobot-v3
+  related_business_logic:
+  - BL-BENCH-001
+  - BL-DATA-001
+  acceptance_refs: []
+  related_decisions: []
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions:
+  - Q-001
+  required_skills:
+  - a-business-clarify
+  - a-engineering-spec
+  - a-verification
+  spec_ref: null
+  inputs:
+  - 任务物料和机器人遥操作采集链路
+  - 原始轨迹数据
+  outputs:
+  - benchmark 数据采集方案
+  - 原始数据到 LeRobot v3.0 的可复现转换产物
+  - 官方工具读取验证记录
+  plan:
+  - 确认物料、机器人、相机和任务摆放
+  - 采集小规模可代表性轨迹
+  - 转换为 LeRobot v3.0 且保留原始数据
+  - 用官方工具检查视频、状态、动作和 episode 边界
+  - 冻结第一版数据版本并记录覆盖范围
+  done_when:
+  - 原始数据未被覆盖
+  - v3.0 数据集可被官方工具读取
+  - 数据规模、采集覆盖和划分方案已记录
+  - 转换失败路径和字段映射已记录
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-30T00:00:00+08:00'
+  updated_at: '2026-07-30T00:00:00+08:00'
+
+- id: TASK-022
+  title: 制定并试标 benchmark 语义与子任务标注规范
+  kind: task
+  parent_id: TASK-021
+  phase: business-clarification
+  goal: 在 LeRobot v3.0 数据上建立与轨迹事实一致的丰富语义、子任务和多描述标注规范。
+  status: pending
+  priority: high
+  risk: medium
+  authority: C
+  owner: shared
+  tags:
+  - annotation
+  - language
+  - subtask
+  related_business_logic:
+  - BL-DATA-002
+  - BL-DATA-003
+  - BL-DATA-004
+  acceptance_refs: []
+  related_decisions: []
+  depends_on:
+  - TASK-021
+  blocked_by: []
+  blocked_by_questions:
+  - Q-004
+  - Q-005
+  required_skills:
+  - a-business-clarify
+  - a-engineering-spec
+  - a-verification
+  spec_ref: null
+  inputs:
+  - 可被官方工具读取的 v3.0 数据集
+  - 任务对象和空间关系说明
+  outputs:
+  - 语义描述规范
+  - 至少覆盖抓取、移动、倾倒的子任务规范
+  - 多语言描述版本的关联规则
+  plan:
+  - 定义可描述的对象、材质、位置和目标特征
+  - 定义完整任务描述和子任务边界
+  - 试标少量轨迹并检查一致性
+  - 决定多描述版本的保存和采样方式
+  done_when:
+  - 描述与真实轨迹一致
+  - 子任务顺序和区间可复核
+  - 多描述版本不会隐式改变轨迹样本权重，或权重规则已明确
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-30T00:00:00+08:00'
+  updated_at: '2026-07-30T00:00:00+08:00'
+
+- id: TASK-023
+  title: 训练并部署 benchmark baseline 完成真机成功率评测
+  kind: milestone
+  parent_id: TASK-021
+  phase: verification
+  goal: 使用冻结的 benchmark 数据和任务训练一个 baseline，并在真机上按统一成功规则评测。
+  status: pending
+  priority: critical
+  risk: critical
+  authority: C
+  owner: shared
+  tags:
+  - benchmark
+  - baseline
+  - real-robot
+  - success-rate
+  related_business_logic:
+  - BL-BENCH-001
+  - BL-BENCH-002
+  - BL-ITER-001
+  acceptance_refs: []
+  related_decisions: []
+  depends_on:
+  - TASK-021
+  - TASK-022
+  blocked_by: []
+  blocked_by_questions:
+  - Q-002
+  - Q-003
+  required_skills:
+  - a-engineering-spec
+  - a-engineering-landing
+  - a-verification
+  inputs:
+  - 冻结的 benchmark 数据集版本
+  - baseline 训练配置
+  - 真机部署链路
+  outputs:
+  - baseline checkpoint
+  - 真机 rollout 记录
+  - 成功率和失败阶段统计
+  - 失败问题清单
+  plan:
+  - 固化训练/验证/真机测试数据边界
+  - 训练 baseline 并保存最小必要产物
+  - 部署到目标机器人执行重复测试
+  - 按统一规则记录成功率和失败现象
+  - 选择首个最主要失败问题进入迭代
+  done_when:
+  - baseline 可在真机执行
+  - 每次 rollout 有成功/失败和失败原因记录
+  - 成功率统计分母和规则明确
+  - 至少形成一个可复现的问题描述
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-30T00:00:00+08:00'
+  updated_at: '2026-07-30T00:00:00+08:00'
+
+- id: TASK-024
+  title: 根据真机失败问题设计首轮针对性优化
+  kind: research
+  parent_id: TASK-023
+  phase: task-decomposition
+  goal: 将 baseline 真机失败归因到可证伪假设，并设计只改变必要因素的下一轮实验。
+  status: pending
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - problem-driven
+  - iteration
+  related_business_logic:
+  - BL-ITER-001
+  acceptance_refs: []
+  related_decisions: []
+  depends_on:
+  - TASK-023
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-task-decompose
+  - a-engineering-spec
+  - a-verification
+  inputs:
+  - baseline 真机失败记录
+  - 失败发生阶段和可观察现象
+  outputs:
+  - 问题假设
+  - 针对性改进方案
+  - 改进前后统一成功率比较计划
+  plan:
+  - 按抓取、移动、对准、倾倒和结束状态整理失败
+  - 为最高影响问题提出可证伪原因
+  - 只选择与问题直接相关的变量
+  - 复用同一 benchmark 和真机成功率验证
+  done_when:
+  - 改进实验能说明问题、假设、变量和预期证据
+  - 不把训练 loss 单独作为真机改进结论
+  - 结果可与 baseline 直接比较
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: null
+    changed_files: []
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-30T00:00:00+08:00'
+  updated_at: '2026-07-30T00:00:00+08:00'
