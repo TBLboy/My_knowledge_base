@@ -1,0 +1,46 @@
+schema_version: 1
+goal:
+  id: GOAL-001
+  statement: 建立并持续执行一条面向机器人学习与具身智能算法工程师的系统学习路线。
+  success_conditions:
+    - id: SC-001
+      statement: 知识库中存在覆盖通用 AI 基础到机器人策略与部署的 28 周路线。
+      status: passed
+      evidence_refs:
+        - EV-001
+    - id: SC-002
+      statement: 第一个月具有每天 90 分钟可直接执行的任务和明确验收标准。
+      status: passed
+      evidence_refs:
+        - EV-002
+    - id: SC-003
+      statement: 路线能在 Linux RTX 4090 与 Windows RTX 4060 8GB 间迁移执行。
+      status: passed
+      evidence_refs:
+        - EV-003
+    - id: SC-004
+      statement: 学习者完成路线并通过各阶段能力验收。
+      status: pending
+      evidence_refs: []
+  non_goals:
+    - 一次性生成半年内每天都不可调整的静态日程。
+    - 从零预训练大型语言模型或大型 VLA。
+    - 以看完课程或运行现成 Notebook 代替能力验收。
+  constraints:
+    - 每天可投入约 1.5 小时。
+    - 日常必做任务必须能在 Windows RTX 4060 8GB 上完成。
+    - 4090 专属实验可以延后且不得阻塞主线。
+    - 路线需要复用已有 ROS2、Jetson、LeRobot、GR00T、VLA 和机器人项目经历。
+  required_evidence:
+    - kind: learning-plan
+      subject: 28 周路线和首月逐日作业
+      evidence_refs:
+        - EV-001
+        - EV-002
+    - kind: execution
+      subject: 各阶段实际学习记录、代码、实验与验收
+      evidence_refs: []
+  risk_level: normal
+  status: active
+  created_at: "2026-07-31"
+  updated_at: "2026-07-31"

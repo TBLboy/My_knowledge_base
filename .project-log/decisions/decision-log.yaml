@@ -1,0 +1,50 @@
+version: "0.2"
+decisions:
+  - id: DEC-001
+    title: 采用 28 周主线加逐月滚动细化
+    category: process
+    status: active
+    authority: B
+    user_approval: approved
+    related_tasks:
+      - TASK-001
+    related_business_logic: []
+    context: 学习者每天可投入 1.5 小时，需要系统补齐通用 AI 到机器人学习的能力，并可能在两台设备间切换。
+    hypothesis: 稳定总路线配合逐月作业比一次性生成约 150 天静态任务更可执行。
+    options:
+      - name: 28 周总路线加逐月滚动细化
+        benefits:
+          - 长期方向稳定
+          - 可根据阶段验收调整任务难度
+          - 适应双设备和实际进度
+        costs:
+          - 每月需要一次计划更新
+        risks:
+          - 需要持续维护学习状态
+      - name: 一次性生成全部每日任务
+        benefits:
+          - 初始日程完整
+        costs:
+          - 后期任务容易与实际掌握程度不匹配
+        risks:
+          - 形成大量失真的静态计划
+    decision: 采用 28 周总路线，先细化首月 24 个学习日，之后依据验收滚动展开。
+    reason_summary:
+      - 用户选择完整路线、每日作业和持续带学。
+      - 学习路线跨度大，必须根据真实学习证据调整。
+      - 8GB 与 24GB 显存设备需要分层安排实验。
+    conditions:
+      - 日常必做任务以 RTX 4060 8GB 为资源上限。
+      - 4090 实验不得成为进入下一阶段的唯一条件。
+    action: 写入总路线、首月作业、资料索引、验收标准和记录模板。
+    expected_result: 学习者可以从第一个学习日开始直接执行，并能跨设备延续。
+    reversal_plan: 若实际投入显著变化，保留能力依赖和验收，重新压缩或扩展周数。
+    observation: null
+    actual_result: null
+    outcome_status: not-observed
+    lesson: null
+    evidence:
+      - 学习路线/机器人学习系统路线/
+    supersedes: []
+    created_at: "2026-07-31"
+    updated_at: "2026-07-31"
