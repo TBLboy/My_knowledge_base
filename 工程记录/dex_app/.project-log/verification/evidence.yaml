@@ -1,0 +1,90 @@
+version: "0.2"
+evidence:
+  - id: apple-robot-id-build-20260803
+    task_id: apple-robot-id-20260803
+    status: valid
+    recorded_at: "2026-08-03"
+    command: "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest"
+    result: "BUILD SUCCESSFUL; debug APK and Android test APK compiled."
+    coverage: "Kotlin call signatures and Android instrumentation test sources compile after adding robotId to every peel-apple payload."
+    limitations: "No connected Android device or emulator was available to run PeelAppleHttpContractTest."
+  - id: apple-robot-id-diff-20260803
+    task_id: apple-robot-id-20260803
+    status: valid
+    recorded_at: "2026-08-03"
+    command: "git diff --check"
+    result: "No whitespace errors."
+    coverage: "Changed source, test, and documentation files."
+    limitations: "Static check only."
+  - id: apple-right-action-en-build-20260803
+    task_id: apple-right-action-en-20260803
+    status: valid
+    recorded_at: "2026-08-03"
+    command: "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest"
+    result: "BUILD SUCCESSFUL; debug APK and Android test APK compiled."
+    coverage: "Updated right-arm apple action values compile in app and contract tests."
+    limitations: "No connected Android device or emulator was available to run PeelAppleHttpContractTest."
+  - id: rename-target-class-build-20260804
+    task_id: rename-target-class-20260804
+    status: valid
+    recorded_at: "2026-08-04"
+    command: "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest"
+    result: "BUILD SUCCESSFUL; debug APK and Android test APK compiled."
+    coverage: "Renamed task_class to target_class in sweet-three-piece and fruit-smoothie contracts and contract tests."
+    limitations: "No connected Android device or emulator was available to run the instrumentation tests."
+  - id: rename-target-class-search-20260804
+    task_id: rename-target-class-20260804
+    status: valid
+    recorded_at: "2026-08-04"
+    command: "rg task_class app/src/main/java/com/example/robotcooking/feature/dashboard/presentation app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation docs/project-maintainer-notes.md"
+    result: "No matches."
+    coverage: "Affected contracts, contract tests, and maintenance notes contain no remaining task_class key."
+    limitations: "Static search only; does not validate runtime JSON serialization."
+  - id: rename-task-type-build-20260804
+    task_id: rename-task-type-to-recipe-code-20260804
+    status: valid
+    recorded_at: "2026-08-04"
+    command: "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest"
+    result: "BUILD SUCCESSFUL; debug APK and Android test APK compiled."
+    coverage: "Renamed task_type to recipeCode in sweet-three-piece and fruit-smoothie contracts and contract tests."
+    limitations: "No connected Android device or emulator was available to run the instrumentation tests."
+  - id: rename-task-type-search-20260804
+    task_id: rename-task-type-to-recipe-code-20260804
+    status: valid
+    recorded_at: "2026-08-04"
+    command: "rg task_type|taskType app/src docs"
+    result: "No matches."
+    coverage: "Affected contracts, contract tests, and docs contain no remaining task_type/taskType references."
+    limitations: "Static search only; does not validate runtime JSON serialization."
+  - id: route-recovery-actions-build-20260804
+    task_id: route-recovery-actions-to-task-start-20260804
+    status: valid
+    recorded_at: "2026-08-04"
+    command: "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest"
+    result: "BUILD SUCCESSFUL; debug APK and Android test APK compiled."
+    coverage: "Sweet-three-piece and fruit-smoothie recovery actions route through TASK_START and contract tests compile."
+    limitations: "No connected Android device or emulator was available to run the instrumentation tests."
+  - id: route-recovery-actions-diff-20260804
+    task_id: route-recovery-actions-to-task-start-20260804
+    status: valid
+    recorded_at: "2026-08-04"
+    command: "git diff --check"
+    result: "No whitespace errors."
+    coverage: "Changed ViewModel, contract, contract test, and docs files."
+    limitations: "Static check only."
+  - id: add-robot-id-to-chicken-build-20260805
+    task_id: add-robot-id-to-chicken-nuggets-20260805
+    status: valid
+    recorded_at: "2026-08-05"
+    command: "./gradlew :app:assembleDebug :app:assembleDebugAndroidTest"
+    result: "BUILD SUCCESSFUL; debug APK and Android test APK compiled."
+    coverage: "Chicken-nuggets contract and ViewModel call sites compile after adding robotId to all request payloads."
+    limitations: "No connected Android device or emulator was available to run the instrumentation tests."
+  - id: add-robot-id-to-chicken-diff-20260805
+    task_id: add-robot-id-to-chicken-nuggets-20260805
+    status: valid
+    recorded_at: "2026-08-05"
+    command: "git diff --check"
+    result: "No whitespace errors."
+    coverage: "Changed chicken-nuggets contract, ViewModel, tests, and docs files."
+    limitations: "Static check only."

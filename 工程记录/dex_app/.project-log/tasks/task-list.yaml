@@ -1,0 +1,134 @@
+version: "0.2"
+active_goal: null
+tasks:
+  - id: apple-robot-id-20260803
+    title: Add required robotId to peel-apple requests
+    phase: verification
+    status: implemented-unverified
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/PeelAppleHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainDashboardViewModel.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/PeelAppleHttpContractTest.kt
+    done_when:
+      - Every peel-apple HTTP payload includes the current robotId.
+      - Debug and Android test APKs compile successfully.
+    verification:
+      - git diff --check
+      - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+    limitations:
+      - Instrumentation tests were not run because no Android device or emulator was selected.
+  - id: robotid-audit-20260804
+    title: "Check robotId presence in sweet-three-piece / smoothie / chicken-nuggets internal HTTP calls"
+    phase: alignment
+    status: done
+    kind: read-only-check
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/ChickenNuggetsHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/SweetThreePieceHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainTaskStartHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainDashboardViewModel.kt
+      - app/src/main/java/com/example/robotcooking/core/network/RobotCookingApi.kt
+    result:
+      - Chicken nuggets: all 9 requests (start, left/right release, 6 stage actions) lack robotId.
+      - Sweet three piece: all 7 payloads already include robotId (added in a0af47f).
+      - Fruit smoothie: start + 8 actions already include robotId (added in a0af47f).
+      - Network layer RobotCookingApi serializes payload maps as-is (no field filtering).
+    done_when:
+      - Report which of the three recipes actually miss robotId in current code.
+    follow-up:
+      - User to confirm evidence source for the claim that sweet-three-piece / smoothie also miss robotId (device APK version vs doc).
+      - On confirmation, create fix task for chicken-nuggets robotId and update chicken contract tests.
+  - id: apple-right-action-en-20260803
+    title: Align peel-apple right-arm action values with English API contract
+    phase: verification
+    status: implemented-unverified
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/PeelAppleHttpContract.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/PeelAppleHttpContractTest.kt
+    done_when:
+      - Right-hand peeler grasp sends action=grasp and arm=right.
+      - Right-hand peeler release sends action=open and arm=right.
+      - robotId remains present in both payloads.
+    verification:
+      - git diff --check
+      - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+    limitations:
+      - Instrumentation tests were not run because no Android device or emulator was selected.
+  - id: rename-target-class-20260804
+    title: Rename task_class to target_class for sweet-three-piece and fruit-smoothie requests
+    phase: verification
+    status: implemented-unverified
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/SweetThreePieceHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContract.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/SweetThreePieceHttpContractTest.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContractTest.kt
+      - docs/project-maintainer-notes.md
+    done_when:
+      - Sweet-three-piece payloads use target_class instead of task_class.
+      - Fruit-smoothie payloads use target_class instead of task_class.
+      - Debug and Android test APKs compile successfully.
+    verification:
+      - git diff --check
+      - rg task_class in affected dashboard contracts/tests/docs
+      - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+    limitations:
+      - Instrumentation tests were not run because no Android device or emulator was selected.
+  - id: rename-task-type-to-recipe-code-20260804
+    title: Rename task_type to recipeCode for sweet-three-piece and fruit-smoothie requests
+    phase: verification
+    status: implemented-unverified
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/SweetThreePieceHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContract.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/SweetThreePieceHttpContractTest.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContractTest.kt
+      - docs/project-maintainer-notes.md
+    done_when:
+      - Every sweet-three-piece payload sends recipeCode instead of task_type.
+      - Every fruit-smoothie payload sends recipeCode instead of task_type.
+      - Debug and Android test APKs compile successfully.
+    verification:
+      - rg task_type/taskType in affected contracts/tests/docs
+      - git diff --check
+      - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+    limitations:
+      - Instrumentation tests were not run because no Android device or emulator was selected.
+  - id: route-recovery-actions-to-task-start-20260804
+    title: Route sweet-three-piece and fruit-smoothie recovery actions to /api/task/start
+    phase: verification
+    status: implemented-unverified
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainDashboardViewModel.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContract.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/FruitSmoothieHttpContractTest.kt
+      - docs/project-maintainer-notes.md
+    done_when:
+      - Sweet-three-piece left/right/reset actions call POST /api/task/start.
+      - Fruit-smoothie left/right/reset actions call POST /api/task/start.
+      - Debug and Android test APKs compile successfully.
+    verification:
+      - git diff --check
+      - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+    limitations:
+      - Instrumentation tests were not run because no Android device or emulator was selected.
+  - id: add-robot-id-to-chicken-nuggets-20260805
+    title: Add robotId to every chicken-nuggets HTTP request
+    phase: verification
+    status: implemented-unverified
+    scope:
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/ChickenNuggetsHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainTaskStartHttpContract.kt
+      - app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainDashboardViewModel.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/ChickenNuggetsHttpContractTest.kt
+      - app/src/androidTest/java/com/example/robotcooking/feature/dashboard/presentation/MainTaskStartHttpContractTest.kt
+      - docs/project-maintainer-notes.md
+    done_when:
+      - Chicken-nuggets start, left/right release, and all six stage payloads include robotId.
+      - Debug and Android test APKs compile successfully.
+    verification:
+      - git diff --check
+      - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+    limitations:
+      - Instrumentation tests were not run because no Android device or emulator was selected.

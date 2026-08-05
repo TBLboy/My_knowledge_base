@@ -1,0 +1,30 @@
+version: "0.2"
+findings:
+  - id: chicken-robotid-missing-20260804
+    type: missing-implementation
+    severity: high
+    summary: "Chicken nuggets HTTP payloads omit required robotId field."
+    evidence:
+      - "ChickenNuggetsHttpContract.startPayload() -> {recipeCode: air_fryer_operation} (no robotId)"
+      - "ChickenNuggetsHttpContract.releasePayload(arm) -> {arm, action} (no robotId)"
+      - "ChickenNuggetsHttpContract.stagePayload(targetClass) -> {recipeCode, target_class} (no robotId)"
+      - "MainTaskStartHttpContract.payload() chicken branch calls startPayload() without robotId"
+      - "MainDashboardViewModel lines 1037/1082/1168 build chicken payloads without robotId"
+    expected_behavior: "Per 7.22 project interface protocol (project-maintainer-notes.md line 405), /api/task/start, /api/task/control and /api/robot/action all require robotId."
+    scope:
+      - "app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/ChickenNuggetsHttpContract.kt"
+      - "app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainTaskStartHttpContract.kt"
+      - "app/src/main/java/com/example/robotcooking/feature/dashboard/presentation/MainDashboardViewModel.kt"
+    note: "project-maintainer-notes.md 2026-07-31 chicken section (lines 458-465) did not record a robotId requirement; may be stale relative to the 2026-08-03 protocol-wide robotId rule. User confirmed chicken must include robotId."
+    resolution: pending-user-confirm
+  - id: sweet-smoothie-robotid-evidence-gap-20260804
+    type: traceability-gap
+    severity: medium
+    summary: "User reports sweet-three-piece and fruit-smoothie also miss robotId, but current code (commit a0af47f) already includes it in every payload."
+    evidence:
+      - "SweetThreePieceHttpContract: all 7 payload builders take robotId and emit \"robotId\" key; SweetThreePieceHttpContractTest asserts full key sets."
+      - "FruitSmoothieHttpContract: startRequest + all 8 actionRequest payloads emit \"robotId\" key; FruitSmoothieHttpContractTest asserts full key sets."
+      - "RobotCookingApi.toJsonBody() serializes every map entry as-is; no null/blank filtering that could drop robotId."
+      - "Commit a0af47f (2026-08-04 08:34, 'add sweet three piece, smoothie') introduced these contracts already carrying robotId."
+    open_question: "What is the user's evidence source (device APK build version, packet capture, interface doc)? Device may be running a build older than a0af47f."
+    resolution: pending-user-confirm
