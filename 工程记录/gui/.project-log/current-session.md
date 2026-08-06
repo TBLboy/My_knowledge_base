@@ -1,5 +1,12 @@
 # Current Session
 
+## 2026-08-06 GUI 工程归档
+
+- 将当前 `gui/.project-log/` 归档至 `My_knowledge_base/工程记录/gui/.project-log`，共 24 个文件。
+- 知识库远端已推送：`github.com/TBLboy/My_knowledge_base.git`，分支 `work_record`，commit `57812d8 archive: gui`。
+- 归档脚本 `archive.py` 执行 `git add -A`，同次提交同时包含了知识库中已存在的未跟踪文件 `学习记录/2026.08.05/今日任务.md`；该文件不是本次 GUI 归档引入的新内容，未作回退。
+- 下一步：如后续 GUI 工程记录有更新，再按 `a-project-log-archive` 流程重新归档。
+
 ## 2026-08-06 恢复旧版 delta 后处理（用户决定）
 
 - 按用户要求放弃实验性平滑/重采样方案，将 `services/arm/flange_delta.py` 和 `tests/test_flange_delta.py` 恢复为基线 `bfb623a` 中已真机验证的旧版后处理。
