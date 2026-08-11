@@ -333,3 +333,103 @@ questions:
     底盘接口到来前不影响 V1 开发，先设一个可调参数。后续接到底盘信号后重构为事件驱动。
   requires: N 值（最短等待秒数）、MAX 值（超时秒数）
   awaiting: 用户确认等待策略的基本方案和 N/MAX 初始值
+
+- id: Q-016
+  title: 增量轨迹录制产物的保留策略
+  category: business-data
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-05
+  context: |+
+    GUI 增量录制完成后，参考工程会产生 raw、processed 和 delta 三类文件。
+    用户已确认自动后处理并生成增量轨迹文件，但尚未确认 raw/processed 是否需要长期保留、是否在 GUI 中展示，
+    以及是否只把 delta 文件作为可回放资产。
+  decision_candidate: |+
+    推荐：三类文件都保留在同一条录制记录下；GUI 默认只展示最终可回放的 delta 文件，
+    raw 和 processed 作为可展开的诊断/重新处理产物，不进入普通回放列表。
+  expected_impact: |+
+    保留 raw/processed 可追溯和重新调整后处理参数，但会增加磁盘占用和文件管理复杂度。
+    只保留 delta 更简单，但丢失后续排查采样质量和重新生成的依据。
+  requires: ""
+  answer: raw、processed、delta 三类文件全部保留；GUI 默认回放列表只展示 delta 文件，raw 和 processed 作为诊断及重新处理产物保留。
+  source_refs:
+  - 用户于 2026-08-05 确认
+  answered_at: '2026-08-05'
+
+- id: Q-017
+  title: 增量轨迹回放的停止与取消语义
+  category: safety-and-control
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-05
+  context: |+
+    GUI 将新增增量轨迹回放入口。增量回放会根据当前法兰位姿展开并执行，
+    但用户尚未确认回放期间点击停止/取消、窗口关闭或机器人异常时，GUI 应如何结束动作、显示状态以及是否允许重新回放。
+  decision_candidate: |+
+    推荐：直接复用现有普通轨迹回放的停止/取消行为；停止后立即请求机器人安全停止，
+    将本次回放标记为 stopped/cancelled，不自动重试；重新回放必须由操作员显式发起。
+  expected_impact: |+
+    复用现有行为可减少两套控制语义和安全风险；若增量回放需要独立语义，则会增加状态机、测试和人工接管复杂度。
+  requires: ""
+  answer: 复用普通轨迹回放的停止、取消和重新发起语义：停止/取消后立即请求安全停止，标记为 stopped/cancelled，不自动重试，重新回放由操作员显式发起。
+  source_refs:
+  - 用户于 2026-08-05 确认
+  answered_at: '2026-08-05'
+
+- id: Q-018
+  title: 旧普通轨迹文件缺少类型标签时的兼容策略
+  category: business-data
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-05
+  context: |+
+    新规则要求普通轨迹和增量轨迹文件都写入明确类型标签，避免回放入口误用。
+    现有 GUI 已经存在普通轨迹文件，部分历史文件可能没有新增标签字段。
+  decision_candidate: |+
+    推荐：旧文件不自动猜测为增量轨迹；若目录和内容能明确证明是普通轨迹，则兼容读取并提示“历史普通轨迹”，
+    若类型无法确认则禁止回放，要求用户重新整理或重新录制并补齐标签。
+  expected_impact: |+
+    推荐方案避免把历史普通轨迹误当成增量轨迹，同时尽量保留明确普通轨迹的可用性；无法识别的旧文件需要人工处理。
+  requires: ""
+  answer: 缺少类型标签的历史轨迹文件默认按普通轨迹处理；只有显式带有增量轨迹类型标签且通过增量 schema 校验的文件才能进入增量回放。
+  source_refs:
+  - 用户于 2026-08-05 确认
+  answered_at: '2026-08-05'
+
+- id: Q-019
+  title: 增量轨迹文件格式、后处理与回放前检查规则
+  category: business-data
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-05
+  context: 用户要求增加增量轨迹资产，同时避免普通/增量轨迹误用，并明确 GUI 当前阶段不接入真实执行代码。
+  decision_candidate: 采用推荐的目录、标签、后处理、版本、兼容性和分层安全检查规则。
+  requires: ""
+  answer: |+
+    1. delta 文件放在以 delta_ 开头的目录；普通文件使用 trajectory_type: joint_absolute，增量文件使用 trajectory_type: flange_delta；同一次录制按动作名+时间戳关联 raw、processed、delta。
+    2. 默认采用 flangeInBase、80 Hz、异常跳变剔除、位置/姿态平滑、去重和空间弧长重采样；GUI 初版不提供高级处理参数。
+    3. 采样不足两点、坐标读取异常或后处理失败时不生成可回放 delta；raw 保留错误信息，processed/delta 只在成功后生成。
+    4. 同名动作每次生成新时间戳版本，禁止静默覆盖。
+    5. delta 文件写入录制臂、机器人型号、frame、单位、RPY 顺序和 schema 版本；回放前校验臂别与 schema，不匹配拒绝。当前不校验 TCP/工具配置版本。
+    6. GUI 阶段只检查文件、当前法兰位姿、展开成功和轨迹非空；IK、关节限位、碰撞检查在真实执行接口可用后补充。
+  source_refs:
+  - 用户于 2026-08-05 确认“1-6全部同意”
+  answered_at: '2026-08-05'
+
+- id: Q-020
+  title: 增量轨迹 GUI 布局规则
+  category: user-interface
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-05
+  context: 需要把增量录制和回放集成到已有 GUI，但与普通轨迹操作明确区分。
+  requires: ""
+  answer: 增量录制增加独立的开始录制和停止录制按钮，放在现有开启/关闭拖动栏目内，紧邻普通轨迹录制按钮；增量轨迹回放新增独立区域，位于普通轨迹回放区域下方。
+  source_refs:
+  - 用户于 2026-08-05 确认
+  answered_at: '2026-08-05'

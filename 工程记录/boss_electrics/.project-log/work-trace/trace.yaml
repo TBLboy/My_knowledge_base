@@ -1,5 +1,20 @@
 version: '0.4'
 entries:
+- id: TRACE-KITCHEN-SDK-EXCLUSION-20260810
+  task_id: TASK-018
+  timestamp: '2026-08-10'
+  context: 用户要求排除本地 SDK 改动后提交 kitchen 仓库；之前 4 个任务提交中混入 lbot_robot_xcore.py 的 ARM_JOINT_COUNT 修改。
+  hypothesis: 重写本地 4 个提交移除 SDK 文件，并把原历史备份到本地分支，可保留任务代码同时保证 push 内容不含 SDK。
+  action: 创建备份分支；从 4 个提交中移除 src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py；恢复本地未提交 SDK 工作区改动；fetch origin 核对无远端分叉；重跑 diff-check/compileall/定向测试。
+  expected_result: origin/robam_kitchen..HEAD 不含 /sdk/，SDK 工作区改动保留在本地，任务代码验证通过。
+  observation: 远端无新提交；31 项定向测试、diff-check、compileall 通过；当前分支与备份分支差异只剩 SDK 文件。
+  actual_result: SDK 已从待推送提交排除，备份分支存在，本地 SDK 改动未提交，等待用户确认 push。
+  delta: 从“SDK 与任务代码混在提交里”改为“任务提交干净、SDK 仅保留工作区”。
+  lesson: 推送前的最后一次 review 应先做路径级 diff 过滤，确认 SDK/个人环境文件不进入公共提交。
+  next_adjustment: 用户确认后 push kitchen 仓库，再独立 review 并处理 robot_motion_executor 仓库。
+  evidence:
+  - .project-log/verification/evidence.yaml#EVID-KITCHEN-SDK-EXCLUSION-20260810
+  knowledge_candidate: false
 - id: TRACE-013
   task_id: TASK-013
   timestamp: '2026-07-30'

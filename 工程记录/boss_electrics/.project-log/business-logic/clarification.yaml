@@ -318,4 +318,92 @@ gate:
   - ARCH-Q-002
   - ARCH-Q-003
   notes: 第一轮代码接管已完成；当前代码行为只作为技术事实和对齐证据，不自动升级为业务规则。技术框架、库、控制器和接口改造方案留到澄清完成后进入技术选型。
-updated_at: '2026-07-28'
+
+incremental_trajectory_gui_clarification:
+  scope:
+    status: confirmed
+    statement: 本次增量轨迹能力先集成到现有 GUI，暂不接入 kitchen_robot_home 或 robot_motion_executor 的运行代码。
+    source: 用户于 2026-08-05 明确说明
+  confirmed_facts:
+  - id: GUI-DELTA-FACT-001
+    statement: 增量轨迹录制沿用现有普通轨迹录制的操作方式，通过 GUI 机械按钮按下开始、松开结束。
+    source: 用户于 2026-08-05 明确说明
+  - id: GUI-DELTA-FACT-002
+    statement: 松开按钮后，本次录制自动进入数据后处理并生成增量轨迹文件。
+    source: 用户于 2026-08-05 明确说明
+  - id: GUI-DELTA-FACT-003
+    statement: 增量生成基于绝对法兰位姿序列计算 Delta_i = inverse(T0) @ Ti。
+    source: 用户确认 TASK-013 方向；参考工程 capture_flange_motion.py/process_flange_motion.py
+  - id: GUI-DELTA-FACT-004
+    statement: 增量回放时，系统读取当前法兰位姿并按 T_current @ Delta_i 生成绝对轨迹后执行。
+    source: 用户于 2026-08-05 明确说明；TASK-013 flange_delta_trajectory.py
+  - id: GUI-DELTA-FACT-005
+    statement: 增量轨迹文件所在目录名称必须以 delta 开头。
+    source: 用户于 2026-08-05 明确说明
+  - id: GUI-DELTA-FACT-006
+    statement: 普通轨迹和增量轨迹文件必须包含明确的轨迹类型标签，回放前必须依据标签和内容校验避免类型误用。
+    source: 用户于 2026-08-05 明确说明
+  - id: GUI-DELTA-FACT-007
+    statement: raw、processed、delta 三类增量录制产物全部保留；GUI 默认回放列表只展示 delta 文件，raw 和 processed 作为诊断及重新处理产物。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-008
+    statement: 增量轨迹回放复用普通轨迹已有的停止、取消和重新发起语义；停止/取消后请求安全停止，不自动重试，重新回放由操作员显式发起。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-009
+    statement: 缺少类型标签的历史轨迹文件默认按普通轨迹处理；只有显式标注为 delta 且通过增量 schema 校验的文件才能进入增量回放。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-010
+    statement: "增量目录与标签规则采用推荐方案：目录以 delta_ 开头；普通文件使用 trajectory_type: joint_absolute，增量文件使用 trajectory_type: flange_delta；同一录制的 raw、processed、delta 以动作名和时间戳关联。"
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-011
+    statement: 增量录制默认复用参考工程的处理策略：flangeInBase、80 Hz 采样、异常跳变剔除、位置/姿态平滑、去重及空间弧长重采样；GUI 初版不暴露这些高级参数。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-012
+    statement: 有效采样少于两点、坐标读取异常或后处理失败时，不生成可回放 delta；已采集 raw 保留并记录失败原因，processed 和 delta 只在相应阶段成功后生成。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-013
+    statement: 文件组使用动作名加时间戳生成新版本，禁止静默覆盖同名历史资产。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-014
+    statement: delta 文件写入录制臂、机器人型号、flangeInBase、单位、xyz RPY 和 schema 版本；回放前校验臂别和 schema，不匹配则拒绝执行。当前不把 TCP/工具配置版本作为兼容条件。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-015
+    statement: 回放前先检查 delta 文件校验、当前法兰位姿、展开成功和轨迹非空；IK、关节限位和碰撞检查待真实执行接口可用后补充，不在 GUI 当前阶段伪称已完成。
+    source: 用户于 2026-08-05 确认
+  - id: GUI-DELTA-FACT-016
+    statement: 增量录制的开始/停止按钮放在现有开启/关闭拖动栏目内，并与普通轨迹录制按钮并列；增量轨迹回放使用独立区域，位于普通轨迹回放区域下方。
+    source: 用户于 2026-08-05 确认
+  evidence_derived:
+  - id: GUI-DELTA-EVID-001
+    statement: 参考工程的采集数据是 flangeInBase 下的绝对 pose6 序列，默认 80 Hz；后处理包含异常点移除、平滑、去重和按空间弧长重采样，再生成 delta 文件。
+    evidence:
+    - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/capture_flange_motion.py
+    - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/process_flange_motion.py
+    - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/recordings/my_circle_20260612_113312_delta.yaml
+  - id: GUI-DELTA-EVID-002
+    statement: 当前老板电器工程已实现增量轨迹 schema 校验和 T_current @ Delta_i 展开，但尚未实现从绝对法兰样本生成 Delta_i 的代码工具。
+    evidence:
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/flange_delta_trajectory.py
+    - .project-log/specs/TASK-013.md
+  inferred:
+  - id: GUI-DELTA-INFER-002
+    statement: 增量录制至少需要暂存原始绝对法兰位姿，才能在后处理中计算 inverse(T0) @ Ti。
+    basis: 参考工程的 raw → processed → delta 三阶段文件链路
+  unknowns:
+  - id: GUI-DELTA-UNKNOWN-004
+    statement: 录制按钮在 GUI 中的来源、去抖、长按/短按和异常松开语义未确认。
+    impact: 影响录制状态机和误触防护
+  alignment:
+    confirmed_match:
+    - 现有 TASK-013 离线模块的坐标、单位、首点 identity 和 T_current @ Delta_i 展开语义与本次增量回放业务意图一致。
+    missing_implementation:
+    - GUI 尚未承载增量录制模式、自动后处理、delta 目录管理、轨迹类型筛选和增量回放入口。
+    - 当前老板电器工程尚无绝对法兰样本到 Delta_i 文件的生成工具。
+    out_of_scope:
+    - 本轮不修改 ROS、MotionExecutor、RobotDriver 或真实机械臂执行链路。
+  gate:
+    status: open
+    blocking_unknowns:
+    - GUI-DELTA-UNKNOWN-004
+    next_question: GUI-DELTA-UNKNOWN-004
+updated_at: '2026-08-05'

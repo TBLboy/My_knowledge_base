@@ -113,6 +113,160 @@ atoms:
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
   last_verified_at: null
+
+- id: BL-TRAJECTORY-001
+  title: GUI 增量法兰轨迹录制
+  kind: flow
+  domain: trajectory_recording
+  status: candidate
+  priority: high
+  risk: high
+  authority: user-confirmed
+  source:
+    type: user-statement
+    reference: 用户于 2026-08-05 确认 GUI 增量轨迹录制流程
+  description: 操作员通过 GUI 的机械按钮按下/松开动作录制法兰在 flangeInBase 下的运动，并在结束后自动完成后处理，生成可供增量回放使用的轨迹文件。
+  actors:
+  - 操作员
+  - GUI
+  - 机械臂法兰位姿采集接口
+  trigger: 操作员按下 GUI 中的轨迹录制机械按钮
+  preconditions:
+  - 机器人处于允许采集法兰位姿的安全状态
+  - 当前录制模式明确为增量轨迹
+  - 录制名称和目标保存位置可用
+  inputs:
+  - 录制名称
+  - 机械按钮按下/松开事件
+  - 录制期间采集的绝对法兰位姿序列 T0...Tn
+  rule:
+    statement: 按钮按下开始采样，按钮松开结束本次采样；结束后按照参考工程的后处理流程生成 Delta_i = inverse(T0) @ Ti 的法兰增量轨迹文件。
+  outputs:
+  - 增量轨迹文件，文件名或目录以 delta 开头
+  - 文件内明确标注轨迹类型为增量轨迹
+  - 录制结果状态和错误信息
+  side_effects:
+  - 产生原始采样数据和后处理结果（是否全部保留待确认）
+  exceptions:
+  - 采样点不足：不生成可回放增量轨迹，并向操作员报告失败
+  - 录制中断或采样异常：结束当前录制并报告状态，不将不完整结果标记为可用
+  - 后处理失败：保留可诊断错误，不生成或启用无效增量轨迹
+  failure_handling:
+  - 录制失败时 GUI 必须显示失败原因，操作员可重新发起录制
+  invariants:
+  - 增量轨迹的参考坐标系为初始法兰位姿，首个 delta 必须为 identity
+  - 平移单位为米，旋转单位为弧度，RPY 顺序为 xyz
+  - 增量轨迹与普通绝对轨迹不可仅依据文件名互相替代；文件标签必须能被回放流程校验
+  acceptance:
+  - id: BL-TRAJECTORY-001-AC-001
+    given: GUI 处于增量轨迹录制模式且机器人可采集法兰位姿
+    when: 操作员按下机械按钮并在完成动作后松开
+    then: 系统只记录按钮保持期间的轨迹，并自动进入后处理
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-TRAJECTORY-001-AC-002
+    given: 录制期间得到至少两个有效绝对法兰位姿
+    when: 后处理完成
+    then: 输出首点为 identity 的增量轨迹文件，且文件类型标签为 delta
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-TRAJECTORY-001-AC-003
+    given: 操作员打开现有拖动控制栏目
+    when: 操作员需要录制增量轨迹
+    then: GUI 在普通轨迹录制按钮旁提供独立的“开始增量录制”和“停止增量录制”按钮
+    method: null
+    evidence: null
+    status: not-verified
+  dependencies: []
+  baseline_refs: []
+  decision_refs: []
+  implementation_refs:
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/capture_flange_motion.py
+  - /home/tbl/Project/cucumber/dexbot_ros2_ws/src/dexbot_middle_layer/CutTofo/scripts/flange_motion_editor/process_flange_motion.py
+  test_refs: []
+  supersedes: []
+  notes: 参考工程是技术证据，不是当前 GUI 的实现依据；当前增量录制暂不接入两个 ROS 工程执行链路。
+  created_at: '2026-08-05'
+  updated_at: '2026-08-05'
+  last_verified_at: null
+
+- id: BL-TRAJECTORY-002
+  title: GUI 增量法兰轨迹回放
+  kind: flow
+  domain: trajectory_replay
+  status: candidate
+  priority: high
+  risk: high
+  authority: user-confirmed
+  source:
+    type: user-statement
+    reference: 用户于 2026-08-05 确认 GUI 增量轨迹回放流程
+  description: 操作员在 GUI 中选择增量轨迹文件，系统读取当前法兰位姿，将增量轨迹展开为当前起点下的绝对法兰轨迹并执行。
+  actors:
+  - 操作员
+  - GUI
+  - 当前法兰位姿查询接口
+  - 轨迹执行接口
+  trigger: 操作员选择增量轨迹文件并发起回放
+  preconditions:
+  - 选择的文件存在且通过增量轨迹 schema 校验
+  - 文件类型标签明确为增量轨迹
+  - 能够获得当前法兰位姿
+  - 机器人处于允许回放的安全状态
+  inputs:
+  - 增量轨迹文件
+  - 当前法兰位姿 T_current
+  - 回放速度或其他用户可见执行参数（具体范围待确认）
+  rule:
+    statement: 系统按 T_current @ Delta_i 生成当前起点下的绝对法兰轨迹，再交给执行链路回放，不把普通绝对轨迹当作增量轨迹解释。
+  outputs:
+  - 回放执行结果
+  - 轨迹类型校验结果
+  - 失败原因或停止状态
+  exceptions:
+  - 文件标签与内容 schema 不匹配：禁止执行并报告文件类型错误
+  - 当前法兰位姿获取失败：禁止展开和执行
+  - 展开或执行失败：停止/结束当前回放并报告失败，不自动重复执行（是否自动重试待确认）
+  invariants:
+  - 回放前必须校验轨迹类型、坐标系、单位、姿态顺序和版本
+  - 普通轨迹与增量轨迹在 GUI 选择和执行入口上必须可区分
+  - 同一增量文件可在不同当前法兰起点复用，但动作相对几何语义保持一致
+  acceptance:
+  - id: BL-TRAJECTORY-002-AC-001
+    given: 操作员选择一个 schema 合法且标注为 delta 的增量轨迹文件
+    when: 操作员发起回放
+    then: 系统读取当前法兰位姿，按 T_current @ Delta_i 展开并执行
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-TRAJECTORY-002-AC-002
+    given: 操作员选择普通绝对轨迹，或文件标签与内容不一致
+    when: 操作员发起增量回放
+    then: 系统在执行前拒绝该文件并显示可诊断错误
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-TRAJECTORY-002-AC-003
+    given: GUI 已展示普通轨迹回放区域
+    when: 操作员需要回放增量轨迹
+    then: GUI 在普通轨迹回放区域下方提供独立的增量轨迹回放区域，且选择器仅展示可回放的 delta 文件
+    method: null
+    evidence: null
+    status: not-verified
+  dependencies:
+  - BL-TRAJECTORY-001
+  baseline_refs: []
+  decision_refs: []
+  implementation_refs:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/flange_delta_trajectory.py
+  test_refs: []
+  supersedes: []
+  notes: 当前只澄清 GUI 业务流程，不接入 ROS/Driver 执行代码。
+  created_at: '2026-08-05'
+  updated_at: '2026-08-05'
+  last_verified_at: null
 - id: BL-GRASP-001
   title: 锅把抓取确认
   kind: flow

@@ -17,3 +17,5 @@ Active goal: `GOAL-001`
 - `TASK-013` 实现并验证法兰增量倾倒轨迹回放适配器 — `blocked`
 - `TASK-014` 接入底盘阶段屏障并完成跨组集成验证 — `blocked`
 - `TASK-015` 验证 V1 左手倾倒入盘最小动作闭环 — `pending`
+- `TASK-016` 固定工位拖动示教拿锅-端锅-倾倒-放锅测试路径 — `in_progress`（完整轨迹真机回放已成功；待系统化安全/取消验收及批次衔接平滑性优化）
+- `TASK-017` 新增 teach_pan_pour_delta 增量倾倒回放套件（policy+skills，不动现有 teach_pan_pour） — `in_progress`（增量回放与固定点放锅真机验证成功；待系统化安全/取消验收及批次衔接平滑性优化）

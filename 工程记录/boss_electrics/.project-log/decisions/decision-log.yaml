@@ -447,6 +447,43 @@ decisions:
   title: 选型七采用现成增量轨迹方案的适配复用路线
   updated_at: '2026-07-30'
   user_approval: approved
+- action: TASK-016
+  actual_result: null
+  authority: C
+  category: business-and-architecture
+  conditions:
+  - 正式感知路径和底盘路径暂缓，不因临时测试路径修改正式 `PanPourPolicy`。
+  - 临时测试固定工位、固定锅具、全程使用左臂，不依赖视觉和底盘。
+  - 拿锅阶段由左臂普通示教移动轨迹和现有 `gripper_action` 闭合组成两个连续动作。
+  - 端锅、倾倒、放锅分别使用独立录制的左臂控制器命名轨迹回放。
+  - 灵巧手动作继续复用现有 `gripper_action` 承载，不新增公共消息接口。
+  context: 感知组和底盘组暂时无法提供正式路径所需能力，需要先建立一个不依赖外部小组接口的固定工位测试闭环。
+  created_at: '2026-08-03'
+  decision: 采用独立拖动示教回放测试路径：`take_move → close_gripper → carry_replay → pour_replay → put_replay`，全部动作绑定左臂；对应 Policy 与正式 `PanPourPolicy` 分离。
+  evidence:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/smoothie_path_record_replay.py
+  - 用户于 2026-08-03 确认临时测试动作拆分
+  expected_result: 在正式感知、底盘和正式路径回放能力就绪前，先通过固定工位示教轨迹验证锅具动作链路。
+  id: DEC-017
+  lesson: 临时验证路径应通过独立 Policy 和最小 Executor 扩展承载，复用现有 Action、Skill 和 gripper_action，不应把固定工位测试逻辑混入正式感知策略。
+  observation: null
+  outcome_status: not-observed
+  reason_summary:
+  - 感知和底盘是当前正式路径的外部阻塞，不是临时动作验证的必要条件。
+  - 现有代码已具备普通示教录制能力，但通用控制器命名路径回放尚未闭合到 MotionExecutor 路由。
+  - 放锅阶段灵巧手张开动作的精确时序尚未明确，暂不纳入本决策的固定顺序。
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-016
+  reversal_plan: 若固定工位回放无法满足锅具安全性或重复性，保留录制资产并回到回放承载或动作拆分设计，不修改正式感知路径。
+  status: active
+  supersedes: []
+  title: 临时测试路径采用左臂独立示教回放 Policy
+  updated_at: '2026-08-03'
+  user_approval: approved
 - action: task-pan-handle-grasp-spike
   actual_result: null
   authority: B
@@ -904,5 +941,310 @@ decisions:
   supersedes: []
   title: V1 感知复用路径 A，Policy 读取统一 WorldState
   updated_at: '2026-07-30'
+  user_approval: approved
+- action: TASK-016
+  actual_result: null
+  authority: C
+  category: architecture
+  conditions:
+  - 轨迹名称通过现有 `TaskTarget.object_id` 传递。
+  - 录制和回放均使用左臂控制器内部的命名路径。
+  - Policy 不直接调用 xCore 或 Skill，只通过现有 `ExecuteTask` 下发任务。
+  - 回放前后必须保证同一机械臂的控制连接不会与其他节点竞争。
+  context: 用户确认临时拖动示教测试路径采用现有 ROS Planner/Executor 链路，不直接由 Policy 调用控制器。
+  created_at: '2026-08-03'
+  decision: '采用 `Policy → ExecuteTask(task_type=path_replay) → MotionExecutor → PathReplaySkill → REPLAY_RECORDED_PATH → replayPath()` 作为轨迹回放链路；轨迹录制继续复用现有 `path_record` 与 `PathRecordSkill`。不修改 `ExecuteTask.action`、`TaskTarget.msg` 或正式 `PanPourPolicy`。'
+  evidence:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_record.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/smoothie_path_record_replay.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  - .project-log/specs/TASK-016.md
+  expected_result: 临时测试 Policy 可以通过现有 Action 生命周期触发控制器命名路径录制和回放，并保持正式任务路径隔离。
+  id: DEC-018
+  lesson: null
+  observation: null
+  outcome_status: not-observed
+  reason_summary:
+  - 底层控制器已有 `startRecordPath/stopRecordPath/saveRecordPath/replayPath` 能力。
+  - 现有 ROS 链路已具备 `path_record`，回放只缺少 MotionExecutor 适配层。
+  - 复用 ExecuteTask 可保留 Planner 的门控、结果回调和取消边界。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-016
+  reversal_plan: 若控制器命名路径回放无法稳定接入 MotionExecutor，则回退为独立 xCore 脚本验证，并重新评估回放 Skill 的执行边界。
+  status: active
+  supersedes: []
+  title: 临时示教轨迹通过现有 ExecuteTask 链路录制与回放
+  updated_at: '2026-08-03'
+  user_approval: approved
+- action: TASK-012
+  actual_result: '已将任务专用配置迁移到 PanPourPolicy 包内，并通过定向测试和受影响包构建验证。'
+  authority: C
+  category: architecture
+  conditions:
+  - pan_pour 参数仅服务于老板电器 V1 `PanPourPolicy`，不是启动所有节点都需要的全局参数。
+  - 配置仍需保持 `configured: false`，直到中心坐标系、TCP 和工位参数完成现场确认。
+  - 不修改 `robot_params.yaml` 的全局 `toolset.end` 语义。
+  context: 用户确认任务专用参数不应继续放在 dexbot_bringup 的全局启动配置目录，选择将配置与 Policy 文件放在同一目录。
+  created_at: '2026-08-05'
+  decision: '采用 Policy-local 配置方案：`pan_pour_params.yaml` 放入 `dexbot_task_planner/policy/pan_pour/`，由 `PanPourPolicy` 默认加载；TaskPlannerNode 和 launch 不再注入该配置。'
+  deferred:
+  - 现场标定后填写真实参数并评估配置文件是否需要进一步按运行环境外置。
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_params.yaml
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/setup.py
+  - '17 个 PanPour 定向测试通过；dexbot_task_planner 和 dexbot_bringup 构建通过。'
+  expected_result: 任务参数由任务 Policy 自己拥有和加载，避免 bringup 全局配置目录承载单一子任务的专用参数。
+  id: DEC-019
+  lesson: 任务专用配置应与拥有其语义和加载逻辑的 Policy 同包维护；只有跨节点共享或启动编排所需参数才进入 bringup 全局配置。
+  observation: 原配置通过 launch 注入 TaskPlannerNode，导致任务参数与全局启动参数混在一起；PanPourPolicy 已经是参数语义的实际拥有者。
+  outcome_status: observed
+  reason_summary:
+  - 配置文件与 Policy 同目录，定位和演进边界清晰。
+  - '`setup.py` 显式打包 YAML，非 symlink 安装也可读取。'
+  - 保留可选构造参数，未破坏已有测试和受控覆盖能力。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-012
+  reversal_plan: 若后续多个节点或多个任务需要共享这些参数，再将共享部分拆出为独立公共配置，并保留 Policy 对任务专用参数的所有权。
+  status: active
+  supersedes: []
+  title: PanPour 任务参数与 Policy 同包维护
+  updated_at: '2026-08-05'
+  user_approval: approved
+- action: TASK-016
+  actual_result: '已将固定点位、灵巧手参数和两段 JSON 轨迹整理到 TeachPanPourSkill 资源目录，并通过资源契约校验。'
+  authority: C
+  category: architecture
+  conditions:
+  - 资源只服务于固定工位左臂临时示教测试路径。
+  - 具体关节点位、手部关节/力矩和轨迹数据不散落在 Policy、Planner 或 Executor 代码中。
+  - 轨迹执行仍需复用现有 Driver 关节控制接口，具体连续发送方式需源码/真机确认。
+  context: 用户确认固定点位和两段录制轨迹全部作为 TeachPanPourSkill 的本地资源，由 Skill 根据阶段按需读取。
+  created_at: '2026-08-05'
+  decision: '采用 Skill-local 资源方案：一个固定点位文件保存机械臂点位、灵巧手关节和力矩；倾倒与放锅分别保存为 JSON 关节轨迹；TeachPanPourSkill 按阶段加载资源。'
+  deferred:
+  - 确认 JSON 点间时间到 Driver 关节命令的映射。
+  - 确认轨迹执行的连续发送、等待、停止和取消语义。
+  evidence:
+  - kitchen_robot_home/arm_preset/arm_poses_left.json
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/hand_presets.yaml
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/pour/segment_001.json
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/put/segment_001.json
+  - '资源契约校验通过：两段轨迹均为左臂 7 关节弧度数据，时间戳单调递增。'
+  expected_result: Skill 实现只需要按阶段读取稳定资源，不需要在代码中硬编码具体示教数值。
+  id: DEC-020
+  lesson: 固定工位示教任务的动作数据应作为 Skill 资源版本化管理，Policy 只表达阶段语义。
+  observation: GUI 导出的轨迹已经包含格式、机械臂侧、IP、采样周期和时间化关节点；现有点位文件包含 7 关节弧度数据和法兰语义元数据。
+  outcome_status: observed
+  reason_summary:
+  - 用户提供的点位和轨迹资源已复制到执行器 Skill 目录。
+  - 资源清单统一了阶段到文件/点位 ID 的映射。
+  - 资源文件格式和关键字段已经通过自动校验。
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-016
+  reversal_plan: 若 Driver 不支持按时间逐点关节执行，则保留资源格式，新增最小轨迹适配器或改用 Driver 已提供的批量关节接口，不把资源搬回 Policy。
+  status: active
+  supersedes: []
+  title: TeachPanPourSkill 使用本地点位与 JSON 轨迹资源
+  updated_at: '2026-08-05'
+  user_approval: approved
+- action: TASK-016
+  actual_result: '确认当前 ROS RobotDriver 只有单点 MoveJoints 公共接口；底层 SDK 虽有 joint_follow/FollowPosition RT 路径，但 O6Luoshi 适配器未调用且 ROS 层未暴露。'
+  authority: B
+  category: technical-selection
+  conditions:
+  - 静态源码结论不替代 RT 真机验证。
+  - 不修改 /opt/ros/humble 下的 .deb 安装产物。
+  - TeachPanPourSkill 不逐点循环调用 MoveJoints 作为平滑轨迹方案。
+  context: '需要判断 JSON 轨迹能否通过当前 robot_driver 连续回放，以及现有框架是否支持 RT 实时模式。'
+  created_at: '2026-08-05'
+  decision: '当前 ROS 链路不支持连续 RT 轨迹回放；底层 xCore SDK 具备条件式 RT joint_follow 能力，但尚未接入 O6Luoshi RobotDriver。后续优先评估 Driver 批量轨迹或 RT follow 公共接口。'
+  deferred:
+  - 确认团队是否允许为 Driver 增加批量关节轨迹或 RT follow 接口。
+  - 在目标控制器型号和安全条件满足后进行 RT follow 真机验证。
+  evidence:
+  - kitchen_robot_home/src/dexbot_interfaces/srv/MoveJoints.srv
+  - /opt/ros/humble/lib/python3.10/site-packages/dexbot_robot_driver/robot_driver_node.py
+  - /opt/ros/humble/lib/python3.10/site-packages/dexbot_robot_driver/robot/composite_robot/luoshi/luoshi_arm.py
+  - kitchen_robot_home/src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py
+  - kitchen_robot_home/src/sdk/xcoresdk_python-v0.5.1.ar_12/example/follow_joint_position.py
+  expected_result: '不把底层 SDK 的隐藏能力误认为当前 ROS Driver 已具备的公共能力，并为后续轨迹执行接口选型提供源码依据。'
+  id: DEC-021
+  lesson: '判断连续轨迹能力必须分开检查资源格式、RobotDriver 公共接口、底层 SDK 和实际控制器型号；其中任一层未接通，都不能宣称 RT 回放可用。'
+  observation: '当前 O6Luoshi 控制链路固定使用 NrtCommandMode 和单个 MoveAbsJCommand；SDK RT follow 受环境变量和 xMate 型号条件控制。'
+  outcome_status: observed
+  reason_summary:
+  - MoveJoints 服务单次只能承载一个关节点位。
+  - O6Luoshi 适配器没有调用 joint_follow。
+  - ROS Driver 未找到 JointFollow 服务、Action 或流式 Topic。
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-016
+  reversal_plan: '若后续 Driver 提供并验证批量轨迹或 RT follow 接口，TeachPanPourSkill 保留现有资源格式，仅替换执行适配器。'
+  status: active
+  supersedes: []
+  title: 当前 RobotDriver 的连续轨迹与 RT 能力边界
+  updated_at: '2026-08-05'
+  user_approval: pending
+- action: TASK-016
+  actual_result: '确定不复用控制器命名路径 PathReplaySkill；TeachPanPourSkill 直接读取自身 JSON 轨迹，在两个回放阶段建立短生命周期 xCore 连接并批量执行 MoveAbsJ。'
+  authority: C
+  category: architecture
+  conditions:
+  - '`pour_replay` 和 `put_replay` 的轨迹资源位于 TeachPanPourSkill 目录内。'
+  - '普通固定点位和灵巧手动作继续通过现有 robot_driver 接口执行。'
+  - '回放期间固定流程不发送其他左臂机械臂控制指令；当前不增加互斥锁。'
+  - '回放完成后必须在 finally 中释放 xCore 连接，再恢复 Driver 点位控制。'
+  context: '控制器 replayPath 只能回放控制器内部命名路径，而本任务使用 Skill-local JSON 轨迹；同时现有 MoveJoints 单点接口会导致逐点回放卡顿。'
+  created_at: '2026-08-05'
+  decision: '采用 Skill-local JSON + 短生命周期 xCore SDK + 批量 MoveAbsJ 执行方案；不调用 replayPath，不复用 PathReplaySkill，不逐点调用 MoveJoints。'
+  deferred:
+  - 确认当前 xCore 批量 MoveAbsJ 的 blend zone、速度和轨迹时长映射。
+  - 完成 Driver → xCore 回放 → Driver 的最小真机控制权切换验证。
+  evidence:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/path_replay.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/xcore_path_client.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/pour/segment_001.json
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/put/segment_001.json
+  expected_result: '本地示教轨迹能够在不经过 ROS 逐点服务调用的情况下平滑执行，并保留现有 Planner → MotionExecutor 任务链路。'
+  id: DEC-022
+  lesson: '轨迹资源的归属决定执行方式：控制器命名路径使用 replayPath；Skill-local JSON 必须由 Skill 自己加载并通过批量轨迹执行器运行。'
+  observation: 'PathReplaySkill 只接收路径名并调用 replayPath；GUI 已证明批量 MoveAbsJ + blend zone 比逐点 MoveJoints 更平滑。'
+  outcome_status: observed
+  reason_summary:
+  - 本任务只有倾倒和放锅需要连续轨迹。
+  - 现有 Driver 公共关节接口不支持连续时间序列。
+  - Policy 的技术参数需要与任务 Policy 同目录、由任务组件内部加载。
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-016
+  reversal_plan: '若真机验证显示双连接不稳定，保留 JSON 资源和 Policy 阶段语义，改为由 Driver 内部提供批量轨迹接口；不回退到逐点 MoveJoints。'
+  status: active
+  supersedes: []
+  title: TeachPanPourSkill 的本地轨迹执行与私有参数方案
+  updated_at: '2026-08-05'
+  user_approval: approved
+- action: TASK-018
+  actual_result: '正式 V1（pan_pour / PanPourPolicy）在 MOVE_TO_POUR_POSITION 后进入 POUR_DELTA_REPLAY 终态，下发 pan_pour_delta_replay 步骤；执行仓库新增独立 PanPourDeltaReplaySkill 复用 LOCAL_DELTA_FLANGE_REPLAY 原语。'
+  authority: B
+  category: architecture
+  conditions:
+  - 正式 V1 最小闭环到倾倒完成结束，不放回/home。
+  - 增量回放仍使用短生命周期 xCore 直连 + 滑动窗口 append（沿用 teach_pan_pour_delta 已真机验证的模式）。
+  - 正式 V1 与临时 teach 套件语义隔离，使用独立 PlanType 与独立 Skill 目录、独立 pour_delta.json 资源副本。
+  context: '临时版本 teach_pan_pour_delta 的增量倾倒回放已真机跑通；正式 V1 此前在 WAITING_FOR_POUR_REPLAY_ADAPTER 阶段一直等待“相对法兰回放适配器”，本次把该适配器接线落地。'
+  created_at: '2026-08-06'
+  decision: '为正式 V1 新增 PlanType.PLAN_PAN_POUR_DELTA_REPLAY（pan_pour_delta_replay），PanPourPolicy 终态步骤 action_name=pour_delta_replay；执行仓库新增 PanPourDeltaReplaySkill 复用既有 LOCAL_DELTA_FLANGE_REPLAY 分支，不改增量回放原理。'
+  deferred:
+  - 正式 V1 标定参数（pan_pour.configured 仍为 false）。
+  - 真机验证正式 V1 完整链路与 xCore/robot_driver 控制权切换。
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/pan_pour_delta_replay/pan_pour_delta_replay_skill.py
+  expected_result: '正式 V1 在倾倒接近后能够像临时版本一样通过增量回放完成倾倒，且不影响临时测试套件。'
+  id: DEC-023
+  lesson: '临时版本跑通的执行适配器可以直接迁移到正式版本，前提是保留独立 PlanType/Skill/资源边界，避免正式业务被临时测试语义污染。'
+  observation: 'teach_pan_pour_delta 的 LOCAL_DELTA_FLANGE_REPLAY 分支与 delta_flange_replay_client 完全可复用；正式 V1 只缺 Policy 终态与 Skill 注册。'
+  outcome_status: superseded
+  reason_summary:
+  - 正式 V1 与临时 teach 版本业务语义不同，不能复用 teach 的 PlanType 或 Skill 目录。
+  - 增量回放原理（读当前法兰 → T_current @ Delta_i → IK → 关节流式）与起点无关，适合正式 V1 的锅具 TCP 倾倒。
+  - 保持既有短生命周期 xCore 连接模式，避免改动已真机验证的执行路径。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-018
+  reversal_plan: '若正式 V1 标定后真机验证失败，优先检查 C 系/锅具 TCP 标定与起点一致性；执行适配器回退路径与 teach_pan_pour_delta 一致。'
+  status: superseded
+  supersedes:
+  - DEC-024
+  title: 正式 V1 增量倾倒回放接入方案
+  updated_at: '2026-08-06'
+  user_approval: pending
+- action: TASK-018
+  actual_result: '正式 V1（pan_pour / PanPourPolicy）使用单一自包含 PanPourSkill 覆盖完整运动链：close_hand → pour_delta_replay → put_fixed → open_hand → return_home；旧 pan_pour_delta_replay 已删除。'
+  authority: B
+  category: architecture
+  conditions:
+  - 正式 V1 不依赖任何临时 teach 链路资源（teach 链路不会正式上传）。
+  - 手部开/闭使用测试链路已调好的角度/力矩值，不改数值。
+  - V1 完整链路：抓取 → 闭手 → 提锅/准备倾倒 → 倾倒 → 放锅（固定点）→ 张手 → 回 home。
+  - 放锅固定点关节角与抓取点一致（grasp_ready preset 2）。
+  context: '用户确认正式 V1 需要完整复刻测试版手部逻辑：不交 robot_driver gripper_action 命名动作，而是 Skill 直接下发 SET_HAND_ANGLES + SET_HAND_TORQUES；参数思路选“V1 单一 skill 包内保存全部运动参数”。'
+  created_at: '2026-08-06'
+  decision: '正式 V1 只保留 1 个专用 Skill（PanPourSkill / pan_pour），资源完全自包含（arm 位姿、手部预设、pour_delta.json 103 点副本）；手部用 SET_HAND 角度/力矩；Policy 阶段链新增 PUT_FIXED → OPEN_HAND → RETURN_HOME 后 COMPLETE；删除 PLAN_PAN_POUR_DELTA_REPLAY 与 pan_pour_delta_replay Skill。'
+  deferred:
+  - 正式 V1 标定参数（pan_pour.configured 仍为 false）。
+  - 真机验证正式 V1 完整链路（标定后现场确认）。
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/pan_pour/pan_pour_skill.py
+  expected_result: '正式 V1 完整运动链由单一自包含 Skill 承担，真机验证通过；不再存在正式链路引用临时 teach 资源的情况。'
+  id: DEC-024
+  lesson: '正式版本必须自包含：任何从临时测试链路复制的能力都要连同资源一起复制进正式 Skill，避免正式上传后因缺失 teach 目录而失效。'
+  observation: '用户强调“不能依赖其他的链路，后边测试链路不会正式上传”，因此 DEC-023 的软引用 teach 资源方案不满足正式要求。'
+  outcome_status: active
+  reason_summary:
+  - 单一 skill 包内保存全部运动参数（思路 1），policy 参数文件只保留业务几何参数。
+  - 手部开/闭用测试版已调好的角度/力矩值，直接下发 SET_HAND 服务，不依赖 driver 命名动作。
+  - 放锅固定点复用抓取点关节角，避免复制数值漂移。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-018
+  reversal_plan: '若真机验证发现单一 Skill 资源边界过宽，可按阶段拆分 Skill，但必须保持自包含（不引用 teach 目录）。'
+  status: active
+  supersedes:
+  - DEC-023
+  title: 正式 V1 单一自包含 pan_pour Skill 方案
+  updated_at: '2026-08-06'
+  user_approval: approved
+- action: TASK-018
+  actual_result: 'PanPourPolicy 等待阶段返回私有 pan_pour/wait 占位动作；PanPourSkill 将其转换为空 MotionPrimitive 列表；wait 结果不推进 Policy 阶段。'
+  authority: B
+  category: architecture
+  conditions:
+  - 当前底盘/视觉明确接口尚未接入，仍需保留等待占位。
+  - 恢复 `PolicyDecision/WAIT` 属于公共资源修改，暂不采用。
+  - 等待期必须保持 active task 存活，且不发送真实机械臂/灵巧手运动指令。
+  context: 'PanPourPolicy 在等待参数/锅把/底盘/餐盘时返回 None，TaskPlannerNode 将 None 视为任务完成，导致任务被误判完成。'
+  created_at: '2026-08-11'
+  decision: 'PanPourPolicy 等待阶段返回私有 pan_pour/wait 占位步骤；PanPourSkill 将其解析为无运动原语，由现有 Planner Action 往返保持任务存活；wait 成功回调不推进阶段。'
+  evidence:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_pan_pour_policy.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/pan_pour/pan_pour_skill.py
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_pan_pour_skill.py
+  expected_result: 'PanPour 等待阶段不再误完成任务；外部数据到达后仍由原入口推进。'
+  id: DEC-025
+  lesson: '在不改动公共 Planner 调度契约时，等待必须表现为一个可发送的任务私有动作；该动作的成功语义必须与真实阶段推进解耦。'
+  observation: '主线定向 21 passed、执行器定向 42 passed，两个包 compileall 与 colcon build 均通过。'
+  outcome_status: active
+  reason_summary:
+  - 现有 Planner 只有 Step / None 两种结果，None 已完成语义无法表达等待。
+  - 方向 2 只改 PanPourPolicy / PanPourSkill 两个任务私有文件，避免触碰公共调度。
+  - 未来底盘/视觉接口可用时，可将 wait 占位替换为真实动作步骤。
+  related_business_logic:
+  - BL-PLATING-001
+  related_tasks:
+  - TASK-018
+  reversal_plan: '若底盘/视觉提供明确 API，将 wait 占位替换为真实动作步骤，不保留占位语义。'
+  status: active
+  supersedes: []
+  title: PanPour 等待阶段采用任务私有 wait 占位动作
+  updated_at: '2026-08-11'
   user_approval: approved
 version: '0.4'

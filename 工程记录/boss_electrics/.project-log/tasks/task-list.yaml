@@ -105,7 +105,6 @@ tasks:
     limitations: []
   result:
     summary: null
-    changed_files: []
     deviations: []
     follow_ups: []
   created_at: '2026-07-22'
@@ -894,6 +893,77 @@ tasks:
     follow_ups: []
   created_at: '2026-07-30'
   updated_at: '2026-07-30'
+- id: TASK-016
+  title: 固定工位拖动示教拿锅-端锅-倾倒-放锅测试路径
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: 在正式感知和底盘能力就绪前，通过左臂普通拖动示教轨迹与控制器回放，快速验证老板电器固定工位锅具动作闭环。
+  status: in_progress
+  priority: high
+  risk: high
+  authority: C
+  owner: shared
+  tags:
+  - temporary-path
+  - teach-replay
+  - pan-pour
+  related_business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_refs: []
+  related_decisions:
+  - DEC-017
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions:
+  - Driver 是否已有或允许增加批量关节轨迹接口
+  - JSON 轨迹时间到 Driver 执行接口的映射
+  - 批量轨迹执行的停止/取消入口
+  required_skills:
+  - a-engineering-spec
+  - a-engineering-landing
+  - a-verification
+  inputs:
+  - 左臂控制器连接和 IP 配置
+  - 固定工位及锅具
+  - 四条命名示教轨迹
+  outputs:
+  - 独立 TeachPanPourPolicy
+  - 独立 TeachPanPourSkill，按需加载 Skill 目录内的点位文件和两段 JSON 轨迹
+  - 真机逐阶段回放证据
+  plan:
+  - 使用 GUI/示教流程生成并整理两段 JSON 关节轨迹
+  - 整理一个包含机械臂点位、手部关节和力矩的固定点位文件
+  - 按阶段复用 ExecuteTask，由 TeachPanPourSkill 调用 Driver 关节接口
+  - 将点位文件和轨迹文件与 TeachPanPourSkill 放在同一目录
+  - 不修改正式 PanPourPolicy
+  - 低速、可停止条件下逐阶段验证
+  done_when:
+  - 拿锅移动、闭手、端锅、倾倒、放锅均能按确认顺序执行
+  - 所有机械臂动作均绑定左臂
+  - 临时任务类型与正式感知路径隔离
+  - 录制、回放、驱动竞争和真机限制均有验证证据
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations: []
+  result:
+    summary: 已恢复实施；左手控制链路已有验证，放锅后立即张手的时序已确认。TeachPanPourSkill 的固定点位、手部参数和两段 JSON 轨迹资源已整理并校验；已确认逐点 MoveJoints 会卡顿，待确定 Driver 批量轨迹接口后实现 Skill/Policy 执行路由。
+    changed_files:
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/arm_poses_left.json
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/hand_presets.yaml
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/resource_manifest.yaml
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/pour/manifest.json
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/pour/segment_001.json
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/put/manifest.json
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/trajectories/put/segment_001.json
+    - robot_motion_executor/src/dexbot_motion_executor/setup.py
+    deviations: []
+    follow_ups: []
+  created_at: '2026-08-03'
+  updated_at: '2026-08-05'
 - id: TASK-009
   title: 固化源码驱动的代码讲解方法为可复用 Codex Skill
   kind: task
@@ -957,3 +1027,210 @@ tasks:
     - 后续继续阅读 TaskPlanner 时按该 Skill 的时间线、状态表和源码锚点格式进行。
   created_at: '2026-07-29'
   updated_at: '2026-07-29'
+- id: TASK-017
+  title: 新增 teach_pan_pour_delta 增量倾倒回放套件
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: 在不改动现有 teach_pan_pour 的前提下，新增独立 policy + skills，倾倒改用增量法兰轨迹（T_current @ Delta_i 展开 + IK + 关节流式回放），放锅改用固定关节点 put_fixed。
+  status: done
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - temporary-path
+  - delta-replay
+  - pan-pour
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs: []
+  related_decisions:
+  - DEC-017
+  depends_on:
+  - TASK-016
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  inputs:
+  - GUI 采点增量轨迹候选2带增量轨迹.json（103 点，dexbot_gui_flange_delta_v1）
+  - grasp_ready 抓取点关节角度作为 put_fixed 放锅点
+  outputs:
+  - kitchen_robot_home 新增 teach_pan_pour_delta policy + 参数
+  - robot_motion_executor 新增 TeachPanPourDeltaSkill（pour_delta_replay / put_fixed / LOCAL_DELTA_FLANGE_REPLAY）
+  - 真机增量倾倒回放与固定点放锅验证证据
+  plan:
+  - 新增主线 policy 与参数 YAML，路由 teach_pan_pour_delta（已完成）
+  - 新增执行器 TeachPanPourDeltaSkill 与增量回放客户端（已完成）
+  - 真机验证增量倾倒回放与 put_fixed 固定点放锅（已完成）
+  done_when:
+  - 增量倾倒回放完整执行 103 点，IK 全解、未触限位、进入 moving 并到达末点
+  - put_fixed 固定关节点放锅执行成功
+  - 现有 teach_pan_pour 普通轨迹套件未改动
+  verification:
+    status: passed
+    commands:
+    - source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && ros2 launch dexbot_bringup dexrob_full.launch.py
+    - "ros2 service call /task_planner/start_task dexbot_interfaces/srv/StartTask '{task_type: \"teach_pan_pour_delta\", target_class: \"\", scene_id: \"\", resume: true}'"
+    - ros2 service call /task_planner/get_status dexbot_interfaces/srv/GetTaskStatus '{}'
+    evidence:
+    - EVID-TASK-016-DELTA-HW-001
+    limitations:
+    - 成功证据为操作员现场确认，控制器逐窗口/姿态日志未全套归档。
+    - 急停、取消、xCore/robot_driver 控制权竞争和重复任务恢复尚未系统化验收。
+  result:
+    summary: teach_pan_pour_delta 增量倾倒回放套件真机验证成功；增量倾倒回放不复段重试，固定点放锅复用抓取点关节角正常执行，现有 teach_pan_pour 未改动。
+    changed_files:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/teach_pan_pour_delta/
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour_delta/
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/delta_flange_replay_client.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/local_joint_trajectory_client.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/entities/flange_delta_trajectory.py
+    deviations: []
+    follow_ups:
+    - 系统化安全/取消/重复任务恢复验收与批次衔接平滑性优化。
+  created_at: '2026-08-06'
+  updated_at: '2026-08-06'
+- id: TASK-019
+  title: 手眼标定（相机外参）自动标定前置问题逐个解决
+  kind: task
+  parent_id: TASK-018
+  phase: implementation
+  goal: 解决相机外参（手眼）自动标定的全部前置问题，先后跑一次单臂自动标定输出 T_base_cam，为正式 V1（pan_pour.configured）真机标定与中心坐标统一做准备。
+  status: in_progress
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - formal-v1
+  - calibration
+  - hand-eye
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs: []
+  related_decisions: []
+  depends_on:
+  - TASK-018
+  blocked_by:
+  - CAL-03
+  - CAL-04
+  - CAL-05
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  inputs:
+  - kitchen_robot_home/src/dexbot_bringup/launch/calibration.launch.py
+  - kitchen_robot_home/src/dexbot_bringup/config/cameras/camera1_params.yaml
+  - kitchen_robot_home/src/dexbot_bringup/config/cameras/camera1_ost.yaml
+  - kitchen_robot_home/VERSIONS.yaml
+  outputs:
+  - left/right_calibration_result.yaml（T_base_cam / T_tcp_marker / RMSE）
+  - robot_params.yaml base_frame 偏移
+  - calibration_result.yaml（T_center_cam）
+  - pan_pour.configured=true 的正式参数
+  plan:
+  - CAL-01 确认并安装 dexbot_toolbox（加入 VERSIONS.yaml 版本锁定）
+  - CAL-02 修正 calibration.launch.py 相机话题与 ArUco 订阅的一致性
+  - CAL-03 统一相机内参/分辨率（camera1_ost.yaml 与 camera1_params.yaml）
+  - CAL-04 确认实际 ArUco 板边长/字典并在 launch 参数对齐
+  - CAL-05 确认机械臂 IP 并设 DEXBOT_ROBOT_IP
+  - 真机单臂自动标定并核对话题/服务/结果
+  - 双臂标定后执行中心坐标统一脚本；标定完成后设 pan_pour.configured=true
+  done_when:
+  - 单臂手眼自动标定成功输出 T_base_cam 且 RMSE 可用
+  - calibration.launch.py 话题、内参、标定板与机械臂 IP 全部对齐
+  verification:
+    status: pending
+    commands: []
+    evidence:
+    - .project-log/docs/hand_eye_calibration.md
+    limitations:
+    - 需要真实相机、Arco 板和标定臂硬件；未解决前置前不启动自动标定。
+  result:
+    summary: 本轮为 TASK-019 建立前置问题清单并冻结维护，未装包、未改产品代码。
+    changed_files:
+    - .project-log/docs/hand_eye_calibration.md
+    - .project-log/current-session.md
+    - .project-log/progress.md
+    deviations: []
+    follow_ups:
+    - 逐个解决 CAL-01 至 CAL-05 前置问题，然后真机执行单臂标定。
+  created_at: '2026-08-07'
+  updated_at: '2026-08-07'
+- id: TASK-018
+  title: 正式 V1 完整运动链接入单一自包含 pan_pour Skill
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: 把临时版本 teach_pan_pour_delta 已跑通的完整运动链接入正式 V1（pan_pour / PanPourPolicy）：闭手 → 增量倾倒回放 → 放锅固定点 → 张手 → 回 home，全部由单一自包含 PanPourSkill 承担，不引用临时 teach 链路资源，手部用 SET_HAND 角度/力矩（测试版已调好的值）。
+  status: in_progress
+  priority: high
+  risk: high
+  authority: B
+  owner: shared
+  tags:
+  - formal-v1
+  - delta-replay
+  - pan-pour
+  related_business_logic:
+  - BL-PLATING-001
+  acceptance_refs: []
+  related_decisions:
+  - DEC-023
+  - DEC-024
+  depends_on:
+  - TASK-017
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  inputs:
+  - teach_pan_pour_delta 增量回放实现（Skill / LOCAL_DELTA_FLANGE_REPLAY / delta_flange_replay_client）
+  - 正式 V1 PanPourPolicy 状态链（WAITING_FOR_CONFIGURATION ... MOVE_TO_POUR_POSITION）
+  outputs:
+  - kitchen_robot_home 新增 PlanType.PLAN_PAN_POUR，PanPourPolicy 完整阶段链（CLOSE_GRIPPER→POUR_DELTA_REPLAY→PUT_FIXED→OPEN_HAND→RETURN_HOME→COMPLETE）
+  - robot_motion_executor 新增自包含 PanPourSkill（pan_pour）并注册；删除旧 pan_pour_delta_replay
+  plan:
+  - 主仓库新增 PLAN_PAN_POUR 并接入 Planner skill goal 路由（已完成）
+  - PanPourPolicy 完整阶段链：闭手/倾倒/放锅/张手/回 home（已完成）
+  - 执行仓库新增自包含 PanPourSkill（手部 SET_HAND、增量回放、固定点、回位），删除旧 pan_pour_delta_replay（已完成）
+  - 定向测试、compileall、两仓库构建验证（已完成）
+  - 标定后真机验证完整 V1 链路（待现场）
+  done_when:
+  - 正式 V1 完整阶段链下发 close_hand/pour_delta_replay/put_fixed/open_hand/return_home 步骤
+  - PanPourSkill 资源完全自包含（无 teach 引用），手部用 SET_HAND_ANGLES + SET_HAND_TORQUES
+  - 旧 pan_pour_delta_replay 目录、注册、测试和 PlanType 全部移除
+  - 现有 teach_pan_pour / teach_pan_pour_delta 临时套件未改动
+  verification:
+    status: implemented-unverified
+    commands:
+    - "cd kitchen_robot_home && PYTHONNOUSERSITE=1 python3 -m pytest src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py -q"
+    - "cd robot_motion_executor/src/dexbot_motion_executor && PYTHONNOUSERSITE=1 python3 -m pytest test/test_pan_pour_skill.py -q"
+    - "cd kitchen_robot_home && colcon build --symlink-install --packages-select dexbot_task_planner"
+    - "cd robot_motion_executor && colcon build --symlink-install --packages-select dexbot_motion_executor"
+    evidence: []
+    limitations:
+    - 尚未做正式 V1 标定（pan_pour.configured 仍为 false），未做真机验证。
+    - 增量回放客户端与 LOCAL_DELTA_FLANGE_REPLAY 原语本身已在 teach_pan_pour_delta 真机验证过，但正式 V1 完整链路仍待真机。
+  result:
+    summary: 正式 V1 完整运动链接入单一自包含 PanPourSkill：主仓库新增 PLAN_PAN_POUR 与完整阶段链（闭手/增量倾倒/放锅固定点/张手/回 home），执行仓库新增 pan_pour skill 且资源自包含；旧 pan_pour_delta_replay 已删除；两仓库定向测试与构建通过，状态 implemented-unverified。
+    changed_files:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/plan.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/entities/pan_pour_kinematics.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_params.yaml
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/pan_pour/
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+    - robot_motion_executor/src/dexbot_motion_executor/setup.py
+    deviations: []
+    follow_ups:
+    - 正式 V1 现场标定（中心 C 系、抓取/锅具 TCP）后设 pan_pour.configured=true 并真机验证完整链路。
+    - 真机时避免 robot_driver 与 xCore 短连接同时占用同一左臂。
+  created_at: '2026-08-06'
+  updated_at: '2026-08-06'

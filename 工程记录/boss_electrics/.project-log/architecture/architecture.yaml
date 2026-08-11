@@ -29,7 +29,10 @@ architectures:
     responsibility: 调用底盘组能力，表达进入倾倒工作区域、完成/失败/超时和阶段屏障；不把底盘动作实现塞入 arm MotionPrimitive。
   - name: BossElectricsPourSkill
     repository: robot_motion_executor
-    responsibility: 将类型化目标转换为现有笛卡尔移动、手部角度/力矩和轨迹播放 MotionPrimitive。
+    responsibility: V1 只使用 1 个专用 Skill（PanPourSkill）；抓取/准备倾倒/倾倒接近复用现有 move_cartesian API，手部开闭、增量倾倒回放、放锅固定点和回 home 由该 Skill 覆盖。
+  - name: PanPourSkill
+    repository: robot_motion_executor
+    responsibility: V1 唯一专用 Skill（task_type=pan_pour，action_name=close_hand/open_hand/pour_delta_replay/put_fixed/return_home）；完全自包含资源（arm 位姿、手部预设、103 点 pour_delta.json），复用既有 LOCAL_DELTA_FLANGE_REPLAY 原语与 delta_flange_replay_client（读当前法兰位姿 → T_current @ Delta_i → IK → 关节流式回放）。
   - name: TCPAndTrajectoryAdapter
     repository: kitchen_robot_home/robot_motion_executor
     responsibility: Planner 侧把业务计算得到的中心坐标系 C 目标转换为左臂 base frame B 下的法兰目标；Executor 侧只负责展开左臂 base 下的法兰增量回放并复用 RobotDriver。
@@ -80,6 +83,22 @@ architectures:
   observability:
   - 每个阶段记录 task_id、frame_id、目标摘要、TCP 名称/版本、轨迹名称/版本和 goal 结果。
   - 记录中心坐标转换输入来源、时间戳和最终执行 frame，便于复现坐标错误。
+  skill_boundary:
+  - status: confirmed
+    date: '2026-08-06'
+    rule: V1 只使用 1 个专用 Skill（PanPourSkill / pan_pour），完全自包含、不引用临时 teach 链路；抓取/准备倾倒/倾倒接近复用 move_cartesian API，手部开闭、增量倾倒回放、放锅固定点、回 home 由该 Skill 覆盖。
+    reused:
+    - move_cartesian API：抓取、提锅到准备倾倒、倾倒接近（Planner 侧已完成 C→B 转换，发送左臂 base 下法兰目标）
+    - ScenePerception -> WorldState -> PanPourPolicy：感知（Planner 侧，不是执行器 Skill）
+    new_for_v1:
+    - PanPourSkill：close_hand / open_hand / pour_delta_replay / put_fixed / return_home（手部用 SET_HAND 不收 driver 命名动作）
+    pending:
+    - 底盘协同：V1 流程有 WAITING_FOR_BASE_POSITION 阶段；若底盘动作需经 MotionExecutor 下发，再新增 1 个底盘相关 Skill，否则由底盘组自行控制，执行器侧不新增
+    evidence:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/pan_pour/pan_pour_skill.py
+    owner: 主 Agent
+    next_action: 底盘接口确认后决定是否新增底盘 Skill；正式 V1 标定后真机验证完整 V1 链路
   deployment_and_compatibility:
   - 本方案不修改 ExecuteTask/TaskTarget；现有通用 TaskTarget 和其他 task_type 保持兼容。
   - 首阶段只更新项目配置、接口、planner policy、executor skill 和针对性测试，不修改底层 SDK。
@@ -108,6 +127,5 @@ architectures:
     - kitchen_robot_home/src/dexbot_interfaces/msg/ObjectDetection.msg
     owner: 感知组
     next_action: 等待感知组提供最终字段契约后，在 Planner 现有 WorldState 写入边界接入最小映射
-  updated_at: '2026-07-30'
   created_at: '2026-07-28'
-  updated_at: '2026-07-28'
+  updated_at: '2026-08-06'

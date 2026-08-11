@@ -1,5 +1,87 @@
 version: '0.4'
 evidence:
+- id: EVID-EXECUTOR-PUSH-READINESS-20260811
+  task_id: TASK-018
+  business_logic:
+  - SDK 私人工作区修改不得随公共任务提交或推送
+  - 正式 V1 执行仓库提交在 push 前必须通过定向测试、编译和提交完整性检查
+  acceptance_criteria:
+  - "robam_kitchen 本地独有提交为明确的待推送任务提交"
+  - 远端无反向提交需要先合并
+  - 个人 SDK 文件未作为工作区改动或 staged 改动进入本次 push
+  - 定向测试、compileall、colcon build 和 diff-check 通过
+  result: passed
+  level: 2
+  commands:
+  - cd robot_motion_executor && git fetch origin
+  - cd robot_motion_executor && git rev-list --left-right --count origin/robam_kitchen...HEAD
+  - cd robot_motion_executor && git diff --name-status origin/robam_kitchen..HEAD
+  - cd robot_motion_executor/src/dexbot_motion_executor && source /opt/ros/humble/setup.bash && source kitchen_robot_home/install/setup.bash && PYTHONPATH=src/dexbot_motion_executor:$PYTHONPATH PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q test/test_flange_delta_trajectory.py test/test_delta_flange_replay_client.py test/test_local_joint_trajectory_client.py test/test_pan_pour_skill.py test/test_teach_pan_pour_skill.py test/test_teach_pan_pour_delta_skill.py test/test_path_replay.py
+  - cd robot_motion_executor/src/dexbot_motion_executor && python3 -m compileall -q dexbot_motion_executor
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && source kitchen_robot_home/install/setup.bash && colcon build --symlink-install --packages-select dexbot_motion_executor
+  - cd robot_motion_executor && git diff --check origin/robam_kitchen..HEAD
+  - git archive efa6b24 到临时干净目录后，在该快照中重复 compileall、41 个定向测试和 colcon build
+  - cd robot_motion_executor && GIT_TERMINAL_PROMPT=0 git push --dry-run origin robam_kitchen
+  artifacts:
+  - robot_motion_executor HEAD=efa6b24
+  - robot_motion_executor origin/robam_kitchen=4635b3e
+  - /home/tbl/.local-backups/robot_motion_executor-sdk-20260811
+  limitations:
+  - 未执行真实 robot_driver、控制器或硬件闭环验证。
+  - 待推送提交本身包含公共路径回放功能对 `xcore_path_client.py` 的改动和新增 `test_path_replay.py`；本结论仅确认后续个人工作区版本未随 push 发送，不代表这些公共任务改动被排除。
+  - 本轮未执行 push，由用户手动执行。
+- id: EVID-KITCHEN-SDK-RECHECK-20260811
+  task_id: TASK-018
+  business_logic:
+  - SDK 改动不得随任务代码提交或推送
+  acceptance_criteria:
+  - 当前工作树无未提交 SDK 改动
+  - 从任务基线到当前 HEAD 的任务提交不包含 src/sdk 路径改动
+  - 当前分支与 origin/robam_kitchen 的 push 增量为 0
+  - 主仓库定向测试、构建和 diff 检查通过
+  result: passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && git fetch origin
+  - cd kitchen_robot_home && git status --short --branch
+  - cd kitchen_robot_home && git rev-list --left-right --count origin/robam_kitchen...HEAD
+  - cd kitchen_robot_home && git diff --quiet 9de887a..HEAD -- src/sdk
+  - cd kitchen_robot_home && python3 -m compileall -q src/dexbot_task_planner/dexbot_task_planner
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_teach_pan_pour_policy.py src/dexbot_task_planner/test/test_teach_pan_pour_delta_policy.py
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && colcon build --symlink-install --packages-select dexbot_bringup dexbot_task_planner
+  - cd kitchen_robot_home && git diff --check
+  artifacts:
+  - kitchen_robot_home HEAD=a0aefce
+  - kitchen_robot_home origin/robam_kitchen=a0aefce
+  - kitchen_robot_home stash@{0} preserved and not applied
+  limitations:
+  - 主仓库没有待 push 增量，因此未执行 push；用户要求手动 push。
+  - 未验证执行仓库，本轮仅记录其状态并留待后续任务。
+- id: EVID-KITCHEN-SDK-EXCLUSION-20260810
+  task_id: TASK-018
+  business_logic:
+  - SDK 改动不得随任务代码提交或推送
+  acceptance_criteria:
+  - origin/robam_kitchen..HEAD 不包含 /sdk/ 路径
+  - 本地 SDK 工作区改动保持未提交
+  - 备份分支保留原提交历史
+  - 远端无新提交或已确认合并
+  result: passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && git status --short --branch
+  - cd kitchen_robot_home && git log --oneline --decorate origin/robam_kitchen..HEAD
+  - cd kitchen_robot_home && git diff --name-only origin/robam_kitchen..HEAD | grep -i '/sdk/'
+  - cd kitchen_robot_home && git fetch origin
+  - cd kitchen_robot_home && git diff --check origin/robam_kitchen..HEAD
+  - cd kitchen_robot_home && python3 -m compileall -q src/dexbot_task_planner/dexbot_task_planner
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py src/dexbot_task_planner/test/test_teach_pan_pour_delta_policy.py src/dexbot_task_planner/test/test_teach_pan_pour_policy.py
+  artifacts:
+  - kitchen_robot_home 分支 robam_kitchen HEAD=7d8dd4d
+  - kitchen_robot_home 分支 backup/robam_kitchen-before-sdk-exclusion-20260810=39c3d83
+  limitations:
+  - 尚未执行 push，远端结果仍待用户确认后验证。
+  - 重写后未重复 colcon build；提交树中任务代码相对重写前未变化，构建结果沿用重写前证据。
 - id: EVID-TASK-010-001
   task_id: TASK-010
   business_logic:
@@ -85,3 +167,224 @@ evidence:
   - 仅验证离线 YAML schema、单位/坐标约定和 SE(3) 展开数学；没有真实 V1 轨迹资产。
   - 未验证目标 Driver 的 GetArmPose/MoveCartesian 运行时语义，未创建或运行 MotionExecutor Skill。
   - 未执行 ROS 节点、Driver 或硬件测试。
+- id: EVID-ENV-INIT-001
+  task_id: TASK-015
+  business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_criteria:
+  - 两个工程包的 ROS/apt 依赖可发现
+  - 两个工程包可完成源码构建
+  - 已实现 V1 模块的定向测试可执行
+  result: partial-passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && sudo bash scripts/setup_apt_repos.sh
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && rosdep install --from-paths src --ignore-src -r -y
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && colcon build --symlink-install --event-handlers console_direct+
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && colcon build --symlink-install --event-handlers console_direct+
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_policy_decision.py src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py
+  - cd robot_motion_executor/src/dexbot_motion_executor && source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && PYTHONPATH="$PWD:${PYTHONPATH:-}" PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q dexbot_motion_executor/skills/test_right_gripper.py test/test_flange_delta_trajectory.py
+  - cd kitchen_robot_home && mamba env create -f src/env/environment.yml
+  artifacts:
+  - kitchen_robot_home/install
+  - robot_motion_executor/install
+  limitations:
+  - 主仓库构建有旧 SDK demo 包无 `install` target 的警告，但 8 个包均构建成功。
+  - "`robot` Conda 环境创建失败；环境文件中的部分精确 CUDA/PyPI 风格版本不在当前 Conda channels 中，感知运行环境尚未完成。"
+  - 未启动真实 ROS 节点、MotionExecutor、目标 Driver 或硬件；测试使用本地接口和纯 Python 定向验证。
+- id: EVID-TASK-016-ANGLE-TYPE-001
+  task_id: TASK-016
+  business_logic:
+  - BL-GRASP-001
+  acceptance_criteria:
+  - teach_pan_pour 的灵巧手角度和力矩请求可被 ROS 消息正确构造
+  result: partial-passed
+  level: 2
+  commands:
+  - cd robot_motion_executor && python3 -m compileall -q src/dexbot_motion_executor
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && colcon build --symlink-install --packages-select dexbot_motion_executor
+  - source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && python3 -c "from dexbot_interfaces.srv import SetHandAngles; request=SetHandAngles.Request(); request.angles=[float(value) for value in [100, 100, 100, 100, 100, 100]]; print('SetHandAngles float assignment: PASS')"
+  - cd robot_motion_executor && git diff --check
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py
+  limitations:
+  - 未在重启后的真实 ROS Action 链路中复测 `teach_pan_pour` 完整流程。
+  - 未验证两段本地 xCore 轨迹、控制权切换和灵巧手动作的完整真机闭环。
+  - 当前环境没有可用的 `pytest` 命令，未执行 pytest。
+- id: EVID-TASK-016-HARDWARE-SMOKE-001
+  task_id: TASK-016
+  business_logic:
+  - BL-GRASP-001
+  - BL-PLATING-001
+  acceptance_criteria:
+  - teach_pan_pour 可在当前双臂/CAN 硬件环境启动并执行
+  result: partial-passed
+  level: 3
+  commands: []
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/teach_pan_pour_skill.py
+  limitations:
+  - 成功证据来自用户现场运行反馈，未归档完整逐阶段日志。
+  - 未形成独立的急停、取消、限位和异常恢复验收记录。
+  - TASK-016 的完整正式验收仍待补充，当前不标记为 done。
+- id: EVID-TASK-016-POUR-DIAGNOSTICS-001
+  task_id: TASK-016
+  business_logic:
+  - BL-PLATING-001
+  acceptance_criteria:
+  - 倾倒轨迹中途停止时能够区分入队不完整、控制器中止和执行状态误判
+  result: partial-passed
+  level: 2
+  commands:
+  - cd robot_motion_executor && PYTHONPATH=src/dexbot_motion_executor PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py
+  - cd robot_motion_executor && python3 -m compileall -q src/dexbot_motion_executor
+  - cd robot_motion_executor && git diff --check
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/local_joint_trajectory_client.py
+  limitations:
+  - 仅完成控制器事件、批次和末点诊断接入；尚未重启后进行真机复测。
+  - 根因仍需由下一次现场日志中的 `WaypointIndex`、`Error`、`Remark` 和全部批次接受记录确认。
+- id: EVID-ENV-DRIVER-CWD-001
+  task_id: ENV-DRIVER-CONFIG
+  business_logic:
+  - robot_driver_node must discover the machine-local SDK configuration regardless of the directory used to invoke ros2 launch
+  acceptance_criteria:
+  - launch sets robot_driver_node cwd to the main workspace root
+  - main bringup package builds successfully
+  result: partial-passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && python3 -m compileall -q src/dexbot_bringup
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_bringup
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && python3 -c "load launch file and assert robot_driver_node cwd resolves to kitchen_robot_home"
+  - cd kitchen_robot_home && git diff --check
+  artifacts:
+  - kitchen_robot_home/src/dexbot_bringup/launch/dexrob_full.launch.py
+  limitations:
+  - 未启动真实 robot_driver_node，未验证 SDK 动态导入、CAN 连接和硬件服务。
+  - "`.localconfig` 是本机忽略文件，不作为仓库产物交付。"
+- id: EVID-TASK-016-TRAJECTORY-STRATEGY-RESEARCH-001
+  task_id: TASK-016
+  business_logic:
+  - teach_pan_pour must replay the complete recorded pour and put trajectories without restarting the same phase after a controller queue boundary
+  acceptance_criteria:
+  - distinguish controller queue capacity from Python moveAppend batch size
+  - assess continuous NRT append and RT joint-follow paths from current SDK evidence
+  result: partial-passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && rg -n "moveAppend|moveStart|RtCommandMode|FollowPosition_7|setControlLoopJoi" src/sdk/xcoresdk_python-v0.5.1.ar_12
+  - cd kitchen_robot_home && sed -n '360,410p' src/sdk/xcoresdk_python-v0.5.1.ar_12/example/move_example.py
+  - cd kitchen_robot_home && sed -n '1,190p' src/sdk/xcoresdk_python-v0.5.1.ar_12/example/follow_joint_position.py
+  - cd kitchen_robot_home && rg -n "joint_follow|_prepare_follow_mode|DEXBOT_XCORE_RT_FOLLOW" src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py
+  artifacts:
+  - kitchen_robot_home/src/sdk/xcoresdk_python-v0.5.1.ar_12/example/move_example.py
+  - kitchen_robot_home/src/sdk/xcoresdk_python-v0.5.1.ar_12/example/follow_joint_position.py
+  - kitchen_robot_home/src/sdk/arm_api/Python/lbot/lbot_robot_xcore.py
+  limitations:
+  - 官方示例没有直接证明目标控制器在运动中追加超过 100 点一定成功，仍需短轨迹真机 Spike。
+  - RT 路径只完成源码/API核查，未验证本机 IP、实时网络、控制器 RT 支持、急停/取消和 Driver 控制权互斥。
+- id: EVID-TASK-016-NRT-STREAMING-IMPLEMENTATION-001
+  task_id: TASK-016
+  business_logic:
+  - teach_pan_pour must replay complete pour and put trajectories without restarting the same phase after a controller queue boundary
+  acceptance_criteria:
+  - complete pour and put resources are preserved
+  - trajectory windows are appended during motion through one xCore connection
+  - execution stops only after final-point verification
+  result: partial-passed
+  level: 2
+  commands:
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && PYTHONPATH="src/dexbot_motion_executor:${PYTHONPATH:-}" PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py src/dexbot_motion_executor/test/test_teach_pan_pour_skill.py
+  - cd robot_motion_executor && python3 -m compileall -q src/dexbot_motion_executor
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_motion_executor
+  - cd robot_motion_executor && git diff --check
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/local_joint_trajectory_client.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/resource_manifest.yaml
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_teach_pan_pour_skill.py
+  limitations:
+  - 软件 Mock 验证了窗口续填和最终验收，但未证明目标控制器真机能在约 100 点边界前完成无停顿续填。
+  - 尚未进行真机急停、取消、控制权竞争和完整 pour→put 顺序验证。
+- id: EVID-TASK-016-NRT-STARTUP-GUARD-FIX-001
+  task_id: TASK-016
+  business_logic:
+  - a moving trajectory must not fail solely because its startup observation window expires
+  acceptance_criteria:
+  - startup timeout fires only when moving was never observed
+  - slow but active trajectory continues to final completion handling
+  result: passed
+  level: 2
+  commands:
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && PYTHONPATH="src/dexbot_motion_executor:${PYTHONPATH:-}" PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py src/dexbot_motion_executor/test/test_teach_pan_pour_skill.py
+  - cd robot_motion_executor && python3 -m compileall -q src/dexbot_motion_executor
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_motion_executor
+  - cd robot_motion_executor && git diff --check
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/local_joint_trajectory_client.py
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py
+  limitations:
+  - 真机已确认旧代码误判发生，但修复后滑动窗口续填和全轨迹完成仍需现场复测。
+- id: EVID-TASK-016-NRT-REFILL-WITHOUT-RESTART-001
+  task_id: TASK-016
+  business_logic:
+  - an active controller must continue consuming an appended trajectory window without a second start command
+  acceptance_criteria:
+  - moving-state refill invokes moveAppend without moveStart
+  - idle fallback retains an explicit restart path
+  - initial start is called once during a continuous two-window stream
+  result: partial-passed
+  level: 3
+  commands:
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && PYTHONPATH="src/dexbot_motion_executor:${PYTHONPATH:-}" PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest -q src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py src/dexbot_motion_executor/test/test_teach_pan_pour_skill.py
+  - cd robot_motion_executor && python3 -m compileall -q src/dexbot_motion_executor
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_motion_executor
+  - cd robot_motion_executor && git diff --check
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/local_joint_trajectory_client.py
+  - robot_motion_executor/src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py
+  limitations:
+  - 真机仅确认第二窗口被接受；尚未观察到其 `absj#3` waypoint 持续推进、后续窗口续填或 437 点末端到达。
+- id: EVID-TASK-016-NRT-FULL-TRAJECTORY-HARDWARE-001
+  task_id: TASK-016
+  business_logic:
+  - complete pour and put trajectory resources must execute without replaying the same pour phase after a queue boundary
+  acceptance_criteria:
+  - continuous NRT window refills complete the recorded trajectory on the target controller
+  - executor no longer fails from a second moveStart while the robot is moving
+  - planner does not retry the same pour phase due to a streaming-client failure
+  result: partial-passed
+  level: 3
+  commands: []
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/local_joint_trajectory_client.py
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/resources/resource_manifest.yaml
+  limitations:
+  - 成功证据来自用户现场确认，未归档完整的逐窗口控制器日志。
+  - 批次交接存在可感知短暂停顿，尚未完成时序与平滑性优化。
+  - 未覆盖急停、取消、xCore/robot_driver 控制权竞争和重复任务恢复。
+- id: EVID-TASK-016-DELTA-HW-001
+  task_id: TASK-016
+  business_logic:
+  - 增量法兰轨迹回放先走到 move_to_pour_ready 固定点，再读当前法兰位姿按 T_current @ Delta_i 展开并 IK 求解后执行
+  - 放锅阶段使用固定关节点 put_fixed，仅关节角度、无轨迹文件，复用 grasp_ready 抓取点关节角
+  - 不修改现有 teach_pan_pour 普通轨迹套件
+  acceptance_criteria:
+  - 增量倾倒回放完整执行 103 点法兰轨迹，IK 全解、未触关节限位、进入 moving 状态并到达末点
+  - put_fixed 固定点放锅动作执行成功
+  - 全流程 move_to_pour_ready → pour_delta_replay → put_fixed → open_gripper → return_home 不回退重试
+  result: passed
+  level: 3
+  commands:
+  - source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && ros2 launch dexbot_bringup dexrob_full.launch.py
+  - "ros2 service call /task_planner/start_task dexbot_interfaces/srv/StartTask '{task_type: \"teach_pan_pour_delta\", target_class: \"\", scene_id: \"\", resume: true}'"
+  - ros2 service call /task_planner/get_status dexbot_interfaces/srv/GetTaskStatus '{}'
+  artifacts:
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour_delta/
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/delta_flange_replay_client.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/teach_pan_pour_delta/
+  limitations:
+  - 成功证据为操作员现场确认，控制器逐窗口/姿态日志未全套归档。
+  - 急停、取消、xCore/robot_driver 控制权竞争和重复任务恢复尚未系统化验收。
