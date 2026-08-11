@@ -237,3 +237,37 @@ entries:
   evidence:
   - EV-036
   knowledge_candidate: true
+
+- id: TRACE-014
+  task_id: TASK-040
+  timestamp: '2026-08-11T00:00:00+08:00'
+  context: 用户要求把 dexbot_ros2_ws-dex_vla 完整迁移到 force_touch_model，并把两套 .project-log 合并。
+  hypothesis: 保留 DexBot 独立 Git 子仓并移动到工作区根，再将工程记录放入根日志的子工程命名空间，可同时满足单一工作区和历史记录完整保留。
+  decision_ref: DEC-010
+  action: 整仓移动、归并 .project-log、更新源码/日志/VS Code 配置中的旧绝对路径、补充 AGENTS 工作区说明，并运行项目日志和 VLA 聚焦测试。
+  expected_result: force_touch_model 成为唯一工作目录；DexBot Git 状态不受迁移影响；Project Log 校验通过。
+  observation: 移动后 git status 仍显示 dex_vla 分支；subprojects 下保留完整 DexBot 工程记录；旧绝对路径在文本工作区中无残留。
+  actual_result: 迁移与合并完成；根 Project Log 已加入 TASK-040、DEC-010、TRACE-014、EV-068，迁移后测试通过。
+  delta: 从两个独立工程目录变为一个工作区根加多个独立 Git 子仓；工程记录从两套根日志合并为一套带子工程命名空间的根日志。
+  lesson: 多个 Git 子仓组成的工作区应复用已有模式，把工程记录按子工程命名空间合并，而不是强行删除独立 Git 历史。
+  next_adjustment: 后续 DevBot/VLA 相关指令统一在 force_touch_model/dexbot_ros2_ws-dex_vla 内进行。
+  evidence:
+  - EV-068
+  knowledge_candidate: false
+
+- id: TRACE-015
+  task_id: TASK-041
+  timestamp: '2026-08-11T00:00:00+08:00'
+  context: 用户要求归档合并 DexBot 子工程后的统一工程。
+  hypothesis: 将 force_touch_model/.project-log 同步到集中知识库的工程记录目录，可以保留统一后的完整记录。
+  decision_ref: null
+  action: 校验 Project Log，同步 .project-log 到知识库，并仅提交 force_touch_model 归档目录后推送。
+  expected_result: 知识库 archive 与工作区 Project Log 一致，且不携带无关未跟踪文件。
+  observation: 根 Project Log 校验通过；归档目录包含 subprojects/dexbot_ros2_ws-dex_vla。
+  actual_result: 归档完成并已推送。
+  delta: 工作区合并后的 Project Log 成为知识库中 force_touch_model 的最新 archive。
+  lesson: 归档时要避免在共享知识库中执行全量 git add，否则会把其他未跟踪个人文件带入归档提交。
+  next_adjustment: 后续归档继续只提交当前工程对应目录。
+  evidence:
+  - EV-069
+  knowledge_candidate: false

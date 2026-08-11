@@ -1,6 +1,6 @@
 version: '0.4'
 mode: standard
-current_phase: verification
+current_phase: business-clarification
 active_goal: null
 phase_order:
 - business-intent
@@ -24,8 +24,8 @@ phases:
     - goal and target outcome are stated
     evidence: []
   business-clarification:
-    status: completed
-    gate_status: passed
+    status: reopened
+    gate_status: open
     required_artifacts:
     - .project-log/business-logic/atoms.yaml
     - .project-log/business-logic/clarification.yaml
@@ -35,7 +35,9 @@ phases:
     - functional and technical conflicts are recorded
     - no blocking C-level semantic question is hidden
     - future solution choices are routed to solution research
-    evidence: []
+    evidence:
+    - .project-log/docs/vlm-v2-guide-analysis-2026-08-08.md
+    notes: 根据外部 V2 精度优先指南重新澄清 VLM 自动标注子任务范围的产品规则。
   requirement-baseline:
     status: completed
     gate_status: passed
@@ -79,16 +81,17 @@ phases:
     - non-trivial ready tasks have implementation-ready specs
     evidence: []
   implementation:
-    status: completed
-    gate_status: passed
+    status: pending
+    gate_status: open
     required_artifacts: []
     exit_conditions:
     - planned outputs exist
     - deviations are recorded
     evidence: []
+    notes: 返回业务澄清，V2 实施暂不推进。
   verification:
-    status: active
-    gate_status: open
+    status: pending
+    gate_status: not-evaluated
     required_artifacts:
     - .project-log/verification/evidence.yaml
     exit_conditions:
@@ -121,7 +124,8 @@ phases:
     exit_conditions:
     - lessons are classified without silently becoming permanent rules
     evidence: []
-open_gates: []
+open_gates:
+- business-clarification
 return_edges:
 - from: implementation
   to: business-clarification
@@ -135,4 +139,4 @@ return_edges:
 - from: alignment
   to: implementation
   reason: implementation or test drift
-last_updated: '2026-07-28T16:35:00+08:00'
+last_updated: '2026-08-08T14:10:00+08:00'

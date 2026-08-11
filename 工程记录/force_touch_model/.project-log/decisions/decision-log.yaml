@@ -278,3 +278,217 @@ decisions:
   supersedes: []
   created_at: '2026-07-28T16:42:00+08:00'
   updated_at: '2026-07-28T16:42:00+08:00'
+- id: DEC-007
+  title: annotation_workbench 采用包内适配层与保留式前端迁移
+  category: architecture
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-031
+  - TASK-032
+  - TASK-033
+  - TASK-034
+  - TASK-035
+  related_business_logic:
+  - BL-TOOL-001
+  - BL-TOOL-002
+  - BL-TOOL-003
+  context: 当前桌面中间件硬编码读取项目外的 visualize_dataset、serve_local_dataset.py 和 lerobot_v1.0，不能满足复制 annotation_workbench 后独立运行的要求。
+  hypothesis: 保留可用的 Next.js 标注前端和 FastAPI 后端，同时仅提取 VLM 所需的 LeRobot v3.0 能力到包内适配层，可以以最小重构成本实现独立运行。
+  options:
+  - name: 复制完整 LeRobot
+    benefits:
+    - 可直接复用原标注模块
+    costs:
+    - 包体积、依赖和维护范围显著扩大
+    risks:
+    - 与原仓库版本漂移，违背最小独立边界
+  - name: 重写纯 Python 可视化界面
+    benefits:
+    - 不再依赖 Node.js
+    costs:
+    - 需要大范围重做已验证 GUI 功能
+    risks:
+    - 当前标注流程回归风险高
+  - name: 保留前端并提取最小 v3 适配层（选择）
+    benefits:
+    - 保持现有 GUI 行为
+    - 消除运行时外部目录依赖
+    - 控制迁移和维护范围
+    costs:
+    - 仍需要 Node.js/npm
+    - 需维护小型数据读取和视频抽帧实现
+    risks:
+    - 视频编码兼容性必须以真实数据集验证
+  decision: 将 visualize_dataset 的源码与标注后端迁移到 annotation_workbench/visualize_dataset；将数据服务和最小 LeRobot v3.0/VLM 能力实现到 annotation_workbench 包内；不复制完整 LeRobot，也不重写前端。
+  reason_summary:
+  - 用户确认可接受 Node.js，并优先避免大范围前端重构。
+  - 当前 VLM 实际只使用少量 episode 读取、视频帧、联系表和 OpenAI 兼容调用能力。
+  - 外部旧目录可以保留为备份，不应成为独立包的运行时输入。
+  conditions:
+  - 外部 Ollama 与模型保持用户管理，不被打包或自动下载。
+  - 首版仅支持 Linux/Ubuntu 和 LeRobot v3.0。
+  - 生产运行使用 next start，不使用 next dev。
+  action: 按 ARCH-001 分阶段创建包骨架、迁移前后端、实现最小适配层、改造桌面服务管理并在隔离目录完成端到端验证。
+  expected_result: annotation_workbench 被复制到没有外部旧目录的位置后，完成安装即可启动桌面端、GUI 和 VLM 自动标注闭环。
+  reversal_plan: 保留外部旧目录不变；若独立适配层在验证中不满足功能，可继续使用现有外部中间件，且仅回滚 annotation_workbench 内迁移改动。
+  observation: "已用 PyAV 在真实 H.264 v3 数据集完成抽帧；Next.js 生产客户端改为同源运行时配置，避免构建期环境变量造成后端写入失效。"
+  actual_result: "annotation_workbench 已独立包含前端、后端、数据服务和最小 V3/VLM 适配层。隔离副本安装、桌面启动、GUI 保存/读回、Gemma 单 episode 写回和 GUI 读回均通过。"
+  outcome_status: successful
+  lesson: "保留成熟前端时，桌面端可写入同源运行时配置以支持动态数据集切换，无需为每次选择重新构建 Next.js。"
+  evidence: [EV-053, EV-054, EV-055, EV-056, EV-057, EV-058, EV-059]
+  supersedes: []
+  created_at: '2026-08-03T00:00:00+08:00'
+  updated_at: '2026-08-03T21:00:00+08:00'
+- id: DEC-008
+  title: VLM 时间对齐改为示例边界局部画面驱动的目标帧序号选择
+  category: architecture
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks: []
+  related_business_logic:
+  - BL-TOOL-003
+  context: 当前实现只把示例子任务起始秒数作为 JSON 文本传给 VLM，没有传示例视频，且目标边界由模型直接猜秒数，导致示例无法形成有效示教。
+  hypothesis: 将人工示例边界附近的真实画面与边界信息一起提供给 VLM，并让 VLM 只从目标联系表中选择帧序号，可减少绝对时间混淆和秒数幻觉，提高时间边界质量。
+  options:
+  - name: 继续传示例秒数并吸附到 0.1 秒网格
+    benefits:
+    - 改动小
+    costs:
+    - 示例视频没有进入模型上下文
+    risks:
+    - 模型继续凭视觉和文本猜测边界
+  - name: 示例边界局部画面 + 目标帧序号选择（选择）
+    benefits:
+    - 示例提供真实动作边界视觉证据
+    - 模型不再负责秒数换算
+    - 程序可严格校验帧序号范围和单调性
+    costs:
+    - 每次请求增加示例图片
+    - 仍依赖 VLM 正确理解动作边界
+    risks:
+    - 示例之间若人工边界差异较大，模型可能受到混合示例干扰
+  decision: 保留固定子任务和 0.1 秒目标采样；每个示例边界提取前后局部帧，目标 episode 联系表显示稳定帧编号；VLM 仅返回每个固定子任务的 start_frame，程序将其映射为目标采样时间并写入标注。不加入示例一致性告警、复杂示例选择器或额外质量面板。
+  reason_summary:
+  - 用户要求示例视频真正发挥示教作用。
+  - 用户明确要求删去第八条示例一致性警告等非核心功能。
+  - 帧编号比秒数更适合视觉模型输出和程序校验。
+  conditions:
+  - 固定模式下子任务数量、顺序和文本仍由人工模板决定。
+  - 目标首个子任务固定从第 0 帧开始，后续边界必须单调递增，最后一段覆盖到 episode 末帧。
+  - 旧的秒数吸附函数保留兼容，但固定模式不再使用它作为主要对齐路径。
+  action: 扩展视频提供器支持指定偏移抽帧；联系表支持帧编号标签；guided_alignment 发送示例局部帧和目标编号联系表，校验并转换 start_frame。
+  expected_result: 新自动标注结果的边界只落在目标联系表实际显示的采样帧上，且模型能参考示例边界前后动作变化。
+  reversal_plan: 若真实小批量复核无改善，可恢复固定模式旧的秒数输出路径，保留新增抽帧能力作为实验接口。
+  observation: "已完成代码实现；固定模式向 VLM 提供前五条示例每个边界前后局部画面，目标联系表改用 FRAME 编号，输出经过帧号校验后转换为目标时间戳。"
+  actual_result: "23 个 Python 测试、py_compile 和 git diff --check 通过；真实数据集只读抽帧 smoke 通过。尚未运行真实 Ollama 批量质量对比。"
+  outcome_status: partial
+  lesson: "示例示教的关键是把动作边界的视觉变化放进模型上下文，并让模型选择程序可验证的帧编号，而不是继续让模型直接生成秒数。"
+  evidence: [EV-060]
+  supersedes: []
+  created_at: '2026-08-04T00:00:00+08:00'
+  updated_at: '2026-08-04T00:00:00+08:00'
+- id: DEC-009
+  title: VLM 时间对齐改为程序时间搜索 + VLM 局部视觉判断（coarse-to-fine、每边界独立请求）
+  category: architecture
+  status: active
+  authority: C
+  user_approval: approved
+  related_tasks: [TASK-036]
+  related_business_logic:
+  - BL-TOOL-003
+  context: v2 方案（40 张示范局部图 + 120–190 张目标帧 + 一次预测两个边界）在 episode 51/52/53 上仍失败，51/52 输出完全相同边界（1.9s/5.8s），但 start_frame 到 sampled_times 的映射、校验链、单元测试均正确；外部 GPT 给出的行动指南认为失败来自单次请求视觉内容过载与双重边界预测。
+  hypothesis: 让 VLM 只做小规模局部视觉决策（每边界独立、每页 ≤8 张、简单候选编号 C00/F00，先 0.5s 粗定位再 ±0.6s 窗口 0.1s 精定位），由程序维护时间搜索与帧号→时间戳映射，可以显著提高时间边界质量；当前 fixed 提示词把示范 start 秒数作为文本发送，可能是额外的数字锚定源。
+  options:
+  - name: 采纳 GPT 指南：诊断实验 + coarse-to-fine + 独立 boundary 请求与持久化日志
+    benefits:
+    - 符合 51/52 完全相同边界这一症状（模型没有在做逐集视觉判别）
+    - 每请求视觉量降低到 10–40 张，减少多图注意力稀释
+    - 日志与 contact sheet 落盘可区分“模型稳定选固定位置”与解析错误
+    costs:
+    - 需要新增诊断实验与调试基础设施
+    - 一次 episode 改为多次请求，耗时更长
+    risks:
+    - fine 窗口 ±0.6s 在 coarse 误差更大时会失效
+    - gemma3:27b + cam_top 可能仍无法可靠识别该 transition；指南已给出退出判定
+  - name: 继续在当前 v2 上调整 prompt 或采样密度
+    benefits:
+    - 改动小
+    costs:
+    - 无诊断数据，无法区分失败来源
+    risks:
+    - 继续在“模型一次看完 100+ 张图”的错误约束下调参，大概率无效
+  decision: 采纳 GPT 行动指南作为下一步实施方向：先做 P0（debug JSONL + contact sheet 落盘 + episode 51 无 demo/单 demo/five-demo 消融实验），再实施每边界独立请求、≤8 张/页、简单编号、coarse(0.5s)->fine(±0.6s/0.1s)，以 51/52/53 的 6 个边界绝对误差为验收。本决策已于 2026-08-08 获用户确认，转 active。
+  reason_summary:
+  - 组件级证据已排除帧映射、校验与采样精度问题，剩余最可能的变量是模型上下文视觉负载与任务拆解。
+  - GPT 指南的最小诊断实验能区分“无示范能力、示范干扰、标签可读性、窗口分辨力”四类原因。
+  - 用户要求先记录再分析；后于 2026-08-08 明确同意改代码并继续实验，授权 DEC-009/P1 推进。
+  conditions:
+  - 固定子任务顺序与文本保持不变。
+  - 首边界固定 0、后续单调、覆盖全 episode 的现有校验保留。
+  - P0/P1 未验证前不重跑 287 条，也不更换 VLM、不修改 GUI；当前 51/52/53 参考边界来自已有自动标注，不等同人工 ground truth。
+  action: 已获用户批准；先补录 P0 实跑结果，再实现 P1 单边界 fine 请求，并在 51/52/53 小批量实验后按证据决定是否进入生产。
+  expected_result: 每次 VLM 只回答“新动作最早在哪一张候选图中开始”，程序做时间搜索与帧号映射；51/52/53 的 6 个边界中多数误差明显小于 v2，且 51/52 不再异常输出完全相同的边界。
+  reversal_plan: 若 coarse 阶段已无法收敛到正确动作附近，判定 cam_top+gemma3:27b 不胜任，不继续 fine 调参，再单独研究视角或模型选择。
+  observation: "外部 GPT 行动指南已记录；P0/P1 均已实跑。P1 新增 fine_offsets、F00 标签、load_coarse_rows、run_fine_probe，33 个测试通过；51/52/53 的 coarse/fine JSONL 与 contact sheets 全部落盘。"
+  actual_result: "P0 10/10 可解析；P1 fine 10/10 可解析；52/53 8/8 可解析。episode 51 只有 single4 b1 从 0.5s 略降至 0.4s，b2 从 1.5s 恶化到 1.7–2.1s；52/53 的 coarse 离群误差 2.2–7.13s 未被 fine 修复，53 的 7.13s 误差完全保留。结论：cam_top+gemma3:27b 当前不胜任该时间定位任务，不能进入 287 条生产。"
+  outcome_status: failed
+  lesson: "当 coarse 阶段没有收敛到真实边界附近时，fine 只是放大局部候选并无法自救；是否继续应换视角/模型或先建立人工 GT 验收，不能在同组合上继续调参。"
+  supersedes: []
+  evidence:
+  - EV-061
+  - EV-063
+  created_at: '2026-08-08T00:00:00+08:00'
+  updated_at: '2026-08-08T12:50:00+08:00'
+
+- id: DEC-010
+  title: DexBot 以独立 Git 子仓迁入统一工作区，工程记录并入根 Project Log
+  category: process
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-040
+  related_business_logic: []
+  context: force_touch_model 已作为统一工作区根，内部多个代码子仓各自保留 Git；用户要求把 dexbot_ros2_ws-dex_vla 完整迁入，并合并工程记录，后续只在 force_touch_model 下工作。
+  hypothesis: 保留 dexbot 子仓的 .git 和 remote，将 repo 移动到工作区根下，同时把其 .project-log 纳入根项目日志的子工程命名空间，可以在不污染内层代码仓库的前提下完成统一管理。
+  options:
+  - name: 将 dexbot .git 移到 force_touch_model 根
+    benefits:
+    - 根目录变成单一 Git 根
+    costs:
+    - 改变现有工作区结构
+    - 会意外纳入 lerobot_v1.0、annotation_workbench、visualize_dataset 等多个子仓
+    risks:
+    - 与现有多个独立 Git 子仓模式冲突
+  - name: 保留 dexbot 独立 Git 子仓并迁入工作区（选择）
+    benefits:
+    - 维持 force_touch_model 现有工作区模式
+    - Git 分支与 remote 不变
+    - 工程记录集中在统一根 .project-log
+    costs:
+    - 仍需要更新代码内旧工作区绝对路径
+    risks:
+    - 外部脚本若仍硬编码旧路径需要另行处理
+  decision: 保留 dexbot_ros2_ws-dex_vla 的独立 Git 子仓，整仓移动为 force_touch_model/dexbot_ros2_ws-dex_vla；其工程记录保存在 .project-log/subprojects/dexbot_ros2_ws-dex_vla/。
+  reason_summary:
+  - force_touch_model 现有结构就是工作区根加多个独立 Git 子仓。
+  - 根日志是统一项目记录权威，子工程命名空间可避免 TASK/DEC ID 冲突。
+  - 保留 Git remote 和分支便于后续同步和回退。
+  conditions:
+  - 代码子仓继续使用各自 .git，不改变 remote。
+  - 根 .project-log 是统一工作区的工程记录源。
+  - 后续 VLA 指令和测试在 dexbot_ros2_ws-dex_vla 目录内执行。
+  action: 移动整仓、归并工程记录、更新绝对路径、补充工作区说明，并完成迁移后验证。
+  expected_result: force_touch_model 成为唯一工作目录，DexBot 子仓可继续独立 Git 管理，项目记录可在一个根日志中检索。
+  reversal_plan: 将 dexbot_ros2_ws-dex_vla 从工作区移回旧路径，并把 subprojects 下的工程记录移回其仓内。
+  observation: 移动后 Git 分支 dex_vla 和 origin remote 均保持正常；全工作区旧绝对路径引用已清理。
+  actual_result: 迁移完成，项目日志校验和迁移后 VLA 聚焦测试通过。
+  outcome_status: successful
+  lesson: 工作区根与代码 Git 根可以分离；统一日志通过子工程命名空间合并，比强行扁平化 ID 更安全。
+  evidence:
+  - EV-068
+  created_at: '2026-08-11T00:00:00+08:00'
+  updated_at: '2026-08-11T00:00:00+08:00'

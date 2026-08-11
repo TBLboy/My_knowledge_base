@@ -1,26 +1,117 @@
 version: "0.4"
-status: passed
+status: active
 functional_business_logic:
-  actors: []
-  scenarios: []
-  rules: []
-  state_transitions: []
-  exceptions: []
-  boundaries: []
+  actors:
+  - "本机标注用户"
+  - "VLM 自动标注服务"
+  - "GUI 复核人员"
+  - "数据/模型训练人员"
+  scenarios:
+  - "固定 Task Template 和 0~4 人工 demo 已冻结时，VLM 自动恢复剩余 episode 的 Grasp/Pour/Put back 两个边界"
+  - "无法可靠判断的边界进入 manual_review，不在 GUI 中静默覆盖"
+  - "高置信度结果写成 sidecar，再由 adapter 写回现有 GUI 可读标注"
+  - "用户提供新数据集后，以新数据集重新标定测试，标定结果由用户评价"
+  - "用户先选择若干已人工标注 episode 作为示范，再选择自动标注范围"
+  rules:
+  - "task description 和 subtask 文本由任务模板固定，VLM 不得改写"
+  - "VLM 只根据局部 temporal panel 判断 before/after/uncertain"
+  - "程序由 N-1 个 boundary 组装 N 个 subtask range"
+  - "auto_accepted 必须经过质量门，不允许只保证格式正确"
+  - "边界 frame 归属新 subtask"
+  - "现有 0~4 demo 时间点不冻结，必须先人工复核/修改后才可作为 V2 人工标准真值"
+  - "当前 Qingdao 数据集暂停用于 V2 标定实验，后续以用户提供的新数据集重新定义"
+  - "示范 episode 必须显式选择，不得把前 5 条硬编码为固定默认"
+  state_transitions:
+  - "draft -> confirmed (人工确认 Task Template/demo)"
+  - "confirmed -> auto_accepted (质量门通过)"
+  - "confirmed/manual_review -> GUI 人工复核"
+  - "manual_review/failed -> 可重跑"
+  exceptions:
+  - "VLM 无法区分 before/after 时返回 uncertain"
+  - "coarse 找不到 BEFORE/AFTER 时进入 manual_review"
+  - "frame_index/timestamp 不合法时失败"
+  - "demo reference 无法构建时失败"
+  boundaries:
+  - "3 个固定 subtask 对应 2 个 boundary"
+  - "B1 = Grasp -> Pour"
+  - "B2 = Pour -> Put back"
+  - "A=[0,B1)，B=[B1,B2)，C=[B2,last)"
 technical_business_logic:
-  current_implementation_facts: []
-  interface_contracts: []
-  data_and_state_rules: []
-  consistency_and_concurrency: []
-  external_constraints: []
-  compatibility_constraints: []
+  current_implementation_facts:
+  - "guided_alignment.py 的 fixed 模式一次要求 VLM 输出所有 start_frame"
+  - "guided_probe.py 已实现单 boundary coarse/fine，但让模型从候选图中选 C00/F00"
+  - "vlm_client.py 当前先收集 text 再 append image，存在图文顺序问题"
+  - "dataset_reader.py 当前只读 episode_index 和 timestamp，未读 frame_index/task_index"
+  - "现有 GUI 写 meta/lerobot_annotations.json，subtask 只有 timestamp 开始时间"
+  interface_contracts:
+  - "当前 VLM 输出格式为 subtasks[start_frame] 或 candidate 编号"
+  - "V2 建议改为 state=before/after/uncertain 和 verdict=pass/fail/uncertain"
+  - "V2 sidecar 需要 adapter 转成现有 GUI atoms"
+  data_and_state_rules:
+  - "真实数据 data/*.parquet 已包含 episode_index, frame_index, timestamp, task_index"
+  - "真实数据 meta/info.json 标记 LeRobot v3.0、fps=30"
+  - "候选 boundary 必须最终映射到真实 LeRobot frame_index"
+  consistency_and_concurrency:
+  - "同一条 episode 已 auto_accepted 时可跳过"
+  - "manual_review 默认不覆盖，只有 force 才重跑"
+  - "结果需保留 raw VLM response、panel 和参数以便复现"
+  external_constraints:
+  - "本地 Ollama gemma3:27b，OpenAI 兼容接口"
+  - "不得自动下载模型"
+  - "精度优先，推理次数和耗时不是首要限制"
+  compatibility_constraints:
+  - "不得修改原始 LeRobot v3.0 data/video shards"
+  - "不得破坏现有 GUI 的 meta/lerobot_annotations.json 读写链路"
+  - "新代码与旧 guided_alignment/guided_probe 保持可对比"
 alignment:
-  confirmed_matches: []
+  confirmed_matches:
+  - id: AL-2026-08-08-001
+    type: confirmed-match
+    summary: "外部指南与当前产品目标一致：固定语义、程序搜索、VLM 局部判断"
+    status: accepted
+    authority: C
+    evidence:
+    - "外部指南 2026-08-08"
+    - "当前业务原子 BL-TOOL-002/BL-DATA-003"
   conflicts: []
-  unknowns: []
-  decisions_required: []
+  unknowns:
+  - id: AL-2026-08-08-002
+    type: unknown
+    summary: "V2 验收的时间误差阈值和 leave-one-out 通过标准未确认"
+    status: open
+    authority: C
+  - id: AL-2026-08-08-003
+    type: unknown
+    summary: "新数据集的输入路径、任务描述、人工标准与标定测试目标待用户提供"
+    status: open
+    authority: C
+  - id: AL-2026-08-08-004
+    type: unknown
+    summary: "自动接受/manual_review 的业务规则未确认"
+    status: open
+    authority: C
+  - id: AL-2026-08-08-005
+    type: unknown
+    summary: "是否保留多 task description 版本，还是 V2 只使用 canonical"
+    status: open
+    authority: C
+  - id: AL-2026-08-08-006
+    type: unknown
+    summary: "示范选择 UI 是两组多选，还是由系统从已人工标注 episode 中自动列出"
+    status: open
+    authority: C
+  decisions_required:
+  - "V2 边界验收标准"
+  - "新数据集标定输入与评价方式"
+  - "自动接受/manual_review 规则"
+  - "canonical 与 paraphrase 关系"
+  - "示范 episode 选择界面和校验方式"
 gate:
-  status: passed
-  blocking_unknowns: []
-  notes: 本增量只涉及 LeRobot/GR00T 训练基础设施、checkpoint 保存和 W&B 指标验证，不新增或改变用户可感知的产品业务行为；后续若扩大到真实机器人控制行为，必须重新打开业务澄清。
-updated_at: '2026-07-28T16:42:00+08:00'
+  status: open
+  blocking_unknowns:
+  - "V2 边界验收标准"
+  - "新数据集标定输入与评价方式"
+  - "自动接受/manual_review 规则"
+  - "canonical 与 paraphrase 关系"
+  notes: "用户已暂停当前 Qingdao 数据集；下一轮以用户提供的新数据集重新定义标定任务和真值。"
+updated_at: '2026-08-08T14:10:00+08:00'

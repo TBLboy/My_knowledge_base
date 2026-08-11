@@ -1,0 +1,66 @@
+version: "0.2"
+entries:
+  - id: WT-GROOT-DEPLOY-IMPLEMENT-002
+    task_id: TASK-002
+    context: "用户批准采用独立服务端 backend 接入自训练 GR00T，并要求先完成全部无需真实设备的工作。"
+    hypothesis: "将 preprocessor、predict_action_chunk 和 full-chunk postprocessor 收敛在 GrootBackend，可使 native relative action 不进入通用 scheduler，同时现有 JSON WebSocket/worker 协议无需改动。"
+    decision_ref: DEC-002
+    action: "实现 groot backend/registry、专用 artifact migrator、checkpoint deployment contract/artifact、30Hz shadow-only模板和模型服务注册；增加 backend/artifact/runtime配置测试，并在真实录制dataset sample、actual checkpoint和localhost服务上执行离线验证。"
+    expected_result: "统一模型服务向 worker 返回有限 absolute 40x13 chunk，artifact/runtime契约校验通过，且任何 profile 都不能批准机器人命令。"
+    observation: "初次真实 backend probe 发现 metadata 获取 CUDA tensor shape 时默认表达式触发 numpy 转换；修复为显式分支。首次 JSON protocol probe 发现整数列表在服务器端解码为int64；仅对0..255整型数组做无损uint8转换后，WebSocket roundtrip成功。"
+    actual_result: "artifact contract hash匹配；真实 recorded sample cold total=555.126ms、warm total=65.756ms、peak=9.427GiB，返回有限absolute [40,13]。localhost service metadata标识backend_id=groot/supports_rtc=false，infer和reset均成功。focused suite为60 passed、2 deselected。"
+    delta: "从分析结论推进到可由统一模型服务实际加载的离线部署实现，并修复了真实 CUDA/JSON 边界缺陷。"
+    lesson: "服务端 backend 的测试必须覆盖 CUDA tensor metadata 和 JSON整数图像数组，否则直接调用路径成功并不代表统一协议路径成功。"
+    next_adjustment: "真机可用后仅执行 shadow rollout：验证两相机视角、state/动作零位、初始姿态及安全门事件；在取得证据前不得移除 shadow_only 或打开 arm/hand command。"
+    evidence:
+      - "focused suite: 60 passed, 2 deselected"
+      - "actual checkpoint artifact_sha256=f46e78262f9b368fcc5433f13266c6cb06b67b88939e8e2d44c9e217e4fe733f"
+      - "actual localhost model-service JSON roundtrip returned finite [40,13]"
+    knowledge_candidate: false
+  - id: WT-TUTOR-VLA-READ-001
+    task_id: TUTOR-VLA-READ-001
+    context: "用户要求逐步阅读 dexbot_vla 的 VLA 部署代码，当前从 ROS Action 外部调用链开始。"
+    hypothesis: "先掌握 ExecuteVLA 接口和客户端 Future/回调生命周期，再阅读服务端节点，可以避免把 Goal 接受、反馈和最终结果混为一谈。"
+    decision_ref: null
+    action: "阅读 ExecuteVLA.action 与 send_vla_goal.py，追踪 Goal 构造、send_goal_async、Goal response、feedback 和 final result。"
+    expected_result: "能够区分 send_goal_future、get_result_future 及三个回调的触发条件和数据类型。"
+    observation: "已确认客户端通过 ActionClient(ExecuteVLA, vla/execute)发送 Goal；send_goal_future 等待 ACCEPT/REJECT，get_result_future 等待最终 ExecuteVLA.Result。"
+    actual_result: "用户已完成口头复述；已校正 future 初始为 pending 而非可读取的空结果，并区分 future.result() 返回 ClientGoalHandle 与 future.result().result 返回最终 Action Result。"
+    delta: "从接口字段阅读推进到客户端异步生命周期阅读。"
+    lesson: "ROS2 Action 客户端存在 Goal response 和 final result 两个不同 Future；Feedback 是独立的推送回调。"
+    next_adjustment: "下一步进入 PolicyRuntimeNode 初始化，只读节点创建、参数声明、ActionServer 回调绑定和状态变量。"
+    evidence: []
+    knowledge_candidate: false
+  - id: WT-TUTOR-VLA-READ-002
+    task_id: TUTOR-VLA-READ-001
+    context: "用户希望了解 dexbot_vla 的整体 VLA 部署流程，并准备将训练好的 GR00T 模型接入框架；此前逐函数阅读导致陷入局部细节。"
+    hypothesis: "把 dexbot_vla 看作策略执行壳，使用一个已工作的 ACT 模型作为黄金样例，按启动链、配置链和观测/动作数据流阅读，可以快速得到整体架构和新模型改动清单。"
+    decision_ref: DEC-001
+    action: "提出并确认分层阅读路线：先看 launch 和 ROS Action，再看 PolicyRuntimeNode 主入口，然后追踪 runtime_execution、policy_models、policy_templates、io_contracts、config_loader，最后只沿一条观测到动作的链路阅读 adapter、worker、SafetyGate 和 robot backend。"
+    expected_result: "形成一页式运行流程、配置解析链、输入输出数据流，以及按模型契约差异判断源码/配置改动范围的方法。"
+    observation: "用户认可该阅读方法，并要求将分析记录到工程记录。"
+    actual_result: "已将阅读目标从逐函数理解调整为场景主线、模块边界、数据契约和扩展决策树；下一步以 pickplace_bottle_lerobot_ACT_0715_10hz 为样例继续。"
+    delta: "从局部源码讲解切换为端到端运行场景和新模型接入导向的阅读。"
+    lesson: "先回答‘一次 model_id 如何变成机器人动作’，再回答‘某个函数如何实现’，能显著降低陌生 VLA 工程的认知负担。"
+    next_adjustment: "下一轮只阅读启动文件和默认 ACT 配置链，不进入 RolloutCoordinator 的完整内部状态机。"
+    evidence: []
+    knowledge_candidate: false
+  - id: WT-GROOT-DEPLOY-ANALYSIS-001
+    task_id: TUTOR-VLA-READ-001
+    context: "用户要求检查自训练 GR00T checkpoint，并确定其接入 DexBot VLA 部署框架的最小改动范围；本轮不实施模型接入。"
+    hypothesis: "若 GR00T backend 在模型服务端将 native relative action chunk 完整反解码为 DexBot 既有 canonical absolute 13D chunk，则 ROS runtime、worker、WebSocket、scheduler 和机器人执行链可保持通用，无需写入模型特例。"
+    decision_ref: DEC-002
+    action: "检查 checkpoint、训练数据转换脚本、训练用 LeRobot GR00T 源码与 DexBot backend/configuration chain；使用实际录制的双相机帧和 state 做离线推理 probe。"
+    expected_result: "确认模型输入输出契约、相对动作解码位置、性能边界、所需修改文件和不应修改的运行时模块。"
+    observation: "checkpoint 为完整 GR00T N1.7，输入为 cam_top、cam_right_wrist 和 13D state，输出为 40 x 13 native relative action；preprocessor 与 postprocessor 需在同一推理调用内协作，postprocessor 依赖本轮缓存 state 解码 absolute chunk。实际双相机离线 probe 得到有限的 (1, 40, 13) decoded action，热态约 63--64 ms，冷态约 584 ms，RTX 4090 峰值 CUDA 内存约 9.6 GB。"
+    actual_result: "确认不能复用当前 Linker 专用 lerobot backend；应新增服务端 groot backend，并向现有 runtime 输出 absolute 13D chunk。用户确认 ROKAE 与 Luoshi 是同一台实体设备，设备身份不再是风险；仍缺训练数据与当前部署在关节零位、坐标约定和初始姿态上的一致性证据。"
+    delta: "从通用 VLA 阅读扩展到以实际 checkpoint、训练数据样本和运行时数据契约为证据的 GR00T 接入边界分析。"
+    lesson: "relative-action 模型的 native 输出语义不能泄露给通用 scheduler；必须在持有同轮 state 的模型 backend 内完成整段动作解码，并将外部 artifact 语义声明为 absolute。"
+    next_adjustment: "进入实施前先固定 GR00T artifact/deployment contract、双相机 processor 行为和 30 Hz non-RTC shadow template；再实现 backend 与配置注册，并以 shadow telemetry 验证坐标、零位和初始姿态一致性。"
+    evidence:
+      - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v2_2cam/checkpoints/014051/pretrained_model/config.json"
+      - "/home/tbl/Project/force_touch_model/convert_telemetry_to_lerobot_v30.py"
+      - "/home/tbl/Project/force_touch_model/lerobot_v1.0/src/lerobot/policies/groot/modeling_groot.py"
+      - "/home/tbl/Project/force_touch_model/lerobot_v1.0/src/lerobot/policies/groot/processor_groot.py"
+      - "/home/tbl/Project/force_touch_model/dexbot_ros2_ws-dex_vla/src/dexbot_vla/dexbot_vla/backend/policy_backends/lerobot_backend.py"
+    knowledge_candidate: false

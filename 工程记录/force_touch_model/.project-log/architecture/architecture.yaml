@@ -1,2 +1,128 @@
 version: "0.2"
-architectures: []
+architectures:
+  - id: ARCH-001
+    status: active
+    goal: "将 annotation_workbench 交付为不读取项目外部代码目录的 Linux/Ubuntu 本地 LeRobot v3.0 标注工具包。"
+    related_business_logic:
+      - BL-TOOL-001
+      - BL-TOOL-002
+      - BL-TOOL-003
+      - BL-DATA-001
+      - BL-DATA-003
+    decision_refs:
+      - DEC-007
+    components:
+      - id: desktop-shell
+        responsibility: "提供 PySide6 本地窗口、系统文件夹选择、操作状态和日志；只编排一个当前数据集会话。"
+        owns:
+          - "当前选择的数据集路径"
+          - "本次启动的服务子进程组"
+          - "GUI 与 VLM 操作状态"
+        does_not_own:
+          - "LeRobot 标注编辑界面"
+          - "数据集视频和标注内容"
+      - id: service-manager
+        responsibility: "为当前数据集启动并回收包内数据服务、标注后端和生产模式 Next.js 前端。"
+        owns:
+          - "动态分配的回环地址端口"
+          - "自身创建的进程组"
+        interfaces:
+          - "start(dataset_root) -> frontend_url"
+          - "stop()"
+      - id: local-dataset-server
+        responsibility: "从用户选择的本地 v3.0 数据集提供只读 HTTP、CORS 和 Range 视频请求。"
+        owns:
+          - "HTTP 文件读取"
+        constraints:
+          - "仅绑定 127.0.0.1"
+          - "不得修改数据集文件"
+      - id: visualizer-frontend
+        responsibility: "保留并运行迁移后的 Next.js 可视化标注界面；读取数据服务并调用标注后端。"
+        owns:
+          - "浏览器内浏览、编辑和保存操作"
+        runtime:
+          - "由 package-lock.json 安装 node_modules"
+          - "由 npm run build 构建、npm run start 运行"
+      - id: annotation-backend
+        responsibility: "为本地数据集读取、校验和持久化 GUI 标注；保留现有导出能力。"
+        owns:
+          - "<dataset>/meta/lerobot_annotations.json 的原子读写"
+          - "帧时间戳对齐和导出过程"
+      - id: annotation-core
+        responsibility: "以包内最小 LeRobot v3.0 读取、视频抽帧、联系表和 Ollama OpenAI 兼容客户端支持固定子任务时间对齐。"
+        owns:
+          - "v3.0 episode 和帧时间戳读取"
+          - "指定相机视频的均匀抽帧"
+          - "图像联系表和 VLM JSON 调用"
+        does_not_own:
+          - "完整 LeRobot 数据集、训练或原生自由标注管线"
+      - id: guided-alignment
+        responsibility: "从人工示范读取固定子任务模板，只预测目标 episode 的时间范围，校验后逐条写回标注文件。"
+        owns:
+          - "固定文本、数量、顺序、范围和覆盖校验"
+          - "已完成 episode 跳过和失败后恢复"
+      - id: installation-and-launch
+        responsibility: "在包内创建 .venv、安装 Python/npm 依赖、构建前端、检查 Ollama，并提供两个启动入口。"
+        owns:
+          - "install.sh"
+          - "run.sh"
+          - "python -m annotation_workbench"
+    interfaces:
+      - name: "Desktop to service manager"
+        contract: "桌面端传入已校验的绝对数据集路径；服务管理器返回本次 GUI URL 或可定位错误。"
+      - name: "Frontend environment"
+        contract: "服务管理器向前端提供 NEXT_PUBLIC_DATASET_URL、NEXT_PUBLIC_ANNOTATE_BACKEND_URL 和 NEXT_PUBLIC_LOCAL_DATASET_PATH；均指向本次回环服务和已选目录。"
+      - name: "Annotation persistence"
+        contract: "GUI 后端和 VLM 都读写 <dataset>/meta/lerobot_annotations.json；写入使用临时文件后原子替换，保留不属于 task_aug/subtask 的 atom。"
+      - name: "VLM configuration"
+        contract: "OLLAMA_API_BASE 和 OLLAMA_MODEL 可覆盖默认 http://127.0.0.1:11434/v1 与 gemma3:27b。Ollama 是唯一外部运行时服务。"
+      - name: "VLM output"
+        contract: "VLM 只能返回既定固定子任务的 start/end；输出新增、改写、重排、越界、重叠或未覆盖 episode 时拒绝写入。"
+    data_flows:
+      - id: manual-annotation
+        steps:
+          - "用户在桌面端选择 v3.0 数据集目录。"
+          - "桌面端校验 meta/info.json、meta/episodes 和 data。"
+          - "服务管理器启动数据服务、标注后端和前端。"
+          - "浏览器 GUI 从数据服务读取视频与 parquet，并通过标注后端保存 atoms 到数据集 meta/lerobot_annotations.json。"
+      - id: vlm-annotation
+        steps:
+          - "桌面端从前五条中读取至少一条完整示范，提取 task augmentation 候选和固定 subtask 模板。"
+          - "guided-alignment 使用 annotation-core 读取目标 episode 时间戳和指定相机帧。"
+          - "annotation-core 将联系表和模板发送到外部 Ollama OpenAI 兼容接口。"
+          - "guided-alignment 校验返回的时间范围，并逐 episode 原子写入当前数据集标注文件。"
+          - "用户重新打开同一 GUI 检查、微调和保存。"
+    state_and_concurrency:
+      - "桌面端一次只持有一个数据集会话；切换数据集前先停止自身服务。"
+      - "服务管理器只停止由本次实例以独立进程组创建的子进程，不按端口或名称全局杀进程。"
+      - "VLM 一次只允许一个运行；每完成一个 episode 立即持久化，恢复时跳过通过固定模板校验的 episode。"
+      - "标注文件采用临时文件替换，避免进程中断留下半写 JSON。GUI 与 VLM 不应并发写同一数据集。"
+    failure_paths:
+      - trigger: "数据集不符合 v3.0 结构"
+        behavior: "桌面端阻止启动，指出缺失路径或版本。"
+      - trigger: "Python、Node.js/npm、前端构建或 Python 依赖缺失"
+        behavior: "install.sh 停止并报告具体前置条件；仅在用户确认后调用 sudo apt。"
+      - trigger: "Ollama 服务或配置模型不可用"
+        behavior: "安装或 VLM 启动前明确报告；人工 GUI 仍可使用。"
+      - trigger: "前端、后端或数据服务无法启动"
+        behavior: "停止已启动的本次子进程、保留日志并显示服务名和失败输出。"
+      - trigger: "VLM 返回非法边界或网络请求失败"
+        behavior: "不写入该 episode，记录失败原因，保留已完成 episode 以便恢复。"
+    security_and_privacy:
+      - "第一版只绑定 127.0.0.1，不提供局域网或云端服务。"
+      - "数据集路径只在本机进程和本机浏览器之间传递。"
+      - "不打包或自动下载模型权重；Ollama 地址由用户环境控制。"
+    observability:
+      - "桌面端显示数据集路径、服务启动/停止状态和 VLM 流式日志。"
+      - "安装脚本将失败命令和修复提示输出到终端。"
+      - "VLM 每个 episode 输出 completed、skipped 或 failed 及原因。"
+    deployment_and_compatibility:
+      - "支持 Linux/Ubuntu、Python 3.11+、Node.js 20 LTS。"
+      - "Python 依赖位于 annotation_workbench/.venv；前端依赖位于 annotation_workbench/visualize_dataset/node_modules。"
+      - "仅接受 LeRobot v3.0 数据集。"
+      - "迁移不删除或修改外部 visualize_dataset、lerobot_v1.0 和 serve_local_dataset.py；它们仅为备份。"
+      - "回退方式：继续使用外部旧中间件及原服务；独立包的迁移在其自身目录内进行。"
+    open_questions:
+      - "视频抽帧实现需在当前 AV1/H.264 数据集上验证 PyAV 或 OpenCV 的实际兼容性；未验证前不能锁定具体库。"
+    created_at: "2026-08-03T00:00:00+08:00"
+    updated_at: "2026-08-03T00:00:00+08:00"

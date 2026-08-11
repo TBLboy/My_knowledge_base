@@ -1,6 +1,131 @@
 version: "0.3"
 source_of_truth: true
 atoms:
+  - id: BL-TOOL-001
+    title: annotation_workbench 必须可独立安装和启动
+    kind: integration
+    domain: annotation-tool
+    status: active
+    priority: high
+    risk: high
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-08-03 独立包需求澄清"
+    description: "用户只保留 annotation_workbench 目录时，仍可完成本地标注全流程。"
+    actors: ["本机标注用户"]
+    trigger: "用户将 annotation_workbench 复制到新的 Linux/Ubuntu 环境"
+    preconditions: ["Python 3.11+、Node.js 20 LTS 和外部 Ollama 可按安装说明获得"]
+    inputs: ["annotation_workbench 目录", "本地 LeRobot v3.0 数据集"]
+    rule:
+      statement: "安装并启动独立包不得读取项目外部 visualize_dataset、lerobot_v1.0 或 serve_local_dataset.py。"
+    outputs: ["可运行桌面中间件", "可访问的本地可视化标注界面"]
+    side_effects: ["包内 .venv 和前端 node_modules 被创建"]
+    exceptions: ["Ollama 或模型缺失时，GUI 与安装检查必须明确报告，不得伪装为可自动标注"]
+    failure_handling: ["依赖或构建失败时停止并给出可定位的命令输出和下一步"]
+    invariants: ["外部旧代码只作为备份，不作为运行时输入"]
+    acceptance:
+      - id: BL-TOOL-001-A1
+        given: "annotation_workbench 被复制到不含外部旧目录的位置"
+        when: "用户执行安装和启动流程"
+        then: "桌面应用和可视化标注 GUI 可启动"
+        method: "隔离目录端到端 smoke"
+        evidence: null
+        status: not-verified
+    dependencies: ["BL-DATA-001"]
+    baseline_refs: ["REQ-002"]
+    decision_refs: ["DEC-007"]
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: null
+    created_at: "2026-08-03T00:00:00+08:00"
+    updated_at: "2026-08-03T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-TOOL-002
+    title: 独立包保留当前人工和 VLM 标注闭环
+    kind: flow
+    domain: annotation-tool
+    status: active
+    priority: high
+    risk: high
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-08-03 独立包需求澄清"
+    description: "拆分迁移不能改变当前桌面选择数据集、GUI 人工标注、VLM 对齐和 GUI 复核流程。"
+    actors: ["本机标注用户"]
+    trigger: "用户启动独立包并选择一个 LeRobot v3.0 数据集"
+    preconditions: ["数据集有效", "Ollama 服务和配置模型可访问"]
+    inputs: ["数据集目录", "至少一条完整人工示范", "固定 subtask 模板"]
+    rule:
+      statement: "工具启动包内服务打开 GUI，VLM 仅补齐非示范 episode 的固定子任务时间范围，并写回同一数据集供 GUI 复核。"
+    outputs: ["meta/lerobot_annotations.json 中的人工与自动标注", "可继续编辑的 GUI 结果"]
+    side_effects: ["已完成 episode 可被断点恢复逻辑跳过"]
+    exceptions: ["示范不完整、Ollama 不可用、视频不可解码或单 episode 生成失败时必须报告"]
+    failure_handling: ["保留已完成 episode 和失败信息，允许用户修复后再次运行"]
+    invariants: ["不修改原始视频", "不改变固定 subtask 的文本、数量和顺序"]
+    acceptance:
+      - id: BL-TOOL-002-A1
+        given: "一条人工完整示范和待处理 v3.0 数据集"
+        when: "用户运行 VLM 自动标注"
+        then: "结果写入当前数据集并可由包内 GUI 读取和保存"
+        method: "隔离数据集端到端验证"
+        evidence: null
+        status: not-verified
+    dependencies: ["BL-TOOL-001", "BL-DATA-003"]
+    baseline_refs: ["REQ-002"]
+    decision_refs: ["DEC-007"]
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: null
+    created_at: "2026-08-03T00:00:00+08:00"
+    updated_at: "2026-08-03T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-TOOL-003
+    title: 安装脚本明确管理依赖和外部模型边界
+    kind: rule
+    domain: annotation-tool
+    status: active
+    priority: high
+    risk: medium
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-08-03 独立包需求澄清"
+    description: "用户通过脚本得到可运行的本地环境，但系统级安装和大模型下载保持可控。"
+    actors: ["本机标注用户"]
+    trigger: "用户执行 ./install.sh"
+    preconditions: ["Linux/Ubuntu"]
+    inputs: ["系统 Python/Node 状态", "用户 sudo 确认", "Ollama 环境变量"]
+    rule:
+      statement: "脚本创建 .venv、安装 Python 和 npm 依赖并构建前端；缺失 Python 或 Node 时先征得确认才执行 sudo apt；只检查 Ollama 与模型，不自动下载模型。"
+    outputs: ["可运行的 .venv", "已构建的前端", "环境检查结果"]
+    side_effects: ["可在用户确认后安装系统包"]
+    exceptions: ["系统包安装被拒绝、Ollama 不可用或模型不存在时，脚本给出说明并以非零状态退出"]
+    failure_handling: ["不得静默降级、不得把模型下载作为隐含副作用"]
+    invariants: ["node_modules 和 .venv 不进入源码版本控制"]
+    acceptance:
+      - id: BL-TOOL-003-A1
+        given: "干净 Linux/Ubuntu 环境且用户已准备 Ollama"
+        when: "执行 ./install.sh"
+        then: "脚本完成依赖准备或在缺失前置条件处明确停止"
+        method: "安装脚本 smoke"
+        evidence: null
+        status: not-verified
+    dependencies: ["BL-TOOL-001"]
+    baseline_refs: ["REQ-002"]
+    decision_refs: ["DEC-007"]
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: null
+    created_at: "2026-08-03T00:00:00+08:00"
+    updated_at: "2026-08-03T00:00:00+08:00"
+    last_verified_at: null
   - id: BL-BENCH-001
     title: 统一 benchmark 任务为矿泉水瓶花生倾倒
     kind: flow
@@ -395,4 +520,61 @@ atoms:
     notes: "采样频率分段提高属于可选技巧，当前不作为主要优化方向。"
     created_at: "2026-07-30T00:00:00+08:00"
     updated_at: "2026-07-30T00:00:00+08:00"
+    last_verified_at: null
+
+  - id: BL-TOOL-004
+    title: VLM 示范 episode 可由用户选择而不是固定前 5 条
+    kind: rule
+    domain: annotation-tool
+    status: active
+    priority: high
+    risk: medium
+    authority: user-confirmed
+    source:
+      type: user-statement
+      reference: "2026-08-08 新数据集标定测试要求"
+    description: "自动标注时，人工示范不能默认锁定为前 5 条；用户应能自主选择哪些 episode 作为示范数据集。"
+    actors:
+      - "本机标注用户"
+    trigger: "用户启动 VLM 自动标注并选择自动标注范围时"
+    preconditions:
+      - "至少一条 episode 已被完整人工标注或可临时指定为示范"
+      - "所选示范的固定 subtask 文本、数量和顺序一致"
+    inputs:
+      - "用户选择的示范 episode 列表"
+      - "用户选择的自动标注 episode 列表"
+    rule:
+      statement: "VLM 自动标注必须使用用户显式选择的示范 episode，不能硬编码前 5 条；示范列表和自动标注列表可分别选择，也可存在重叠。"
+    outputs:
+      - "本次运行的 demo_episodes"
+      - "自动标注请求使用用户选择的示范数据"
+    side_effects:
+      - "用户只需人工标注自己选择的少量 episode，即可作为后续自动标注示范"
+      - "不同运行可以选择不同示范集，结果应记录 demo_episodes"
+    exceptions:
+      - "所选示范不完整或 subtask 不一致时，应阻止本次运行并提示用户修改"
+      - "未选择任何示范时，保留现有非 fixed 路径或明确禁止固定模式"
+    failure_handling:
+      - "示范校验失败时停止自动标注，不静默回退到前 5 条"
+    invariants:
+      - "固定 subtask 文本、数量和顺序不得因示范选择改变"
+      - "不修改原始视频和人工标注"
+    acceptance:
+      - id: BL-TOOL-004-A1
+        given: "用户选择任意若干条已完整标注 episode 作为示范"
+        when: "启动 VLM 自动标注"
+        then: "系统仅使用用户选择的示范 episode，并拒绝把前 5 条硬编码为默认"
+        method: "桌面/CLI 自动标注 smoke"
+        evidence: null
+        status: not-verified
+    dependencies:
+      - BL-TOOL-002
+    baseline_refs: []
+    decision_refs: []
+    implementation_refs: []
+    test_refs: []
+    supersedes: []
+    notes: "2026-08-08 已按两组多选落地到 EpisodeSelectionDialog 和 read_template；等待用户真实验证。"
+    created_at: "2026-08-08T14:20:00+08:00"
+    updated_at: "2026-08-08T14:20:00+08:00"
     last_verified_at: null

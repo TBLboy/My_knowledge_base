@@ -352,3 +352,189 @@ evidence:
   recorded_at: '2026-07-29T15:25:00Z'
   invalidated_at: null
   invalidation_reason: null
+- id: EV-061
+  kind: experimental
+  subject: P0 coarse boundary probe evidence
+  status: valid
+  command: guided_probe.py --demo-styles none,single0,single3,single4,all --interval
+    0.5
+  result_ref: .project-log/verification/evidence.yaml#EV-061
+  covers:
+    files:
+    - .project-log/verification/evidence.yaml
+    - annotation_workbench/guided_probe.py
+    - annotation_workbench/debug_run1/vlm_alignment.jsonl
+    requirements:
+    - BL-TOOL-003-A1
+    tasks:
+    - TASK-036
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      .project-log/verification/evidence.yaml: 987a84d12743fbf5b22f3b3348693534f168c5413647a63348baca682a3b5b04
+      annotation_workbench/guided_probe.py: cbb642f8c4d78a5d03626a44f877299e6d9e5155f954a3a6a2765e0813b50e3d
+      annotation_workbench/debug_run1/vlm_alignment.jsonl: f2518e5bdf945f1d7c048b719bf8a30a9d2bf41d63b7464411e738833e103212
+  recorded_at: '2026-08-08T05:30:23Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-062
+  kind: test
+  subject: P1 fine implementation and tests
+  status: valid
+  command: pytest -q annotation_workbench/tests && guided_probe.py --fine --dry-run
+  result_ref: .project-log/verification/evidence.yaml#EV-062
+  covers:
+    files:
+    - annotation_workbench/guided_probe.py
+    - annotation_workbench/tests/test_guided_probe.py
+    - annotation_workbench/annotation_core/vlm_client.py
+    requirements:
+    - BL-TOOL-003-A1
+    tasks:
+    - TASK-036
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      annotation_workbench/guided_probe.py: cbb642f8c4d78a5d03626a44f877299e6d9e5155f954a3a6a2765e0813b50e3d
+      annotation_workbench/tests/test_guided_probe.py: 3380a84b9879d21ad8cabad65fe83fbade879523b3f0f9bdfcad7e287e1174db
+      annotation_workbench/annotation_core/vlm_client.py: 2fa83fbf7915d8c0250744606423129c3fdd6996f8100e216476f5e5ffb2bd97
+  recorded_at: '2026-08-08T05:30:29Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-063
+  kind: experiment
+  subject: P1 fine 51/52/53 real coarse-to-fine comparison
+  status: valid
+  command: guided_probe.py --fine for 51 and coarse/fine for 52-53
+  result_ref: .project-log/verification/evidence.yaml#EV-063
+  covers:
+    files:
+    - annotation_workbench/debug_run1_fine/vlm_alignment.jsonl
+    - annotation_workbench/debug_coarse_5253/vlm_alignment.jsonl
+    - annotation_workbench/debug_coarse_5253_fine/vlm_alignment.jsonl
+    - annotation_workbench/debug_run1_fine_console.log
+    - annotation_workbench/debug_coarse_5253_console.log
+    - annotation_workbench/debug_coarse_5253_fine_console.log
+    requirements:
+    - BL-TOOL-003-A1
+    tasks:
+    - TASK-036
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      annotation_workbench/debug_run1_fine/vlm_alignment.jsonl: d43f83c521e2e04737fa1ec335b641df5514368ed7752af15f92c4e648b3d018
+      annotation_workbench/debug_coarse_5253/vlm_alignment.jsonl: 505206b1df80a6504c55942b4b3852ec77d7fd684f5e094c7d12e66ab564cfcb
+      annotation_workbench/debug_coarse_5253_fine/vlm_alignment.jsonl: 20a297c6f05103df1d023ce7975330776cfbdc44b66407d780450776513dc957
+      annotation_workbench/debug_run1_fine_console.log: cb7086edcde8a8c27989ce8e6fb06e562c457726e089fc194b22429481bfe4a1
+      annotation_workbench/debug_coarse_5253_console.log: 12bb8840b03f99fc762a937868ee8a0c08b5e7223e73ef80adb5a1bdf1f6b0de
+      annotation_workbench/debug_coarse_5253_fine_console.log: ea98b01f4762ac75299401bf5238863c3ec715af310a0b8676b2b0403cf89a51
+  recorded_at: '2026-08-08T05:30:38Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-064
+  kind: test
+  subject: VLM 示范 episode 可选择实现与验证
+  status: valid
+  command: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python
+    -m pytest -q annotation_workbench/tests && QT_QPA_PLATFORM=offscreen EpisodeSelectionDialog
+    smoke
+  result_ref: .project-log/verification/evidence.yaml#EV-064
+  covers:
+    files:
+    - annotation_workbench/desktop_app.py
+    - annotation_workbench/tests/test_app.py
+    - annotation_workbench/README.md
+    requirements:
+    - BL-TOOL-004-A1
+    tasks:
+    - TASK-038
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      annotation_workbench/desktop_app.py: 578ad8edbaa745815ee6bc305ec11982cc2b1244d8c3da03e9de0cd086aa987f
+      annotation_workbench/tests/test_app.py: 9a6d993d74e9d60c3fa52240e9979e514b481ce1bec454ca1312ed1d24c31020
+      annotation_workbench/README.md: 028023299c87a2fffb965788dced70541f4559a9098a3fe664bb7fa151f78641
+  recorded_at: '2026-08-08T07:11:11Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-065
+  kind: user-test
+  subject: 用户真实桌面测试：VLM 子任务识别精度仍差
+  status: stale
+  command: 用户在真实桌面端执行 VLM 自动标注
+  result_ref: .project-log/verification/evidence.yaml#EV-065
+  covers:
+    files:
+    - .project-log/current-session.md
+    - .project-log/verification/evidence.yaml
+    requirements:
+    - BL-DATA-003-A1
+    tasks:
+    - TASK-037
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      .project-log/current-session.md: dcc06084918fbd4c810c411495013a82c24944ce587c8c31f4d4ff3d59d1ef02
+      .project-log/verification/evidence.yaml: 91072234938453026458b0c682f7ae9196a447d82c11ca08bdf3e96cf1be487a
+  recorded_at: '2026-08-08T07:35:20Z'
+  invalidated_at: '2026-08-10T02:10:29Z'
+  invalidation_reason: PostToolUse:apply_patch
+- id: EV-066
+  kind: verification
+  subject: GR00T Qingdao pouring 单 pass 训练完成并保存 checkpoint
+  status: stale
+  command: RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh; 检查
+    output.log、wandb-summary.json、training_step.json
+  result_ref: .project-log/verification/evidence.yaml#EV-066
+  covers:
+    files:
+    - .project-log/verification/evidence.yaml
+    - .project-log/current-session.md
+    - lerobot_v1.0/examples/groot/finetune_right_o6_13d_lerobot.sh
+    requirements:
+    - 正式 Qingdao pouring v3 数据集应完成可复现的 GR00T 单 pass 训练并保存可直接复用的 checkpoint
+    tasks:
+    - TASK-039
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      .project-log/verification/evidence.yaml: 3c2da2bc7984badf51f0923d24bc5a8c47dba946692ecaa28f1c234e557f95de
+      .project-log/current-session.md: aa627060c349af80152df11f9cd657d3116fe72bb7fb298ed48236f8846eed21
+      lerobot_v1.0/examples/groot/finetune_right_o6_13d_lerobot.sh: 61b8987e2a88fdb5a5e404f2638df799bdbedebc4c94969f5f3f8f0db9e97faf
+  recorded_at: '2026-08-09T02:43:39Z'
+  invalidated_at: '2026-08-10T02:10:29Z'
+  invalidation_reason: PostToolUse:apply_patch
+- id: EV-067
+  kind: scripted-validation
+  subject: GR00T 最终 checkpoint strict load 与推理 action chunk
+  status: stale
+  command: GrootPolicy.from_pretrained(checkpoint/014051/pretrained_model, strict=True);
+    LeRobotDataset -> preprocessor -> predict_action_chunk -> postprocessor
+  result_ref: .project-log/verification/evidence.yaml#EV-067
+  covers:
+    files:
+    - .project-log/verification/evidence.yaml
+    - .project-log/current-session.md
+    - lerobot_v1.0/src/lerobot/policies/groot/modeling_groot.py
+    - lerobot_v1.0/examples/groot/smoke_test_right_o6_13d_lerobot.py
+    requirements:
+    - 最终 GR00T checkpoint 必须能被标准 LeRobot 加载器严格加载，并能输出完整 finite action chunk
+    tasks:
+    - TASK-039
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      .project-log/verification/evidence.yaml: 26c86660d8bc50539444aa2991849e036eccd4ee8c2f497c3fb49376a34c42aa
+      .project-log/current-session.md: 4b96936f42479d331d49e41988416f89e733f197dc2bf423409a928de5654a79
+      lerobot_v1.0/src/lerobot/policies/groot/modeling_groot.py: bbdf7ebcba67ad1bd5d806ab562ab593e7d9ef7ad37a493a1d9d4ded59a5e384
+      lerobot_v1.0/examples/groot/smoke_test_right_o6_13d_lerobot.py: 81856673f2d5c98146de6aa51828e59353358329844a3bd1c6261d462b872974
+  recorded_at: '2026-08-09T02:54:13Z'
+  invalidated_at: '2026-08-10T02:10:29Z'
+  invalidation_reason: PostToolUse:apply_patch

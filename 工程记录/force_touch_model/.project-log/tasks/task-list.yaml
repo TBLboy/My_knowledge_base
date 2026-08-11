@@ -1673,3 +1673,1077 @@ tasks:
     follow_ups: []
   created_at: '2026-07-30T00:00:00+08:00'
   updated_at: '2026-07-30T00:00:00+08:00'
+
+- id: TASK-025
+  title: 验证 Gemma Ollama 与 LeRobot GUI 自动标注闭环
+  kind: task
+  parent_id: TASK-022
+  phase: verification
+  goal: 使用本地 Gemma 27B 对单个 LeRobot v3.0 episode 执行官方自动标注，并验证 GUI 读取、人工保存和导出后的数据可重新加载。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - annotation
+  - gemma
+  - ollama
+  - e2e
+  related_business_logic:
+  - BL-DATA-002
+  - BL-DATA-003
+  acceptance_refs:
+  - EV-040
+  depends_on:
+  - TASK-022
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - /mnt/data/models/gemma3:27b
+  - Ollama 127.0.0.1:11434
+  outputs:
+  - 单 episode 自动标注验证结果
+  - GUI 保存和导出验证结果
+  plan:
+  - 创建不污染正式数据的隔离测试副本
+  - 运行 lerobot-annotate 的 plan/interjections/vqa 阶段
+  - 通过 GUI 后端保存人工 atom 并导出
+  - 用 LeRobotDataset 读回导出结果
+  - 清理临时测试产物并记录语义质量风险
+  done_when:
+  - 自动标注 CLI、validator、GUI 保存和导出均有成功证据
+  - 导出数据可被 LeRobot 重新读取
+  - 正式数据集未被修改
+  - 语义质量偏差已明确记录
+  verification:
+    status: passed
+    commands:
+    - isolated episode-0 copy with independent parquet
+    - lerobot-annotate via Ollama Gemma 27B
+    - visualizer backend load/save/export API calls
+    - LeRobotDatasetMetadata and LeRobotDataset readback
+    evidence:
+    - EV-040
+    limitations:
+    - 只验证 episode 0；未执行全量标注。
+    - 模型输出语义与当前任务明显不一致，不能直接用于训练。
+  result:
+    summary: 技术流程闭环通过，但针对旧数据“右手抓右侧圆形金属盆并向左侧黑色带把手铁锅倾倒”的语义质量未达全量使用标准；矿泉水瓶 benchmark 尚未采集。
+    changed_files:
+    - .project-log/
+    deviations:
+    - 为满足官方 OpenAI backend 运行要求，在 Miniforge lerobot 环境安装 openai==1.109.1。
+    follow_ups:
+    - 先修正 benchmark 任务描述、视觉提示和相机选择，再进行小批量人工复核。
+  created_at: '2026-07-31T16:00:00+08:00'
+  updated_at: '2026-07-31T16:00:00+08:00'
+
+- id: TASK-026
+  title: 五 episode 固定任务语义标注质量校准
+  kind: task
+  parent_id: TASK-025
+  phase: verification
+  goal: 使用顶视角和固定旧数据任务描述，验证 Gemma 对核心对象、位置、右手和倾倒动作的识别，并检查子任务粒度稳定性。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - annotation
+  - calibration
+  - gemma
+  related_business_logic:
+  - BL-DATA-002
+  - BL-DATA-003
+  acceptance_refs:
+  - EV-041
+  depends_on:
+  - TASK-025
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - Ollama gemma3:27b
+  outputs:
+  - 五 episode 固定语义标注质量结论
+  plan:
+  - 使用独立副本替换完整任务描述
+  - 通过 cam_top 运行 plan/subtask/memory
+  - 检查对象、位置、动作和子任务粒度
+  - 清理校准产物并记录下一批量范围
+  done_when:
+  - 5 个 episode 自动标注完成且 validator 无错误
+  - 核心对象、位置和倾倒动作识别正确
+  - 子任务粒度偏差已记录
+  - 正式数据集未被修改
+  verification:
+    status: passed
+    commands:
+    - lerobot-annotate on episodes 0,20,50,100,140 with cam_top and derive_task_from_video=off
+    - parquet language_persistent readback
+    - formal dataset task/data integrity readback
+    evidence:
+    - EV-041
+    limitations:
+    - 仅验证 5 个 episode；未验证全量一致性。
+    - 子任务粒度仍不稳定，需要进入 20 episode 批量验证并人工抽检。
+  result:
+    summary: 5 个 episode 均正确识别当前旧任务核心对象和倾倒动作；主要剩余风险是抬高、释放、收回等动作的子任务拆分不一致。
+    changed_files:
+    - .project-log/
+    deviations: []
+    follow_ups:
+    - 进入 20 episode 小批量标注，固定核心子任务验收规则并人工抽检时间边界。
+  created_at: '2026-07-31T16:30:00+08:00'
+  updated_at: '2026-07-31T16:30:00+08:00'
+
+- id: TASK-027
+  title: 二十 episode 固定任务语义基线验证
+  kind: task
+  parent_id: TASK-026
+  phase: verification
+  goal: 在 20 个代表性 episode 上验证固定任务描述和顶视角配置的核心语义稳定性，并量化额外子任务的比例。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - annotation
+  - calibration
+  - baseline
+  related_business_logic:
+  - BL-DATA-002
+  - BL-DATA-003
+  acceptance_refs:
+  - EV-042
+  depends_on:
+  - TASK-026
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - Ollama gemma3:27b
+  outputs:
+  - 20 episode 核心语义和子任务粒度统计
+  plan:
+  - 准备实体复制的测试副本
+  - 运行固定任务描述和 cam_top 标注
+  - 统计对象、动作、核心链和额外子任务
+  - 清理副本并记录是否进入全量
+  done_when:
+  - 20 个 episode 完成且 validator 无错误
+  - 核心对象和倾倒动作统计完成
+  - 额外子任务比例统计完成
+  - 正式数据集未修改
+  verification:
+    status: passed
+    commands:
+    - lerobot-annotate on 20 episodes with cam_top and derive_task_from_video=off
+    - parquet language_persistent readback and aggregate keyword statistics
+    - formal dataset task and annotation state readback
+    evidence:
+    - EV-042
+    limitations:
+    - 关键词统计不能替代人工逐 episode 时间边界审核。
+    - 未验证 VQA/interjections；本轮目标是核心任务标注。
+  result:
+    summary: 核心对象和倾倒动作 20/20 正确；12/20 出现额外或粒度不一致子任务，当前配置不宜直接全量导出。
+    changed_files:
+    - .project-log/
+    deviations: []
+    follow_ups:
+    - 强化任务专属子任务粒度约束后重跑 20 episode，对比额外子任务比例。
+  created_at: '2026-07-31T17:00:00+08:00'
+  updated_at: '2026-07-31T17:00:00+08:00'
+
+- id: TASK-028
+  title: 任务专属子任务约束实现与同批次验证
+  kind: task
+  parent_id: TASK-027
+  phase: verification
+  goal: 为旧倾倒任务增加可选的核心三阶段标注指导和质量指标，并验证同批样本是否适合 A/B 比较。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - annotation
+  - quality
+  - ab-test
+  related_business_logic:
+  - BL-DATA-002
+  - BL-DATA-003
+  acceptance_refs:
+  - EV-043
+  depends_on:
+  - TASK-027
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - LeRobot steerable annotation pipeline
+  - 20 episode baseline sample
+  outputs:
+  - optional task-specific prompt guidance
+  - auditable subtask quality checker
+  - same-batch guided annotation result
+  plan:
+  - 检查现有提示词和标注测试
+  - 增加可选任务专属指导字段
+  - 增加不改写原始标签的质量指标
+  - 在同批样本运行 guided annotation
+  - 核对任务分层并清理临时产物
+  done_when:
+  - 通用标注回归测试通过
+  - guided annotation 完成且 validator 无错误
+  - 确认样本是否属于同一业务任务
+  - 正式数据未修改，测试产物已清理
+  verification:
+    status: passed
+    commands:
+    - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 env -u PYTHONPATH /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q tests/annotations/test_quality.py tests/annotations/test_modules.py tests/annotations/test_pipeline_recipe_render.py
+    - lerobot-annotate on the same 20 episodes with cam_top and task-specific guidance
+    - inspect generated language_persistent labels and meta/tasks.parquet
+    evidence:
+    - EV-043
+    limitations:
+    - 用户已人工确认 20 个 episode 属于同一操作场景；初始错误对象名来自 Gemma 视觉误识别。
+    - Quality checker is heuristic and does not replace video boundary review.
+  result:
+    summary: Implementation and pipeline validation passed, but guided annotation still misidentified the same real scene as kettle/mug/container in many episodes; user manual review confirmed the dataset is one consistent task, so the failure is VLM visual grounding rather than dataset mixing.
+    changed_files:
+    - lerobot_v1.0/src/lerobot/annotations/steerable_pipeline/config.py
+    - lerobot_v1.0/src/lerobot/annotations/steerable_pipeline/modules/plan_subtasks_memory.py
+    - lerobot_v1.0/src/lerobot/annotations/steerable_pipeline/prompts/plan_subtasks.txt
+    - lerobot_v1.0/src/lerobot/annotations/steerable_pipeline/quality.py
+    - lerobot_v1.0/tests/annotations/test_quality.py
+    - .project-log/
+    deviations:
+    - Guided run produced 20 expected warnings because plan emission was intentionally disabled for the subtask-only A/B test.
+    - Initial interpretation classified VLM object names as evidence of mixed tasks; user manual review corrected this attribution.
+    follow_ups:
+    - 在确认同一真实任务的样本上比较更强对象约束、密集采样和分阶段视觉复核，先解决 Gemma 的对象误识别。
+  created_at: '2026-07-31T18:00:00+08:00'
+  updated_at: '2026-07-31T18:00:00+08:00'
+
+- id: TASK-029
+  title: 验证自动标注结果的 GUI 读取与人工微调闭环
+  kind: task
+  parent_id: TASK-025
+  phase: verification
+  goal: 确认自动生成的 LeRobot 语言标注能被本地 GUI 识别、编辑、保存并保持可再次读取。
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - annotation
+  - gui
+  - manual-review
+  related_business_logic:
+  - BL-DATA-001
+  - BL-DATA-003
+  acceptance_refs: []
+  depends_on:
+  - TASK-025
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - 当前自动标注数据集
+  - 本地 visualize_dataset 前端和 FastAPI 后端
+  outputs:
+  - GUI 读取/保存闭环结论
+  - 人工微调后的测试状态
+  plan:
+  - 检查自动标注数据和 GUI 服务
+  - 通过后端 API 加载并读取 episode atoms
+  - 修改一条 atom 并保存
+  - 再次读取确认修改持久化
+  - 清理测试修改并记录证据
+  done_when:
+  - 自动标注 atoms 能被 GUI 后端读取
+  - 修改后的 atom 能保存并再次读取
+  - 测试不污染正式数据或恢复正式状态
+  verification:
+    status: passed
+    commands:
+    - Create isolated subset from formal episodes 0, 20, and 45 and reindex to test episodes 0, 1, and 2
+    - Run lerobot-annotate with gemma3:27b on all three test episodes
+    - POST /api/dataset/load with the isolated automatically annotated LeRobot v3.0 copy
+    - GET /api/episodes/{0,1,2}/atoms and inspect generated persistent subtask atoms
+    - POST /api/episodes/0/atoms after changing one subtask text and GET readback
+    - Start isolated dataset server on port 8081 and frontend on port 3001
+    - Load /local/gui_annotation_test_3ep/episode_{0,1,2} and verify HTTP 200
+    evidence:
+    - EV-044
+    - EV-045
+    limitations:
+    - Formal dataset remains unannotated; this verification uses the persistent isolated copy at /mnt/data/gr00t-finetune/gui_annotation_test_3ep.
+    - Browser page and API paths are verified, but the user's manual editing action remains to be performed.
+    - Gemma generated inconsistent object names across the three episodes; labels are candidates for manual correction, not final training labels.
+  result:
+    summary: A persistent three-episode isolated copy was automatically annotated, served on an isolated GUI instance, and verified readable through both page routes and the annotation backend. The backend also persisted and read back a smoke-test edit; the copy was then restored to the generated labels. Formal data was not modified.
+    changed_files:
+    - .project-log/
+    deviations: []
+    follow_ups: []
+  created_at: '2026-07-31T18:30:00+08:00'
+  updated_at: '2026-07-31T18:00:00+08:00'
+
+- id: TASK-030
+  title: 第一版本机桌面标注中间件
+  kind: task
+  parent_id: TASK-029
+  phase: implementation
+  goal: 为本机单数据集流程提供 PySide6 桌面入口，自动选择本地数据集、管理 LeRobot GUI 服务并启动固定模板 VLM 标注，不修改现有 LeRobot GUI。
+  status: implemented-unverified
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags:
+  - annotation
+  - middleware
+  - local-only
+  - desktop
+  related_business_logic:
+  - BL-DATA-001
+  - BL-DATA-003
+  depends_on:
+  - TASK-029
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  outputs:
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/guided_alignment.py
+  - annotation_workbench/static/index.html
+  - annotation_workbench/README.md
+  inputs:
+  - 本机 LeRobot v3.0 数据集
+  - 现有 visualize_dataset GUI 和标注后端
+  - 本机 lerobot-annotate 与 Ollama Gemma 服务
+  plan:
+  - 建立桌面数据集选择流程
+  - 自动管理现有 GUI 服务
+  - 从前五条中读取至少一条完整示范模板
+  - 接入固定模板时间对齐执行器
+  - 验证桌面端服务与失败边界
+  done_when:
+  - 用户可通过系统文件夹选择框选择一个本地 v3.0 数据集
+  - 用户可启动现有 GUI 完成人工标注
+  - 中间件自动检查前五条中的已完成示范并汇总模板，至少一条即可
+  - 桌面端显示 VLM 运行状态和日志
+  - 固定模板时间对齐已由独立执行器验证
+  verification:
+    status: partial
+    commands:
+    - PYTHONPATH=. /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q annotation_workbench/tests
+    - /home/tbl/miniforge3/envs/lerobot/bin/python -m py_compile annotation_workbench/desktop_app.py
+    - QT_QPA_PLATFORM=offscreen PYTHONPATH=. /home/tbl/miniforge3/envs/lerobot/bin/python desktop window smoke
+    - PYTHONPATH=. /home/tbl/miniforge3/envs/lerobot/bin/python ServiceManager isolated GUI smoke
+    evidence:
+    - EV-047
+    - EV-049
+    limitations:
+    - 真实数据集上的人工前五条示范和 Gemma 自动标注质量尚未由用户验收。
+  result:
+    summary: 网页启动器已被 PySide6 桌面中间件替代；桌面端已验证目录选择逻辑、前五条中至少一条模板读取、服务自动启动/停止和 GUI 可达性。真实数据集端到端验收仍待执行。
+    changed_files:
+    - annotation_workbench/desktop_app.py
+    - annotation_workbench/guided_alignment.py
+    - annotation_workbench/static/index.html
+    - annotation_workbench/README.md
+    - annotation_workbench/requirements.txt
+    - annotation_workbench/tests/test_app.py
+    - .project-log/
+  created_at: '2026-07-31T00:00:00+08:00'
+  updated_at: '2026-07-31T00:00:00+08:00'
+
+- id: TASK-031
+  title: 建立独立包骨架和安装启动入口
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: "在 annotation_workbench 内建立可复制的 Python 包、安装脚本和双启动入口，不读取当前项目路径或 Conda 环境。"
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags: [annotation, standalone, packaging, installer]
+  related_business_logic: [BL-TOOL-001, BL-TOOL-003]
+  acceptance_refs: [BL-TOOL-001-A1, BL-TOOL-003-A1]
+  related_decisions: [DEC-007]
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: [a-engineering-landing, a-verification, a-project-log]
+  spec_ref: .project-log/specs/annotation-workbench-standalone.md
+  inputs:
+  - "REQ-002 与 ARCH-001"
+  - "现有 annotation_workbench Python 入口"
+  outputs:
+  - "包内 pyproject.toml、requirements.txt、install.sh、run.sh 和 __main__.py"
+  - "包内运行时路径解析与配置入口"
+  plan:
+  - "建立不依赖项目根的包目录和运行路径"
+  - "实现 Python 3.11+、Node.js 和 Ollama 前置检查"
+  - "实现 .venv、Python/npm 安装和生产前端构建"
+  - "提供 shell 与 python 模块启动入口"
+  done_when:
+  - "从 annotation_workbench 目录执行安装脚本可创建 .venv 并安装声明的依赖"
+  - "Node.js/npm 缺失时脚本给出确认式安装选项而不静默 sudo"
+  - "./run.sh 和 python -m annotation_workbench 使用包内 .venv 并进入同一桌面入口"
+  - "代码不含固定的 /home/tbl 或外部项目根运行路径"
+  verification:
+    status: passed
+    commands:
+    - "shellcheck 或 bash -n install.sh run.sh"
+    - "Python 版本与包入口 smoke"
+    - "Python 3.11 ./install.sh（.venv、Python 依赖、npm install、npm run build）"
+    evidence: []
+    limitations:
+    - "隔离目录运行验证由 TASK-035 执行；当前 desktop_app.py 尚未切换到包内资源。"
+  result:
+    summary: "已建立 Python 3.11+ 包元数据、install.sh、run.sh、模块入口和忽略规则；真实安装完成并成功构建迁入的前端。"
+    changed_files:
+    - annotation_workbench/pyproject.toml
+    - annotation_workbench/install.sh
+    - annotation_workbench/run.sh
+    - annotation_workbench/__main__.py
+    - annotation_workbench/.gitignore
+    - annotation_workbench/requirements.txt
+    - annotation_workbench/README.md
+    deviations:
+    - "当前系统 node 为 22.23.1，高于 Node.js 20 LTS 最低要求。"
+    - "Ollama 未运行，安装脚本明确报告但不阻断 GUI 依赖安装。"
+    follow_ups:
+    - "TASK-034 完成后验证两个启动入口可真正启动独立桌面端。"
+  created_at: '2026-08-03T00:00:00+08:00'
+  updated_at: '2026-08-03T00:00:00+08:00'
+
+- id: TASK-032
+  title: 迁移本地数据服务和可视化标注资源
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: "将现有数据 HTTP 服务、Next.js 前端和 FastAPI 标注后端完整迁入 annotation_workbench，并以生产模式启动。"
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags: [annotation, standalone, frontend, backend]
+  related_business_logic: [BL-TOOL-001, BL-TOOL-002]
+  acceptance_refs: [BL-TOOL-001-A1, BL-TOOL-002-A1]
+  related_decisions: [DEC-007]
+  depends_on: [TASK-031]
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: [a-engineering-landing, a-verification]
+  spec_ref: .project-log/specs/annotation-workbench-standalone.md
+  inputs:
+  - "现有 serve_local_dataset.py"
+  - "现有 visualize_dataset 源码、锁文件和 backend"
+  outputs:
+  - "包内 local_dataset_server.py"
+  - "annotation_workbench/visualize_dataset 前端与 backend 源码"
+  - "生产模式服务启动契约"
+  plan:
+  - "复制源码与配置，不复制 node_modules、.next 或缓存"
+  - "调整包内服务路径和静态资源入口"
+  - "以动态回环端口启动数据、后端和 next start"
+  - "保留当前 GUI 本地数据集读写行为"
+  done_when:
+  - "前端可以在包内 npm run build 后以 npm run start 运行"
+  - "GUI 可加载本地 v3.0 数据集、读取与保存 lerobot_annotations.json"
+  - "运行过程不读取项目外 visualize_dataset 或 serve_local_dataset.py"
+  verification:
+    status: passed
+    commands:
+    - "npm run type-check"
+    - "npm run build"
+    - "FastAPI 与数据服务针对性 smoke"
+    - "隔离副本 GUI 打开和保存 smoke"
+    evidence: [EV-053]
+    limitations: []
+  result:
+    summary: "前端、FastAPI 标注后端和 Range 数据服务均已迁入包内；生产 GUI 通过同源运行时配置读取当前本地数据集和后端地址，不需要为切换数据集重建前端。"
+    changed_files:
+    - annotation_workbench/local_dataset_server.py
+    - annotation_workbench/visualize_dataset/
+    - annotation_workbench/desktop_app.py
+    deviations:
+    - "Next.js 的 NEXT_PUBLIC 变量在生产客户端中为构建期值，改用 /api/workbench-config 读取桌面端写入的本机运行时配置。"
+    follow_ups: []
+  created_at: '2026-08-03T00:00:00+08:00'
+  updated_at: '2026-08-03T18:00:00+08:00'
+
+- id: TASK-033
+  title: 实现包内最小 LeRobot v3 VLM 适配层
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: "以最小包内实现取代 guided_alignment 对 lerobot_v1.0 标注管线的运行时依赖。"
+  status: done
+  priority: high
+  risk: high
+  authority: B
+  owner: agent
+  tags: [annotation, standalone, vlm, dataset, video]
+  related_business_logic: [BL-TOOL-001, BL-TOOL-002]
+  acceptance_refs: [BL-TOOL-002-A1]
+  related_decisions: [DEC-007]
+  depends_on: [TASK-031]
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: [a-engineering-landing, a-verification]
+  spec_ref: .project-log/specs/annotation-workbench-standalone.md
+  inputs:
+  - "当前 guided_alignment.py"
+  - "LeRobot v3.0 meta、episodes、data 和视频布局"
+  - "外部 frames.py、reader.py、vlm_client.py 的实际最小调用面"
+  outputs:
+  - "annotation_core dataset_reader、video_frames、contact_sheet 和 vlm_client"
+  - "更新后的 guided_alignment，不接受 --lerobot-src"
+  plan:
+  - "实现 v3 episode、任务和时间戳读取"
+  - "选择并验证 Python 视频解码依赖"
+  - "生成带时间戳的联系表和 OpenAI 图像请求"
+  - "实现 Ollama JSON 调用、异常诊断和一次可控重试"
+  - "移除所有 lerobot import 与 PYTHONPATH 依赖"
+  done_when:
+  - "guided_alignment 不再导入或接收外部 lerobot 源码路径"
+  - "真实 v3.0 数据集可读取指定相机帧和对应时间戳"
+  - "针对固定模板的 VLM 请求和非法输出拒绝逻辑通过测试"
+  - "默认 Ollama 配置及环境变量覆盖生效"
+  verification:
+    status: passed
+    commands:
+    - "annotation_core 单元测试"
+    - "真实 v3.0 视频抽帧 smoke（当前 AV1/H.264 数据）"
+    - "本地 Ollama 单 episode VLM smoke"
+    evidence: [EV-054]
+    limitations: ["VLM 时间边界语义质量需由后续人工抽检单独验收"]
+  result:
+    summary: "已用包内 v3 parquet reader、PyAV 视频抽帧、联系表和 OpenAI 兼容 Ollama 客户端取代外部 LeRobot 标注依赖；真实 Gemma 单 episode 写回通过。"
+    changed_files:
+    - annotation_workbench/annotation_core/
+    - annotation_workbench/guided_alignment.py
+    - annotation_workbench/tests/test_annotation_core.py
+    - annotation_workbench/tests/test_app.py
+    deviations:
+    - "Gemma 的图像时间戳可略超出 episode 末帧；边界现统一吸附到真实帧时间戳后再执行固定文本、顺序和覆盖校验。"
+    follow_ups:
+    - "VLM 语义和时间边界质量仍需按具体任务进行人工抽样复核。"
+  created_at: '2026-08-03T00:00:00+08:00'
+  updated_at: '2026-08-03T18:00:00+08:00'
+
+- id: TASK-034
+  title: 改造桌面端为独立服务编排器
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: "将桌面端改为仅使用包内资源，统一生产 GUI 服务、VLM 配置和受控进程回收。"
+  status: done
+  priority: high
+  risk: medium
+  authority: A
+  owner: agent
+  tags: [annotation, standalone, desktop, lifecycle]
+  related_business_logic: [BL-TOOL-001, BL-TOOL-002, BL-TOOL-003]
+  acceptance_refs: [BL-TOOL-001-A1, BL-TOOL-002-A1]
+  related_decisions: [DEC-007]
+  depends_on: [TASK-032, TASK-033]
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: [a-engineering-landing, a-verification]
+  spec_ref: .project-log/specs/annotation-workbench-standalone.md
+  inputs:
+  - "包内服务资源"
+  - "包内 annotation_core 和 guided_alignment"
+  outputs:
+  - "更新后的 desktop_app.py 与服务日志策略"
+  - "包内配置、Ollama 覆盖和 VLM 启动路径"
+  plan:
+  - "删除 PROJECT_ROOT、LEROBOT_SRC 和外部路径常量"
+  - "由包资源定位器提供数据服务、后端和前端路径"
+  - "将 next dev 改为 next start，并检测启动失败"
+  - "保留动态端口和仅回收自身进程组规则"
+  done_when:
+  - "桌面端可选择数据集并自动打开包内生产 GUI"
+  - "VLM 使用环境变量配置的 Ollama 地址和模型"
+  - "正常关闭后不会留下本实例启动的前后端或数据服务"
+  - "外部旧目录不存在时，桌面端路径解析仍成功"
+  verification:
+    status: passed
+    commands:
+    - "pytest desktop service manager tests"
+    - "QT_QPA_PLATFORM=offscreen desktop smoke"
+    - "隔离副本启动、服务回收和 VLM command smoke"
+    evidence: [EV-053, EV-054]
+    limitations: []
+  result:
+    summary: "桌面端仅解析 annotation_workbench 内资源，以动态回环端口启动三项服务，使用环境变量覆盖 Ollama 配置，并且仅回收本实例创建的进程组。"
+    changed_files:
+    - annotation_workbench/desktop_app.py
+    - annotation_workbench/visualize_dataset/src/app/api/workbench-config/route.ts
+    - annotation_workbench/visualize_dataset/src/utils/workbenchConfig.ts
+    - annotation_workbench/visualize_dataset/src/utils/annotationsClient.ts
+    deviations: []
+    follow_ups: []
+  created_at: '2026-08-03T00:00:00+08:00'
+  updated_at: '2026-08-03T18:00:00+08:00'
+
+- id: TASK-035
+  title: 隔离独立包端到端验收
+  kind: task
+  parent_id: null
+  phase: verification
+  goal: "在不含外部旧目录的隔离副本中验证安装、桌面 GUI、人工保存、VLM 写回和 GUI 复核闭环。"
+  status: done
+  priority: high
+  risk: high
+  authority: A
+  owner: agent
+  tags: [annotation, standalone, verification, end-to-end]
+  related_business_logic: [BL-TOOL-001, BL-TOOL-002, BL-TOOL-003]
+  acceptance_refs: [BL-TOOL-001-A1, BL-TOOL-002-A1, BL-TOOL-003-A1]
+  related_decisions: [DEC-007]
+  depends_on: [TASK-034]
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: [a-verification, a-business-code-align, a-project-log]
+  spec_ref: .project-log/specs/annotation-workbench-standalone.md
+  inputs:
+  - "已迁移的 annotation_workbench"
+  - "隔离测试副本和一条人工完整示范"
+  - "已运行的外部 Ollama 与配置模型"
+  outputs:
+  - "安装、GUI、VLM、复核和外部路径隔离的验证证据"
+  - "验收结论或明确的失败归因"
+  plan:
+  - "复制 annotation_workbench 到不含外部旧目录的位置"
+  - "运行安装和生产构建"
+  - "启动桌面端并确认 GUI 能加载和保存本地数据集"
+  - "运行至少一个非示范 episode 的 VLM 对齐"
+  - "重新打开 GUI 读取并微调 VLM 结果"
+  - "检查运行日志与代码路径没有外部目录读取"
+  done_when:
+  - "安装脚本、两个启动入口和生产 GUI 均可用"
+  - "GUI 标注与 VLM 结果均写入并可从同一数据集读回"
+  - "服务只绑定回环地址，并在退出后回收自身进程"
+  - "验证未发现对原项目外部目录的运行时读取"
+  verification:
+    status: passed
+    commands:
+    - "isolated copy install.sh"
+    - "isolated copy ./run.sh and python -m annotation_workbench smoke"
+    - "GUI save/read browser smoke"
+    - "Ollama one-episode guided alignment smoke"
+    evidence: [EV-053, EV-054, EV-055, EV-056, EV-057, EV-058, EV-059]
+    limitations: ["VLM 标注质量结论需在独立的人工抽检任务中给出"]
+  result:
+    summary: "隔离数据集上的 GUI 保存/读回、Gemma 自动标注/GUI 读回，以及无外部旧目录的独立复制安装和桌面端离屏启动均已通过。"
+    changed_files: []
+    deviations:
+    - "隔离桌面端使用 QT_QPA_PLATFORM=offscreen 验证进程可启动；用户可见桌面交互仍应在实际使用时复核。"
+    follow_ups:
+    - "后续单独开展 VLM 标注质量抽检，不将本次技术闭环误作语义质量结论。"
+  created_at: '2026-08-03T00:00:00+08:00'
+  updated_at: '2026-08-03T21:00:00+08:00'
+
+- id: TASK-036
+  title: VLM 时间边界 P0/P1 诊断与 coarse-to-fine 小批量实验
+  kind: task
+  parent_id: TASK-022
+  phase: verification
+  goal: "在 Qingdao v3 真实数据上验证“程序时间搜索 + VLM 单边界局部视觉判断”是否改善时间候选边界，并产出可复查 JSONL/contact sheet。"
+  status: done
+  priority: high
+  risk: high
+  authority: C
+  owner: agent
+  tags: [experiment, temporal-alignment, diagnostic, coarse-to-fine]
+  related_business_logic: [BL-TOOL-003]
+  acceptance_refs: [BL-TOOL-003-A1]
+  related_decisions: [DEC-009]
+  depends_on: [TASK-025]
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: [a-engineering-landing, a-verification, a-project-log]
+  spec_ref: .project-log/briefs/gpt-vlm-alignment-action-guide-2026-08-08.md
+  inputs:
+  - "Qingdao v3 数据集副本及 meta/lerobot_annotations.json"
+  - "P0 debug_run1 JSONL 与 contact sheets"
+  - "外部 Ollama gemma3:27b"
+  outputs:
+  - "P1 fine 单边界请求实现和测试"
+  - "51/52/53 boundary 误差分析"
+  plan:
+  - "补录 P0 实际结果与用户批准"
+  - "实现 fine candidates、F00 标签和 fine JSONL"
+  - "在 51/52/53 上运行小批量实验"
+  - "对比 coarse/fine 误差并记录证据"
+  done_when:
+  - "P0 结果已补录且 DEC-009 转 active"
+  - "P1 fine 阶段可独立运行并通过针对性测试"
+  - "51/52/53 的 coarse/fine 请求均有 JSONL 证据"
+  - "分析结论明确记录误差和是否继续生产化"
+  verification:
+    status: passed
+    commands:
+    - "pytest -q annotation_workbench/tests"
+    - "guided_probe.py coarse probe"
+    - "guided_probe.py fine probe"
+    evidence:
+    - EV-061
+    - EV-062
+    - EV-063
+    limitations:
+    - "当前 51/52/53 参考边界来自已有自动标注，不等同人工 ground truth"
+    - "P1 结论为当前组合不胜任，不代表其他视角或模型被否定"
+  result:
+    summary: "P0/P1 均已实跑：fine 阶段无法修复 coarse 离群误差，cam_top+gemma3:27b 当前不胜任 51/52/53 时间定位。任务作为诊断实验完成，结论为不进入 287 条生产。"
+    changed_files:
+    - annotation_workbench/guided_probe.py
+    - annotation_workbench/tests/test_guided_probe.py
+    - annotation_workbench/annotation_core/vlm_client.py
+    deviations:
+    - "真实实验仅以现有自动标注边界作为参考，未获得人工 ground truth"
+    follow_ups:
+    - "等待用户 C 级决定：更换视角/模型、提供人工 GT，或接受当前组合不胜任。"
+  created_at: '2026-08-08T12:50:00+08:00'
+  updated_at: '2026-08-08T13:30:00+08:00'
+
+- id: TASK-037
+  title: 新数据集 VLM 标定测试业务要求与范围
+  kind: task
+  parent_id: TASK-036
+  phase: business-clarification
+  goal: "记录用户对 VLM 自动标注新标定测试的要求，明确新数据集输入、标定目标、交付物和用户评价方式；不再继续当前 Qingdao 数据实验。"
+  status: cancelled
+  priority: high
+  risk: high
+  authority: C
+  owner: shared
+  tags: [annotation, business-clarification, v2]
+  related_business_logic:
+  - BL-TOOL-002
+  - BL-DATA-003
+  acceptance_refs: []
+  related_decisions: []
+  depends_on:
+  - TASK-036
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-business-clarify
+  spec_ref: /home/tbl/下载/VLM_LeRobot_v3_精度优先自动标注改造指南.md
+  inputs:
+  - "用户后续提供的新数据集"
+  - "用户对标定测试的目标和评价方式"
+  - "外部 V2 精度优先指南作为参考"
+  outputs:
+  - "新数据集标定测试业务要求"
+  - "是否继续复用 V2 架构的决定"
+  - "标定结果交付与用户评价方式"
+  plan:
+  - "记录外部指南分析"
+  - "暂停当前 Qingdao 数据实验"
+  - "接收用户新数据集标定测试要求"
+  - "更新业务范围和验收方式"
+  done_when:
+  - "用户已提供新数据集的标定测试目标和评价方式"
+  - "新范围已写入业务记录"
+  - "不再在当前数据上继续标定实验"
+  verification:
+    status: not-run
+    commands: []
+    evidence: []
+    limitations:
+    - "等待用户回答业务澄清问题"
+  result:
+    summary: "外部 V2 分析已记录；真实用户测试后 VLM 子任务识别精度仍差，用户决定当前项目暂停。"
+    changed_files:
+    - ".project-log/docs/vlm-v2-guide-analysis-2026-08-08.md"
+    - ".project-log/business-logic/clarification.yaml"
+    deviations: []
+    follow_ups:
+    - "用户提供新数据集及标定测试要求"
+  created_at: '2026-08-08T14:10:00+08:00'
+  updated_at: '2026-08-08T14:10:00+08:00'
+
+- id: TASK-038
+  title: VLM 示范 episode 可选择实现
+  kind: task
+  parent_id: TASK-037
+  phase: implementation
+  goal: "把 VLM 自动标注的示范 episode 从前 5 条硬编码改为用户显式选择，并保证桌面端与 CLI 传递闭环。"
+  status: done
+  priority: high
+  risk: medium
+  authority: B
+  owner: agent
+  tags: [annotation, vlm, demo-selection, implementation]
+  related_business_logic:
+  - BL-TOOL-004
+  acceptance_refs:
+  - BL-TOOL-004-A1
+  related_decisions: []
+  depends_on:
+  - TASK-037
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  inputs:
+  - "当前 EpisodeSelectionDialog"
+  - "read_template/load_episode_states"
+  - "用户要求的示范/自动标注两组多选"
+  outputs:
+  - "可分别多选的示范 episode 与自动标注 episode"
+  - "read_template 只基于用户所选示范解析模板"
+  - "CLI --demo-episodes 接收桌面端选择结果"
+  plan:
+  - "把选择弹窗拆成两组多选"
+  - "新增 episode 标注状态扫描"
+  - "read_template 改为显式 demo_episodes"
+  - "补充测试并运行完整测试"
+  done_when:
+  - "示范组只允许选择已完整标注 episode"
+  - "自动标注组可任意多选并与示范组重叠"
+  - "read_template 不使用前 5 条硬编码"
+  - "Python 测试和 UI smoke 通过"
+  verification:
+    status: passed
+    commands:
+    - "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests"
+    - "annotation_workbench/.venv/bin/python -m py_compile annotation_workbench/desktop_app.py annotation_workbench/guided_alignment.py"
+    - "git -C annotation_workbench diff --check"
+    - "QT_QPA_PLATFORM=offscreen EpisodeSelectionDialog smoke"
+    evidence:
+    - EV-064
+    limitations:
+    - "用户在真实桌面环境中的人工交互仍需最终测试"
+  result:
+    summary: "选择弹窗已改为示范/自动标注两组多选；read_template 只读取用户所选 demo；37 个测试和 offscreen dialog smoke 通过。"
+    changed_files:
+    - annotation_workbench/desktop_app.py
+    - annotation_workbench/tests/test_app.py
+    - annotation_workbench/README.md
+    deviations: []
+    follow_ups:
+    - "等待用户在真实桌面端测试选择交互和 VLM 自动标注"
+    - "用户真实测试显示选择功能可用，但 VLM 子任务识别精度不达标；项目已暂停。"
+  created_at: '2026-08-08T14:30:00+08:00'
+  updated_at: '2026-08-08T14:30:00+08:00'
+
+- id: TASK-039
+  title: Qingdao pouring GR00T 单 pass 训练
+  kind: task
+  parent_id: TASK-038
+  phase: verification
+  goal: "在正式 Qingdao pouring v3 数据集上完成 GR00T 单 pass 训练，并验证训练-保存链路与最终 checkpoint。"
+  status: done
+  priority: high
+  risk: high
+  authority: C
+  owner: shared
+  tags: [training, groot, qingdao-pouring, single-pass]
+  related_business_logic:
+  - BL-BENCH-001
+  acceptance_refs: []
+  related_decisions: []
+  depends_on:
+  - TASK-038
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-verification
+  - a-project-log
+  inputs:
+  - "正式 Qingdao pouring v3 数据集"
+  - "GR00T N1.7 base checkpoint"
+  - "单 pass 训练脚本参数"
+  outputs:
+  - "checkpoints/007000"
+  - "checkpoints/014000"
+  - "checkpoints/014051"
+  - "W&B run nrea7gvg"
+  plan:
+  - "确认训练参数为 1 pass"
+  - "启动正式训练"
+  - "检查 End of training 和 checkpoint"
+  - "记录 W&B 最终指标"
+  done_when:
+  - "训练日志出现 End of training"
+  - "training_step.json 为 step=14051"
+  - "checkpoints/last 指向 014051"
+  - "无残留训练进程"
+  verification:
+    status: passed
+    commands:
+    - "RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh"
+    - "检查 wandb-summary.json、output.log、training_step.json"
+    - "GrootPolicy.from_pretrained(checkpoint/014051/pretrained_model, strict=True)"
+    - "preprocessor -> predict_action_chunk -> postprocessor"
+    evidence:
+    - EV-066
+    - EV-067
+    limitations:
+    - "尚未做真机 rollout，训练 loss 和单样本推理不能等价于实际成功率"
+  result:
+    summary: "GR00T 单 pass 训练完成：14051/14051，End of training，最终 checkpoint 014051 已保存；W&B run nrea7gvg。"
+    changed_files: []
+    deviations: []
+    follow_ups:
+    - "下一步可进行模型部署和真机评测"
+    - "真机前仍需 ROKAE 驱动/SDK 接入，并修正 smoke 脚本 base_model_path 使用方式"
+  created_at: '2026-08-09T08:00:00+08:00'
+  updated_at: '2026-08-09T08:30:00+08:00'
+
+- id: TASK-040
+  title: 合并 DexBot VLA 子工程到统一工作区与工程记录
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: "把 dexbot_ros2_ws-dex_vla 完整迁移到 force_touch_model 工作区，并把其工程记录并入统一的根 Project Log。"
+  status: done
+  priority: high
+  risk: medium
+  authority: B
+  owner: agent
+  tags: [workspace, migration, project-log, dex_vla]
+  related_business_logic: []
+  acceptance_refs:
+  - EV-068
+  related_decisions:
+  - DEC-010
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  - a-project-log
+  spec_ref: null
+  inputs:
+  - "/home/tbl/Project/dexbot_ros2_ws-dex_vla"
+  - "/home/tbl/Project/force_touch_model/.project-log"
+  outputs:
+  - "/home/tbl/Project/force_touch_model/dexbot_ros2_ws-dex_vla"
+  - "/home/tbl/Project/force_touch_model/.project-log/subprojects/dexbot_ros2_ws-dex_vla/"
+  plan:
+  - "移动 dexbot Git 子仓到统一工作区根"
+  - "将 DexBot 工程记录并入根 Project Log 子工程命名空间"
+  - "批量更新旧绝对路径引用"
+  - "校验项目日志并运行迁移后 VLA 聚焦测试"
+  done_when:
+  - "新路径下 Git 分支和 remote 保持有效"
+  - "根 .project-log/subprojects 包含完整 DexBot 记录快照"
+  - "源码/运行时配置不再引用旧路径；历史记录保留来源说明"
+  - "项目日志校验通过，DexBot 聚焦测试通过"
+  verification:
+    status: passed
+    commands:
+    - "git -C dexbot_ros2_ws-dex_vla status --short --branch"
+    - "PYTHONPATH=src/dexbot_vla /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q src/dexbot_vla/test/test_groot_backend.py src/dexbot_vla/test/test_model_artifacts.py src/dexbot_vla/test/test_contract_loader_integration.py src/dexbot_vla/test/test_model_services.py --deselect src/dexbot_vla/test/test_contract_loader_integration.py::test_rokae_artifact_profile_separates_model_and_robot_identity --deselect src/dexbot_vla/test/test_model_services.py::test_runtime_bundle_materializes_model_service_and_service_client_command"
+    - "/home/tbl/miniforge3/envs/vibe-coding/bin/python ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model"
+    evidence:
+    - EV-068
+    limitations:
+    - "旧绝对路径清理覆盖工作区文本文件；用户自建 shell 别名或外部系统配置不在本次迁移范围内。"
+  result:
+    summary: "DexBot 子仓已迁移到统一工作区，历史 Project Log 已并入子工程命名空间，旧路径引用已清理并完成验证。"
+    changed_files:
+    - "AGENTS.md"
+    - ".project-log/subprojects/dexbot_ros2_ws-dex_vla/"
+    - "dexbot_ros2_ws-dex_vla/"
+    deviations: []
+    follow_ups:
+    - "后续所有 VLA 指令在 force_touch_model/dexbot_ros2_ws-dex_vla 内运行。"
+  created_at: '2026-08-11T00:00:00+08:00'
+  updated_at: '2026-08-11T00:00:00+08:00'
+
+- id: TASK-041
+  title: 归档合并后的统一工程记录
+  kind: task
+  parent_id: TASK-040
+  phase: implementation
+  goal: "把合并 DexBot 子工程后的 force_touch_model/.project-log 同步到集中知识库并提交推送。"
+  status: done
+  priority: medium
+  risk: low
+  authority: A
+  owner: agent
+  tags: [archive, project-log, knowledge-base]
+  related_business_logic: []
+  acceptance_refs:
+  - EV-069
+  related_decisions: []
+  depends_on:
+  - TASK-040
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-project-log-archive
+  - a-verification
+  spec_ref: null
+  inputs:
+  - "/home/tbl/Project/force_touch_model/.project-log"
+  outputs:
+  - "/home/tbl/Project/My_knowledge_base/工程记录/force_touch_model/.project-log"
+  plan:
+  - "校验根 Project Log"
+  - "同步 .project-log 到集中知识库"
+  - "只提交 force_touch_model 归档目录并推送"
+  done_when:
+  - "知识库归档目录包含合并后的完整 .project-log"
+  - "归档提交只包含 force_touch_model 工程记录"
+  verification:
+    status: passed
+    commands:
+    - "/home/tbl/miniforge3/envs/vibe-coding/bin/python ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model"
+    - "同步 .project-log 至 /home/tbl/Project/My_knowledge_base/工程记录/force_touch_model"
+    - "git -C /home/tbl/Project/My_knowledge_base add 工程记录/force_touch_model && git commit && git push"
+    evidence:
+    - EV-069
+    limitations: []
+  result:
+    summary: "合并后的统一工程记录已归档到集中知识库，并单独提交推送。"
+    changed_files:
+    - "/home/tbl/Project/My_knowledge_base/工程记录/force_touch_model/.project-log"
+    deviations:
+    - "为避免把知识库中无关未跟踪文件一起提交，未使用 skill 脚本默认的 git add -A。"
+    follow_ups: []
+  created_at: '2026-08-11T00:00:00+08:00'
+  updated_at: '2026-08-11T00:00:00+08:00'

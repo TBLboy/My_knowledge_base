@@ -1,0 +1,316 @@
+version: "0.1"
+status: draft
+scope: "本机部署、局域网访问的数据标注 Web 应用及 VLM 标注编排流程"
+fact_map:
+  confirmed:
+    - "应用运行在用户本机，局域网其他用户可以访问。"
+    - "用户先选择一个本地 LeRobot v3.0 数据集，再进入 GUI 标注。"
+    - "人工示范标注完成并保存后，才能启动 VLM 自动标注。"
+    - "人工标注阶段需要支持 1-5 条精细示范轨迹。"
+    - "同一轨迹允许添加 2-4 条不同细粒度的 task augmentation 描述。"
+    - "一个任务的 subtask 集合应固定；VLM 只为固定标签填充时间范围，不自由创建、删除或改写标签。"
+    - "VLM 完成后，用户可以重新打开 GUI 抽样检查和微调。"
+    - "GUI 标注流程与 VLM 自动标注流程在业务上分开，通过中间组件串联。"
+    - "中间组件应保存用户选择的数据集地址，并提供打开 GUI 与启动 VLM 的入口。"
+  inferred:
+    - "示范数据应保存为数据集内的标注状态或独立可追溯的标注配置，具体载体尚未决定。"
+    - "VLM 失败或部分 episode 无法对齐时，应保留已完成结果并将失败项标记为待人工复核，而不是覆盖原始数据。"
+    - "局域网访问至少需要限制在明确的本机/局域网边界内，不能默认暴露到公网。"
+  unknown:
+    - "task augmentation 的多描述是否全部用于训练，还是只作为 VLM 参考/语言增强数据。"
+    - "subtask 是否允许同一固定标签存在多个等价语言版本。"
+    - "额外辅助标注的类型、保存方式和是否需要 GUI 编辑。"
+    - "示范轨迹如何选择、是否必须同一任务/同一场景。"
+    - "VLM 自动标注是否允许写入原数据集，还是必须输出到新目录。"
+    - "局域网用户是否需要登录、只读/编辑权限和并发编辑规则。"
+    - "局域网用户 B 的数据集由 A 上传/处理，还是由 B 本机代理直接处理。"
+    - "VLM 推理由 A 上的模型服务执行，还是要求 B 本机也运行模型。"
+functional_business_logic:
+  actors:
+    - id: owner
+      role: "启动应用、选择数据集、管理流程和最终导出"
+    - id: annotator
+      role: "人工创建/修订 task augmentation、subtask 和辅助参考标注"
+    - id: reviewer
+      role: "抽样检查 VLM 输出并修订标注"
+    - id: vlm_runner
+      role: "根据人工示范和固定 subtask 模板生成候选时间范围"
+  happy_path:
+    - "启动本机 Web 应用"
+    - "选择本地 LeRobot v3.0 数据集"
+    - "打开 GUI，人工精细标注 1-5 条示范轨迹"
+    - "为示范轨迹添加 2-4 条不同细粒度 task augmentation 描述"
+    - "建立并确认固定 subtask 模板"
+    - "添加可选的辅助参考信息"
+    - "保存人工标注"
+    - "启动 VLM；系统检查示范和固定 subtask 是否存在"
+    - "VLM 对剩余轨迹/指定轨迹复用固定 subtask，仅生成时间范围"
+    - "重新打开 GUI，抽样检查、修订并保存"
+  invariants:
+    - "正式原始数据集不可被自动流程无提示覆盖。"
+    - "VLM 不得改变固定 subtask 的数量、顺序和文本。"
+    - "人工示范、VLM 输出、人工修订应可区分并可追溯。"
+    - "用户未完成必需示范时，VLM 启动必须被阻止并给出可操作提示。"
+  failure_boundaries:
+    - "本地路径不存在或不是有效 LeRobot v3.0 数据集：不能进入 GUI，提示具体缺失项。"
+    - "示范标注缺失或 subtask 模板未确认：不能启动 VLM。"
+    - "VLM 部分失败：不得伪造时间范围；失败 episode 标为待人工复核。"
+    - "多人同时编辑同一 episode：并发冲突规则尚未确定。"
+technical_business_logic:
+  current_facts:
+    - "当前 GUI 前端和 FastAPI 标注后端是两个独立进程。"
+    - "当前 GUI 通过 NEXT_PUBLIC_DATASET_URL 指向 HTTP 数据集服务。"
+    - "当前标注后端支持 local_path，并将 GUI 标注状态保存到 meta/lerobot_annotations.json。"
+    - "当前 VLM 通过 lerobot-annotate CLI 运行，使用 Ollama OpenAI 兼容接口。"
+    - "当前前端启动时需要通过环境变量绑定单一数据集路径，尚无数据集选择器/编排入口。"
+  gaps:
+    - type: missing-implementation
+      statement: "缺少统一的本地数据集选择、服务启动和流程状态管理入口。"
+    - type: missing-implementation
+      statement: "缺少从人工示范中生成固定 subtask 模板并供 VLM 时间对齐使用的流程。"
+    - type: missing-implementation
+      statement: "缺少辅助参考标注的数据契约和 VLM 消费接口。"
+    - type: unknown
+      statement: "局域网访问的身份、权限、并发和安全边界尚未定义。"
+    - type: constraint-conflict
+      statement: "浏览器可以让 B 选择本机目录，但 A 上的服务不能直接读取 B 的本地路径；必须采用浏览器上传/浏览器本地处理，或在 B 部署本地代理。"
+alignment:
+  confirmed_matches:
+    - "现有 GUI 已支持人工查看、修改和保存语言标注，符合人工复核阶段目标。"
+  missing_implementation:
+    - "统一 Web 编排入口。"
+    - "固定 subtask 模板驱动的 VLM 时间对齐。"
+    - "示范和辅助参考信息管理。"
+  decisions_required:
+    - "subtask 文本是否固定单一版本。"
+    - "task augmentation 多版本的消费范围。"
+    - "VLM 输出是否必须写入新数据集目录。"
+    - "局域网用户权限模型。"
+next_question:
+  id: Q-WEB-001
+  question: "subtask 的文本是否采用‘每个固定子任务一个标准描述’，不做同一 subtask 的多语言/多措辞版本？"
+  why_blocking: "这决定示范标注的数据结构、VLM 输出契约、GUI 编辑方式和后续训练样本是否会被重复加权。"
+  recommendation: "第一版采用每个 subtask 一个固定标准描述；把语言多样性放在 task augmentation，不放在 subtask。"
+  consequence: "VLM 只输出固定 subtask 的时间范围，标签数量、顺序和文本稳定，减少语义漂移和训练权重变化。"
+  fallback: "若后续实验需要 subtask 语言增强，再作为独立实验变量增加版本，不改变 baseline 标注契约。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+next_question:
+  id: Q-WEB-002
+  question: "同一轨迹的多条 task augmentation，第一版是否全部作为训练时可用的语言描述，还是只保留一条主描述用于训练，其余描述仅作为 VLM 参考和后续增强实验？"
+  why_blocking: "这决定标注数据如何导出、同一轨迹是否被重复采样、训练样本权重是否改变，以及 GUI 中是否需要区分主描述和候选描述。"
+  recommendation: "第一版只指定一条主描述进入 baseline 训练，其余描述保留为增强候选并可通过配置单独启用。"
+  consequence: "不会因为一条轨迹添加 2-4 条描述而无意中提高该轨迹的训练权重，同时保留语言增强实验能力。"
+  fallback: "若当前目标只是构建 VLM 参考库，可先全部保存，但在训练 manifest 中默认只选择主描述。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+next_question:
+  id: Q-WEB-003
+  question: "第一版是否只增加三类辅助参考标注：对象/目标位置、关键动作提示、标注置信度与边界说明？"
+  why_blocking: "辅助信息会影响示范标注界面、数据结构和 VLM 输入；先限定范围可以避免把不参与最终输出的标注做得过于复杂。"
+  recommendation: "第一版采用这三类：对象与空间关系、关键动作/边界提示、人工置信度/备注；不加入 VQA 框选、关键点等复杂标注。"
+  consequence: "VLM 获得足够的任务先验，同时人工标注成本和数据契约保持可控。"
+  fallback: "如果实际抽检发现对象定位仍不足，再增加 bbox/关键点作为第二版能力。"
+  answer: "deferred"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "辅助参考标注不是第一版必需项，可以标注，也可以暂不标注；第一版只要求完成 task augmentation 和固定 subtask 标注。"
+next_question:
+  id: Q-WEB-004
+  question: "第一版是否要求用户先完成 1 条示范轨迹并确认固定 task augmentation/subtask 模板后，才允许扩展到 1-5 条示范轨迹？"
+  why_blocking: "这决定人工标注阶段的最小可用门槛，以及系统何时生成固定 subtask 模板。"
+  recommendation: "第一版允许直接标注 1-5 条示范轨迹，但必须在启动 VLM 前确认一份最终固定模板；不同示范之间的 subtask 不一致时阻止启动并提示合并。"
+  consequence: "人工可以逐条完善示范，同时 VLM 只消费明确确认过的统一模板。"
+  fallback: "若希望流程更简单，可只要求 1 条示范作为模板，其他 4 条作为可选校验样本。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "人工阶段允许直接标注 1-5 条示范轨迹，不要求先完成单条示范再扩展。"
+next_question:
+  id: Q-WEB-005
+  question: "启动 VLM 自动标注时，是否默认跳过这 1-5 条人工示范轨迹，只标注其余未完成轨迹？"
+  why_blocking: "这决定示范标注是否被保护、VLM 的处理范围以及重复运行时是否会覆盖人工结果。"
+  recommendation: "默认跳过示范轨迹，并保护所有已有人工标注；只有用户明确选择‘重新标注’时才允许覆盖。"
+  consequence: "人工示范作为稳定参考，不会被 VLM 自动结果覆盖；流程可安全重复运行。"
+  fallback: "如果需要统一重跑，可另提供显式的覆盖模式并要求二次确认。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "VLM 默认跳过 1-5 条人工示范轨迹，并保护所有已有人工标注；只有显式覆盖操作才允许重标。"
+next_question:
+  id: Q-WEB-006
+  question: "VLM 自动标注结果是否默认输出到原数据集旁边的新目录，而不直接修改用户选择的原始数据集？"
+  why_blocking: "这决定数据安全、重复运行、失败恢复和 GUI 重新打开时使用哪个数据集版本。"
+  recommendation: "默认生成带运行标识的新输出目录；原始数据集只读保留，用户验收后再通过明确操作导出或替换。"
+  consequence: "自动标注失败或质量不合格时可以直接丢弃输出，不影响人工原始数据和示范标注。"
+  fallback: "如果用户明确选择原地写入，必须二次确认并创建可恢复备份。"
+  answer: "confirmed-with-choice"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "VLM 输出位置作为用户可选项：用户可以选择原地写入，也可以选择输出到新目录。"
+  required_safety: "选择原地写入时，界面必须明确显示目标路径并要求二次确认；新目录模式应允许用户指定输出目录或使用可识别的默认目录。"
+next_question:
+  id: Q-WEB-007
+  question: "第一版是否只支持单个用户使用，局域网其他用户默认只读，不允许多人同时编辑同一数据集？"
+  why_blocking: "这决定是否需要登录、权限管理、并发冲突处理和编辑锁；会显著影响 Web 应用的第一版范围。"
+  recommendation: "第一版采用单编辑者模式：本机用户可编辑，局域网访问者默认只读；暂不实现账号和多人协同编辑。"
+  consequence: "可以先完成稳定的本机标注编排流程，避免多人同时写入 annotations 文件造成覆盖或冲突。"
+  fallback: "若确实需要多人编辑，再单独设计用户身份、锁和冲突合并规则。"
+  answer: "superseded-by-clarification"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "局域网访问者需要操作各自电脑上的本地数据集；服务不能假定数据集位于 A。"
+next_question:
+  id: Q-WEB-008
+  question: "对于 B 电脑上的本地数据集，第一版是否接受‘B 浏览器选择目录后，将数据上传/同步到 A 处理，VLM 使用 A 上的模型’，而不是要求 B 本机运行模型？"
+  why_blocking: "浏览器安全策略不允许 A 的后端直接读取 B 的本地路径；这个选择决定是否需要上传、磁盘占用和数据隐私边界。"
+  recommendation: "如果数据集较大，推荐在 B 部署轻量本地代理；如果先做最小可用版本，可由浏览器选择目录并上传到 A 的任务工作目录。"
+  consequence: "本地代理方案避免大视频上传，且 VLM/GUI 可以直接操作 B 的数据；上传方案部署简单但耗时、占用 A 磁盘并产生数据副本。"
+  fallback: "只支持浏览器本地选择而不上传时，只能把标注逻辑放到浏览器，无法直接复用 A 上现有 Python VLM 流程。"
+  answer: "deferred-to-phase-2"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "分两个版本实施：第一版只支持用户在本机安装并使用，不考虑网络访问；第一版稳定后再升级为局域网客户端无需安装、直接访问并处理客户端本地数据。"
+  phase_1_scope:
+    - "本机选择本地 LeRobot v3.0 数据集。"
+    - "本机 GUI 人工标注 task augmentation 和固定 subtask。"
+    - "本机检查示范标注并启动 VLM。"
+    - "本机查看、微调和保存 VLM 结果。"
+  phase_2_scope:
+    - "局域网客户端浏览器无需安装软件。"
+    - "客户端浏览器选择并读写客户端本地数据集。"
+    - "服务端提供 VLM 推理能力。"
+    - "具体浏览器本地文件读写和数据传输方案另行澄清/研究。"
+next_question:
+  id: Q-WEB-009
+  question: "第一版是否只要求支持单个本地数据集会话：一次选择一个数据集，完成标注/VLM/复核后再切换到下一个数据集？"
+  why_blocking: "这决定第一版是否需要多数据集工作区、任务队列和跨数据集状态管理。"
+  recommendation: "第一版采用单数据集会话，先完成选择、人工标注、VLM 自动标注、复核保存的闭环。"
+  consequence: "实现范围小、状态更清晰，验证通过后再扩展多数据集管理。"
+  fallback: "如果用户确实需要并行处理多个数据集，再增加工作区列表和任务状态。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "第一版一次只处理一个本地数据集文件夹；完成或关闭当前会话后才能切换到另一个数据集。"
+next_question:
+  id: Q-WEB-010
+  question: "第一版是否需要保存当前数据集会话状态，使应用重启后能恢复到上次的数据集路径、人工示范状态和 VLM 运行状态？"
+  why_blocking: "这决定第一版是否需要持久化工作流状态，还是只在当前应用进程中维护临时状态。"
+  recommendation: "至少持久化数据集路径、示范轨迹列表、当前阶段、最近一次 VLM 运行结果和输出路径；应用重启后可恢复并继续。"
+  consequence: "长时间 VLM 标注或中途关闭应用后不会丢失流程进度，也能避免重复运行。"
+  fallback: "如果先追求最小实现，可以只要求标注数据本身持久化，应用状态在重启后重新选择。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "第一版持久化当前数据集路径、示范轨迹列表、当前阶段、最近一次 VLM 运行状态和输出路径；应用重启后恢复会话。"
+next_question:
+  id: Q-WEB-011
+  question: "VLM 运行中途失败或应用重启后，是否允许从已完成的 episode 继续，默认跳过已成功标注的 episode？"
+  why_blocking: "这决定 VLM 任务是否可恢复、重复运行是否覆盖结果，以及长任务失败后的操作方式。"
+  recommendation: "允许断点恢复：默认跳过人工示范和已有有效结果，只重试失败/未完成 episode；用户可显式选择全量重跑。"
+  consequence: "长时间标注失败后不需要从头开始，也能保护已有人工和自动结果。"
+  fallback: "如果暂不支持断点恢复，失败后只能重新执行整个未保护范围。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "VLM 支持断点恢复；默认跳过人工示范和已有有效自动标注，只处理失败或未完成 episode；另提供显式全量重跑选项。"
+next_question:
+  id: Q-WEB-012
+  question: "1-5 条人工示范轨迹是否由用户在 GUI 中手动选择 episode 编号，而不是由系统自动选择？"
+  why_blocking: "这决定示范数据的控制权和界面交互；不同 episode 可能存在质量差异，不能假设前几个 episode 就适合作为示范。"
+  recommendation: "由用户手动勾选 1-5 个 episode，并在启动 VLM 前显示已选示范列表供确认。"
+  consequence: "用户可以选择最清晰、最具代表性的轨迹，避免低质量示范污染固定 subtask 模板。"
+  fallback: "如果用户未选择，系统可以允许选择当前正在编辑的 episode 作为唯一示范，但不能静默随机选择。"
+  answer: "confirmed-with-default"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "示范轨迹直接复用 GUI 左侧 episode 列表进行选择；默认选择前 5 条，用户可以在列表中改选任意 1-5 条。"
+  constraint: "不新增独立的复杂示范选择器；启动 VLM 前显示当前选中的示范 episode 并允许确认。"
+next_question:
+  id: Q-WEB-013
+  question: "是否要求用户在启动 VLM 前点击一次‘确认示范标注’，由系统检查所选 1-5 个 episode 都同时包含 task augmentation 和固定 subtask？"
+  why_blocking: "这决定系统是否在自动标注前阻止不完整示范，避免 VLM 使用缺失或不一致的参考信息。"
+  recommendation: "增加一次确认检查；只检查必需的 task augmentation 和 subtask，辅助标注不参与阻止条件。"
+  consequence: "可以提前发现示范不完整，同时保持第一版流程简单。"
+  fallback: "如果不做确认，VLM 运行时发现缺失示范只能失败并返回提示。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "启动 VLM 前增加示范完整性检查；每个选中的示范 episode 必须包含 task augmentation 和固定 subtask，辅助标注不参与阻止条件。"
+next_question:
+  id: Q-WEB-014
+  question: "示范完整性检查通过后，是否由系统自动提取并展示 task augmentation 和 subtask 模板，用户确认后再启动 VLM？"
+  why_blocking: "这决定 1-5 条示范之间的标签不一致如何被发现，以及 VLM 使用哪一份最终模板。"
+  recommendation: "系统展示汇总结果：主 task augmentation 候选、subtask 数量、顺序和文本；如果 subtask 不一致则阻止启动，用户修订后再次检查。"
+  consequence: "VLM 使用明确、可追溯的固定模板，不会静默选择某一条示范或混合不一致标签。"
+  fallback: "如果第一版暂不做自动汇总，也必须要求用户指定一条示范作为模板来源。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "示范完整性检查通过后，系统自动汇总 task augmentation 和 subtask 模板并展示；用户确认后才允许启动 VLM。"
+next_question:
+  id: Q-WEB-015
+  question: "如果多个示范 episode 的 subtask 数量或文本不一致，是否阻止启动，并要求用户回到 GUI 手动统一后重新检查？"
+  why_blocking: "VLM 只能复用一套固定 subtask；自动选择、投票或合并会改变用户定义的业务语义。"
+  recommendation: "阻止启动并显示差异；用户回到 GUI 修改示范标注，直到所有示范的 subtask 数量、顺序和文本一致。"
+  consequence: "固定模板来源清晰，避免 VLM 在不同示范之间混合出不可控的标签体系。"
+  fallback: "若用户明确只想使用一条示范，可取消其他示范选择，使模板来源唯一。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "多个示范的 subtask 数量、顺序或文本不一致时阻止 VLM；用户必须回到 GUI 统一示范标注后重新检查。"
+next_question:
+  id: Q-WEB-016
+  question: "多个示范 episode 的 task augmentation 描述不一致时，是否允许全部汇总为候选列表，由用户确认一条主描述，其余保留为参考描述？"
+  why_blocking: "task augmentation 允许多版本，但 VLM 需要明确的任务语义参考；不能让系统无提示地选择或合并描述。"
+  recommendation: "允许汇总所有描述；用户明确选择一条主描述供 baseline/VLM 使用，其余作为参考候选保存。"
+  consequence: "保留语言多样性，同时确保自动标注和 baseline 使用的主任务描述唯一。"
+  fallback: "如果描述差异过大，提示用户回到 GUI 修订，而不是自动判断它们是否等价。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "多个示范的 task augmentation 全部汇总保留，由用户选择一条主描述供 baseline/VLM 使用，其余作为参考候选。"
+next_question:
+  id: Q-WEB-017
+  question: "VLM 自动标注时，是否只处理未标注 episode；已有自动标注但未人工确认的 episode 也默认跳过，只有用户显式选择重跑才覆盖？"
+  why_blocking: "这决定断点恢复、人工修订保护和重复运行时的覆盖范围。"
+  recommendation: "默认只处理无有效标注的 episode；已有人工或自动标注都跳过，重跑必须显式选择并二次确认。"
+  consequence: "不会覆盖人工修订，也能保护已完成的自动结果。"
+  fallback: "允许用户按失败、未确认或全部 episode 三种范围选择重跑。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "VLM 默认只处理完全没有有效标注的 episode；已有人工或自动标注的 episode 都跳过；显式重跑时才允许覆盖并要求二次确认。"
+next_question:
+  id: Q-WEB-018
+  question: "一个 episode 只有在固定 subtask 的数量、顺序、文本和时间范围都成功写入并通过校验后，才算 VLM 标注完成吗？"
+  why_blocking: "这决定断点恢复时哪些 episode 可以跳过，以及部分输出是否会被误认为有效结果。"
+  recommendation: "是；必须完成固定 subtask 的完整集合并通过格式、范围、顺序和非重叠校验，否则标记为失败/待人工复核，不计入有效结果。"
+  consequence: "断点恢复不会跳过半成品，GUI 能明确区分完成、失败和待复核状态。"
+  fallback: "如果允许部分完成，需要明确哪些缺失阶段可以由人工补齐，不能使用模糊的‘有标注即完成’。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "episode 只有在固定 subtask 集合完整、文本/顺序一致、时间范围有效且通过校验后才算 VLM 完成；否则为失败或待人工复核。"
+next_question:
+  id: Q-WEB-019
+  question: "用户在 GUI 中保存人工修改后，是否将该 episode 标记为‘人工已确认’，后续 VLM 默认永久跳过，除非用户显式解除保护并重跑？"
+  why_blocking: "这决定人工修订结果的保护等级，以及自动流程如何区分待复核自动结果和最终人工结果。"
+  recommendation: "是；保存人工修改后标记为人工已确认并保护。仅保存自动结果不算人工确认，除非用户点击明确的‘确认本 episode’操作。"
+  consequence: "人工质量控制结果不会被后续自动重跑覆盖，状态也能反映真实验收进度。"
+  fallback: "如果不区分，只能依赖时间戳或文件内容猜测是否已人工检查，容易误覆盖。"
+  answer: "confirmed"
+  answered_by: "user"
+  answered_at: "2026-07-31"
+  decision: "GUI 保存人工修改后，将 episode 标记为人工已确认并保护；后续 VLM 默认跳过，只有显式解除保护并重跑才允许覆盖。"
+  scope_correction: "该保护状态不通过修改 LeRobot GUI 增加 Confirm episode 按钮实现；第一版由中间件根据已有标注和用户在中间件中的流程选择管理，LeRobot GUI 保持原样。"
+next_question:
+  id: Q-WEB-020
+  question: "中间件是否只需要复用现有 GUI 的 Save episode/保存结果，不在 LeRobot GUI 中新增人工确认按钮或其他复杂标注功能？"
+  why_blocking: "这决定实现范围；修改官方/现有 GUI 会增加维护成本，而当前目标只是把人工 GUI 和 VLM 流程串起来。"
+  recommendation: "是；LeRobot GUI 保持不变，中间件只负责启动 GUI、检查已有标注、选择示范、启动/恢复 VLM 和记录运行状态。"
+  consequence: "实现更小，保留现有 GUI 的标注能力，减少对 LeRobot 可视化代码的侵入。"
+  fallback: "如果后续确实需要人工确认状态，再由中间件单独保存状态，不改 GUI。"
+updated_at: "2026-07-31T00:00:00+08:00"

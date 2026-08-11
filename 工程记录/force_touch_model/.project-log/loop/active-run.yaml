@@ -1,19 +1,19 @@
 schema_version: 1
 run_id: null
 goal_id: null
-phase: business-clarification
+phase: verification
 clarification_domain: null
-task_id: TASK-021
-status: active
+task_id: TASK-039
+status: handed-off
 next_action:
-  kind: task
-  subject: null
-  statement: Begin small-scale benchmark data collection, LeRobot v3.0 conversion, and official-tool read smoke
+  kind: user
+  subject: model-deployment-evaluation
+  statement: 单 pass 训练已完成，等待用户决定是否部署到真机评测或继续调参
 counters:
   task_attempts: 0
   same_failure_count: 0
   no_progress_count: 0
-  loop_decisions: 3
+  loop_decisions: 6
 limits:
   task_attempts: 4
   same_failure_count: 2
@@ -24,5 +24,5 @@ native_goal:
   thread_goal_id: null
   last_known_status: null
   last_synced_at: null
-last_event_id: LE-000011
-updated_at: '2026-07-30T00:00:00+08:00'
+last_event_id: LE-000352
+updated_at: '2026-08-11T03:34:43Z'

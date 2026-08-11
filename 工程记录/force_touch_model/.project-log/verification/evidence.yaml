@@ -734,6 +734,707 @@ evidence:
   limitations:
   - 未进行真实机器人 rollout 评估。
   - optimizer 完整恢复能力未独立验证。
+
+- id: EV-040
+  task_id: TASK-025
+  business_logic:
+  - Gemma VLM 自动标注链路必须能够从本地 LeRobot v3.0 数据集读取视频，经 Ollama 推理，写入语言列，并可由 GUI 后端人工修改后导出为可读取数据集。
+  acceptance_criteria:
+  - Ollama `gemma3:27b` 可通过 OpenAI 兼容接口被 `lerobot-annotate` 调用。
+  - 单 episode 的 plan、interjections、vqa 阶段完成且 validator errors=0。
+  - GUI 后端能读取、保存人工 atom 并导出语言列。
+  - 导出数据可被 LeRobotDatasetMetadata 和 LeRobotDataset 读取。
+  result: passed
+  level: 3
+  commands:
+  - OLLAMA_MODELS=/mnt/data/models ollama list
+  - curl http://127.0.0.1:11434/v1/models
+  - /home/tbl/miniforge3/envs/lerobot/bin/lerobot-annotate --root=/mnt/data/lerobot_annotation_e2e_smoke_20260731_r1 --only_episodes='[0]' --vlm.backend=openai --vlm.model_id=gemma3:27b --vlm.api_base=http://127.0.0.1:11434/v1 --vlm.auto_serve=false
+  - curl POST http://127.0.0.1:7861/api/dataset/load
+  - curl POST http://127.0.0.1:7861/api/episodes/0/atoms
+  - curl POST http://127.0.0.1:7861/api/export
+  - LeRobotDatasetMetadata and LeRobotDataset readback on exported dataset
+  result_ref: plan/interjections/vqa each completed 1/1; validator checked=1 errors=0 warnings=0; 41 atoms saved; export persistent_rows=14 event_rows=27; exported dataset remained 148 episodes and 47250 frames.
+  limitations:
+  - Gemma semantic output materially mismatched the observed task; requires prompt/data/quality review before full-dataset annotation.
+  - Test was limited to episode 0 and did not validate full-dataset throughput or annotation consistency.
+  artifacts:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+  - /mnt/data/models
+
+- id: EV-041
+  task_id: TASK-026
+  business_logic:
+  - 固定任务语义和顶视角后，自动标注应稳定识别右手、右侧圆形金属盆、左侧黑色带把手铁锅以及倾倒动作。
+  acceptance_criteria:
+  - 5 个代表性 episode 完成 plan/subtask/memory 标注。
+  - validator errors=0 warnings=0。
+  - 5 个 episode 均包含金属盆、黑色铁锅和 pour/contents 动作语义。
+  - 正式数据集仍保持原始任务表和未标注状态。
+  result: passed
+  level: 3
+  commands:
+  - lerobot-annotate episodes 0,20,50,100,140 with `--vlm.camera_key=observation.images.cam_top` and `--plan.derive_task_from_video=off`
+  - isolated parquet language_persistent inspection
+  - formal task table readback returned `pouring`
+  result_ref: 5/5 completed; validator checked=5 errors=0 warnings=0; all samples identified bowl/pan/pour; subtask granularity varied for lifting/release/retract actions.
+  limitations:
+  - 未进行 20 episode 或全量验证。
+  - 语义核心正确不代表时间边界和子任务粒度已经满足最终训练标准。
+  artifacts:
+  - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+
+- id: EV-042
+  task_id: TASK-027
+  business_logic:
+  - 20 episode 基线标注应稳定识别当前任务的金属盆、黑色铁锅和倾倒动作，并量化额外子任务风险。
+  acceptance_criteria:
+  - 20 个 episode 自动标注完成且 validator errors=0。
+  - 核心对象和倾倒动作识别率达到 90% 以上。
+  - 额外子任务比例被统计并用于决定是否全量。
+  result: passed
+  level: 3
+  commands:
+  - lerobot-annotate on episodes 1,5,10,15,20,25,30,35,40,45,55,60,65,70,75,80,90,110,120,130 with cam_top
+  - aggregate inspection of language_persistent subtask rows
+  - formal task/annotation readback
+  result_ref: 20/20 completed; validator checked=20 errors=0 warnings=0; bowl=20/20; pan=20/20; pour/contents=20/20; extra or inconsistent tail subtasks=12/20 (60%).
+  limitations:
+  - 核心关键词和子任务文本统计不能替代人工时间边界审核。
+  - 本轮关闭 VQA 和 interjections。
+  artifacts:
+    - /mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30
+
+- id: EV-043
+  task_id: TASK-028
+  business_logic:
+  - 自动标注质量必须在同一业务任务、统一视角和固定验收规则下比较；混合任务样本不能作为同任务质量证据。
+  acceptance_criteria:
+  - 任务专属指导字段可选且默认不改变通用流程
+  - 质量检查只报告指标，不静默重写 VLM 标签
+  - guided 20 episode 流水线完成且 validator errors=0
+  - 核对 episode 级任务同质性并记录限制
+  result: passed
+  level: 2
+  commands:
+  - focused annotation regression tests: 12 passed
+  - guided lerobot-annotate on the same 20 episodes with cam_top
+  - inspect generated subtask labels and formal meta/tasks.parquet
+  result_ref: 实现和流水线均通过；初始输出包含 kettle、mug、container 等错误对象名。用户人工检查确认所有 episode 属于同一操作场景，因此该结果应归因于 Gemma 视觉对象误识别，而不是数据集混合。
+  limitations:
+  - 质量检查为关键词启发式，未替代人工视频边界复核。
+  - guided run 暴露了 Gemma 在当前视角/采样配置下的对象识别不稳定，尚未达到训练标签质量要求。
+  - 正式数据集未修改；guided 副本和临时日志已清理。
+  artifacts:
+  - lerobot_v1.0/src/lerobot/annotations/steerable_pipeline/quality.py
+  - lerobot_v1.0/tests/annotations/test_quality.py
+
+- id: EV-044
+  task_id: TASK-029
+  business_logic:
+  - 自动标注结果必须能进入 GUI 进行人工复核和修改，修改结果必须可持久化并再次读取。
+  acceptance_criteria:
+  - GUI 后端能读取自动生成的语言 atoms
+  - 人工修改一条 atom 后保存成功
+  - 再次读取能得到修改后的内容和完整 atom 集合
+  - 正式数据集未被测试修改
+  result: passed
+  level: 2
+  commands:
+  - isolated episode-0 automatic annotation with gemma3:27b and cam_top
+  - POST /api/dataset/load local_path
+  - GET /api/episodes/0/atoms local_path
+  - POST /api/episodes/0/atoms with one edited subtask
+  - GET /api/episodes/0/atoms readback comparison
+  result_ref: GUI backend loaded 6 persistent subtask atoms; one content edit was saved to meta/lerobot_annotations.json and read back with atom count unchanged; isolated copy cleaned afterward.
+  limitations:
+  - Formal dataset currently has no language columns and was not modified.
+  - API roundtrip verifies the backend persistence path; browser-level manual interaction remains untested in this pass.
+  artifacts:
+  - /home/tbl/Project/force_touch_model/visualize_dataset/backend/app.py
+  - /home/tbl/Project/force_touch_model/visualize_dataset/src/context/annotations-context.tsx
+
+- id: EV-045
+  task_id: TASK-029
+  business_logic:
+  - 自动标注结果必须能在独立 GUI 中按 episode 浏览，并允许后续人工修改。
+  - 测试数据必须与正式数据隔离，不能覆盖正式数据集。
+  acceptance_criteria:
+  - 三个抽取 episode 均完成自动标注并写入语言列。
+  - GUI 数据服务、前端和标注后端均可访问。
+  - 三个 episode 页面路由返回成功，标注后端可读取对应 atoms。
+  result: passed
+  level: 2
+  commands:
+  - Create /mnt/data/gr00t-finetune/gui_annotation_test_3ep from formal episodes 0, 20, and 45.
+  - Run lerobot-annotate with gemma3:27b, cam_top, and only_episodes=[0,1,2].
+  - Validator result checked=3 errors=0 warnings=3; warnings were expected because plan emission was disabled.
+  - Verify language_persistent and language_events columns in the isolated parquet.
+  - POST /api/dataset/load and GET atoms for episodes 0, 1, and 2.
+  - POST one temporary GUI edit and read it back, then restore generated atoms.
+  - Serve the subset on 8081 and the frontend on 3001; episode routes returned HTTP 200.
+  observation:
+  - Automatic labels were readable and editable through the GUI backend.
+  - Gemma produced object-name drift across episodes: object/cylinder, kettle/mug, and container/mug; this is a semantic-quality issue, not a GUI persistence failure.
+  - The formal dataset remained unchanged; videos in the test copy are hardlinks and metadata/data parquet files are isolated copies.
+  artifacts:
+  - /mnt/data/gr00t-finetune/gui_annotation_test_3ep
+  - /tmp/gui-test-dataset-8081.log
+  - /tmp/gui-test-frontend-3001.log
+  limitations:
+  - User browser interaction and final manual label quality review remain pending.
+
+- id: EV-046
+  task_id: TASK-029
+  business_logic:
+  - VLM 自动生成的候选标注必须能在 LeRobot 可视化界面中被人工检查和修订。
+  acceptance_criteria:
+  - 用户能够在 GUI 中看到自动生成的 task/subtask 标注。
+  - 用户能够修改标注内容或时间并保存。
+  - 修改后的标注不会导致 GUI 崩溃，且保持在隔离测试副本中。
+  result: passed
+  level: 2
+  commands:
+  - Open the isolated three-episode dataset in the local visualizer.
+  - Inspect VLM-generated subtask atoms in the Annotations panel.
+  - Manually add/edit annotations through the GUI after fixing empty quick-add input handling.
+  - Verify the page remains usable and the edited state can be saved.
+  observation:
+  - User confirmed that VLM annotations are visible and manually adjustable in the LeRobot visualizer.
+  - The `task augmentation` quick-add empty-input crash was fixed in `annotations-panel.tsx`.
+  limitations:
+  - This is a GUI usability and persistence verification, not a semantic correctness approval for the Gemma labels.
+  artifacts:
+  - /home/tbl/Project/force_touch_model/visualize_dataset/src/components/annotations-panel.tsx
+  - /mnt/data/gr00t-finetune/gui_annotation_test_3ep
+
+- id: EV-047
+  task_id: TASK-030
+  business_logic:
+  - 第一版本机工作台只负责把本地数据集、现有 GUI 和 VLM 流程串起来，不修改 LeRobot GUI 标注功能。
+  acceptance_criteria:
+  - 中间件后端和静态操作页存在。
+  - 单数据集路径、示范 episode 和模板状态可持久化。
+  - 示例检查拒绝缺少 task augmentation/subtask 的示范。
+  - 最小测试通过。
+  result: partial
+  level: 1
+  commands:
+  - PYTHONPATH=/home/tbl/Project/force_touch_model /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q annotation_workbench/tests
+  - python3 -m py_compile annotation_workbench/app.py
+  - static HTML smoke check
+  observation:
+  - 2 tests passed.
+  - 中间件增加了单机数据集会话、默认前五示范、示范完整性检查、模板汇总、GUI 启动和 VLM 任务入口。
+  - LeRobot GUI 文件没有因本任务新增标注业务控件。
+  limitations:
+  - "/api/vlm 当前仍调用原生自由 subtask 的 lerobot-annotate，固定模板时间对齐执行器尚未实现。"
+  - 尚未在真实带人工示范的数据集上完成中间件到 GUI 再到 VLM 的端到端浏览器验证。
+  artifacts:
+  - /home/tbl/Project/force_touch_model/annotation_workbench/app.py
+  - /home/tbl/Project/force_touch_model/annotation_workbench/static/index.html
+  - /home/tbl/Project/force_touch_model/annotation_workbench/README.md
+  - /home/tbl/Project/force_touch_model/annotation_workbench/tests/test_app.py
+
+- id: EV-048
+  task_id: TASK-030
+  business_logic:
+  - VLM 只能复用人工示范确定的固定 subtask 文本、数量和顺序，只预测目标 episode 的时间范围。
+  acceptance_criteria:
+  - 缺失、新增、改写、重排、越界、重叠或未覆盖完整 episode 的 VLM 输出必须被拒绝。
+  - 已通过固定模板校验的 episode 默认跳过，支持断点恢复。
+  - 输出写入现有 GUI 识别的 lerobot_annotations.json，并保留其他 atom。
+  result: passed
+  level: 1
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q annotation_workbench/tests
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m py_compile annotation_workbench/app.py annotation_workbench/guided_alignment.py
+  observation:
+  - 6 tests passed。
+  - /api/vlm 已从原生自由 subtask 管线切换为独立 guided_alignment.py 执行器。
+  - 执行器使用固定模板校验 JSON，只写入 task_aug/subtask 原子，保留其他原子。
+  limitations:
+  - 尚未调用真实 Ollama/Gemma 在带人工示范的真实数据集上运行，因此当前证据证明的是实现和校验边界，不证明 VLM 时间边界质量。
+  artifacts:
+  - /home/tbl/Project/force_touch_model/annotation_workbench/guided_alignment.py
+  - /home/tbl/Project/force_touch_model/annotation_workbench/app.py
+  - /home/tbl/Project/force_touch_model/annotation_workbench/tests/test_app.py
+
+- id: EV-049
+  task_id: TASK-030
+  business_logic:
+  - 用户通过本地桌面 GUI 选择 LeRobot v3.0 数据集，自动启动原有 GUI 所需服务，并在前五条人工示范完成后原地启动 VLM 自动标注。
+  acceptance_criteria:
+  - 可在 lerobot 环境中创建 PySide6 桌面窗口。
+  - 系统文件夹选择后的数据集校验和前五条模板读取可独立验证。
+  - 服务管理器为所选数据集自动启动数据服务、标注后端和原有 GUI，并在关闭时停止自身进程。
+  result: partial
+  level: 1
+  commands:
+  - PYTHONPATH=. /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q annotation_workbench/tests
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m py_compile annotation_workbench/desktop_app.py annotation_workbench/guided_alignment.py annotation_workbench/app.py
+  - QT_QPA_PLATFORM=offscreen PYTHONPATH=. /home/tbl/miniforge3/envs/lerobot/bin/python desktop window smoke
+  - PYTHONPATH=. /home/tbl/miniforge3/envs/lerobot/bin/python ServiceManager isolated GUI smoke
+  observation:
+  - PySide6 6.11.1 已安装到 lerobot 虚拟环境。
+  - 8 tests passed；桌面窗口离屏 smoke 通过。
+  - ServiceManager 使用动态端口拉起三项服务，LeRobot GUI 页面返回 HTTP 200，随后服务已停止。
+  - 已停止旧网页工作台及其固定端口残留服务；Ollama Gemma 服务保留运行。
+  limitations:
+  - 未在可见桌面环境中完成用户实际点击文件夹选择、浏览器标注、VLM 运行与复核的端到端验收。
+  - VLM 质量仍取决于用户完成的前五条一致人工示范，尚无真实质量证据。
+  artifacts:
+  - /home/tbl/Project/force_touch_model/annotation_workbench/desktop_app.py
+  - /home/tbl/Project/force_touch_model/annotation_workbench/guided_alignment.py
+  - /home/tbl/Project/force_touch_model/annotation_workbench/tests/test_app.py
+  - /home/tbl/Project/force_touch_model/.project-log/business-logic/clarification-2026-08-03-desktop-annotation-middleware.yaml
+
+- id: EV-050
+  task_id: TASK-030
+  business_logic:
+  - 桌面中间件必须能在用户的 X11 图形桌面中启动，而不是因 Qt xcb 运行时依赖缺失而崩溃。
+  acceptance_criteria:
+  - 用户给出的 desktop_app.py 启动命令不再出现 xcb platform plugin 初始化失败或核心转储。
+  result: passed
+  level: 1
+  commands:
+  - /home/tbl/miniforge3/bin/conda install -n lerobot -y -c conda-forge xcb-util-cursor
+  - timeout 8s /home/tbl/miniforge3/envs/lerobot/bin/python annotation_workbench/desktop_app.py
+  observation:
+  - 根因是 PySide6 的 libqxcb.so 依赖 libxcb-cursor.so.0，而系统未安装 libxcb-cursor0。
+  - 已在 lerobot Conda 环境安装 xcb-util-cursor；desktop_app.py 启动时自动将该环境的 lib 目录加入 LD_LIBRARY_PATH 后重启自身。
+  - 在 DISPLAY=:1、X11 环境中使用用户原始启动命令运行，没有 xcb 错误或核心转储。
+  limitations:
+  - Qt 输出的 inotify_add_watch 提示来自 IBus 配置目录监听限制，不影响窗口创建；该提示未在本任务中处理。
+  artifacts:
+  - /home/tbl/Project/force_touch_model/annotation_workbench/desktop_app.py
+  - /home/tbl/Project/force_touch_model/annotation_workbench/README.md
   artifacts:
   - /mnt/data/gr00t-finetune/outputs/lerobot_right_o6_13d_from_official_n1_7/checkpoints/030000
   - 模型训练实验记录表.xlsx
+
+- id: EV-051
+  task_id: TASK-030
+  business_logic:
+  - 前五条 episode 中至少一条完整人工示范即可启动 VLM；多条完整示范之间的固定 subtask 必须一致。
+  acceptance_criteria:
+  - 前五条中只有一条完整示范时，模板读取成功。
+  - 前五条中没有完整示范时，模板读取失败并提示至少完成一条。
+  - 未完成的前五条作为普通自动标注目标，不被硬编码跳过。
+  result: passed
+  level: 1
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest annotation_workbench/tests/test_app.py -q
+  - python3 -m py_compile annotation_workbench/desktop_app.py annotation_workbench/guided_alignment.py
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -c 'from pathlib import Path; from annotation_workbench.desktop_app import read_template; print(read_template(Path("/mnt/data/gr00t-finetune/datasets/lerobot_dataset_right_o6_13d_v30 copy")).demo_episodes)'
+  observation:
+  - 9 passed。
+  - 当前真实数据集读取出 demo_episodes=[0]，固定 subtask 3 条，task augmentation 候选 3 条。
+  - 代码不再要求 episode 1-4 必须先完成人工标注。
+  artifacts:
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/tests/test_app.py
+  - annotation_workbench/README.md
+
+- id: EV-052
+  task_id: TASK-030
+  business_logic:
+  - 桌面中间件关闭或切换数据集时，应清理自己启动的数据服务、标注后端和 GUI 前端，不影响其他项目服务。
+  acceptance_criteria:
+  - 三项服务以独立进程组启动。
+  - 正常停止时按进程组回收，避免 Next.js 子进程残留。
+  - 不执行无差别端口或进程名清理。
+  result: passed
+  level: 1
+  commands:
+  - /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest annotation_workbench/tests/test_app.py -q
+  - isolated ServiceManager start/stop smoke with current dataset
+  observation:
+  - 服务回收逻辑使用 `start_new_session=True` 和 `os.killpg`。
+  - 当前数据集的三服务启动、GUI 后端标注读取和停止验证通过。
+  - 正常退出残留问题已修复；强制杀进程或系统异常关机后的残留仍属于后续可增强边界。
+  artifacts:
+  - annotation_workbench/desktop_app.py
+
+- id: EV-053
+  task_id: TASK-032
+  business_logic:
+  - 本地桌面工作台必须让 GUI 对当前选择的 v3 数据集读取并直接保存标注。
+  acceptance_criteria:
+  - 生产 Next.js 前端返回 HTTP 200。
+  - 同源运行时配置返回本次选择的数据集路径和标注后端地址。
+  - 后端保存 atom 后可读回，且文件写入隔离数据集的 meta/lerobot_annotations.json。
+  - 关闭服务后仅本实例的三个子进程均退出。
+  result: passed
+  level: 2
+  commands:
+  - npm --prefix annotation_workbench/visualize_dataset run type-check
+  - npm --prefix annotation_workbench/visualize_dataset run build
+  - isolated ServiceManager GUI/config/backend save-read-cleanup smoke
+  observation:
+  - 生产 GUI、数据服务和 FastAPI 后端均在动态 127.0.0.1 端口启动。
+  - /api/workbench-config 返回所选隔离数据集路径；episode 1 的 subtask atom 保存、后端读回和 JSON 文件读回一致。
+  - ServiceManager.stop 后三个自建进程全部退出。
+  limitations:
+  - 此证据验证技术读写闭环，不评价标注语义。
+  artifacts:
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/local_dataset_server.py
+  - annotation_workbench/visualize_dataset/src/app/api/workbench-config/route.ts
+
+- id: EV-054
+  task_id: TASK-033
+  business_logic:
+  - VLM 必须只复用人工示范的固定 subtask 文本与顺序，并把结果直接写入当前数据集供 GUI 复核。
+  acceptance_criteria:
+  - Gemma3:27b 完成一个非示范 episode 的时间对齐。
+  - 结果固定为示范的三条 subtask 文本，写入 lerobot_annotations.json。
+  - GUI 后端可从同一隔离数据集读回该结果。
+  result: passed
+  level: 2
+  commands:
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests
+  - python -m annotation_workbench.guided_alignment --episodes='[1]' --model=gemma3:27b --max-frames=12
+  - isolated ServiceManager GUI backend readback smoke
+  observation:
+  - 10 tests passed。
+  - Ollama 从 /mnt/data/models 识别到 gemma3:27b Q4_K_M（约 17.4 GB）。
+  - episode 1 写入 1 条 task augmentation 和 3 条固定 subtask；GUI 后端成功读回 4 个 atoms。
+  limitations:
+  - 本次仅证明自动标注技术链路和结构约束；时间边界/语义质量需人工抽检。
+  artifacts:
+  - annotation_workbench/annotation_core/
+  - annotation_workbench/guided_alignment.py
+
+- id: EV-055
+  task_id: TASK-035
+  business_logic:
+  - 未来仅保留 annotation_workbench 目录时，用户应能独立安装并启动工具。
+  acceptance_criteria:
+  - 不含 lerobot_v1.0、旧 visualize_dataset 和旧数据服务的隔离目录可完成安装和前端构建。
+  - 独立副本的 python -m annotation_workbench 可启动桌面进程。
+  - 包内代码没有对旧外部目录的运行时路径引用。
+  result: passed
+  level: 2
+  commands:
+  - isolated annotation_workbench copy ./install.sh
+  - QT_QPA_PLATFORM=offscreen isolated .venv/bin/python -m annotation_workbench
+  - rg external legacy runtime references annotation_workbench
+  observation:
+  - 隔离副本的 Python 安装、npm install、next build 和 Ollama 预检查成功。
+  - 离屏桌面进程保持运行，随后正常退出；源码检索未发现旧目录运行时引用。
+  limitations:
+  - 离屏模式只证明桌面程序可启动，不替代用户在可见桌面上的点击验收。
+  artifacts:
+  - annotation_workbench/
+
+- id: EV-056
+  task_id: TASK-035
+  business_logic:
+  - 独立桌面包必须在真实 X11 条件下明确处理 Qt 系统库前置项，并在退出时不留下指向已删除数据集的运行时配置。
+  acceptance_criteria:
+  - 安装器检测到缺少 libxcb-cursor0 时给出确认式 apt 安装提示，不静默 sudo。
+  - ServiceManager 停止后删除 .workbench-runtime.json，且自建服务全部退出。
+  - Python、前端和项目记录验证仍通过。
+  result: passed
+  level: 2
+  commands:
+  - bash -n annotation_workbench/install.sh annotation_workbench/run.sh
+  - DISPLAY=:99 annotation_workbench/install.sh with non-interactive input
+  - isolated ServiceManager live start/config/stop cleanup smoke
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests
+  - npm --prefix annotation_workbench/visualize_dataset run type-check
+  - npm --prefix annotation_workbench/visualize_dataset run build
+  - validate_project.py --root /home/tbl/Project/force_touch_model
+  observation:
+  - 独立 PySide6 venv 的 libqxcb.so 缺少 libxcb-cursor.so.0；安装器现检测该前置项，非交互模式明确停止并给出 libxcb-cursor0 安装说明。
+  - 实际动态端口服务启动后写入运行时配置；停止后配置文件和本实例的服务进程均不存在。
+  - 11 Python tests、前端 type-check、生产 build 和 Project Log 校验全部通过。
+  limitations:
+  - 本机尚未实际安装 libxcb-cursor0；首次在 X11 可见桌面运行前，用户需在安装器提示时确认安装，或自行安装该系统包。
+  artifacts:
+  - annotation_workbench/install.sh
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/README.md
+  - annotation_workbench/tests/test_app.py
+
+- id: EV-057
+  task_id: TASK-035
+  business_logic:
+  - 用户必须能从 annotation_workbench 目录直接运行 ./run.sh，而不因 Qt xcb 插件缺少系统库而核心转储。
+  acceptance_criteria:
+  - 不依赖 sudo 安装系统包。
+  - ./run.sh 和从父目录运行的 python -m annotation_workbench 均可在 DISPLAY=:1/X11 中保持运行。
+  - 运行日志不出现 xcb 平台插件、libxcb-cursor0、Traceback 或核心转储错误。
+  result: passed
+  level: 2
+  commands:
+  - apt-get download libxcb-cursor0 and dpkg-deb -x into annotation_workbench/.system-libs
+  - timeout 8s ./run.sh
+  - cd parent && timeout 8s .venv/bin/python -m annotation_workbench
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests
+  - npm --prefix annotation_workbench/visualize_dataset run type-check
+  observation:
+  - 根因是独立 PySide6 venv 的 libqxcb.so 无法从系统加载 libxcb-cursor.so.0，用户帐户没有免密 sudo。
+  - libxcb-cursor0 已解压至包内 .system-libs；run.sh 和模块入口会在导入 PySide6 前设置 LD_LIBRARY_PATH。
+  - 两个入口均在实际 DISPLAY=:1/X11 环境保持运行超过 8 秒，未出现 Qt xcb 崩溃；11 Python tests 和前端 type-check 通过。
+  limitations:
+  - 包内私有库针对当前 Ubuntu amd64 环境；若迁移到不同架构或发行版，install.sh 会优先重新下载对应 apt 包，失败时再提示用户安装系统库。
+  artifacts:
+  - annotation_workbench/.system-libs/usr/lib/x86_64-linux-gnu/libxcb-cursor.so.0.0.0
+  - annotation_workbench/run.sh
+  - annotation_workbench/__main__.py
+  - annotation_workbench/desktop_app.py
+
+- id: EV-058
+  task_id: TASK-035
+  business_logic:
+  - 通过桌面端打开本地数据集时，GUI 服务端必须请求本机数据服务，不能回退至 Hugging Face 并出现 401。
+  acceptance_criteria:
+  - Next.js 生产服务读取启动时动态数据服务地址。
+  - 隔离 v3 数据集 episode 页面返回正常内容，不含 Failed to fetch dataset info: 401 或 Something went wrong。
+  result: passed
+  level: 2
+  commands:
+  - npm --prefix annotation_workbench/visualize_dataset run build
+  - isolated ServiceManager local dataset page smoke
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests
+  - npm --prefix annotation_workbench/visualize_dataset run type-check
+  observation:
+  - 根因是 NEXT_PUBLIC_DATASET_URL 被 Next.js 在 build 阶段固化为 Hugging Face 默认地址；浏览器端运行时配置修复并不能覆盖服务端数据读取。
+  - desktop_app 现向 next start 传入 DATASET_URL，versionUtils 优先读取该服务器运行时变量。
+  - 隔离数据集页面 HTTP 200，未出现 401 或错误边界；11 Python tests、前端 type-check 与 Project Log 校验均通过。
+  limitations:
+  - 用户当前已启动的旧 next-server 仍加载旧构建；必须关闭桌面工作台后重新运行 ./run.sh 才会使用本修复。
+  artifacts:
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/visualize_dataset/src/utils/versionUtils.ts
+
+- id: EV-059
+  task_id: TASK-035
+  business_logic:
+  - 本地数据集 GUI 的服务端和浏览器端都必须使用当前本地数据服务，不能只有后端地址正确而客户端仍访问 Hugging Face。
+  acceptance_criteria:
+  - 浏览器端本地数据请求通过同源 /api/local-dataset 路由转发。
+  - info.json、stats.json 和页面加载均返回成功。
+  - 浏览器实际 DOM 出现 Episodes、Annotations、Frames，不出现 401 错误边界。
+  result: passed
+  level: 2
+  commands:
+  - npm --prefix annotation_workbench/visualize_dataset run type-check
+  - npm --prefix annotation_workbench/visualize_dataset run build
+  - isolated ServiceManager local proxy checks for info.json and stats.json
+  - Google Chrome headless dump-dom with 30s virtual time budget
+  - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests
+  observation:
+  - 根因是客户端 versionUtils 的 DATASET_URL 仍指向构建期 Hugging Face 默认值。
+  - 新增同源 /api/local-dataset/[...path] 代理；本地浏览器在 /local/... 页面构造数据、parquet、视频 URL 时统一走该代理。
+  - 隔离服务检查中 config/info/stats 均为 200；Chrome DOM 出现 Episodes、Annotations、Frames，未出现错误边界。
+  limitations:
+  - 旧的桌面/next-server 进程必须完全退出后重新启动；浏览器需要打开新 URL 或强制刷新，旧页面不会自动切换到新构建。
+  artifacts:
+  - annotation_workbench/visualize_dataset/src/app/api/local-dataset/[...path]/route.ts
+  - annotation_workbench/visualize_dataset/src/utils/versionUtils.ts
+  - annotation_workbench/visualize_dataset/src/utils/workbenchConfig.ts
+  - annotation_workbench/visualize_dataset/src/app/api/workbench-config/route.ts
+
+- id: EV-061
+  task_id: TASK-036
+  business_logic:
+  - VLM 每次只回答一个边界的小范围候选问题，并必须有程序化 JSONL 与 contact sheet 证据。
+  acceptance_criteria:
+  - 探针请求 100% 可由程序解析出候选编号。
+  - 每个 style/boundary 都记录 candidates、raw、parsed、final_timestamp、error 与 sheet 路径。
+  result: partial
+  level: 1
+  commands:
+  - "guided_probe.py --demo-styles none,single0,single3,single4,all --interval 0.5"
+  - "guided_probe.py --dry-run"
+  observation:
+  - P0 共 10 次请求，10/10 可解析。
+  - episode 51 参考 GT `[0,3.5,7]` 时 boundary 1 误差 `0.5–2.0s`，boundary 2 全部预测 `8.5s`、误差 `1.5s`。
+  - debug JSONL 10 行，contact sheets 全部落盘。
+  limitations:
+  - GT 与现有参考边界尚未人工确认，不能据此宣称 coarse-to-fine 方案通过。
+  artifacts:
+  - annotation_workbench/guided_probe.py
+  - annotation_workbench/debug_run1/vlm_alignment.jsonl
+  - annotation_workbench/debug_run1/episode_51/
+- id: EV-062
+  task_id: TASK-036
+  business_logic:
+  - coarse-to-fine 必须由程序维护候选网格、由 VLM 只选择 F 编号，且请求/测试链路可独立验证。
+  acceptance_criteria:
+  - P1 fine 候选生成、F 前缀解析、粗结果加载和汇总有针对性测试。
+  - fine JSONL 记录 coarse_candidate、candidates、parsed、final_timestamp、coarse_error 与 fine_error。
+  result: passed
+  level: 2
+  commands:
+  - "pytest -q annotation_workbench/tests"
+  - "guided_probe.py --fine --dry-run"
+  observation:
+  - "annotation_workbench/tests 33 passed；py_compile 与 git diff --check 通过。"
+  - "debug_fine_dryrun/ 可生成 fine 探针输出。"
+  limitations:
+  - 单元测试不覆盖真实 Ollama 输出质量。
+  artifacts:
+  - annotation_workbench/guided_probe.py
+  - annotation_workbench/tests/test_guided_probe.py
+  - annotation_workbench/annotation_core/vlm_client.py
+- id: EV-063
+  task_id: TASK-036
+  business_logic:
+  - 必须在 51/52/53 真实 Qingdao v3 数据上对比 coarse/fine 误差，并据此判断是否继续生产化。
+  acceptance_criteria:
+  - P1 fine 的 51 全消融与 52/53 none/single4 请求均有 JSONL 和 contact sheet。
+  - 分析清楚记录“fine 是否修复 coarse 离群误差”与生产化结论。
+  result: failed
+  level: 3
+  commands:
+  - "guided_probe.py --fine --coarse-jsonl debug_run1/vlm_alignment.jsonl"
+  - "guided_probe.py --episode=52,53 --demo-styles none,single4 --interval 0.5"
+  - "guided_probe.py --episodes=52,53 --demo-styles none,single4 --fine --coarse-jsonl debug_coarse_5253/vlm_alignment.jsonl"
+  observation:
+  - "51 仅 single4 b1 从 0.5s 降到 0.4s；b2 从 1.5s 恶化到 1.7–2.1s。"
+  - "52 coarse 误差 2.2–3.7s，fine 后未见下降；53 的 4.4s 与 7.13s 误差保留或略增。"
+  - "结论：fine 无法修复 coarse 未收敛到真实边界附近的样本；cam_top+gemma3:27b 当前不胜任时间定位。"
+  limitations:
+  - "51/52/53 边界仍来自既有自动标注参考，不等同人工 ground truth。"
+  artifacts:
+  - annotation_workbench/debug_run1_fine/vlm_alignment.jsonl
+  - annotation_workbench/debug_coarse_5253/vlm_alignment.jsonl
+  - annotation_workbench/debug_coarse_5253_fine/vlm_alignment.jsonl
+  - annotation_workbench/debug_run1_fine_console.log
+  - annotation_workbench/debug_coarse_5253_console.log
+  - annotation_workbench/debug_coarse_5253_fine_console.log
+- id: EV-064
+  task_id: TASK-038
+  business_logic:
+  - VLM 示范 episode 必须由用户显式选择，不能硬编码前 5 条。
+  acceptance_criteria:
+  - 选择弹窗分成“示范 episode”和“自动标注 episode”两组多选。
+  - 示范组只允许选择已完整标注的 episode。
+  - read_template 只基于用户选择的 demo_episodes 构建模板。
+  - Python 测试和 offscreen dialog smoke 通过。
+  result: passed
+  level: 2
+  commands:
+  - "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 annotation_workbench/.venv/bin/python -m pytest -q annotation_workbench/tests"
+  - "annotation_workbench/.venv/bin/python -m py_compile annotation_workbench/desktop_app.py"
+  - "QT_QPA_PLATFORM=offscreen EpisodeSelectionDialog smoke"
+  observation:
+  - "37 passed；py_compile 与 git diff --check 通过；offscreen dialog selected_demo/selected_episodes 断言通过。"
+  limitations:
+  - "真实桌面环境下的人工选择和 VLM 启动仍需用户验证。"
+  artifacts:
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/tests/test_app.py
+  - annotation_workbench/README.md
+- id: EV-066
+  task_id: TASK-039
+  business_logic:
+  - 正式 Qingdao pouring v3 数据集应完成可重复的 GR00T 单 pass 训练并保存可直接复用的 checkpoint。
+  acceptance_criteria:
+  - 训练日志出现 End of training。
+  - training_step.json 最终 step=14051。
+  - checkpoints/last 指向 014051。
+  - W&B 有最终 loss/grad norm/lr 指标。
+  result: passed
+  level: 3
+  commands:
+  - "RUN_TRAINING=1 bash examples/groot/finetune_right_o6_13d_lerobot.sh"
+  - "读取 wandb-summary.json 和 output.log 确认 End of training"
+  - "读取 checkpoints/014051/training_state/training_step.json"
+  observation:
+  - "训练 14051/14051 完成，日志出现 Checkpoint policy after step 14051 和 End of training。"
+  - "checkpoints/007000、014000、014051 均存在，last 指向 014051。"
+  - "WARNING: 最终 summary loss=0.0347, grad_norm=0.1304, lr=2.39e-08, runtime=15345s。"
+  limitations:
+  - "仅验证训练与 checkpoint 保存；未做真机 rollout，不评估成功率。"
+  artifacts:
+  - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v1/checkpoints/014051"
+  - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v1/wandb/run-20260808_175854-nrea7gvg/files/output.log"
+  - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v1/wandb/run-20260808_175854-nrea7gvg/files/wandb-summary.json"
+- id: EV-065
+  task_id: TASK-037
+  business_logic:
+  - VLM 自动标注子任务范围必须达到用户可接受精度后才算项目目标完成。
+  acceptance_criteria:
+  - 用户在真实桌面端测试后认可自动标注子任务范围精度。
+  result: failed
+  level: 2
+  commands:
+  - "用户在真实桌面端启动 annotation_workbench 并执行 VLM 自动标注"
+  observation:
+  - "用户反馈选择示范功能可用，但 VLM 子任务识别精度仍然很差。"
+  - "用户决定当前项目先到此为止。"
+  limitations:
+  - "本次未提供逐条失败样本或误差统计。"
+  artifacts:
+  - annotation_workbench/desktop_app.py
+  - annotation_workbench/tests/test_app.py
+- id: EV-067
+  task_id: TASK-039
+  business_logic:
+  - 最终 GR00T checkpoint 必须能被标准 LeRobot 加载器严格加载，并能输出完整 finite action chunk。
+  acceptance_criteria:
+  - strict=True 加载 014051/pretrained_model 无 missing/unexpected key。
+  - 从 Qingdao v3 数据经过 preprocessor 后，predict_action_chunk 和 postprocessor 输出 shape (1,40,13) 且 finite。
+  result: passed
+  level: 3
+  commands:
+  - "GrootPolicy.from_pretrained(checkpoints/014051/pretrained_model, strict=True)"
+  - "LeRobotDataset(qingdao_pouring_v30) -> preprocessor -> predict_action_chunk -> postprocessor"
+  observation:
+  - "strict load PASS；base_model_path 自动读取为 gr00t_n1_base，跟踪训练配置。"
+  - "inference chunk shape=(1,40,13)，全部值 finite。"
+  - "相对 action 模式下 select_action 明确不支持，需要使用 predict_action_chunk + 整段 postprocess 或 RTC rollout。"
+  limitations:
+  - "未连接真机，未验证 ROKAE 驱动、相机流、安全限位和实际执行成功率。"
+  artifacts:
+  - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v1/checkpoints/014051/pretrained_model"
+  - "/mnt/data/gr00t-finetune/datasets/lerobot_dataset_qingdao_pouring_v30"
+  - lerobot_v1.0/src/lerobot/policies/groot/modeling_groot.py
+  - lerobot_v1.0/examples/groot/smoke_test_right_o6_13d_lerobot.py
+
+- id: EV-068
+  task_id: TASK-040
+  business_logic: []
+  acceptance_criteria:
+  - DexBot 子仓位于 force_touch_model/dexbot_ros2_ws-dex_vla 且 Git 状态有效。
+  - DexBot 工程记录快照位于根 .project-log/subprojects/dexbot_ros2_ws-dex_vla。
+  - 源码/运行时配置不再引用旧路径；历史记录保留来源说明。
+  - 根 Project Log 校验通过，迁移后 VLA 聚焦测试通过。
+  result: passed
+  level: 2
+  commands:
+  - "git -C dexbot_ros2_ws-dex_vla status --short --branch"
+  - "PYTHONPATH=src/dexbot_vla /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q src/dexbot_vla/test/test_groot_backend.py src/dexbot_vla/test/test_model_artifacts.py src/dexbot_vla/test/test_contract_loader_integration.py src/dexbot_vla/test/test_model_services.py --deselect src/dexbot_vla/test/test_contract_loader_integration.py::test_rokae_artifact_profile_separates_model_and_robot_identity --deselect src/dexbot_vla/test/test_model_services.py::test_runtime_bundle_materializes_model_service_and_service_client_command"
+  - "/home/tbl/miniforge3/envs/vibe-coding/bin/python ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model"
+  observation:
+  - "Git 分支仍为 dex_vla，origin remote 保持原地址。"
+  - "旧绝对路径无残留。"
+  - "DexBot 聚焦测试 60 passed、2 deselected；根 Project Log 校验通过。"
+  limitations:
+  - "用户自建的 shell alias 或外部系统配置中的旧路径需用户自行同步。"
+  artifacts:
+  - /home/tbl/Project/force_touch_model/dexbot_ros2_ws-dex_vla
+  - /home/tbl/Project/force_touch_model/.project-log/subprojects/dexbot_ros2_ws-dex_vla
+
+- id: EV-069
+  task_id: TASK-041
+  business_logic: []
+  acceptance_criteria:
+  - 知识库归档目录包含合并后的完整 .project-log。
+  - 归档提交只涉及 force_touch_model 工程记录。
+  result: passed
+  level: 2
+  commands:
+  - "/home/tbl/miniforge3/envs/vibe-coding/bin/python ~/.codex/vibe-workflow/scripts/validate_project.py --root /home/tbl/Project/force_touch_model"
+  - "同步 .project-log 至 /home/tbl/Project/My_knowledge_base/工程记录/force_touch_model"
+  - "git -C /home/tbl/Project/My_knowledge_base add 工程记录/force_touch_model && git commit && git push"
+  observation:
+  - "知识库归档包含根 Project Log 和 subprojects/dexbot_ros2_ws-dex_vla 完整记录。"
+  limitations: []
+  artifacts:
+  - /home/tbl/Project/My_knowledge_base/工程记录/force_touch_model/.project-log

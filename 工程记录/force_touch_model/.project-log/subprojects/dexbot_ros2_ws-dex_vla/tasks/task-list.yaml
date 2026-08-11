@@ -1,0 +1,77 @@
+version: "0.2"
+active_goal: null
+tasks:
+  - id: TASK-002
+    title: "自训练 GR00T 离线部署接入"
+    kind: task
+    parent_id: null
+    phase: implementation
+    goal: "让自训练 GR00T checkpoint 能通过 DexBot 统一模型服务加载并离线输出 canonical absolute 13D action chunk，不连接真实设备或下发机器人命令。"
+    status: completed
+    priority: high
+    risk: high
+    authority: B
+    owner: agent
+    tags:
+      - "groot"
+      - "model-service"
+      - "offline"
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions:
+      - "DEC-002"
+    depends_on: []
+    blocked_by: []
+    blocked_by_questions: []
+    required_skills:
+      - "a-engineering-landing"
+      - "a-verification"
+    spec_ref: ".project-log/specs/TASK-002-groot-offline-deployment.md"
+    inputs:
+      - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v2_2cam/checkpoints/014051/pretrained_model"
+      - "现有 DexBot unified policy service 与 13D right-arm O6 contracts"
+    outputs:
+      - "服务端 groot backend"
+      - "checkpoint artifact 和 deployment contract"
+      - "30 Hz non-RTC shadow 配置注册"
+      - "离线 backend、artifact 与 model-service 验证"
+    plan:
+      - "固定 checkpoint-side artifact 与 deployment contract"
+      - "实现并注册 groot backend"
+      - "注册 I/O contract、template、model service 和 model ID"
+      - "运行无 ROS、无机器人命令的离线验证"
+    done_when:
+      - "统一模型服务可以构造 groot backend，并返回有限的 absolute 13D action chunk。"
+      - "artifact、deployment contract 和 runtime bundle 静态校验通过，模型注册为 shadow_only 且 supports_rtc=false。"
+      - "新增和相关回归测试通过；验证中不连接 ROS 或真实机器人。"
+    verification:
+      status: valid
+      commands:
+        - "PYTHONPATH=src/dexbot_vla /home/tbl/miniforge3/envs/lerobot/bin/python -m pytest -q src/dexbot_vla/test/test_groot_backend.py src/dexbot_vla/test/test_model_artifacts.py src/dexbot_vla/test/test_contract_loader_integration.py src/dexbot_vla/test/test_model_services.py --deselect src/dexbot_vla/test/test_contract_loader_integration.py::test_rokae_artifact_profile_separates_model_and_robot_identity --deselect src/dexbot_vla/test/test_model_services.py::test_runtime_bundle_materializes_model_service_and_service_client_command"
+        - "PYTHONPATH=src/dexbot_vla:/home/tbl/Project/force_touch_model/lerobot_v1.0/src /home/tbl/miniforge3/envs/lerobot/bin/python <offline recorded-sample GrootBackend probe>"
+        - "PYTHONPATH=src/dexbot_vla /home/tbl/miniforge3/envs/lerobot/bin/python -m dexbot_vla.tools.artifact.serve_policy_artifact --artifact <checkpoint> --host 127.0.0.1 --port 18083 --codec json --device cuda"
+      evidence:
+        - "Focused offline suite: 60 passed, 2 deselected; the deselected tests require unrelated historical absolute-path scene assets unavailable on this host."
+        - "Actual checkpoint artifact hash f46e78262f9b368fcc5433f13266c6cb06b67b88939e8e2d44c9e217e4fe733f and deployment contract hash 836369bee181aa75ff42c46f5c517893b4e109640580dec6221274e119de4343 match."
+        - "Actual recorded sample through GrootBackend: decoded finite action shape [40,13], native shape [1,40,13], cold total 555.126 ms, warm total 65.756 ms, GPU peak 9.427 GiB on RTX 4090."
+        - "Actual localhost dexbot_policy_service.v2 JSON roundtrip: metadata backend_id=groot/supports_rtc=false; infer returned finite [40,13] absolute actions; reset returned ok."
+      limitations:
+        - "未验证真实相机、机器人 state service、坐标零位、初始姿态或任何机器人命令。"
+        - "lerobot Python environment lacks ROS-generated dexbot_interfaces, so test_deployment_contract.py cannot be collected in this environment."
+        - "GR00T processor sidecar still declares cam_left_wrist; accepted two-camera execution emits a warning and must be cleaned or explicitly retained in later training/export work."
+    result:
+      summary: "完成独立GR00T backend、artifact迁移、checkpoint sidecar、30Hz shadow-only模型注册以及离线GPU/WebSocket验证；未连接ROS或真实设备。"
+      changed_files:
+        - "src/dexbot_vla/dexbot_vla/backend/policy_backends/groot_backend.py"
+        - "src/dexbot_vla/dexbot_vla/backend/policy_backends/__init__.py"
+        - "src/dexbot_vla/dexbot_vla/tools/artifact/migrate_policy_checkpoint.py"
+        - "src/dexbot_vla/dexbot_vla/config/io_contracts.yaml"
+        - "src/dexbot_vla/dexbot_vla/config/policy_templates.yaml"
+        - "src/dexbot_vla/dexbot_vla/config/policy_models.yaml"
+        - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v2_2cam/checkpoints/014051/pretrained_model/deployment_contract.json"
+        - "/mnt/data/gr00t-finetune/outputs/lerobot_qingdao_pouring_gr00t_n1_7_v2_2cam/checkpoints/014051/pretrained_model/dexbot_policy_artifact.json"
+      deviations: []
+      follow_ups:
+        - "完成离线接入后进行真实设备 shadow rollout，验证观测与坐标一致性。"
+    created_at: "2026-08-11"
+    updated_at: "2026-08-11"

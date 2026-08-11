@@ -64,3 +64,61 @@ baselines:
     supersedes: []
     created_at: "2026-07-30T00:00:00+08:00"
     updated_at: "2026-07-30T00:00:00+08:00"
+
+  - id: REQ-002
+    revision: 1
+    status: active
+    goal: "将 annotation_workbench 交付为 Linux/Ubuntu 上可独立安装和运行的本地 LeRobot v3.0 标注工具包。"
+    actors:
+      - "本机标注用户"
+      - "工具维护人员"
+    in_scope:
+      - "annotation_workbench 内置桌面入口、本地数据集 HTTP 服务、可视化标注前端、标注后端和固定子任务 VLM 对齐逻辑"
+      - "迁移现有可视化前端和标注后端，不对其界面进行大范围重构"
+      - "以包内最小实现替代对外部 lerobot_v1.0 的运行时依赖"
+      - "Linux/Ubuntu 安装脚本：Python 3.11+ 检查、.venv 创建、Python 依赖安装、Node.js 20 LTS 检查、npm install 和前端生产构建"
+      - "通过 ./run.sh 和 python -m annotation_workbench 启动"
+      - "通过环境变量配置外部 Ollama 服务和模型"
+      - "对 LeRobot v3.0 数据集进行 GUI 人工标注、VLM 自动标注、断点恢复和 GUI 复核"
+      - "证明独立包在运行时不读取外部 visualize_dataset、lerobot_v1.0 或 serve_local_dataset.py"
+    out_of_scope:
+      - "Windows 或 macOS 支持"
+      - "重写现有 Next.js 可视化界面为纯 Python 前端"
+      - "打包完整 LeRobot 源码、Node.js、Ollama 服务或 Gemma 模型权重"
+      - "自动下载大模型"
+      - "修改外部 visualize_dataset、lerobot_v1.0 或 serve_local_dataset.py；它们保留为备份"
+      - "增加新的多用户、局域网或云端访问能力"
+    business_logic_refs:
+      - BL-TOOL-001
+      - BL-TOOL-002
+      - BL-TOOL-003
+      - BL-DATA-001
+      - BL-DATA-003
+    constraints:
+      - "Python 版本必须为 3.11+；低版本不得静默降级"
+      - "Node.js 目标版本为 20 LTS；缺失时仅在用户确认后使用 sudo apt 安装"
+      - "Python 虚拟环境位于 annotation_workbench/.venv"
+      - "node_modules 不纳入源码包；由安装脚本依据 package-lock.json 安装"
+      - "前端安装后使用 npm run build，运行时使用生产模式"
+      - "默认 OLLAMA_API_BASE=http://127.0.0.1:11434/v1，OLLAMA_MODEL=gemma3:27b，可被环境变量覆盖"
+      - "VLM 标注直接写入所选数据集的 meta/lerobot_annotations.json"
+      - "仅支持 LeRobot v3.0 数据集"
+    quality_attributes:
+      - "自足性：复制 annotation_workbench 目录后，安装依赖即可运行"
+      - "可复现性：安装脚本和锁定的前端依赖可重复准备运行环境"
+      - "可恢复性：已完成 episode 不重复处理，失败后可继续"
+      - "可诊断性：桌面端显示服务、安装与 VLM 失败原因"
+      - "隔离性：工具仅回收自身启动的服务，不清理其他项目进程"
+    assumptions:
+      - "用户机器可访问 Ubuntu 软件源，且在需要安装系统依赖时拥有 sudo 权限"
+      - "用户自行安装并运行 Ollama，且其服务可访问配置的 OpenAI 兼容地址"
+      - "目标数据集包含符合 v3.0 元数据约定的 data、meta 和 video 文件"
+      - "Node.js 20 LTS 可通过 Ubuntu 支持的安装方式获得"
+    unresolved_questions: []
+    approval:
+      status: approved
+      evidence:
+        - "2026-08-03 用户逐项确认独立包边界和全部推荐方案"
+    supersedes: []
+    created_at: "2026-08-03T00:00:00+08:00"
+    updated_at: "2026-08-03T00:00:00+08:00"

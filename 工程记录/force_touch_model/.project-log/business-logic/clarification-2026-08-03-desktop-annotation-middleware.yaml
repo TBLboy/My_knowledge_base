@@ -1,0 +1,106 @@
+version: "1.0"
+status: active
+scope: "本机单用户桌面中间件：将本地 LeRobot 数据集、原有可视化 GUI 与 VLM 自动标注串联。"
+supersedes:
+  - clarification-2026-07-31-web-annotation.yaml
+extension_2026-08-03_package_independence:
+  confirmed:
+    - "最终只保留 annotation_workbench/ 目录即可运行完整功能。"
+    - "annotation_workbench 应作为独立 Python 包提供。"
+    - "annotation_workbench 内包含 requirements.txt，用户创建虚拟环境并安装依赖后即可运行。"
+    - "独立包必须包含桌面 GUI、本地数据集访问、VLM 自动标注和 LeRobot 数据可视化标注界面所需资源与逻辑。"
+    - "允许依赖外部 Ollama 服务和用户配置的 Gemma 模型。"
+    - "允许用户安装 Node.js/npm，不要求将前端重写为纯 Python GUI。"
+    - "优先通过自动安装脚本检查并安装 Python、Node.js/npm 和前端依赖，降低使用门槛。"
+    - "第一版部署环境限定为 Linux/Ubuntu。"
+  inferred:
+    - "不再依赖项目外部的 visualize_dataset/、lerobot_v1.0/ 和 serve_local_dataset.py。"
+    - "LeRobot 仅保留满足当前 v3.0 数据读取、视频帧采样和 VLM 客户端所需的最小代码。"
+  out_of_scope:
+    - "不打包完整 LeRobot 源码。"
+    - "不打包 Ollama 服务或 Gemma 模型权重。"
+  decisions:
+    - "保留现有 Next.js 可视化前端，迁移到 annotation_workbench 内部，不进行大范围前端重构。"
+    - "通过安装脚本完成 Python 虚拟环境依赖、Node.js/npm 检查和前端 npm 依赖安装。"
+    - "Python 依赖自动安装到项目虚拟环境。"
+    - "Node.js/npm 缺失时先向用户提示；用户确认后才允许使用 sudo apt 安装。"
+    - "同时提供 ./run.sh 和 python -m annotation_workbench 两个启动入口。"
+    - "迁移完成后保留外部 visualize_dataset/ 和 lerobot_v1.0/ 代码作为备份。"
+    - "独立包运行时不得依赖外部 visualize_dataset/、lerobot_v1.0/ 或 serve_local_dataset.py。"
+    - "安装脚本在 annotation_workbench/.venv 创建独立 Python 虚拟环境。"
+    - "系统缺少合适 Python 版本时，安装脚本先提示用户；用户确认后才允许使用 sudo apt 安装 python3、python3-venv 和 python3-pip。"
+    - "Python 运行时目标为 3.11+；低于该版本时提示用户，不自动降级。"
+    - "Node.js 使用 20 LTS；缺失时提示用户，确认后通过系统包管理器安装。"
+    - "不将 node_modules 纳入包内；保留 package.json 和 package-lock.json，由安装脚本执行 npm install。"
+    - "安装阶段执行 npm run build，运行阶段使用 Next.js 生产模式。"
+    - "完整迁移当前可用的 visualize_dataset 前端和 Python 后端到 annotation_workbench 内部，第一阶段不重构界面。"
+    - "仅提取 VLM 流程所需的最小 LeRobot 模块，不复制完整 lerobot_v1.0。"
+    - "第一版只支持 LeRobot v3.0。"
+    - "安装脚本只检查 Ollama 服务和配置模型，不自动下载 Gemma 权重。"
+    - "Ollama 地址和模型通过 OLLAMA_API_BASE、OLLAMA_MODEL 配置，默认分别为 http://127.0.0.1:11434/v1 和 gemma3:27b。"
+    - "VLM 直接写入所选数据集的 meta/lerobot_annotations.json，不自动创建副本。"
+    - "安装结果保存在 annotation_workbench/.venv 和 annotation_workbench/visualize_dataset/node_modules。"
+    - "保留 VLM 断点恢复，已完成 episode 跳过，失败 episode 可再次处理。"
+    - "迁移验收必须证明独立目录可运行，且运行时不读取外部 visualize_dataset、lerobot_v1.0 或 serve_local_dataset.py。"
+fact_map:
+  confirmed:
+    - "产品只在用户本机运行，不提供网页端、多用户或局域网访问。"
+    - "中间件是本地桌面 GUI，不是浏览器网页。"
+    - "桌面 GUI 使用 lerobot Python 虚拟环境运行。"
+    - "桌面 GUI 使用专业 GUI 库实现；用户允许安装依赖。"
+    - "选择数据集必须使用系统文件夹选择框，用户不手动输入路径。"
+    - "选择完成后，用户点击按钮即可自动拉起 LeRobot GUI 所需服务并打开浏览器。"
+    - "LeRobot 原有可视化 GUI 负责人工标注和自动结果微调，不在本任务中改写。"
+    - "用户先在 LeRobot GUI 中手工标注前五条 episode。"
+    - "用户点击 VLM 自动标注后，中间件读取当前选择数据集的前五条人工标注作为模板。"
+    - "VLM 自动标注直接写回当前选择的数据集。"
+    - "VLM 完成后，用户再次点击打开 LeRobot GUI 复核和微调。"
+  inferred:
+    - "中间件显示数据集、服务与 VLM 运行状态以及可复制的日志。"
+  out_of_scope:
+    - "网页工作台、浏览器内数据集路径输入、多用户、局域网访问。"
+    - "修改 LeRobot 可视化 GUI 的功能或布局。"
+    - "独立的示范 episode 选择器、模板编辑器和输出目录管理。"
+functional_business_logic:
+  actor: "本机用户"
+  happy_path:
+    - "启动桌面中间件。"
+    - "点击选择数据集，在系统文件夹选择框中选择 LeRobot v3.0 数据集。"
+    - "点击打开 LeRobot GUI；中间件自动启动/复用数据集服务、标注后端和前端。"
+    - "用户在浏览器的原有 LeRobot GUI 中完成前五条 episode 的 task augmentation 和固定 subtask 标注并保存。"
+    - "用户回到桌面中间件，点击 VLM 自动标注。"
+    - "中间件检查前五条标注并从中读取一致的任务描述与子任务模板。"
+    - "VLM 直接写入当前数据集的自动标注结果。"
+    - "用户再次点击打开 LeRobot GUI，对结果复核和微调。"
+  invariants:
+    - "未选择有效 LeRobot v3.0 数据集时，不能启动 GUI 或 VLM。"
+    - "前五条示范标注缺失或 subtask 不一致时，不能启动 VLM，并告知用户回到原有 GUI 修正。"
+    - "VLM 不能改变固定 subtask 的数量、顺序或文本，只能生成时间范围。"
+    - "VLM 输出写入当前选择的数据集；原有 GUI 再次打开必须连接同一目录。"
+  failure_boundaries:
+    - "服务启动失败：桌面端显示明确服务名和日志。"
+    - "浏览器未打开：仍显示可点击 GUI 地址。"
+    - "VLM 部分失败：保留已完成 episode，显示失败信息；用户可再次启动恢复未完成项。"
+technical_business_logic:
+  current_facts:
+    - "已有 visualize_dataset 前端、FastAPI 标注后端与本地数据集 HTTP 服务。"
+    - "已有 guided_alignment.py 可读取固定模板并通过 Ollama 进行时间对齐。"
+    - "lerobot 虚拟环境可用 tkinter；将安装 PySide6 作为桌面框架。"
+  required_adaptation:
+    - "将现有 Web workbench 的服务编排与 VLM 调用迁移到 PySide6 桌面应用。"
+    - "用 QFileDialog 提供文件夹选择，不再暴露手工路径输入。"
+    - "服务端口冲突需在桌面应用内部检测、复用或报告，不能要求用户手动处理。"
+alignment:
+  implementation_drift:
+    - "现有 annotation_workbench/static/index.html 是网页启动器，和桌面 GUI 产品目标冲突。"
+    - "现有网页流程暴露示范编号、模板确认和输出模式，超出新产品的最小交互范围。"
+  reusable:
+    - "本地数据集 v3.0 校验。"
+    - "原有 GUI 服务启动参数。"
+    - "固定模板 VLM 对齐执行器。"
+acceptance_criteria:
+  - "在 lerobot 环境运行一条桌面启动命令后显示桌面窗口。"
+  - "用户可用系统文件夹选择框选择本地 LeRobot v3.0 数据集。"
+  - "点击打开 GUI 后，三项必要服务自动可用，浏览器打开原有 LeRobot GUI 并连接所选目录。"
+  - "点击 VLM 自动标注后，桌面端自动读取前五条示范并原地运行；不要求用户输入模板或路径。"
+  - "桌面端显示进度、日志和失败原因；完成后可再次打开同一数据集的原有 GUI。"
