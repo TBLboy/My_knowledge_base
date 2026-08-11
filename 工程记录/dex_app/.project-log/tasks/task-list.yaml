@@ -132,3 +132,16 @@ tasks:
       - ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
     limitations:
       - Instrumentation tests were not run because no Android device or emulator was selected.
+  - id: robot-arm-calibration-20260807
+    title: "Robot arm calibration on field tablet"
+    phase: implementation
+    status: in-progress
+    scope:
+      - .project-log
+    done_when:
+      - "Left arm calibration test successfully detects the calibration marker (confirmed by user)."
+      - "Right arm calibration continues next workday and completes with result logged."
+    verification:
+      - "User field test: left arm marker detection successful."
+    follow-up:
+      - "Right arm calibration is still pending; continue next workday, then record the result."

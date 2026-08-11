@@ -1,2 +1,10 @@
 version: "0.2"
-entries: []
+entries:
+  - id: 20260807-left-arm-calibration-check
+    timestamp: "2026-08-07"
+    context: "ROS2 现场左臂标定测试"
+    hypothesis: "当前环境配置下可以检测到左臂标定标签"
+    action: "运行左臂标定流程并观察标定标签检测结果"
+    observation: "可以成功检测到标定标签"
+    result: "通过，明天继续右臂标定"
+    next: "继续右臂标定，验证完成后记录结果"
