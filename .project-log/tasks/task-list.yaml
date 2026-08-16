@@ -186,3 +186,116 @@ tasks:
         - 用户填写 Day 5 闭卷、核心理解、错误记录后进入 Day 6。
     created_at: "2026-08-12"
     updated_at: "2026-08-12"
+  - id: TASK-004
+    title: 归档当前个人简历事实基线
+    kind: task
+    parent_id: null
+    phase: business-clarification
+    goal: 将用户提供的现有简历内容结构化记录，保留来源、事实边界和待确认项，供后续简历重构使用。
+    status: done
+    priority: medium
+    risk: low
+    authority: A
+    owner: agent
+    tags:
+      - resume
+      - career-profile
+      - source-baseline
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions: []
+    depends_on: []
+    blocked_by: []
+    required_skills:
+      - a-project-log
+    spec_ref: null
+    inputs:
+      - 个人简历/简历.docx
+    outputs:
+      - .project-log/docs/个人简历事实基线-2026-08-16.md
+    plan:
+      - 读取用户提供的现有简历
+      - 按基本信息、教育、项目、比赛、技能与主张分类记录
+      - 对无法可靠提取或尚未核验的内容明确标记
+    done_when:
+      - 现有简历的可提取信息已写入项目记录
+      - 源文件、提取限制和后续待确认项均已记录
+    verification:
+      status: passed
+      commands:
+        - Get-FileHash -Algorithm SHA256 个人简历/简历.docx
+        - Test-Path .project-log/docs/个人简历事实基线-2026-08-16.md
+      evidence:
+        - EV-006
+      limitations:
+        - 源文件中部分技术名以 WMF 嵌入对象呈现，需由用户或原始视觉文档进一步确认。
+        - 全量项目日志校验仍有 3 个既有 RES-001 引用问题，与本次 TASK-004 新增记录无关；Loop Core 校验通过。
+    result:
+      summary: 当前简历已作为事实输入基线归档；未对项目、奖项和能力主张进行外部核验。
+      changed_files:
+        - .project-log/docs/个人简历事实基线-2026-08-16.md
+        - .project-log/tasks/task-list.yaml
+        - .project-log/verification/evidence.yaml
+        - .project-log/progress.md
+        - .project-log/current-session.md
+        - .project-log/work-trace/trace.yaml
+      deviations: []
+      follow_ups:
+        - 收集目标岗位、真实职责、可量化成果和作品/获奖证明后再进行简历重构。
+    created_at: "2026-08-16"
+    updated_at: "2026-08-16"
+  - id: TASK-005
+    title: 提取、讨论并凝练个人工作与项目经历为简历条目
+    kind: task
+    parent_id: null
+    phase: business-clarification
+    goal: 以用户真实经历为输入，经过事实提取、两轮讨论与草稿迭代，形成可直接放入简历的项目经历条目。
+    status: in-progress
+    priority: high
+    risk: medium
+    authority: B
+    owner: shared
+    tags:
+      - resume
+      - project-experience
+      - career-profile
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions: []
+    depends_on:
+      - TASK-004
+    blocked_by: []
+    required_skills:
+      - a-business-clarify
+      - a-project-log
+    spec_ref: null
+    inputs:
+      - .project-log/docs/个人简历事实基线-2026-08-16.md
+      - 用户后续提供的工作经历、项目资料和目标岗位信息
+    outputs:
+      - 项目经历事实提取记录
+      - 待讨论的简历项目经历草稿
+      - 用户确认后的最终简历项目经历条目
+    plan:
+      - 提取并分层记录项目事实、个人贡献、技术动作、结果与证据
+      - 与用户讨论补齐贡献边界、量化结果和岗位相关性
+      - 生成待讨论草稿
+      - 根据用户反馈优化并产出最终简历版
+    done_when:
+      - 每个采用的项目都具有用户确认的事实、个人贡献和结果边界
+      - 草稿经过至少一轮用户讨论与优化
+      - 最终条目可直接写入简历且能经受面试追问
+    verification:
+      status: not-run
+      commands: []
+      evidence: []
+      limitations:
+        - 当前尚未开始信息提取，不能验证最终简历措辞与真实性边界。
+    result:
+      summary: 尚未开始信息提取，等待用户提供材料或发出开始指令。
+      changed_files: []
+      deviations: []
+      follow_ups:
+        - 用户提供具体工作经历材料后开始事实提取。
+    created_at: "2026-08-16"
+    updated_at: "2026-08-16"

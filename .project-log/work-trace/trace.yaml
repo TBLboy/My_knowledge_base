@@ -15,3 +15,186 @@ entries:
       - EV-004
       - EV-005
     knowledge_candidate: false
+  - id: TRACE-002
+    task_id: TASK-004
+    context: 用户要求在进一步重构个人简历前，将当前简历信息写入项目记录。
+    hypothesis: 保留来源、事实边界和材料缺口的结构化基线可避免后续包装将未确认内容误当事实。
+    decision_ref: null
+    action: 读取简历 Word 文件，归档可提取信息，记录源文件哈希、WMF 提取限制和待确认项。
+    expected_result: 后续简历重构可以直接基于可追溯的资料基线开展。
+    observation: 基本信息、教育、项目、比赛、技能与自我评价均可提取；若干具体技术名因嵌入 WMF 对象无法可靠提取。
+    actual_result: 已形成个人简历事实基线文档，并登记为 TASK-004 的验证对象。
+    delta: 从仅有原始 Word 简历，推进到具有来源、事实边界和待补材料列表的项目记录。
+    lesson: 简历美化前应先区分用户确认的经历事实、尚未核验的成果和待确认的技术细节。
+    evidence:
+      - EV-006
+    knowledge_candidate: false
+  - id: TRACE-003
+    task_id: TASK-005
+    context: 用户要求先记录项目经历重构的方法，再开始处理具体经历。
+    hypothesis: 将事实提取、用户讨论、草稿和最终版本拆开，可同时获得更强的表达效果和更可靠的真实性边界。
+    decision_ref: null
+    action: 建立分阶段工作流和待执行任务，明确输入、输出、验收条件与禁止虚构约束。
+    expected_result: 后续每段经历都能从可追溯事实逐步凝练，而不是一次性生成不可核验的包装文案。
+    observation: 用户尚未提供本轮要处理的具体工作经历材料。
+    actual_result: 工作流与 TASK-005 已登记，处于等待开始状态。
+    delta: 从非结构化的“美化简历”请求，推进到有讨论关卡和事实边界的项目经历凝练流程。
+    lesson: 对简历项目经历，先确认贡献与结果，再优化措辞，能显著降低虚构与面试失真的风险。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-004
+    task_id: TASK-005
+    context: 用户说明秋招时间压力，并明确允许在真实经历基础上进行较强的岗位化包装与优势突出。
+    hypothesis: 将原始经历重构为目标岗位可识别的个人能力叙事，比机械保留组织职位和“参与者”标签更能反映求职价值；但必须保留可追溯事实边界。
+    decision_ref: null
+    action: 将“强表达、岗位化重构、模块主导叙事、优势维度选择”纳入后续简历流程，同时保留面试可解释与不捏造的约束。
+    expected_result: 简历能够最大化呈现用户真实能力，并在 HR 筛选和技术面试中保持一致。
+    observation: 用户给出“参与者突出为模块负责人”和“以成绩涨幅而非绝对排名表达”的示例，确认其认可这种表达策略。
+    actual_result: 项目经历工作流已增加包装策略与边界，等待具体材料进入第一阶段提取。
+    delta: 从一般的“适度美化”，明确为以秋招投递为目标的强表达、岗位化重构和事实约束下的优势最大化。
+    lesson: 简历包装不应只追求字面保守，也不应越过事实边界；应把表达强度作为可讨论、可验证的变量。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-005
+    task_id: TASK-005
+    context: 用户授权自由探索 `工程记录/`，要求边探索、边总结、边写入项目记录，避免上下文丢失。
+    hypothesis: 先建立跨项目事实地图，再按优先级深挖个人贡献和量化结果，可以把多个工程日志收敛为可讨论的职业资产组合。
+    decision_ref: null
+    action: 盘点目录结构，识别归档副本与交叉项目，阅读主要项目的 business logic、architecture、progress、current-session 和 requirements 文档，形成第一轮事实中间稿。
+    expected_result: 建立项目全景、工程能力标签、候选简历资产和下一轮澄清问题。
+    observation: 目录包含机器人控制、APP、数据平台、标注、模型训练部署、GUI、老板电器和 Vibe Coding 框架等多类项目；多个目录存在归档/变体关系。
+    actual_result: 已生成 `.project-log/docs/工程经历事实提取-第一轮探索中间稿-2026-08-16.md`，并将 TASK-005 标记为 in-progress。
+    delta: 从单份个人简历中的 3 个项目描述，扩展到基于工程记录的多项目职业资产地图。
+    lesson: 工程日志中的项目边界、版本变体和验证限制必须先整理，再进入简历包装，避免重复计数或把研究结果误写成产品交付。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-006
+    task_id: TASK-005
+    context: 用户要求第一阶段一次详细探索一个项目，并确认切豆腐项目由本人全权负责。
+    hypothesis: 切豆腐项目具有完整的感知—规划—控制—验证闭环，适合先作为主项目建立精华材料模板。
+    decision_ref: null
+    action: 深读切豆腐业务逻辑、状态机、软件/硬件架构、视觉准备任务、迁移计划、调试与进度记录，形成项目精华材料。
+    expected_result: 得到可供后续讨论和简历雏形使用的事实化项目资产，而不是直接生成未经确认的宣传文案。
+    observation: 记录覆盖 7 阶段流程、视觉几何目标、IK/FK 候选评分、TCP/手眼标定、阻抗回退、xCore/Lbot 迁移和真机验证。
+    actual_result: 已写入 `个人简历/切豆腐机器人-项目精华材料-第一阶段.md`，并同时保留稳健版/强表达版候选方向和待补信息。
+    delta: 从跨项目概览推进到第一个项目的端到端事实与候选表达资产。
+    lesson: 对全权负责的应届生项目，应优先展示完整闭环和关键工程决策，同时明确未完成分支，避免把实验性路径写成稳定交付。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-007
+    task_id: TASK-005
+    context: 用户确认老板炒菜机器人项目身份为核心成员，要求继续逐项深挖并提取可用于简历的精华材料。
+    hypothesis: 以 PanPour 任务链为主线、以 Policy/Skill/感知/标定/轨迹/SDK 的关键模块为个人贡献中心，可以在不吞并团队职责的前提下体现核心成员价值。
+    decision_ref: null
+    action: 深读老板电器项目需求、V1 Skill 边界、业务逻辑、轨迹回放、标定、感知接口、任务规格和验证记录，形成项目精华材料。
+    expected_result: 得到可供后续讨论和简历雏形使用的核心成员项目资产。
+    observation: 记录覆盖自包含 PanPourSkill、V1/V2 边界、两段接近、增量法兰轨迹回放、手眼/TCP 标定、感知端点适配、SDK 兼容与坐标修复。
+    actual_result: 已写入 `个人简历/老板电器炒菜机器人-项目精华材料-第一阶段.md`，并明确团队职责边界和待补数据。
+    delta: 从第一个全权负责项目扩展到第二个核心成员项目，建立了“关键模块主导但不吞并团队成果”的材料模板。
+    lesson: 核心成员项目的简历包装应围绕个人可解释的关键模块组织，而不是把整套系统未经确认地写成个人独立交付。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-008
+    task_id: TASK-005
+    context: 用户确认数据平台由本人单独完成，要求继续深挖并提取精华材料。
+    hypothesis: 数据平台记录覆盖从数据结构调研到扫描、QC、标注和导出的完整链路，适合体现应届生的独立交付和跨层工程能力。
+    decision_ref: null
+    action: 深读 data_collect/software 的需求、业务逻辑、架构、current-session 和实施验证记录，形成独立交付口径的项目材料。
+    expected_result: 得到可供简历雏形使用的数据平台项目资产，并明确早期研究状态、后续实施状态和生产验收边界。
+    observation: 记录覆盖 MinIO/PostgreSQL 控制面、持久化扫描队列、QC/批次决策、VLM 标注、人工复核、资产重算和 Compose/Ollama 验收。
+    actual_result: 已写入 `个人简历/机器人数据平台-QC与标注系统-项目精华材料-第一阶段.md`。
+    delta: 从机器人控制项目扩展到独立完成的复杂数据平台项目，增加后端、数据治理和平台工程证据。
+    lesson: “独立完成”类应届生项目应同时证明架构设计、实际代码交付和运行验收，不能只写技术名词堆叠。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-009
+    task_id: TASK-005
+    context: 用户确认机器人 GUI 为个人作品，要求逐项深挖并形成精华材料。
+    hypothesis: GUI 项目不仅是界面开发，还包含共享控制服务层、ROS2/SDK/CAN 集成、轨迹数据处理、IK 预检和真机安全逻辑，能够体现完整个人工程能力。
+    decision_ref: null
+    action: 深读 GUI 需求、软件架构、通信、硬件、线程模型和验证记录，形成个人作品材料。
+    expected_result: 形成可用于简历雏形的跨端机器人软件工程项目资产。
+    observation: 记录覆盖 Tkinter/Web 双入口、共享 Service Layer、FastAPI/WebSocket、worker 隔离、轨迹录制、delta 回放和真机调试。
+    actual_result: 已写入 `个人简历/机器人控制GUI与轨迹回放-项目精华材料-第一阶段.md`。
+    delta: 增加了一个可独立呈现的软件工程个人作品，补足机器人控制项目中的工具链和产品化能力。
+    lesson: 个人作品应同时写清产品形态、系统架构、底层集成和验证方式，避免被简化为“做了一个界面”。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-010
+    task_id: TASK-005
+    context: 用户确认模型训练和部署是小组探索经历，要求继续逐项深挖并提取可用于应届生简历的精华材料。
+    hypothesis: 以数据适配、13D embodiment、低显存训练、open-loop 评估和远端部署边界为个人贡献候选，可以展示具身智能算法工程能力，同时避免吞并小组成果。
+    decision_ref: null
+    action: 深读 GR00T/LeRobot 的进度、会话、需求和 force_touch_model 的训练/部署记录，形成小组项目材料。
+    expected_result: 形成有量化指标、实验边界和个人贡献待确认项的模型项目资产。
+    observation: 记录确认 148 episodes、47,250 frames、30,000 steps、13D embodiment、训练集 open-loop MSE/MAE 和远端 service_host 部署准备。
+    actual_result: 已写入 `个人简历/GR00T模型训练与部署-项目精华材料-第一阶段.md`。
+    delta: 将模型项目从“会训练模型”具体化为数据转换、训练配置、评估对比和部署边界的工程闭环。
+    lesson: 小组模型项目的简历表达必须同时写清个人模块和团队边界，量化结果要绑定具体评估口径。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-011
+    task_id: TASK-005
+    context: 用户要求继续逐项目探索，机器人 APP 的工程记录主要集中在 ShangHai_718，dex_app 归档本身信息较少。
+    hypothesis: 机器人 APP 的核心价值不只是 Android 技术栈，而是将 ROS 机器人能力抽象为面向现场用户的任务、自检、急停和状态控制产品。
+    decision_ref: null
+    action: 深读 ShangHai_718 的需求、API、业务逻辑、架构和进度记录，形成第一阶段项目材料，并保留用户贡献待确认边界。
+    expected_result: 形成可按应届生岗位方向选择“机器人产品化”或“Android 工程”叙事的项目资产。
+    observation: 记录确认 Kotlin/Compose/MVVM、6 类 REST API、登录/自检/主面板、Developer/User 模式和任务状态轮询。
+    actual_result: 已写入 `个人简历/机器人控制APP-项目精华材料-第一阶段.md`。
+    delta: 将 APP 从简历中的泛化技能扩展为具有机器人现场控制场景和接口闭环的项目材料。
+    lesson: APP 项目需要把“页面开发”翻译成机器人操作产品、协议边界和现场可靠性问题。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-012
+    task_id: TASK-005
+    context: 用户确认 Vibe Coding 是个人经验凝练产物，要求继续提取其可用于简历的工程价值。
+    hypothesis: 将个人 AI 使用经验沉淀为可运行的 Project Log、Loop Core、Hooks、Skills、MCP 和安装归档体系，能够作为应届生差异化的 AI 工程工具链项目。
+    decision_ref: null
+    action: 深读 vibe-coding 与人物画像的工作流、安装、Hook、MCP、归档和验证记录，形成项目材料。
+    expected_result: 将“会使用 AI”提升为“能设计和实现 AI 辅助工程流程”的可验证项目资产。
+    observation: 记录覆盖项目生命周期、证据索引、失败归因、重试、跨平台安装、Hook/MCP、归档和知识蒸馏。
+    actual_result: 已写入 `个人简历/VibeCoding工程框架-项目精华材料-第一阶段.md`。
+    delta: 增加了个人方法论与工具链项目，形成与机器人/模型项目互补的差异化能力证据。
+    lesson: Vibe Coding 项目应绑定真实工程痛点和验证结果，避免只写抽象理念或 AI 热词。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-013
+    task_id: TASK-005
+    context: 用户确认切黄瓜项目身份为参与者，要求继续逐项深挖并提取可用于简历的精华材料。
+    hypothesis: 切黄瓜项目适合用于展示用户参与复杂机器人演示系统、ROS2 状态机、视觉—动作集成和协同调试的经历，但不应抢占切豆腐项目的全权负责叙事。
+    decision_ref: null
+    action: 深读 cucumber 与切黄瓜项目跟踪的主流程、节点、软件架构和验证边界，形成参与者口径材料。
+    expected_result: 形成能够体现早期参与和技术积累、又不夸大个人职责的项目资产。
+    observation: 记录确认黄瓜握持—准备—水平切割—释放主路径，以及多 Skill、双臂、视觉和 ROS2 Action 集成。
+    actual_result: 已写入 `个人简历/切黄瓜机器人-项目精华材料-第一阶段.md`。
+    delta: 明确切黄瓜与切豆腐的身份分层，形成“参与者→全权负责”的成长叙事基础。
+    lesson: 同一机器人系统中的不同子项目必须按个人实际责任拆分，避免把团队系统能力全部归于个人。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-014
+    task_id: TASK-005
+    context: 第一阶段项目精华材料已形成，用户要求随后生成一版不追求完美的应届生简历雏形。
+    hypothesis: 先按机器人/具身智能目标岗位建立项目排序、技能分组和可讨论条目，再通过用户补充信息收敛表达，比直接追求最终文案更高效。
+    decision_ref: null
+    action: 将 8 个项目材料重组为应届生简历结构，保留身份边界、量化证据和待确认占位符，生成第二阶段雏形。
+    expected_result: 形成可供用户明天讨论的简历结构和项目优先级，而不是未经确认的最终版本。
+    observation: 主项目候选为切豆腐、老板电器、数据平台和 GR00T；GUI、APP、切黄瓜、Vibe Coding 作为个人作品/补充项目存在。
+    actual_result: 已写入 `个人简历/简历雏形-第二阶段.md`。
+    delta: 从分散项目精华材料推进到面向应届生机器人/具身智能岗位的第一版简历结构。
+    lesson: 简历雏形阶段应优先解决项目组合、身份边界和证据占位，第三阶段再集中优化语言和版面。
+    evidence: []
+    knowledge_candidate: false
+  - id: TRACE-015
+    task_id: TASK-005
+    context: 第二阶段简历雏形已完成，用户要求后续进行专业简历美化，并说明明天再决定如何调整。
+    hypothesis: 在保留事实占位和贡献边界的前提下，先生成一版应届生专业候选稿，可以让用户围绕具体文字而不是抽象方向进行高效反馈。
+    decision_ref: null
+    action: 对雏形进行项目排序、成果前置、语言压缩、技能分组和身份口径优化，生成第三阶段候选稿。
+    expected_result: 得到一版接近正式投递简历的可讨论文本，同时保留待确认项，不把候选措辞误当最终事实。
+    observation: 主区集中切豆腐、老板电器、数据平台、GR00T 和 GUI；APP、切黄瓜、Vibe Coding 放入其他经历。
+    actual_result: 已写入 `个人简历/简历专业美化版-第三阶段候选稿.md`。
+    delta: 从项目雏形推进到应届生岗位导向的专业表达候选稿。
+    lesson: 美化阶段的核心不是增加形容词，而是压缩背景、前置个人动作和结果，并保留面试可解释边界。
+    evidence: []
+    knowledge_candidate: false

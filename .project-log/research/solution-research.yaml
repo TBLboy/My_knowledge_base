@@ -1,2 +1,115 @@
 version: "0.2"
-studies: []
+studies:
+  - id: RES-001
+    status: complete
+    problem: >-
+      为缺少系统化大模型/深度学习工程基础、但已有机器人项目接触和具身智能目标的学习者，
+      从 GitLab 公开仓库中选择能够组成“基础 -> 模型 -> 训练/评估 -> 机器人专项 -> 部署验证”学习链条的高质量资料。
+    related_business_logic:
+      - BL-PERSONA-LEARNING-GAP
+      - BL-PERSONA-CAREER-EMBODIED-AI
+    related_tasks:
+      - TASK-LEARNING-CHAIN-001
+    constraints:
+      - 用户明确表示没有扎实的大模型/AI 基础，不能从 VLA、GR00T 或复杂机器人仓库直接起步。
+      - 用户希望优先利用 GitLab 上已有资料，不希望继续无序收集链接。
+      - 学习目标需要服务于具身智能算法、机器人系统工程和 Jetson 端侧落地。
+      - 2026 年 8-9 月有秋招窗口，第一阶段应优先选择可在数周内产出代码和实验结果的资料。
+      - GitLab 项目可能是 GitHub/课程上游镜像，必须显式标注来源属性，不能把镜像的活跃度当成原作者维护度。
+    candidates:
+      - name: LLMs-from-scratch_learn
+        source: https://gitlab.com/pengbo16/LLMs-from-scratch_learn
+        category: model-internals-and-llm-engineering
+        gitlab_type: upstream-code-mirror-or-learning-fork
+        fit: high
+        evidence: >-
+          README 标明这是 Sebastian Raschka《Build a Large Language Model (From Scratch)》的官方代码仓库内容，
+          覆盖 tokenizer、attention、GPT 结构、预训练、微调、LoRA/参数高效微调、分布式训练等可运行章节。
+        limitations:
+          - 不能替代 Python、NumPy、PyTorch、概率和基础深度学习训练。
+          - GitLab 页面本身不等于上游项目的维护承诺，学习时应以书籍/上游仓库版本为准。
+        use: reference-implementation
+      - name: Hands-On-Large-Language-Models
+        source: https://gitlab.com/swchen/Hands-On-Large-Language-Models
+        category: applied-llm-and-multimodal
+        gitlab_type: upstream-code-mirror-or-learning-fork
+        fit: medium-high
+        evidence: >-
+          README 说明其为《Hands-On Large Language Models》的配套代码，包含从文本表示、Transformer、检索增强、
+          微调到多模态模型的应用型示例，适合作为模型基础之后的工程过渡。
+        limitations:
+          - 应用面较宽，不能替代从零实现训练循环和深度学习基础。
+          - RAG/应用章节对用户当前具身智能主线不是第一优先级。
+        use: reference-implementation
+      - name: FastAI
+        source: https://gitlab.com/mw-university/FastAI
+        category: deep-learning-foundation
+        gitlab_type: official-book-notebook-mirror
+        fit: medium-high
+        evidence: >-
+          GitLab 项目描述为 fast.ai 课程/教材的 notebooks 镜像，覆盖从 Python/数据到视觉、NLP 和训练实践的快速入门。
+          它适合先建立“数据集 -> 模型 -> loss -> optimizer -> validation”的整体感。
+        limitations:
+          - fastai 高层封装较多，完成后必须用原生 PyTorch 重写关键训练循环。
+          - 不是专门面向机器人或 VLA 的课程。
+        use: reference-implementation
+      - name: nlp-courses
+        source: https://gitlab.com/vladmir-bc/nlp-courses
+        category: curated-learning-index
+        gitlab_type: personal-curation
+        fit: medium
+        evidence: >-
+          项目整理了 Hugging Face NLP Course、Hugging Face Agents Course、Karpathy Neural Networks: Zero to Hero、
+          LLM from scratch 和 Transformer from scratch 等学习入口，适合作为索引和补充材料导航。
+        limitations:
+          - 页面显示已归档，不能视作持续维护的单一课程。
+          - 资料之间缺少针对用户机器人目标的取舍和验收标准。
+        use: direct-use
+      - name: DISCOVERSE
+        source: https://gitlab.com/zhangyichi/DISCOVERSE
+        category: embodied-ai-capstone
+        gitlab_type: project-mirror-or-fork
+        fit: medium-high
+        evidence: >-
+          项目面向多任务机器人学习/仿真，包含 ACT、Diffusion Policy、RDT 等策略学习路线和任务环境，
+          可作为基础学习完成后的具身智能项目基线与代码阅读对象。
+        limitations:
+          - 环境、数据、仿真和硬件依赖重，不适合作为零基础起点。
+          - 不能替代 Python/PyTorch、监督学习和强化学习基础课程。
+        use: reference-implementation
+      - name: AutowareClass2020
+        source: https://gitlab.com/autowarefoundation/autowareclass2020
+        category: robotics-system-engineering
+        gitlab_type: institutional-course-repository
+        fit: medium
+        evidence: >-
+          项目是 Autoware 生态的系统课程资料，适合补充机器人软件栈、感知/规划/控制和 ROS 工程化视角。
+        limitations:
+          - 主题偏自动驾驶，和机械臂具身智能并不完全匹配。
+          - 资料较旧，依赖和工具链需要单独核对，不能作为当前策略模型主线。
+        use: reference-implementation
+    strategy: reference-implementation
+    recommendation: >-
+      不选择一个“全包式 GitLab 仓库”。采用四段主干：FastAI/原生 PyTorch 补深度学习训练基础；
+      LLMs-from-scratch_learn 补 Transformer、预训练和微调内部机制；Hands-On-Large-Language-Models 补应用与多模态工程；
+      DISCOVERSE 作为具身智能专项和可追问项目入口。nlp-courses 只做索引，AutowareClass2020 只做机器人系统工程补充。
+    conditions:
+      - 第一阶段必须把 fastai 或同类材料中的一个模型改写成原生 PyTorch 训练脚本，并保留日志、验证指标和 checkpoint。
+      - LLM 学习必须完成一个可解释的最小 GPT/Transformer 实验，而不是只运行 notebook。
+      - 进入 DISCOVERSE 前，先完成至少一个监督学习训练项目和一个基础策略/控制实验。
+      - 任何镜像若与上游版本冲突，以官方上游文档、代码和许可证为准。
+    contrary_evidence:
+      - GitLab 上高质量、连续维护且完整覆盖 AI 基础到具身智能的单一仓库非常少。
+      - 多个候选是镜像、fork 或个人整理，GitLab 的 stars/活动时间不能直接代表内容质量。
+      - 部分课程依赖旧版 PyTorch、旧版 CUDA 或旧版 ROS，必须在实际学习前做环境可运行性检查。
+    confidence: 0.78
+    decision_ref: null
+    sources:
+      - https://gitlab.com/pengbo16/LLMs-from-scratch_learn
+      - https://gitlab.com/swchen/Hands-On-Large-Language-Models
+      - https://gitlab.com/mw-university/FastAI
+      - https://gitlab.com/vladmir-bc/nlp-courses
+      - https://gitlab.com/zhangyichi/DISCOVERSE
+      - https://gitlab.com/autowarefoundation/autowareclass2020
+    retrieved_at: "2026-07-30"
+    updated_at: "2026-07-30"

@@ -65,3 +65,40 @@ evidence:
     artifacts:
       - ../学习记录/2026.08.12/学习记录.md
       - ../学习记录/2026.08.12/exercises/day05_module_optimizer.py
+  - id: EV-006
+    task_id: TASK-004
+    result: passed
+    level: 2
+    commands:
+      - Get-FileHash -Algorithm SHA256 个人简历/简历.docx
+      - Test-Path .project-log/docs/个人简历事实基线-2026-08-16.md
+    limitations:
+      - 源文件中部分技术名以 WMF 嵌入对象呈现，需由用户或原始视觉文档进一步确认。
+      - 本证据仅证明资料归档和来源绑定，不证明项目、奖项或能力主张的真实性。
+    artifacts:
+      - 个人简历/简历.docx
+      - .project-log/docs/个人简历事实基线-2026-08-16.md
+  - id: EV-007
+    task_id: TASK-005
+    result: passed
+    level: 2
+    commands:
+      - Test-Path 个人简历/项目经历精华材料索引-第一阶段.md
+      - Test-Path 个人简历/简历雏形-第二阶段.md
+      - Test-Path 个人简历/简历专业美化版-第三阶段候选稿.md
+      - loopctl.py --root D:\Project\My_knowledge_base --json validate
+    limitations:
+      - 文档产物中的项目时间、个人贡献边界、量化指标和公开范围仍有待用户确认。
+      - 本证据证明材料已生成并通过项目日志校验，不证明候选简历内容已最终确认。
+    artifacts:
+      - 个人简历/项目经历精华材料索引-第一阶段.md
+      - 个人简历/简历雏形-第二阶段.md
+      - 个人简历/简历专业美化版-第三阶段候选稿.md
+      - 个人简历/切黄瓜机器人-项目精华材料-第一阶段.md
+      - 个人简历/切豆腐机器人-项目精华材料-第一阶段.md
+      - 个人简历/老板电器炒菜机器人-项目精华材料-第一阶段.md
+      - 个人简历/机器人数据平台-QC与标注系统-项目精华材料-第一阶段.md
+      - 个人简历/机器人控制GUI与轨迹回放-项目精华材料-第一阶段.md
+      - 个人简历/GR00T模型训练与部署-项目精华材料-第一阶段.md
+      - 个人简历/机器人控制APP-项目精华材料-第一阶段.md
+      - 个人简历/VibeCoding工程框架-项目精华材料-第一阶段.md
