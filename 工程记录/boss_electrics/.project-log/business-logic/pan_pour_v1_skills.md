@@ -12,12 +12,13 @@ V1 正式版本（`pan_pour` / `PanPourPolicy`）**只使用 1 个专用 Skill**
 
 1. 正式 V1 **不能依赖其他链路**（临时 `teach_pan_pour` / `teach_pan_pour_delta` 不会正式上传），正式 Skill 必须完全自包含。
 2. 手部开/闭参数（角度/力矩）**直接使用现有测试链路的已调好值**，V1 不改数值。
-3. V1 完整链路与测试版一致：抓取 → 闭手 → 提锅/准备倾倒 → 倾倒 → 放锅（固定点）→ 张手 → 回 home。
+3. V1 完整链路：回抓锅起始点并张手 → 抓取 → 闭手 → 提锅/准备倾倒 → 倾倒 → 放锅（固定点）→ 张手 → 回 home。
 
 ## V1 各阶段使用的能力
 
 | 阶段 | 能力 | 类型 | 说明 |
 |---|---|---|---|
+| 回抓锅起始点并张手 | `pan_pour` skill `home_open` | 专用 Skill | `MOVE_JOINTS` 到 `home`（抓锅起始点）`1`，再按 `open` 预设张手 |
 | 抓取 | `move_cartesian` | 复用 API | Planner 已完成 C→左臂 base 转换，发送法兰目标 |
 | 闭手 | `pan_pour` skill `close_hand` | 专用 Skill | `SET_HAND_ANGLES` + `SET_HAND_TORQUES`，用 `grasp_pan` 预设 |
 | 提锅到准备倾倒 | `move_cartesian` | 复用 API | 同上 |

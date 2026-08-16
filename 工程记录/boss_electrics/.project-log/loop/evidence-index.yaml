@@ -24,7 +24,8 @@ evidence:
   kind: push-readiness
   subject: kitchen_robot_home SDK 排除复核
   status: valid
-  command: git fetch origin; git status --short --branch; git rev-list --left-right --count origin/robam_kitchen...HEAD; compileall; focused pytest; colcon build
+  command: git fetch origin; git status --short --branch; git rev-list --left-right
+    --count origin/robam_kitchen...HEAD; compileall; focused pytest; colcon build
   result_ref: .project-log/verification/evidence.yaml#EVID-KITCHEN-SDK-RECHECK-20260811
   covers:
     files:
@@ -73,7 +74,7 @@ evidence:
 - id: EVID-TASK-011-001
   kind: verification
   subject: TASK-011 pan_pour 参数和 SE(3) 变换模块
-  status: valid
+  status: stale
   command: 21 focused tests passed; colcon build dexbot_bringup dexbot_task_planner
     passed; git diff --check passed
   result_ref: .project-log/verification/evidence.yaml#EVID-TASK-011-001
@@ -91,5 +92,5 @@ evidence:
     file_hashes:
       .project-log/verification/evidence.yaml: 9b80e335761cfcc9c2aaf9de44330f8d4a4671f6a9397185c9deec922439ffaf
   recorded_at: '2026-07-30T05:44:36Z'
-  invalidated_at: null
-  invalidation_reason: null
+  invalidated_at: '2026-08-13T02:55:09Z'
+  invalidation_reason: PostToolUse:apply_patch

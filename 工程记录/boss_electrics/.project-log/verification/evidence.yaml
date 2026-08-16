@@ -1,5 +1,56 @@
 version: '0.4'
 evidence:
+- id: EVID-CALIBRATION-CONFIG-20260813
+  task_id: CAL-RIGHT-CONFIG-20260813
+  business_logic:
+  - 标定使用现场真实 IP、CAN、相机和标定板参数
+  - 标定前帧参数必须与 reset 脚本一致
+  acceptance_criteria:
+  - robot_params.yaml 左臂 192.168.2.159/can0，右臂 192.168.2.160/can1，pose_frame -90/90，ref.trans 归零
+  - camera1_params.yaml 激活 gemini335l 1280x720@15 CPCAC53000FP，camera_info_source=ost_yaml
+  - YAML 可解析，reset dry-run 无差异，diff-check/build/launch -s/install config 同步通过
+  result: passed
+  level: 1
+  commands:
+  - cd kitchen_robot_home && PYTHONNOUSERSITE=1 python3 scripts/reset_robot_params_frames.py --reset-path src/dexbot_bringup/config/robot_driver/robot_params.yaml --dry-run
+  - cd kitchen_robot_home && git diff --check
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_bringup
+  - cd kitchen_robot_home && source /home/tbl/camera_env/calibration_env.sh && ros2 launch dexbot_bringup calibration.launch.py -s
+  - cd kitchen_robot_home && diff -q install/dexbot_bringup/share/dexbot_bringup/config/robot_driver/robot_params.yaml src/dexbot_bringup/config/robot_driver/robot_params.yaml
+  - cd kitchen_robot_home && diff -q install/dexbot_bringup/share/dexbot_bringup/config/cameras/camera1_params.yaml src/dexbot_bringup/config/cameras/camera1_params.yaml
+  artifacts:
+  - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml
+  - kitchen_robot_home/src/dexbot_bringup/config/cameras/camera1_params.yaml
+  limitations:
+  - 未连接硬件；未验证相机驱动真实出图或标定节点真机流程。
+- id: EVID-TEACH-EXCLUSION-20260813
+  task_id: OPS-20260813-TEACH-EXCLUSION
+  business_logic:
+  - 两个 teach pan-pour 测试版本仅保留本地，不进入远端 robam_kitchen
+  - 正式 pan_pour 路由在移除 teach 后仍可用
+  acceptance_criteria:
+  - kitchen_robot_home origin/robam_kitchen tree 不含 teach_pan_pour 路径
+  - robot_motion_executor origin/robam_kitchen tree 不含 teach_pan_pour 路径
+  - 本地 teach 文件仍存在且被 .gitignore 覆盖
+  - 主仓库定向测试、执行仓库定向测试、compileall、colcon build 与 diff-check 通过
+  - 两仓库 HEAD 与 origin/robam_kitchen 一致
+  result: passed
+  level: 2
+  commands:
+  - cd kitchen_robot_home && git fetch --all --prune && git merge --ff-only origin/robam_kitchen
+  - cd kitchen_robot_home && git ls-tree -r --name-only origin/robam_kitchen | rg teach_pan_pour
+  - cd kitchen_robot_home && PYTHONNOUSERSITE=1 python3 -m pytest -q src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py src/dexbot_task_planner/test/test_pan_pour_policy.py src/dexbot_task_planner/test/test_pan_pour_kinematics.py src/dexbot_task_planner/test/test_plate_pour_policy.py
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && source install/setup.bash && colcon build --symlink-install --packages-select dexbot_task_planner
+  - cd robot_motion_executor && git ls-tree -r --name-only origin/robam_kitchen | rg teach_pan_pour
+  - cd robot_motion_executor && PYTHONNOUSERSITE=1 python3 -m pytest -q src/dexbot_motion_executor/test/test_local_joint_trajectory_client.py src/dexbot_motion_executor/test/test_pan_pour_skill.py src/dexbot_motion_executor/test/test_delta_flange_replay_client.py src/dexbot_motion_executor/test/test_path_replay.py src/dexbot_motion_executor/test/test_flange_delta_trajectory.py
+  - cd robot_motion_executor && source /opt/ros/humble/setup.bash && source kitchen_robot_home/install/setup.bash && colcon build --symlink-install --packages-select dexbot_motion_executor
+  artifacts:
+  - kitchen_robot_home robam_kitchen HEAD=6728762
+  - robot_motion_executor robam_kitchen HEAD=c660147
+  - 两仓库 .gitignore 覆盖 teach 目录与对应测试
+  limitations:
+  - 未执行真机验证。
+  - 远端 Git 历史仍保留旧提交中的 teach 文件；本次只保证当前 robam_kitchen 分支树和后续 checkout 不再包含。
 - id: EVID-EXECUTOR-PUSH-READINESS-20260811
   task_id: TASK-018
   business_logic:

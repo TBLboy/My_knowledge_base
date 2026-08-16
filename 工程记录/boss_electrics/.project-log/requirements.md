@@ -6,6 +6,8 @@
 - V1 范围内：上游任务移交、感知结果订阅、锅把朝左固定场景、基于抓取点偏置的左手 TCP 控制、灵巧手闭合、准备倾倒姿态、底盘协同、餐盘定位与倾倒目标计算、倾倒、轻微抖动、放回原位及失败接管
 - V1 抓取确认：暂留可选步骤插槽，不作为当前基础闭环必经条件；触觉判断和失败回退后续再定
 - 职责边界：感知模型由感知组提供，底盘移动由底盘组支持，两个代码仓库由团队共同开发
+- 感知后处理缺口：当前模型能检测 `plate`，但 `boss_kitchen_scene2` 后处理尚未输出 `plate_center`；已作为感知组后续需求记录，详见 `.project-log/docs/perception_plate_center_requirement.md`
+- 底盘接口现状：`dexbot_robot_driver` 已暴露底盘 service，但当前 `robot_type=O6Luoshi` 不启用底盘后端，需确认厂商后切换 `O6LuoshiYunji` / `O6LuoshiDaka` 并补 `chassis` 参数；详见 `.project-log/docs/chassis_motion_interface_status.md`
 - 坐标与动作约束：抓取 TCP 目标由感知抓取点加可调偏置计算；倾倒使用锅具 TCP 转换，移动阶段保持 TCP 姿态，动作优先考虑预录制增量回放
 - V1 范围外：右手锅铲辅助、生产级泛化、全轨迹自适应力控和未经验证的双臂协同
 - 关键约束：闭合完成前锅具保持安全支撑；V1 不因右手锅铲或未定的抓取确认能力阻塞基础闭环；保留安全停止和人工介入

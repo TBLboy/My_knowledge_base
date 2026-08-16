@@ -1,5 +1,157 @@
 # 手眼标定（相机外参）启动问题清单
 
+## 2026-08-16 新机器人/新相机覆盖说明（优先于下方旧记录）
+
+- 当前机器人已更换，旧机器人的左右臂 IP 和旧相机型号记录仅作历史参考，**不要直接套用**。
+- 本次标定相机已确认为 `Orbbec Gemini 2`：序列号 `AY3Z33100DJ`，USB PID `2bc5:0670`。
+- ArUco 板不变：`DICT_6X6_250`，黑色方格外沿 `0.13 m`。
+- 新机器人左臂 IP 已确认为 `192.168.2.160`。
+- 新机器人右臂 IP 当前未知，标定前需要现场确认；`robot_params.yaml` 中旧左臂 `192.168.2.159`、旧右臂 `192.168.2.160` 不应继续作为事实使用。
+- 当前 `camera_env` 缺少 Gemini 2 所需 `extensions/frameprocessor/libob_frame_processor.so`，深度流验证需要先补该个人环境扩展；机器上已有扩展位于 `/home/tbl/.local/lib/python3.10/orbbec-sdk/extensions/`。
+- 相机参数和内参配置尚未更新到新相机，当前不能直接沿用 `camera1_params.yaml` / `camera1_ost.yaml` 跑标定。
+
+## 2026-08-15 实测可用操作手册（优先阅读）
+
+### 运行环境
+
+- 必须从 `kitchen_robot_home` 启动，因为 `robot_driver` 需要读取 `.localconfig` 的 SDK 路径。
+- 使用本机相机隔离环境，**不要 `conda activate robot`**：
+
+```bash
+cd /home/tbl/Project/boss_electrics/kitchen_robot_home
+unset PYTHONPATH
+source /home/tbl/camera_env/calibration_env.sh
+```
+
+`calibration_env.sh` 已依次加载 ROS Humble、主线 `install/setup.bash`、`camera_env.sh`，包含 `PYTHONNOUSERSITE=1`、系统 `numpy 1.21.5`、`cv2 4.5.4` 和 `pyorbbecsdk 2.7.6`。
+
+### 固定事实
+
+- 位型：相机固定、机械臂末端装 ArUco 标记，eye-to-hand，标定节点自动移动机械臂采样。
+- 标定板：6x6 字典，黑色外沿边长 `0.13 m`。
+- 左右臂 IP 由 `robot_params.yaml` 提供：左臂 `192.168.2.159`，右臂 `192.168.2.160`。
+- 当前标定 launch 走 `/robot_driver/get_arm_pose` 和 `/robot_driver/move_cartesian`，**不再需要手动 `export DEXBOT_ROBOT_IP`**。
+- 相机物理位置在左臂、右臂两次标定之间必须保持不变。
+- 同一臂标定前必须停止该臂其他控制链，现场保留急停，工作空间清空。
+
+### 左臂启动命令
+
+左臂采样范围沿用历史成功记录；如果当前左臂 TCP 位姿不同，按 launch 日志里的 TCP Pose 调整 `x/y/z`：
+
+```bash
+cd /home/tbl/Project/boss_electrics/kitchen_robot_home
+unset PYTHONPATH
+source /home/tbl/camera_env/calibration_env.sh
+
+ros2 launch dexbot_bringup calibration.launch.py \
+  arm_type:=left \
+  output_file:=/home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_bringup/config/calibration/left_calibration_result.yaml \
+  marker_length:=0.13 \
+  x_min:=0.15 \
+  x_max:=0.6 \
+  y_min:=0.1 \
+  y_max:=0.5 \
+  z_min:=-0.5 \
+  z_max:=0.3 \
+  enable_viewer:=true
+```
+
+### 右臂启动命令
+
+右臂当前典型 TCP 为 `pos=[0.442, -0.012, 0.010]`，`y` 是负值；launch 默认 `y=[0.1, 0.4]` 会把候选点全部过滤掉，所以右臂必须显式覆盖 `y` 范围：
+
+```bash
+cd /home/tbl/Project/boss_electrics/kitchen_robot_home
+unset PYTHONPATH
+source /home/tbl/camera_env/calibration_env.sh
+
+ros2 launch dexbot_bringup calibration.launch.py \
+  arm_type:=right \
+  output_file:=/home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_bringup/config/calibration/right_calibration_result.yaml \
+  marker_length:=0.13 \
+  x_min:=0.2 \
+  x_max:=0.7 \
+  y_min:=-0.4 \
+  y_max:=0.2 \
+  z_min:=-0.3 \
+  z_max:=0.3 \
+  enable_viewer:=true
+```
+
+如果右臂当前位姿变化，以日志中的 `TCP Pose (after compensation)` 为准微调范围，确保候选点数大于 10。
+
+### 触发与监控
+
+另开终端，同样使用 `calibration_env.sh`：
+
+```bash
+source /home/tbl/camera_env/calibration_env.sh
+ros2 service call /calibration/start_calibration std_srvs/srv/Trigger "{}"
+```
+
+监控：
+
+```bash
+ros2 topic echo /calibration/status
+```
+
+启动后先确认：
+
+```bash
+ros2 topic list | rg '/camera/color|/aruco|/calibration'
+ros2 service list | rg '/robot_driver|/calibration'
+```
+
+正常应看到真实相机启动日志 `Camera backend: real device (Orbbec Gemini 335L)`，并能收到 `/aruco/pose`。hand-eye 日志应出现 `生成 N 个笛卡尔候选点`，`N` 至少大于 10。
+
+### 常见问题
+
+- `import cv2` 报 NumPy 2.x 兼容错误：没有使用 `calibration_env.sh`，或手动激活了 robot conda 环境；重新开终端并执行上面的环境命令。
+- `GetArmTorques` 导入失败：`install/dexbot_interfaces` 是旧构建产物，需要重建：
+
+```bash
+cd /home/tbl/Project/boss_electrics/kitchen_robot_home
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+colcon build --symlink-install --packages-select dexbot_interfaces --allow-overriding dexbot_interfaces
+```
+
+- 相机日志出现 synthetic fallback：没有加载 `/home/tbl/camera_env`，不是相机硬件问题。
+- 标定报 `候选点数量偏少: 0/10` / `样本数不足: 0/10`：采样范围没有覆盖当前 TCP；右臂尤其注意 `y` 应为负值范围。
+- `No module named 'can'` 和 `SafetyHeartbeat 失联`：当前手眼标定不依赖灵巧手和 safety 节点，可继续；后续全链路启动时再处理。
+
+### 标定结果与下一步
+
+- 左臂结果：`kitchen_robot_home/src/dexbot_bringup/config/calibration/left_calibration_result.yaml`
+- 右臂结果：`kitchen_robot_home/src/dexbot_bringup/config/calibration/right_calibration_result.yaml`
+- 中心结果：`kitchen_robot_home/src/dexbot_bringup/config/calibration/center_calibration_result.yaml`
+- 视觉运行时已在本机 `.localconfig` 启用：`calibration_path` 指向中心结果，`right_calibration_path` 指向右臂结果；左臂结果保留为中心坐标生成源文件。
+- 左右各跑完一次且相机位置未移动后，用 `scripts/generate_robot_center_frames.py` 生成中心坐标系文件，再配置感知 `calibration_path` 和 `pan_pour` 参数。
+
+### 2026-08-15 实测结果
+
+- 右臂标定成功：`samples=12`，平移 RMSE `0.001082 m`，旋转 RMSE `0.4482°`，结果已保存到 `right_calibration_result.yaml`。
+- 标定过程中部分候选点报 `Motion timeout after 30.0 seconds` 并被跳过，这是单个候选位姿不可达/未收敛，不影响最终结果；`min_samples=10`，本次 12 个有效样本满足要求。
+- 标定完成后的“返回起始 TCP 位姿”也可能超时；结果已保存，超时不表示标定失败，但需要人工确认右臂停在安全位后再关闭 launch。
+- 左臂历史成功结果：`samples=22`，平移 RMSE `0.001825 m`，旋转 RMSE `0.805°`。
+- 如果后续想减少右臂运动超时，可把右臂起始位姿放到更居中的可达区域，并进一步缩小采样范围；当前结果不需要为提升样本数量而强制重跑。
+
+### 2026-08-15 中心坐标系计算完成
+
+左右标定文件质量检查通过后，已用现有脚本计算中心坐标系，结果保存在：
+
+- `kitchen_robot_home/src/dexbot_bringup/config/calibration/center_calibration_result.yaml`
+- 生成明细 `center_frames.yaml` 仍保留在 `/home/tbl/Project/boss_electrics/标定结果/`
+
+主要结果：
+
+- 肩宽（Y 轴投影）：`0.188627 m`；自由三维基线长度 `0.189393 m`。
+- 左臂 `toolset.ref.trans`：`[0.0, -0.094313551, 0.0]`；右臂：`[0.0, 0.094313551, 0.0]`。
+- `T_center_cam` 平移：`[0.1179409, 0.025820205, 0.270310843]`。
+- 左右标定推算相机位姿的旋转残差 `2.848°`，位置偏差约 `17 mm`；正式执行前建议用固定点或已知物体坐标验证一次。
+
+视觉运行时 `calibration_path` 已指向 `center_calibration_result.yaml`。中心坐标已落位到 `pan_pour.left_base_from_center`（`translation=[0, 0, -0.094313551]`，`rpy=[pi/2, 0, 0]`）；`robot_params.yaml` 的左右臂 `toolset.end/ref` 保持 identity，避免驱动与 planner 重复换算。`pan_pour.configured` 仍必须保持 `false`，直到 `tcp_pan`、点位和现场验证完成。
+
 ## 目标
 
 做一次相机外参（手眼）自动标定，输出 `T_base_cam`，为正式 V1（`pan_pour.configured`）的真机标定与后续中心坐标系统一提供外参。当前进入"逐个解决前置问题"阶段，先冻结问题清单，再逐步推进。
@@ -67,10 +219,10 @@ source install/setup.bash
 source /home/tbl/camera_env/camera_env.sh   # 相机 python 隔离环境（本机），含 PYTHONNOUSERSITE=1
 export DEXBOT_ROBOT_IP=192.168.2.159        # 左臂；右臂改为 192.168.2.160
 
-# 标定结果输出目录（2026-08-07 用户指定）：/home/tbl/Project/boss_electrics/标定结果/
+# 标定结果输出目录（2026-08-15 后使用主仓库规范目录）
 ros2 launch dexbot_bringup calibration.launch.py \
     arm_type:=left \
-    output_file:="/home/tbl/Project/boss_electrics/标定结果/left_calibration_result.yaml" \
+    output_file:="/home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_bringup/config/calibration/left_calibration_result.yaml" \
     marker_length:=0.13 \
     auto_vel_scale:=0.25 \
     x_min:=0.15 x_max:=0.6 \

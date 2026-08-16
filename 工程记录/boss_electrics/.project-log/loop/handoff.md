@@ -5,8 +5,8 @@
 - Task: TASK-011
 - Run status: handed-off
 - Native Goal: unbound
-- Valid evidence: EVID-TASK-011-001
-- Stale evidence: EVID-TASK-010-001
+- Valid evidence: EVID-EXECUTOR-PUSH-READINESS-20260811, EVID-KITCHEN-SDK-RECHECK-20260811
+- Stale evidence: EVID-TASK-010-001, EVID-TASK-011-001
 - Open C questions: Q-001, Q-007, Q-008
 - Next action: 等待感知组最终字段契约与底盘组 ROS 接口后，接入 PanPourPolicy 动态阶段编排
 

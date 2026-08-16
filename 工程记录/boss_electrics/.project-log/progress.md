@@ -2,6 +2,15 @@
 
 倾倒入盘技术路线、V1 业务澄清和技术选型已完成；当前进入工程实施阶段，已完成 Planner 的动态等待调度基础能力。
 
+## 2026-08-16 新机器人手眼标定前置信息
+
+- 用户已换新机器人，需重新做左右臂手眼标定。
+- 本次标定相机已确认：`Orbbec Gemini 2`，SN `AY3Z33100DJ`，USB `2bc5:0670`。
+- ArUco 板不变：`DICT_6X6_250`、黑色外沿 `0.13 m`。
+- 新机器人左臂 IP：`192.168.2.160`；右臂 IP 未知，待现场确认。
+- 当前阻塞点：`camera_env` 缺 Gemini 2 `frameprocessor` 扩展；`camera1_params.yaml` 序列号和内参仍为旧相机；`calibration.launch.py` 强制旧 OST 内参；`robot_params.yaml` 旧 IP 不能直接用于新机器人。
+- 本轮只记录，未改产品代码和配置。详细检查结果见 `current-session.md`。
+
 - 推荐：示教轨迹基线 + 受限重量/力矩反馈局部修正。
 - 回退：带安全限幅、超时、急停和人工确认的示教回放。
 - V1：作为中间环节承接上游任务，订阅感知组锅把信息，沿锅把 PCA 主轴施加中心坐标系下的抓取偏置，使用参数化抓取 TCP 控制左臂；提锅后由底盘组协同移动，再以机器人中心坐标系下的餐盘中心点加 xyz 偏置计算倾倒点，通过参数化锅具 TCP 和其局部坐标系增量回放完成倾倒；放回/home、落料验收和异常处理后续补充，不考虑右手锅铲辅助。
@@ -17,6 +26,49 @@
 - 下一步：完整集成仍被三项外部能力阻塞：感知组 V1 字段契约、底盘组 ROS 生命周期接口、目标 robot_driver deb 的运行时位姿/MoveCartesian 语义和真实倾倒轨迹资产。中心和两个 TCP 的现场标定完成后，才可将 `pan_pour.configured` 设为 `true`。
 - 旧版完整记录：`.project-log-legacy-20260728/`。
 旧版完整记录：`.project-log-legacy-20260728/`。
+
+## 2026-08-16 抓锅两段接近：实现与本地视觉脚本修复
+
+- 正式实现完成：`PanPourPolicy` 抓锅步骤改为 `pan_pour/move_to_grasp`，`PanPourSkill` 从最终法兰目标 `a` 计算接近点 `b = a + [0, 0, grasp_approach_offset_m]`，返回两个 `MOVE_CARTESIAN`，经现有 `/robot_driver/move_cartesian` 执行；未新增公共接口。
+- 备份提交：主仓库 `c14108d`，执行仓库 `b218e3d`，提交信息均为“抓锅视觉测试初步通过，但是存在风险点”。
+- 本地测试脚本 `local_visual_grasp_test/visual_grasp_target.py` 已复刻两段接近，并修复直连 SDK 的坐标系问题：IK 和 `MoveL` 先按左臂 `-90°` 补偿，再用 `EndInRefToFlanInBase` 转回 flange 矩阵；同时兼容 `baseFrame(ec)` 返回列表。
+- 正式链路检查确认：`/robot_driver/move_cartesian` 会由 driver 内部完成姿态帧补偿和 flange IK，无同类 bug。
+- 状态：正式实现 `implemented-unverified`；本地脚本离线验证通过，实机 `b -> a` 尚未重新执行。
+- 下一步：先 `--move --dry-run`，再 `--move --yes --move-speed 80` 实测并确认最终法兰位姿，随后按结果提交两个正式仓库。
+
+## 2026-08-13 PanPour 抓锅风险点记录
+
+## 2026-08-14 感知链路实机验证
+
+- 用户连接相机后要求验证感知链路，确认后关闭节点；本轮未改公共代码。
+- 临时感知 launch 实机验证通过：Orbbec Gemini 335L（`CPCAC53000FP`）1280x720@15 出图，YOLO OBB 模型加载成功，`/perception/scene` 约 30 Hz。
+- 当前场景无任务相关锅具，主要观测到弱 `bowl_center` 检测（置信度约 `0.30-0.31`）；大量 `scene_valid=False, objects=0` 是“无检测输出”，不是感知链路故障。
+- 感知节点仍用 identity 相机变换；左右臂标定完成并生成中心坐标系后，再配置 `calibration_path`，正式坐标语义才成立。
+- 验证后已关闭临时节点，无 `perception_node` / `camera_driver_node` 残留。
+- 同步完成本地个人资源排除：`kitchen_robot_home/.git/info/exclude` 新增 `/arm_preset/`、`/poses/`、`/pose_o6_left/`，不影响本地 GUI 点位使用。
+- 下一步：等感知组最新模型后复测锅把/锅盖类别，随后接入正式视觉消费链路。
+
+- 用户提出两个抓锅风险，本轮仅记录，不修改产品代码。
+- 风险 1：一步到位移动到锅把抓取点可能碰撞锅把并导致锅把旋转；缓解思路是先移动到抓取点正上方，再垂直下降到达抓取点。
+- 风险 2：上游开盖动作可能改变锅盖/锅把朝向，导致锅把不再水平朝左，PanPour 抓取成功率下降；方案待后续讨论。
+- 详细记录：`.project-log/docs/pan_pour_grasp_risks.md`。
+
+## 2026-08-13 本地 TCP 标定脚本（个人资源，不提交）
+
+- 用户确认思路：xCore 直连 → 拖动需按末端机械按钮 → 多姿态对准同一标定尖端 → 记录原始 `flangeInBase` → `c` 计算 TCP 相对法兰平移；TCP 相对法兰旋转固定为 0。
+- 已落地 `kitchen_robot_home/local_tcp_calibration/`：主脚本、离线测试和 README；通过 `kitchen_robot_home/.git/info/exclude` 排除，不进入 Git 索引/提交/push。
+- 数学链路：对任意两采样姿态 `(R_i,t_i)`、`(R_j,t_j)` 构造 `(R_i-R_j) @ p_tcp = t_j-t_i`，全部姿态对做最小二乘；输出直接填 `pan_pour.tcp_grasp/tcp_pan.flange_to_tcp.translation`，`rpy` 固定 `[0,0,0]`。
+- 验证：7 个离线单测通过（含已知 TCP 偏移还原、退化姿态拒绝、SDK 导入）；`--check-sdk` 成功；`py_compile`、`git check-ignore` 通过；主仓库工作区仍只有既有标定配置改动。
+- 状态：`implemented-unverified`；真机标定未执行，未提交/推送。
+- 下一步：现场分别标定 `tcp_grasp` 与 `tcp_pan`，确认残差后填写 `pan_pour_params.yaml`；真机验证后才可把 `configured` 置为 `true`。
+
+## 2026-08-13 teach 测试版本从远端排除
+
+- 用户要求：两个 `teach_pan_pour` / `teach_pan_pour_delta` 测试版本只在本地保留，远端 `robam_kitchen` 不再包含对应 Policy、Skill、测试和打包引用。
+- 主仓库已先快进到远端最新 `a135e83`，随后提交 `6728762` 移除 teach 索引与路由，并用 `.gitignore` 覆盖本地保留文件；同时恢复远端合并后丢失的正式 `pan_pour` 注册。
+- 执行仓库提交 `c660147` 移除 teach Skill 注册、package_data 与测试路径依赖，`.gitignore` 覆盖本地保留的 teach Skill/测试目录。
+- 验证：主仓库定向 22 passed；执行仓库定向 34 passed；两仓库 `compileall`、`colcon build`、`git diff --check` 通过；远端树与本地索引均无 `teach_pan_pour` 文件。
+- 推送：两个仓库均成功 push 到 `origin/robam_kitchen`，`HEAD == origin/robam_kitchen`。
 
 ## 2026-08-11 PanPourPolicy 等待阶段改为私有 wait 占位
 
@@ -579,3 +631,88 @@
 - 本轮停止在手动 push 前。
 
 - 进一步使用 `efa6b24` 干净提交快照复验：定向测试 41 passed、compileall 和 colcon build 通过；`git push --dry-run origin robam_kitchen` 成功，确认可推送 `4635b3e..efa6b24`。
+
+## 2026-08-13 感知包 1.0.9 与 YOLO 模型本地配置
+
+- 感知包 `ros-humble-dexbot-perception=1.0.9-0jammy` 已安装并 `verify_versions.sh` 8/8 通过；仓库 `VERSIONS.yaml` 已匹配。
+- 感知组桌面模型 `yolo26l_obb.pt` 已复制到 `kitchen_robot_home/local_models/yolo/`，SHA-256 与源文件一致。
+- `.localconfig` 已增加 `yolo_model_dir`，`.git/info/exclude` 已排除 `/local_models/`；模型和目录均为本机个人资源，不进入 Git。
+- 相机标定暂缓，后续由用户自行标定后再配置 `calibration_path`。
+- 阻塞项：ROS 侧 Python 3.10 未安装 `ultralytics`，感知包 YOLO 后端启动会报缺依赖；待用户或感知组确认安装方式，避免破坏本机 NumPy/ROS 环境。
+- 尚未实现 `ScenePerception/WorldState` 到 `PanPourPolicy` 的锅把/餐盘适配；待确认感知类别语义后继续。
+
+## 2026-08-13 pour_tip / 双端点接口检查
+
+- 感知组声称 `/perception/scene` 发布 `pour_tip` 并给出锅把两端点；检查后确认 topic 正确，但当前安装包和本机模型尚未实现该说法。
+- 当前模型类别没有 `pour_tip`；当前 `ObjectDetection.msg` 没有端点字段或显式 PCA 字段；当前 `dexbot_perception=1.0.9` 每个检测只发一个 `ObjectDetection`，位置来自 OBB 中心，姿态来自 OBB 首边角度。
+- 下一步先向感知组确认新模型、准确类别名、端点字段名和是否需要新版感知包；本轮不修改 Policy/消息/公共配置。
+
+## 2026-08-13 dexbot_perception 1.0.11 检查
+
+- 新版感知包已安装并验证：`ros-humble-dexbot-perception=1.0.11-0jammy`。
+- 新版提供 `boss_kitchen_scene2` 任务后处理，可输出 `pot_inner_handle` / `pot_inner_tip` / `pot_tip_target_16cm` / lid 轴线端点等点位；这比 1.0.9 更接近 PanPour 需求，但感知组口述的 `pour_tip` 实际应映射到 `pot_tip` 系列。
+- 当前主仓库 `perception_params.yaml` 未配置 `task_name`，所以即使装 1.0.11，默认仍不会启用该后处理。
+- 当前模型仍不含 `pot_handle/pot_tip/pot_lid`，需要感知组提供新模型；未修改公共配置。
+
+## 2026-08-13 等待新锅具模型
+
+- 已配置 `task_name: "boss_kitchen_scene2"`，感知包和配置侧准备完成。
+- 当前模型类别仍为切菜/碗类，无 `pot_handle/pot_tip/pot_lid`；用户向感知组索要新模型后，先验证类别，再继续感知链路闭环和 PanPour 适配。
+
+## 2026-08-14 新锅具模型放置完成
+
+- 新模型 `boss_kitchen_scene2_428_yolo26l_obb_best.pt` 已复制到 `local_models/yolo/yolo26l_obb.pt`，旧场景 1 模型保留为 `yolo26l_obb_scene1.pt`。
+- 新模型类别包含 `pot_lid/pot_handle/pot_tip/plate` 等，满足 `boss_kitchen_scene2` 后处理输入要求；模型仍为本地资源，不进入 Git。
+- 下一步：用真实锅把图像验证 YOLO 输出和后处理端点，再接入 PanPour。
+
+## 2026-08-14 真实锅照片离线验证结果
+
+- 用户提供的锅照片上，新模型只检出 `bowl=0.857`，未检出 `pot_handle/pot_tip/pot_lid/plate`；按当前 640x480 预缩放则 0 个检测。
+- 已绘制结果到 `a82af84ad66e978b78a4fed1b98297f4_detected.jpg`；需要感知组确认照片类别或提供更匹配模型训练分布的锅照片，同时复核 `model_input_width/height` 配置。
+
+## 2026-08-14 裁掉碗后的锅照片复测
+
+- 用户提供裁掉碗干扰的新图 `f1f62b75ce0b64413f80416ac2486cfe.jpg`，但新模型仍只检出 `bowl`，未检出 `pot_handle/pot_tip/pot_lid/plate`。
+- 当前图仍无法驱动 `boss_kitchen_scene2` 生成锅把端点；下一步需要感知组确认该照片在模型训练集中的类别，或提供能检出锅具的实际视角图片。
+
+## 2026-08-14 横锅照片检测成功
+
+- 用户提供横锅照片 `9b6c243eaa5676358279bccf2965552d.jpg`，模型能检出 `pot_handle/pot_tip`，方向为锅把朝左，符合实际场景。
+- 当前感知配置 `conf_threshold=0.30` 会漏掉 `pot_handle=0.2386`；需要降到约 `0.20` 才能同时保留 handle/tip。
+- 已绘制检测图和局部放大图；待用户确认后修改阈值，并继续验证 scene2 后处理与 PanPour 消费链路。
+
+## 2026-08-14 /perception/scene 字段检查
+
+- 确认 `ScenePerception` 与 `ObjectDetection` 字段；没有独立 PCA/端点字段，锅把按 `class_name` 区分，位置在 `pose.position`。
+- scene2 后处理可输出 `pot_handle_center/pot_inner_handle/pot_inner_tip` 等对象，但当前 Planner 的 `WorldObject` 只保留位置/朝向，未保留 `obb/confidence/size`。
+- 下一步：确认阈值和感知输出后，补 PanPour 感知适配，把 scene2 对象转换为 `PanPourPolicy.update_handle_detection()` 所需的中心点与 PCA 轴。
+
+## 2026-08-14 PanPour 视觉接入代码完成
+
+- 已新增 PanPour 感知适配层并接入 `TaskPlannerNode._on_scene`；`pot_handle_center + pot_inner_handle` 有效时自动更新 Policy，否则保持等待。
+- `PanPourPolicy.clear()` 已改为清空锅把/餐盘观测，避免新任务使用旧视觉数据。
+- 验证：定向 25 passed、compileall、colcon build、flake8（新文件）、diff check 通过。
+- 阻塞/未完成：中心标定文件尚未配置；`conf_threshold=0.30` 下当前横锅图可能不发布 `pot_handle`；真机视觉闭环仍未验证。
+
+## 2026-08-14 餐盘视觉接入待办（未改代码）
+
+- 已记录后续需求：`_on_scene` 目前只接入锅把视觉，底盘移动后准备倒菜阶段还需要从 `/perception/scene` 更新餐盘中心。
+- 现有 `PanPourPolicy.update_plate_center()` 可复用；后续只需新增 plate 感知适配和接线，并确认类别名、置信度与新鲜度规则。
+
+## 2026-08-14 动作链调整待办（未改代码）
+
+- 倾倒回放后新增“回安全/准备倾倒位”动作，再等待底盘返回，防止底盘旋转时锅碰撞。
+- `put_fixed` 改为增量轨迹回放，轨迹后续重新录制；当前实现是 `MOVE_JOINTS`，不能直接复用倾倒 delta 轨迹。
+- 待确认安全位参数定义；后续同步修改主仓库 Policy 和执行仓库 PanPourSkill。
+
+## 2026-08-14 动作链调整确认
+
+- 倾倒后回安全位复用现有 `pour_ready_tcp_pose_in_center`，使用普通笛卡尔移动，不新增独立点位/逻辑。
+- 调整后整数顺序：8 `POUR_DELTA_REPLAY`、9 回到 `pour_ready_tcp_pose_in_center`、10 `WAITING_FOR_BASE_RETURN`、11 `PUT_FIXED`；`put_fixed` 增量回放待办保留。
+
+## 2026-08-14 动作链调整落地 + put_fixed 增量回放
+
+- `PanPourPolicy` 新增 `RETURN_TO_POUR_READY` 阶段，倾倒回放完成后先笛卡尔回到准备倾倒位，再等待底盘返回。
+- `PanPourSkill.put_fixed` 改为 `LOCAL_DELTA_FLANGE_REPLAY`，使用独立 `put_delta.json` 占位轨迹；后续需录制真实放锅增量轨迹替换。
+- 验证：主/执行仓库定向 25+25 passed，`compileall`、对应包 `colcon build`、改动文件 flake8、`git diff --check` 通过；全量 pytest 仅既有 flake8/pep257 存量失败。
+- 状态：`implemented-unverified`，未接真机，未提交/推送。
