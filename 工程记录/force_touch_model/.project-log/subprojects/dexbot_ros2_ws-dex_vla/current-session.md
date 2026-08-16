@@ -114,3 +114,25 @@
 
 - 已新增 `docs/GR00T_SHADOW_ROLLOUT.md`，包含模型服务、ROS VLA 启动、shadow goal 发送、通过标准和禁止项。
 - 手册路径：`/home/tbl/Project/force_touch_model/dexbot_ros2_ws-dex_vla/docs/GR00T_SHADOW_ROLLOUT.md`。
+
+### 2026-08-13 GR00T 远端推理配置与 dex_vla 推送
+
+- 用户要求先配置 GR00T 为远端模型推理，再提交并推送 dex_vla，供连接机器人的远端电脑拉取启动。
+- 远端检查：fetch 后 `origin/dex_vla` 仍与本地 HEAD 同为 `c35ca8a`，没有需要先同步的新提交。
+- 配置改动：`policy_templates.yaml` 中 `groot_qingdao_pouring_014051_local` 改为 `host=192.168.97.184:18083`、`artifact_residency=service_host`；未修改 worker preset 路径、artifact 路径或公共模型配置。
+- 验证：GR00T 相关聚焦测试 `60 passed, 2 deselected`；实际 `load_runtime_bundle()` 确认 `policy_artifact=None`、worker `--service-host 192.168.97.184`，即远端模式下不强制读本地权重。
+- 已提交 `b067c56`（“接入GR00T N1.7独立backend并配置远端推理服务”）并推送 `c35ca8a..b067c56` 到 `origin/dex_vla`。
+- 远端待处理：拉取后按远端机器实际路径修改 `groot_policy_service` worker preset；模型服务端需以 `0.0.0.0:18083` 启动并确认机器人电脑可访问该地址。
+
+### 2026-08-13 新增 GR00T 远端部署与测试手册
+
+- 已新增 `docs/GR00T_REMOTE_DEPLOYMENT.md`，供远端机器人电脑拉取后直接按文档操作。
+- 手册覆盖：拉取分支、修改 `groot_policy_service` 本地路径、检查远端模型服务、colcon build、shadow 启动、发送 goal、通过标准和禁止项。
+- 已提交 `feee740` 并推送 `b067c56..feee740` 到 `origin/dex_vla`。
+
+### 2026-08-13 GR00T 模型服务地址改为 192.168.20.147
+
+- 用户指定模型端固定使用 `192.168.20.147`。
+- 已更新 `policy_templates.yaml` 的 groot `host`，并同步远端部署手册和 shadow 手册的服务端绑定说明。
+- 验证：`load_runtime_bundle()` 输出 `ws://192.168.20.147:18083`，worker `--service-host=192.168.20.147`。
+- 已提交 `06edc9d` 并推送 `feee740..06edc9d` 到 `origin/dex_vla`。

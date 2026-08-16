@@ -765,3 +765,12 @@ cd /home/tbl/Project/force_touch_model/annotation_workbench
 - 已把合并后的 `/home/tbl/Project/force_touch_model/.project-log` 归档到 `/home/tbl/Project/My_knowledge_base/工程记录/force_touch_model/.project-log`。
 - 归档包含根 Project Log 和 `subprojects/dexbot_ros2_ws-dex_vla/` 完整 DexBot 历史记录。
 - 已只提交 `force_touch_model` 对应目录并推送，未用 `git add -A` 带入知识库中其他未跟踪文件。
+
+# 2026-08-13 GR00T 远端部署准备
+
+- DexBot 子工程已把 GR00T 模型服务切为远端推理模式，并提交推送 `dex_vla` 分支：`c35ca8a..b067c56`。
+- 关键配置：`groot_qingdao_pouring_014051_local` 使用 `192.168.97.184:18083`、`artifact_residency=service_host`。
+- 验证：GR00T 聚焦测试 `60 passed, 2 deselected`；runtime bundle 在 service_host 模式下不读本地权重。
+- 详细记录见 `.project-log/subprojects/dexbot_ros2_ws-dex_vla/current-session.md`。
+- 已新增并推送远端部署手册 `docs/GR00T_REMOTE_DEPLOYMENT.md`，提交 `feee740`。
+- 按用户指定将 GR00T 模型服务地址改为 `192.168.20.147`，已推送提交 `06edc9d`。
