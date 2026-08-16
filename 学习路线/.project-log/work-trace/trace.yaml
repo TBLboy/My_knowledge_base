@@ -1,0 +1,17 @@
+version: "0.2"
+entries:
+  - id: TRACE-001
+    task_id: TASK-002
+    context: 项目日志仍停留在 Day 1 起点，但学习记录中已存在 Day 1-4 练习代码与部分实验结果。
+    hypothesis: 将复核结果登记为执行证据后，GOAL-001 的当前进度可以被继续推进。
+    decision_ref: null
+    action: 补写 Day 2/Day 4 实验结果，复跑七个练习，登记 EV-004/EV-005，并生成 Day 5 作业。
+    expected_result: 项目日志与真实学习记录一致，下一步可执行 Day 5。
+    observation: 七个练习全部通过；Day 5 脚本也复现成功。
+    actual_result: Day 1-4 成为可复核执行证据，Day 5 代码已生成并验证。
+    delta: 从“未开始 Day 1”推进到“Day 1-4 已验证、Day 5 待用户完成”。
+    lesson: 学习记录与项目日志必须同步登记，避免日志失去追踪价值。
+    evidence:
+      - EV-004
+      - EV-005
+    knowledge_candidate: false

@@ -1,0 +1,75 @@
+version: "0.4"
+status: passed
+functional_business_logic:
+  actors:
+    - 学习者
+    - 学习陪练代理
+  scenarios:
+    - 学习者每天约 90 分钟按首月逐日作业执行，并记录理解、代码、实验结果和错误。
+    - 学习者在 Linux RTX 4090 与 Windows RTX 4060 8GB 之间切换，日常实验不能因设备缺失阻塞。
+    - 陪练代理复核学习记录、登记执行证据并推进下一天任务。
+  rules:
+    - 路线完成标准是形成代码、实验、观察和验收证据，不能以看完课程代替。
+    - 日常必做实验以 Windows RTX 4060 8GB 为资源上限。
+    - 未发生的学习不得伪造为已完成记录。
+    - 每周至少执行 6 个学习日，第 7 天可补欠、复盘或休息。
+  state_transitions:
+    - 学习记录待执行 -> 已记录 -> 已复核 -> 已登记执行证据 -> 进入下一学习日
+  exceptions:
+    - 4090 专属实验可以延后，不阻塞主线。
+    - 某天未完成时不熬夜补齐，先完成最小闭环再继续。
+  boundaries:
+    - 范围：PyTorch 训练闭环、视觉、Transformer、强化学习、模仿学习、机器人策略与部署。
+    - 范围外：大型基础模型从零预训练、一次性静态规划全部日程。
+technical_business_logic:
+  current_implementation_facts:
+    - 路线以 Markdown 文档和 Python 练习脚本承载，学习记录按日期目录存放。
+    - 当前项目日志位于 学习路线/.project-log，以 学习路线 为 Loop 根目录。
+    - Day 1-4 已有七个练习脚本，Day 5 作业已生成并复跑。
+  interface_contracts:
+    - 每日记录模板包含闭卷回忆、核心理解、代码实验、错误记录、结论与下一步。
+    - 练习脚本使用 pathlib 相对路径，不硬编码用户目录。
+  data_and_state_rules:
+    - 学习记录/YYYY.MM.DD/exercises 存放代码，results 存放小型结果。
+    - 模型权重、数据集、缓存和大体积输出不提交 Git。
+  consistency_and_concurrency:
+    - 项目日志与学习记录需要同步更新；证据覆盖文件变化后需失效或复核。
+    - Loop 状态由 .project-log/loop/active-run.yaml 和事件流维护。
+  external_constraints:
+    - Linux RTX 4090 24GB 与 Windows RTX 4060 8GB 双设备约束。
+    - 每天约 1.5 小时；网络访问可能不稳定，需要离线替代策略。
+  compatibility_constraints:
+    - 日常作业应支持 CPU smoke test，代码应在 8GB 显存设备上可运行。
+alignment:
+  confirmed_matches:
+    - id: CLF-001
+      type: confirmed-match
+      summary: 需求基线、28 周路线和首月 24 天作业与用户确认的时间、目标和设备约束一致。
+      status: resolved
+      authority: B
+      evidence:
+        - REQ-001
+        - EV-001
+        - EV-002
+    - id: CLF-002
+      type: confirmed-match
+      summary: Day 1-4 学习记录与项目日志登记为真实执行证据，代码复跑结果可复核。
+      status: resolved
+      authority: B
+      evidence:
+        - EV-004
+  conflicts: []
+  unknowns:
+    - id: CLF-003
+      type: unknown
+      summary: 8/1-8/11 没有路线每日学习记录，缺失原因未记录。
+      status: open
+      authority: B
+      evidence: []
+  decisions_required:
+    - DEC-002
+gate:
+  status: passed
+  blocking_unknowns: []
+  notes: 基于已确认需求、路线文档、学习记录和验证结果完成澄清；缺失日期作为已知未知，不阻塞从 Day 5 继续。
+updated_at: "2026-08-12"

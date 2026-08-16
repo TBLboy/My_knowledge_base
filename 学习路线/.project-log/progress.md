@@ -10,4 +10,14 @@
 - 校验通过：Project Log schema、Markdown 本地链接、24 天/28 周结构和 Git 空白检查。
 - 当前状态：路线制定完成，长期 Goal 保持 active，下一步执行 Day 1。
 
-尚未开始。以 `.project-log/tasks/task-list.yaml` 为任务事实源，以本文件作为面向人的阶段摘要。
+## 2026-08-12
+
+- 复核并补全 7/31 Day 1-4 学习记录。
+- Day 1-4 的七个练习在 Linux RTX 4090 上复跑通过。
+- 登记 EV-004/EV-005 执行证据，更新 GOAL-001 required_evidence。
+- 生成 Day 5 nn.Module/optimizer 作业代码并验证。
+- 已知缺口：8/1-8/11 无路线每日记录；Day 3 图表未生成；Windows 4060 未实机验证。
+
+当前状态：Day 1-4 已形成可复核证据；Day 5 等待用户完成个人学习闭环。
+
+以 `.project-log/tasks/task-list.yaml` 为任务事实源，以本文件作为面向人的阶段摘要。

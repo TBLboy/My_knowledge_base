@@ -58,3 +58,170 @@ decisions:
   supersedes: []
   created_at: '2026-07-27T11:48:34+08:00'
   updated_at: '2026-07-27T11:54:48+08:00'
+
+- id: DEC-002
+  title: MCP/hooks/插件失效根因确认为 cc-switch 整写 config.toml，防复发方案待用户选择
+  category: tooling
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-005
+  related_business_logic: []
+  context: VibeCoding 安装后 MCP/hooks/插件多次失效，每次重装后短暂恢复。备份与 cc-switch 日志时间线比对显示，cc-switch 在启动/异常恢复/热切换时整写 C:\Users\12187\.codex\config.toml，仅保留其管理的模型字段，删除 Vibe 受管的 hooks/mcp_servers/marketplaces/plugins 段。
+  hypothesis: 失效由第三方配置接管工具 cc-switch 在每次“重新接管 Codex Live 配置”时覆盖 config.toml 造成；安装器只在运行时恢复，无守护机制。
+  options:
+  - name: 关闭 cc-switch 对 Codex 的接管与自动启动
+    benefits:
+    - 从源头消除覆盖源，最可靠
+    costs:
+    - 需要手动切换模型或改用其他方式
+    risks:
+    - 用户已依赖 cc-switch 的模型热切换体验
+  - name: 安装器增加配置守护/自愈校验
+    benefits:
+    - 即使外部工具覆盖也能自动恢复
+    costs:
+    - 属于框架功能改动，需要实现与测试
+    risks:
+    - 与 cc-switch 写入竞争，可能产生配置抖动
+  - name: cc-switch 支持合并保留其他配置段时开启
+    benefits:
+    - 双方配置可共存
+    costs:
+    - 依赖第三方功能是否支持
+    risks:
+    - 需验证每次接管后 Vibe 段仍完整
+  decision: 根因确认（cc-switch 整写覆盖）。防复发采用“方案 C（cc-switch 通用配置托管 Vibe 块）+ 安装器兼容增强”组合：用户在 cc-switch 通用配置中维护带标记的完整 Vibe 块，安装器修复 cc-switch 重写格式（容忍缺失 END、剥离时保留混入的 model_providers/mcp_servers）。
+  reason_summary:
+  - 7/28 20:37、7/29 20:55、8/1 08:33 的 config.toml 被裁为 394 字节，与 cc-switch 日志“重新接管”时间戳逐一吻合
+  - 394 字节配置含 cc-switch 专属字段 model_catalog_json 与 experimental_bearer_token = "PROXY_MANAGED"
+  - cc-switch 数据库 proxy_live_backup 中 codex 的 original_config 仅含模型字段，证明其“备份”不包含 Vibe 受管段
+  - 安装器 backup() 在写入前执行，其备份反映的正是被 cc-switch 裁后的状态
+  conditions:
+  - 用户确认采用哪个防复发方案后再实施
+  - 任何方案不得静默丢失用户模型供应商配置
+  action: 记录根因分析到项目日志；向用户输出结论与防复发选项；待用户选择后实施。
+  expected_result: 明确 MCP/hooks/插件失效的根因与可选防复发路径；热切换后 Vibe 配置保留且安装器 update 不再报错或误删用户配置。
+  reversal_plan: 不涉及代码改动，无需回滚。
+  observation: 当前 config.toml 已由安装器恢复为 1847 字节，hooks/MCP/marketplace/plugins 段完整，模型配置保留。
+  actual_result: 根因链闭环：cc-switch 每次启动/异常恢复/热切换整写 config.toml；方案 C 实测透传完整 TOML 段（热切换后 hooks/marketplace/plugins 保留）；安装器增强后 update 在真实 cc-switch 重写配置上成功修复（model_providers/mcp_servers 保留、END 恢复、marketplace/plugin 重建），codex mcp list 全 enabled，vibe-toolbelt 0.4.1 正常。
+  outcome_status: successful
+  lesson: 全局配置存在多个写入方时，应把“外部写入方审计”纳入配置失效排查第一步；恢复机制需要能安全修复第三方工具的整写结果（容忍其格式变化、保留其混入段），而不只是安装时一次性写入。
+  evidence:
+  - ROOTCAUSE-001
+  - REPRO-001
+  - COMMONCFG-001
+  - COMPATFIX-001
+  supersedes: []
+  created_at: '2026-08-01T15:30:00+08:00'
+  updated_at: '2026-08-01T15:30:00+08:00'
+
+- id: DEC-003
+  title: cc-switch 通用配置必须按宿主机动态生成
+  category: tooling
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks: []
+  related_business_logic: []
+  context: cc-switch 通用配置模板曾把 Windows 的 Conda、用户目录和源码仓库路径写死，用户当前实际运行环境为 Ubuntu，直接粘贴会导致 Hook 与本地 marketplace 无法加载。
+  hypothesis: 将宿主机相关绝对路径写死在通用配置模板中，会导致跨机器复制后 Hook 与本地 marketplace 无法加载；按目标宿主机动态生成可消除该漂移。
+  options:
+  - name: 继续维护固定模板
+    benefits:
+    - 修改成本低
+    costs:
+    - 更换宿主机时需要手工修改路径
+    risks:
+    - 容易因路径漂移导致配置失效
+  - name: 按宿主机动态生成（选择）
+    benefits:
+    - 从当前宿主机事实来源生成可直接使用的配置
+    costs:
+    - 更换宿主机时需要重新运行生成脚本
+    risks:
+    - 生成脚本必须正确解析目标宿主机环境
+
+  decision: 新增生成脚本，从 CODEX_HOME、VIBE_PYTHON 或 CODEX_HOME/vibe-python 以及当前源码根目录解析绝对路径；模板文件只保存当前宿主生成结果，并明确禁止跨机器直接复制。
+  reason_summary:
+  - 安装器已有同源的宿主路径解析逻辑，生成脚本应复用同一事实来源
+  - cc-switch 配置中的 Hook 和本地 marketplace 都依赖绝对路径
+  - Linux 与 Windows 的 command/commandWindows 字段需要按宿主机分别生成
+  conditions:
+  - 目标宿主机必须存在 CODEX_HOME/vibe-python，或显式提供 VIBE_PYTHON
+  - 目标宿主机必须从实际源码根目录运行生成脚本
+  action: 新增 scripts/generate_cc_switch_config.py；更新 cc-switch-common-config-codex.txt；补充项目日志和宿主路径验证。
+  expected_result: 当前宿主机可直接粘贴生成结果；更换宿主机时重新运行脚本即可，不需要手工修改路径。
+  reversal_plan: 删除生成脚本并恢复上一版本模板；不影响 Codex 当前运行配置。
+  observation: Ubuntu 当前生成结果使用 /home/tbl/miniforge3/envs/vibe-coding/bin/python3.11、/home/tbl/.codex/vibe-workflow/hooks 和 /home/tbl/Project/vibe-coding；TOML、路径和回归检查均通过。
+  actual_result: implemented-unverified
+  outcome_status: successful
+  lesson: 机器相关的配置示例不能作为跨平台常量提交，应由安装器同源逻辑在目标宿主机生成并验证。
+  evidence:
+  - HOSTCFG-001
+  supersedes: []
+  created_at: '2026-08-03T10:20:00+08:00'
+  updated_at: '2026-08-03T10:20:00+08:00'
+- id: DEC-004
+  title: 项目初始化流程固化为 a-project-init skill
+  category: process
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-006
+  related_business_logic:
+  - BL-PROJECTINIT-001
+  - BL-PROJECTINIT-002
+  - BL-PROJECTINIT-003
+  - BL-PROJECTINIT-004
+  context: 项目初始化目前只创建 .project-log，AGENTS.md 依赖手工维护；需要将初始化流程统一并固化。
+  hypothesis: 将 .project-log 现有链路与 AGENTS.md 建立/安全注入包装为 a-project-init skill，通用规则模板资产化到 skill 内部，可安全幂等初始化项目。
+  options:
+  - name: 纯 prompt skill（不写脚本）
+    benefits:
+    - 实现成本最低
+    costs:
+    - 幂等注入依赖模型每次正确执行，不可测试
+    risks:
+    - 重复初始化可能叠加或破坏已有 AGENTS.md
+  - name: skill 内带确定性脚本（选择）
+    benefits:
+    - 幂等注入、标记检测可自动化测试
+    - 通用规则模板可随 skill 同步并保持唯一来源
+    costs:
+    - 需要维护一个脚本与模板
+    risks:
+    - 脚本路径需兼容源码与安装后两种布局
+  - name: 扩展 init_project.py 合并两条链路
+    benefits:
+    - 单一入口
+    costs:
+    - 违反用户明确要求：.project-log 现有链路不改动
+    risks:
+    - 改动既有稳定链路，回归风险高
+  decision: 新建 a-project-init skill，包含 SKILL.md、templates/general-rules.md 与 scripts/init_project_agents.py；脚本内部调用现有 init_project.py；AGENTS.md 用 VIBE-PROJECT-GENERAL 标记幂等注入；路由加入 prompts/vibe-global-agent.md。
+  reason_summary:
+  - 不修改 .project-log 现有创建链路
+  - 确定性脚本保证注入幂等并可测试
+  - 通用规则模板资产化，避免规则在项目间复制失真
+  - 已有 AGENTS.md 保留原内容，降低覆盖风险
+  conditions:
+  - 已有 AGENTS.md 原内容一字不动保留，仅最前注入通用区块
+  - 重复初始化幂等：已有 BEGIN 标记则跳过
+  - 只维护项目根目录 AGENTS.md，不处理子文件夹
+  action: 创建 skills/a-project-init（SKILL.md、templates/general-rules.md、scripts/init_project_agents.py）、tests/test_project_init.py，更新 prompts/vibe-global-agent.md 路由与 .project-log 记录。
+  expected_result: 用户说“初始化项目”时，.project-log 与 AGENTS.md 一并就绪；已有 AGENTS.md 安全注入不覆盖。
+  reversal_plan: 删除 skills/a-project-init 与路由条目，回滚 .project-log 相关记录；不影响 .project-log 现有链路。
+  observation: skill、模板、脚本、测试与路由已创建；test_project_init.py 6 项单测通过，validate_package 通过，CLI 冒烟（创建 + 幂等重跑）通过；validate_project 仅剩 4 个历史存量问题。
+  actual_result: implemented and verified in source repo
+  outcome_status: successful
+  lesson: 需要幂等写文件的初始化流程应配套确定性脚本，避免依赖模型每次手工执行。
+  evidence:
+  - UNIT-PI-001
+  - SMOKE-PI-001
+  - VALID-PI-001
+  supersedes: []
+  created_at: '2026-08-15T10:20:00+08:00'
+  updated_at: '2026-08-15T10:40:00+08:00'

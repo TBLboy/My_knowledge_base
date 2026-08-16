@@ -1,0 +1,188 @@
+version: "0.2"
+active_goal: GOAL-001
+tasks:
+  - id: TASK-001
+    title: 制定机器人学习系统总路线与首月作业
+    kind: milestone
+    parent_id: null
+    phase: verification
+    goal: 形成可在双设备执行的 28 周路线和首月逐日任务。
+    status: done
+    priority: high
+    risk: medium
+    authority: B
+    owner: agent
+    tags:
+      - learning-roadmap
+      - embodied-ai
+    related_business_logic: []
+    acceptance_refs:
+      - REQ-001
+    related_decisions:
+      - DEC-001
+    depends_on: []
+    blocked_by: []
+    required_skills:
+      - a-deep-research
+      - a-project-log
+    spec_ref: null
+    inputs:
+      - 现有知识库学习路线、学习记录和工程经历
+      - 用户确认的时间、目标、基础和双设备配置
+    outputs:
+      - 机器人学习系统路线/
+    plan:
+      - 盘点已有知识与能力缺口
+      - 筛选主教材和开源资源
+      - 设计 28 周依赖路线与阶段验收
+      - 细化首月 24 个学习日
+      - 校验文档与链接
+    done_when:
+      - 总路线覆盖从训练基础到机器人策略与部署
+      - 首月每天具有材料、代码任务和完成条件
+      - 明确支持 Linux 4090 与 Windows 4060 8GB
+      - 项目日志和文档校验通过
+    verification:
+      status: passed
+      commands:
+        - python validate_project.py --root .
+        - rg -c '^### Day [0-9]+' 机器人学习系统路线/03-第一个月每日作业.md
+        - git diff --check
+      evidence:
+        - EV-001
+        - EV-002
+        - EV-003
+      limitations:
+        - Windows RTX 4060 环境尚待首次实机学习时验证。
+    result:
+      summary: 28 周路线、首月 24 天作业、双设备约束、资料索引和验收模板已写入并通过结构与项目日志校验。
+      changed_files:
+        - 机器人学习系统路线/README.md
+        - 机器人学习系统路线/00-能力地图.md
+        - 机器人学习系统路线/01-二十八周总路线.md
+        - 机器人学习系统路线/02-学习资料索引.md
+        - 机器人学习系统路线/03-第一个月每日作业.md
+        - 机器人学习系统路线/04-阶段验收标准.md
+      deviations: []
+      follow_ups:
+        - 第一个月验收后滚动生成第二个月逐日任务
+    created_at: "2026-07-31"
+    updated_at: "2026-07-31"
+  - id: TASK-002
+    title: 复核并补全第一个月 Day 1-4 学习记录与执行证据
+    kind: repair
+    parent_id: null
+    phase: verification
+    goal: 把已完成的 Day 1-4 练习与代码核验结果登记为 GOAL-001 执行证据。
+    status: done
+    priority: high
+    risk: low
+    authority: B
+    owner: agent
+    tags:
+      - learning-record
+      - pytorch
+    related_business_logic: []
+    acceptance_refs:
+      - REQ-001
+    related_decisions: []
+    depends_on:
+      - TASK-001
+    blocked_by: []
+    required_skills: []
+    spec_ref: null
+    inputs:
+      - ../学习记录/2026.07.31/学习记录.md
+      - ../学习记录/2026.07.31/exercises/
+    outputs:
+      - ../学习记录/2026.07.31/学习记录.md
+      - .project-log/verification/evidence.yaml
+      - .project-log/loop/evidence-index.yaml
+    plan:
+      - 复核 Day 1-4 练习代码
+      - 补写 Day 2 与 Day 4 缺失实验结果
+      - 登记为 GOAL-001 执行证据
+    done_when:
+      - Day 2 和 Day 4 实验字段有可复现结果
+      - Day 1-4 证据写入 verification/evidence.yaml 与 evidence-index
+    verification:
+      status: passed
+      commands:
+        - python3 ../学习记录/2026.07.31/exercises/day01_tensors.py
+        - python3 ../学习记录/2026.07.31/exercises/day02_tensor_ops.py
+        - python3 ../学习记录/2026.07.31/exercises/day02_linear.py
+        - python3 ../学习记录/2026.07.31/exercises/day03_linear_regression_numpy.py
+        - python3 ../学习记录/2026.07.31/exercises/day03_linear_regression_matrix.py
+        - python3 ../学习记录/2026.07.31/exercises/day04_autograd.py
+        - python3 ../学习记录/2026.07.31/exercises/day04_manual_update.py
+      evidence:
+        - EV-004
+      limitations:
+        - Windows RTX 4060 尚未实机复核。
+        - Day 3 的 loss 曲线与拟合直线图尚未生成。
+    result:
+      summary: Day 1-4 的七个练习在 Linux RTX 4090 上复跑通过，缺失实验字段已补写，并登记为执行证据。
+      changed_files:
+        - ../学习记录/2026.07.31/学习记录.md
+        - .project-log/verification/evidence.yaml
+        - .project-log/loop/evidence-index.yaml
+      deviations:
+        - 7/31 用一个日期目录合并记录 Day 1-4，与“每天一个目录”的模板不同。
+      follow_ups:
+        - 继续 Day 5。
+    created_at: "2026-08-12"
+    updated_at: "2026-08-12"
+  - id: TASK-003
+    title: 执行 Day 5 nn.Module 与 optimizer
+    kind: task
+    parent_id: null
+    phase: implementation
+    goal: 使用 nn.Linear、SGD、state_dict 完成可保存加载的线性回归最小闭环。
+    status: implemented-unverified
+    priority: high
+    risk: low
+    authority: B
+    owner: shared
+    tags:
+      - learning-record
+      - pytorch
+    related_business_logic: []
+    acceptance_refs:
+      - REQ-001
+    related_decisions: []
+    depends_on:
+      - TASK-002
+    blocked_by: []
+    required_skills: []
+    spec_ref: null
+    inputs:
+      - 机器人学习系统路线/03-第一个月每日作业.md
+    outputs:
+      - ../学习记录/2026.08.12/学习记录.md
+      - ../学习记录/2026.08.12/exercises/day05_module_optimizer.py
+    plan:
+      - 用 nn.Linear 与 SGD 重写 Day 3 线性回归
+      - 打印 model.parameters()
+      - 保存并加载 state_dict
+      - 验证加载后预测一致
+    done_when:
+      - Day 5 脚本可运行且 state_dict 加载后预测一致
+      - 学习记录包含闭卷、核心理解、实验结果、错误与下一步
+    verification:
+      status: partial
+      commands:
+        - python3 ../学习记录/2026.08.12/exercises/day05_module_optimizer.py
+      evidence:
+        - EV-005
+      limitations:
+        - 作业代码已由 agent 验证，用户的闭卷回忆与核心理解尚未填写。
+    result:
+      summary: Day 5 作业代码已生成并复现通过；记录模板已建立，等待用户完成个人理解与错误记录。
+      changed_files:
+        - ../学习记录/2026.08.12/学习记录.md
+        - ../学习记录/2026.08.12/exercises/day05_module_optimizer.py
+      deviations: []
+      follow_ups:
+        - 用户填写 Day 5 闭卷、核心理解、错误记录后进入 Day 6。
+    created_at: "2026-08-12"
+    updated_at: "2026-08-12"

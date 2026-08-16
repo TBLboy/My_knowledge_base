@@ -48,3 +48,52 @@ decisions:
     supersedes: []
     created_at: "2026-07-31"
     updated_at: "2026-07-31"
+  - id: DEC-002
+    title: 补录 Day 1-4 真实执行证据并继续 Day 5
+    category: process
+    status: active
+    authority: B
+    user_approval: approved
+    related_tasks:
+      - TASK-002
+      - TASK-003
+    related_business_logic: []
+    context: 7/31 已存在 Day 1-4 练习，但项目日志仍停留在 Day 1 起点；用户确认继续推进。
+    hypothesis: 补齐复核结果并登记执行证据后，学习路线可以从当前真实进度继续。
+    options:
+      - name: 补录真实执行证据并继续 Day 5
+        benefits:
+          - 不伪造缺失日期记录
+          - 保持路线从实际掌握处继续
+        costs:
+          - 需要本人补齐 Day 5 以上的个人理解与错误记录
+        risks:
+          - 中间缺失日期留下进度缺口
+      - name: 退回 Day 1 重新执行
+        benefits:
+          - 学习链连续
+        costs:
+          - 重复已完成且可复核的练习
+        risks:
+          - 降低执行动力并浪费已有证据
+    decision: 补录 Day 1-4 已完成的真实证据，不伪造 8/1-8/11 记录，从 Day 5 继续。
+    reason_summary:
+      - 用户确认继续。
+      - 学习代码可以复跑，实验结果可以补记。
+      - 缺失日期没有真实学习行为，不能凭空补写。
+    conditions:
+      - 未发生的学习不生成伪造记录。
+      - 后续按实际学习日期逐日记录。
+    action: 更新学习记录、任务列表、执行证据和当前会话。
+    expected_result: 项目日志反映 Day 1-4 已验证、Day 5 待本人完成。
+    reversal_plan: 若用户认为应从 Day 1 重学，可暂停 Day 5 并重新调整任务。
+    observation: null
+    actual_result: null
+    outcome_status: not-observed
+    lesson: null
+    evidence:
+      - EV-004
+      - EV-005
+    supersedes: []
+    created_at: "2026-08-12"
+    updated_at: "2026-08-12"

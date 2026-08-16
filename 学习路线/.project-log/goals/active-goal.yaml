@@ -39,8 +39,10 @@ goal:
         - EV-002
     - kind: execution
       subject: 各阶段实际学习记录、代码、实验与验收
-      evidence_refs: []
+      evidence_refs:
+        - EV-004
+        - EV-005
   risk_level: normal
   status: active
   created_at: "2026-07-31"
-  updated_at: "2026-07-31"
+  updated_at: "2026-08-12"
