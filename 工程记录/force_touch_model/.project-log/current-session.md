@@ -774,3 +774,9 @@ cd /home/tbl/Project/force_touch_model/annotation_workbench
 - 详细记录见 `.project-log/subprojects/dexbot_ros2_ws-dex_vla/current-session.md`。
 - 已新增并推送远端部署手册 `docs/GR00T_REMOTE_DEPLOYMENT.md`，提交 `feee740`。
 - 按用户指定将 GR00T 模型服务地址改为 `192.168.20.147`，已推送提交 `06edc9d`。
+
+# 2026-08-16 工程归档
+
+- 用户要求归档 `force_touch_model` 工程。
+- 已执行 `a-project-log-archive`，将 `.project-log` 同步到 `/home/tbl/Project/My_knowledge_base/工程记录/force_touch_model/.project-log`。
+- 首次归档提交 `3a5b2b0` 已推送至知识库 `work_record` 分支；本次补记归档留痕后再次同步。
