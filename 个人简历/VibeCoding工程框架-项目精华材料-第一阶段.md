@@ -10,6 +10,10 @@
   - `工程记录/人物画像/.project-log/business-logic/main.md`
   - `工程记录/人物画像/.project-log/business-logic/constraints.md`
 
+## 0. 作品仓库
+
+- GitHub：https://github.com/TBLboy/vibe-coding
+
 ## 1. 项目定位
 
 将个人在机器人、数据平台、模型训练和软件开发中的实践经验，凝练为一套可运行、可恢复、可验证的 AI 辅助工程工作框架。

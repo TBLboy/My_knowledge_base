@@ -128,3 +128,23 @@ evidence:
   recorded_at: '2026-08-12T06:23:29Z'
   invalidated_at: null
   invalidation_reason: null
+- id: EV-008
+  kind: interview-prep
+  subject: 面试风险与源码答案（切豆腐/老板/数据平台/GR00T/Vibe/其他仓库）
+  status: valid
+  command: loopctl validate; git diff --check
+  result_ref: .project-log/docs/面试风险与源码答案-2026-08-17.md
+  covers:
+    files:
+    - .project-log/docs/面试风险与源码答案-2026-08-17.md
+    requirements: []
+    tasks:
+    - TASK-006
+  version_binding:
+    git_commit: c9b02500b24b83814f8514e122dae6f900ae9d76
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      .project-log/docs/面试风险与源码答案-2026-08-17.md: b493593dd1878334e65b25fcea886b8a7898934c2b330eddcacb142b78026861
+  recorded_at: '2026-08-17T06:53:00Z'
+  invalidated_at: null
+  invalidation_reason: null

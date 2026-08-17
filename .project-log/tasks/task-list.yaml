@@ -286,16 +286,88 @@ tasks:
       - 草稿经过至少一轮用户讨论与优化
       - 最终条目可直接写入简历且能经受面试追问
     verification:
-      status: not-run
-      commands: []
-      evidence: []
+      status: partial
+      commands:
+        - loopctl.py --root /home/tbl/Project/My_knowledge_base --json validate
+        - git diff --check
+      evidence:
+        - EV-007
       limitations:
-        - 当前尚未开始信息提取，不能验证最终简历措辞与真实性边界。
+        - 项目事实、时间、贡献边界和主要量化指标已确认；正式投递版页数与是否保留 APP 仍待用户确认。
+        - 老板电器正式 V1 全链路尚未完成最终现场验证；GR00T 未见轨迹泛化与真机闭环尚未验证。
     result:
-      summary: 尚未开始信息提取，等待用户提供材料或发出开始指令。
-      changed_files: []
+      summary: 已完成第一轮事实提取、8 个项目精华材料、简历雏形、专业美化候选稿和正式投递压缩候选稿；当前等待最终页数/APP 取舍确认。
+      changed_files:
+        - .project-log/docs/工程经历事实提取-第一轮探索中间稿-2026-08-16.md
+        - 个人简历/项目经历精华材料索引-第一阶段.md
+        - 个人简历/简历雏形-第二阶段.md
+        - 个人简历/简历专业美化版-第三阶段候选稿.md
+        - 个人简历/简历投递版-第四阶段候选.md
+      deviations:
+        - 数据平台标注模块不进入简历；材料文件名已重命名。
+        - GUI Web 版本不进入简历。
+      follow_ups:
+        - 确认正式投递版页数与是否保留 APP。
+        - 按用户确认结果生成最终定稿。
+    created_at: "2026-08-16"
+    updated_at: "2026-08-17"  - id: TASK-006
+    title: 基于源码整理各项目面试风险问答
+    kind: task
+    parent_id: null
+    phase: business-clarification
+    goal: 针对切豆腐、老板电器、数据平台、GR00T、Vibe Coding 等项目，从 ~/Project 源码与工程记录整理面试追问问题及可辩护答案。
+    status: done
+    priority: high
+    risk: medium
+    authority: B
+    owner: agent
+    tags:
+      - interview-prep
+      - source-evidence
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions: []
+    depends_on:
+      - TASK-005
+    blocked_by: []
+    required_skills:
+      - a-project-log
+      - b-source-code-tutoring
+    spec_ref: null
+    inputs:
+      - ~/Project 下各项目源码与 .project-log
+      - 用户确认的 5 个面试追问风险
+    outputs:
+      - .project-log/docs/面试风险与源码答案-2026-08-17.md
+    plan:
+      - 阅读切豆腐视觉/TCP/IK/状态机/标定源码
+      - 阅读老板电器 Policy/Skill/标定/增量回放源码与工程记录
+      - 阅读数据平台扫描/队列/lease/QC/导出源码
+      - 阅读 GR00T 数据转换/训练/评估文档与源码
+      - 阅读 Vibe Coding runtime/Hooks/Skills 源码
+      - 汇总为源码支撑的面试问答文档
+    done_when:
+      - 5 个主要风险问题均有源码或工程记录支撑的答案
+      - 成功率等用户确认数字与源码边界明确区分
+      - 文档写入 .project-log 并通过 loopctl validate 与 git diff --check
+    verification:
+      status: passed
+      commands:
+        - loopctl.py --root /home/tbl/Project/My_knowledge_base --json validate
+        - git diff --check
+      evidence:
+        - EV-008
+      limitations:
+        - 切豆腐 90%+ 与老板电器 95%+ 为开发期实机验证口径，仓库无逐次测试日志。
+        - 数据平台 8 vs 58 active List 为不同时间点快照，需面试前按最新生产数据确认。
+        - GR00T 指标为训练集 open-loop，不构成闭环/泛化证明。
+    result:
+      summary: 已从源码/工程记录产出 344 行面试风险问答文档，覆盖切豆腐视觉与 IK 评分、老板 Policy/Skill/标定/增量回放、数据平台扫描幂等/lease/QC、GR00T 指标口径、Vibe Coding runtime 与真实案例，并给出面试前行动清单。
+      changed_files:
+        - .project-log/docs/面试风险与源码答案-2026-08-17.md
       deviations: []
       follow_ups:
-        - 用户提供具体工作经历材料后开始事实提取。
-    created_at: "2026-08-16"
-    updated_at: "2026-08-16"
+        - 用户补齐成功率测试小表与最新数据平台快照口径后可更新文档。
+        - 校园项目可按需要从 Transformer-Koopman 等仓库继续补充源码级问答。
+    created_at: "2026-08-17"
+    updated_at: "2026-08-17"

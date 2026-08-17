@@ -97,3 +97,59 @@ decisions:
     supersedes: []
     created_at: "2026-08-12"
     updated_at: "2026-08-12"
+
+  - id: DEC-003
+    title: 采用机器人控制与具身智能算法复合简历主线
+    category: product
+    status: active
+    authority: C
+    user_approval: approved
+    related_tasks:
+      - TASK-005
+    related_business_logic: []
+    context: 当前候选稿同时覆盖机器人控制、具身智能算法和机器人系统工程，需要确定主投递方向以控制项目排序与篇幅。
+    hypothesis: 以机器人控制与具身智能算法复合方向为主线，最能同时利用真实机器人闭环、模型训练评估和数据工程证据。
+    options:
+      - name: 机器人控制与具身智能算法复合方向
+        benefits:
+          - 同时覆盖真实机器人控制闭环和具身模型能力
+          - 切豆腐、炒菜机器人、GR00T、数据平台形成递进主线
+          - 可自然衍生机器人控制版和具身算法版备选简历
+        costs:
+          - 需要控制平台工程和应用开发内容的篇幅
+        risks:
+          - 若目标岗位极度偏单一算法或纯控制，需后续做定向压缩
+      - name: 纯机器人控制方向
+        benefits:
+          - 强化 ROS2、标定、IK、轨迹和真机联调
+        costs:
+          - GR00T 和数据闭环价值被压缩
+        risks:
+          - 具身智能岗位匹配度下降
+      - name: 纯具身智能算法方向
+        benefits:
+          - 强化 GR00T、LeRobot、数据和策略评估
+        costs:
+          - 真实机器人系统能力展示不足
+        risks:
+          - 可能弱化独立控制闭环证据
+    decision: 采用机器人控制与具身智能算法复合方向作为主投递主线，纯机器人控制、纯具身智能算法和机器人系统工程作为后续备选版本。
+    reason_summary:
+      - 用户明确同意推荐方向。
+      - 该主线覆盖当前最强的真实机器人、模型训练和数据工程证据。
+    conditions:
+      - 所有项目表达必须保留个人贡献边界，不把团队探索包装为独立交付。
+      - 备选版本从同一事实基线派生，不重复建立互相冲突的项目事实。
+    action: 以复合方向确定主项目排序，并按岗位需要派生备选版本。
+    expected_result: 先形成复合方向正式投递版，再可低成本压缩出控制、算法和系统工程版本。
+    reversal_plan: 若实际投递反馈显示岗位匹配不足，保留事实基线并调整项目顺序、技能权重和摘要。
+    observation: null
+    actual_result: null
+    outcome_status: not-observed
+    lesson: null
+    evidence:
+      - 个人简历/简历专业美化版-第三阶段候选稿.md
+      - 个人简历/项目经历精华材料索引-第一阶段.md
+    supersedes: []
+    created_at: "2026-08-17"
+    updated_at: "2026-08-17"
