@@ -439,3 +439,24 @@ evidence:
   limitations:
   - 成功证据为操作员现场确认，控制器逐窗口/姿态日志未全套归档。
   - 急停、取消、xCore/robot_driver 控制权竞争和重复任务恢复尚未系统化验收。
+- id: EVID-TASK-016-DELTA-HW-002-NEWROBOT-GEMINI2
+  task_id: TASK-016
+  business_logic:
+  - 新机器人（左 192.168.2.160 / 右 192.168.2.161）与 Gemini 2 相机下，teach_pan_pour_delta 全链路应正常注册并可被 full launch 执行
+  - 增量回放链路应沿用现有 driver/motion executor 架构，不新增 public 接口
+  acceptance_criteria:
+  - full launch 中 camera real device 启动，perception 能加载 YOLO 并订阅相机数据
+  - StartTask(teach_pan_pour_delta) 返回 accepted，最终 GetTaskStatus 为 success/task_completed
+  result: passed
+  level: 3
+  commands:
+  - "PYTHONPATH=/home/tbl/miniforge3/envs/robot/lib/python3.10/site-packages; source /home/tbl/camera_env/calibration_env.sh; source /home/tbl/Project/boss_electrics/robot_motion_executor/install/setup.bash; export PYTHONNOUSERSITE=1; PYTHONPATH=$PYTHONPATH:/home/tbl/.local/lib/python3.10/site-packages; ros2 launch dexbot_bringup dexrob_full.launch.py"
+  - "ros2 service call /task_planner/start_task dexbot_interfaces/srv/StartTask '{task_id: \"\", task_type: \"teach_pan_pour_delta\", target_class: \"\", scene_id: \"\", resume: false}'"
+  - ros2 service call /task_planner/get_status dexbot_interfaces/srv/GetTaskStatus '{}'
+  artifacts:
+  - kitchen_robot_home/src/dexbot_bringup/config/cameras/camera1_params.yaml
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour_delta/
+  limitations:
+  - 右手 CAN `can1` 未就绪，未覆盖双手/右臂验证。
+  - Gemini 2 的 depth preset 与当前驱动预设接口不匹配，仅记录非致命告警，未做深度算法验收。
+  - SafetyHeartbeat 失联为 full launch 当前 safety layer 注释配置下的预期现象，未作为本次任务验收项。

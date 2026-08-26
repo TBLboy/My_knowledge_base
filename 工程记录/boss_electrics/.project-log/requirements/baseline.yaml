@@ -2,7 +2,7 @@ version: '0.4'
 baselines:
 - id: REQ-001
   revision: 3
-  status: active
+  status: superseded
   goal: 完成老板电器炒菜机器人 3.3 倾倒入盘（大）的第一版可重复闭环，并为第二版右手锅铲辅助预留迭代入口
   actors:
   - 双臂移动机器人
@@ -66,3 +66,83 @@ baselines:
   - REQ-001 revision 1
   created_at: '2026-07-28'
   updated_at: '2026-07-28'
+- id: REQ-002
+  revision: 7
+  status: active
+  goal: 固化 Robam 新 PanPour 倾倒菜品子 Policy 的第一版业务逻辑：只编排现有 Pick/Pour/Place manipulation、增量轨迹回放和 MoveCartesian API，不开发 Motion Skill；底盘和正式工具坐标切换先保留接口占位
+  actors:
+  - TaskPlanner / FullPolicy
+  - PanPour 子 Policy
+  - MotionExecutor / manipulation Skill
+  - 左臂机器人
+  - 左臂 O6 灵巧手
+  - 视觉感知系统
+  - 底盘（未来接入，当前占位）
+  in_scope:
+  - 新建 `sub_policy_pan_pour.py`、`config/robam/sub_policy_pan_pour.yaml`，FullPolicy 键 `pan_pour`
+  - 子 Policy 开头保留“设定为我们的全 0 工具坐标系”接口占位，结尾保留“切换下一子 Policy 工具坐标系”注释占位
+  - 子 Policy 的 YAML 保存 pick/pour/place 三个 skill 动作模板，包括 `plan_type`、`arm_type`、`profile`、`mode`、`speed`、`accel`、`wait_time`、`hand_action_name` 和 `replay_file`
+  - 私有业务参数（工具坐标、抓取参数、倾倒参数和固定臂姿）按现有 `PlatePourPolicy` 模式放在 `sub_policy_pan_pour.py` 顶层常量
+  - 视觉锅把抓取点、餐盘/倾倒起点等动态点位由 Policy 运行时覆盖，不写死在 YAML
+  - 子 Policy 从 `ScenePerception.objects` 按 `class_name=plate_center` 读取餐盘中心，位置取 `pose.position`
+  - 预抓取点由视觉抓取点沿中心坐标系 Z 轴正方向、按顶层常量 `GRASP_APPROACH_DISTANCE_M` 外推，RPY 与抓取姿态一致
+  - 抬锅固定点位 `move_to_pick_retreat` 可写成 `mode: joints` + 7 个弧度关节角，走 `MOVE_JOINTS`；也可沿用现有 food 参考的 `linear_cartesian`
+  - 抬锅 `move_to_pick_retreat` 完成后直接进入底盘占位，不执行 `move_to_pick_end`，不保留旧 teach 的 `POUR_READY_JOINTS`
+  - 流程：等待锅把 → PickSkill 预抓取/抓取/闭合/抬锅 → 底盘占位 → 等待餐盘 → MoveCartesianApi 视觉引导到倾倒起点 → pour_action local_delta_replay → upright_action 回到抬锅点 → 底盘返回占位 → PlaceSkill 放回/张开/回 home
+  - Policy 只做工具目标点到法兰目标点转换，下发法兰目标点在中心坐标系下的表示
+  - 共三套 TCP：抓锅 `TCP_GRASP`、倾倒 `TCP_PAN` 用于 Policy 内 TCP→法兰换算；set_tcp 全 0 TCP `SET_TCP_ZERO_*` 用于正式接入 `/robot_driver/set_tcp`，当前仅保留参数和逻辑占位，不接接口路由
+  - 左臂 O6 手部配置补充抓取/松开动作，并在 PanPour YAML 引用
+  - trajectory replay 校验 `arm_side` 与目标臂一致，不校验 `arm_ip`
+  out_of_scope:
+  - 修改或替换现有 `sub_policy_pour_food.py`（food）
+  - 修改 Motion Skill、`manipulation.py`、MotionPrimitive 或执行器原语
+  - 修改 FullPolicy 接入底盘导航
+  - 正式实现底盘移动、底盘等待完成信号和工具坐标系切换
+  - 把视觉动态点位作为固定点位写死
+  - 数值化手部关节角度/力矩下发
+  - 失败重试、抓取确认、落料完整性和更完善的异常回退
+  - 增量轨迹资源目录的框架级打包方案（Q-028：业务目录已确定，setup.py 数据安装仍待实现验证）
+  business_logic_refs:
+  - BL-PANPOUR-001
+  - BL-PLATING-001
+  - BL-TRAJECTORY-001
+  - BL-TRAJECTORY-002
+  constraints:
+  - 不修改 Motion 仓库中的 Skill，只新增/修改 Home 侧子 Policy 和配置
+  - 底盘移动和工具坐标系设定当前只保留接口占位，不执行、不等待、不阻塞任务
+  - YAML 保存 skill 动作模板中的速度、手型名和回放文件；Policy 私有计算参数和固定臂姿放 `sub_policy_pan_pour.py` 顶层常量，与现有 `PlatePourPolicy` 一致
+  - Policy 不应发送 TCP 直接目标或 base 目标，只下发法兰目标点在中心坐标系下的表示
+  - 左臂手部动作名必须与 O6 左臂手部配置的 `ACTION_NAME` 一致，缺动作时先补充配置
+  - 增量轨迹文件存放在 `robot_motion_executor/.../skills/robam/trajectories/pour_delta.json`，通过 `pour_action.replay_file` 传入，回放前校验 `arm_side`
+  - 抓取接近方向固定为中心坐标系 Z 轴正方向；预抓取点 = 抓取点 + [0, 0, approach_distance_m]，位于抓取点正上方，抓取运动沿 -Z 下降到抓取点
+  - 关节模式 `move_to_pick_retreat` 要求 `joints` 长度 7、单位弧度；`joints` 动作需要 `speed` 和 `wait_time`，会经 `/robot_driver/move_joints` 执行
+  - 抬锅后不设置第二个固定点；PanPour YAML 中 `move_to_pick_end` 保持 `enabled: false`
+  - 倾倒轨迹回放完成后必须回到抬锅点，再进入底盘返回占位，避免底盘移动时锅具碰撞周围物体
+  - 现有 food 子 Policy 不受影响
+  quality_attributes:
+  - 编排可读性
+  - Skill 复用边界清晰
+  - 左右臂动作名/arm_side 可校验
+  - 占位逻辑可后续替换为正式接入
+  - 视觉动态目标与固定参数分离
+  assumptions:
+  - PanPour 逻辑上是 FullPolicy 中最后一个子 Policy
+  - 视觉会提供锅把中心/PCA（或把手类目标）和餐盘/倾倒目标的有效坐标
+  - 现有 `PourSkill` 的 `local_delta_replay` 已集成且可用
+  - 左臂 O6 手部配置后续会补充抓取/松开动作
+  - 工具坐标系参数全 0，Policy 手算工具→法兰转换
+  unresolved_questions:
+  - 视觉盘子字段已确认由新版感知包输出 `class_name=plate_center`，位置取 `pose.position`；真机场景复测待做
+  - 视觉引导到倾倒起点已通过 `PourSkill.move_to_pour_initial` 生成笛卡尔目标，待真机联调
+  - 增量轨迹 `pour_delta.json` 已提供并复制，安装/打包后的 `replay_file` 路径解析待实现验证
+  approval:
+    status: approved
+    evidence:
+    - .project-log/current-session.md
+    - .project-log/decisions/decision-log.yaml#DEC-027
+    - 用户于 2026-08-23 确认业务逻辑并指示固化基线
+  supersedes:
+  - REQ-001 revision 3
+  created_at: '2026-08-23'
+  updated_at: '2026-08-24'
+version: '0.4'

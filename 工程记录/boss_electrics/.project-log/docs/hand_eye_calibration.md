@@ -6,9 +6,9 @@
 - 本次标定相机已确认为 `Orbbec Gemini 2`：序列号 `AY3Z33100DJ`，USB PID `2bc5:0670`。
 - ArUco 板不变：`DICT_6X6_250`，黑色方格外沿 `0.13 m`。
 - 新机器人左臂 IP 已确认为 `192.168.2.160`。
-- 新机器人右臂 IP 当前未知，标定前需要现场确认；`robot_params.yaml` 中旧左臂 `192.168.2.159`、旧右臂 `192.168.2.160` 不应继续作为事实使用。
+- 新机器人右臂 IP 已确认为 `192.168.2.161`，当前左臂 `192.168.2.160`、右臂 `192.168.2.161` 已写入 `robot_params.yaml`；旧左臂 `192.168.2.159`、旧右臂 `192.168.2.160` 不应继续作为事实使用。
 - 当前 `camera_env` 缺少 Gemini 2 所需 `extensions/frameprocessor/libob_frame_processor.so`，深度流验证需要先补该个人环境扩展；机器上已有扩展位于 `/home/tbl/.local/lib/python3.10/orbbec-sdk/extensions/`。
-- 相机参数和内参配置尚未更新到新相机，当前不能直接沿用 `camera1_params.yaml` / `camera1_ost.yaml` 跑标定。
+- `camera1_params.yaml` 已更新到新相机，但 `calibration.launch.py` 仍强制旧 `camera1_ost.yaml`（fx≈610.8）；Gemini 2 实测 fx≈690.8，直接启动可解析但标定结果会错，必须先改用 device 或新 OST。
 
 ## 2026-08-15 实测可用操作手册（优先阅读）
 
@@ -25,11 +25,13 @@ source /home/tbl/camera_env/calibration_env.sh
 
 `calibration_env.sh` 已依次加载 ROS Humble、主线 `install/setup.bash`、`camera_env.sh`，包含 `PYTHONNOUSERSITE=1`、系统 `numpy 1.21.5`、`cv2 4.5.4` 和 `pyorbbecsdk 2.7.6`。
 
+- 若 calibration launch 拉起 `robot_driver_node` 时需要灵巧手 CAN，应在 `calibration_env.sh` 之后追加 `export PYTHONPATH="$PYTHONPATH:/home/tbl/.local/lib/python3.10/site-packages"`，否则 `import can` 失败，灵巧手初始化会报错。
+
 ### 固定事实
 
 - 位型：相机固定、机械臂末端装 ArUco 标记，eye-to-hand，标定节点自动移动机械臂采样。
 - 标定板：6x6 字典，黑色外沿边长 `0.13 m`。
-- 左右臂 IP 由 `robot_params.yaml` 提供：左臂 `192.168.2.159`，右臂 `192.168.2.160`。
+- 左右臂 IP 由 `robot_params.yaml` 提供：左臂 `192.168.2.160`，右臂 `192.168.2.161`。
 - 当前标定 launch 走 `/robot_driver/get_arm_pose` 和 `/robot_driver/move_cartesian`，**不再需要手动 `export DEXBOT_ROBOT_IP`**。
 - 相机物理位置在左臂、右臂两次标定之间必须保持不变。
 - 同一臂标定前必须停止该臂其他控制链，现场保留急停，工作空间清空。
@@ -217,7 +219,7 @@ cd /home/tbl/Project/boss_electrics/kitchen_robot_home
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 source /home/tbl/camera_env/camera_env.sh   # 相机 python 隔离环境（本机），含 PYTHONNOUSERSITE=1
-export DEXBOT_ROBOT_IP=192.168.2.159        # 左臂；右臂改为 192.168.2.160
+export DEXBOT_ROBOT_IP=192.168.2.160        # 左臂；右臂改为 192.168.2.161
 
 # 标定结果输出目录（2026-08-15 后使用主仓库规范目录）
 ros2 launch dexbot_bringup calibration.launch.py \
@@ -238,5 +240,5 @@ ros2 service call /calibration/start_calibration std_srvs/srv/Trigger "{}"
 
 - 实际相机型号/分辨率（✅ 2026-08-07：Orbbec Gemini 336L，COLOR 1280x720）
 - ArUco 板边长（✅ 2026-08-07：字典 6X6，黑色外沿边长 130 mm / 0.13 m，与 launch 默认一致）
-- 机械臂（标定臂）IP（✅ 2026-08-07：左 192.168.2.159 / 右 192.168.2.160）
+- 机械臂（标定臂）IP（当前：左 192.168.2.160 / 右 192.168.2.161；旧记录 2026-08-07：左 192.168.2.159 / 右 192.168.2.160）
 - 是否确认"相机固定 + 手上 marker"装法（✅ 2026-08-07：眼到手外，机械臂末端装 ArUco，相机固定，与现有实现一致）

@@ -1247,4 +1247,181 @@ decisions:
   title: PanPour 等待阶段采用任务私有 wait 占位动作
   updated_at: '2026-08-11'
   user_approval: approved
+- action: calibration-camera-intrinsics-device-source
+  actual_result: null
+  authority: B
+  category: technical
+  conditions:
+  - camera1 为 Orbbec Gemini 2（SN AY3Z33100DJ）
+  - camera1_params.yaml 已使用 camera_info_source: device 及设备实测内参
+  - camera1_ost.yaml 仍为旧 Gemini 336L 内参（fx≈610.8），与新相机不一致
+  context: 'calibration.launch.py 之前强制 camera_info_source: ost_yaml + camera1_ost.yaml，
+    导致 ArUco solvePnP 与去畸变使用旧内参，会静默算错 T_base_cam。'
+  created_at: '2026-08-21'
+  decision: '标定相机改为直接使用 camera1_params.yaml 的 device 内参来源，
+    移除 calibration.launch.py 里 ost_yaml 覆盖，保证标定与 full launch 使用同一份设备内参。'
+  expected_result: 手眼标定 ArUco 位姿与去畸变使用 Gemini 2 实测内参，T_base_cam 不再被旧 OST 污染。
+  hypothesis: 'device 来源的 SDK 内参即为现役相机真值，比手工维护的 OST 更可靠且不易随换机漂移。'
+  id: DEC-026
+  observation: 'ros2 launch dexbot_bringup calibration.launch.py --show-args 通过，launch 可解析；py_compile 通过。'
+  options:
+  - costs:
+    - 每次换相机需保证 camera1_params.yaml 的设备内参与实际硬件一致
+    name: 标定使用 device 内参
+    risks:
+    - 依赖相机 SDK 能正确读回内参
+  - costs:
+    - 换相机后需再次手工更新 camera1_ost.yaml 内参与畸变
+    name: 更新 camera1_ost.yaml 为 Gemini 2 内参
+    risks:
+    - 与 camera1_params.yaml 双份内参容易再次漂移
+  outcome_status: active
+  reason_summary:
+  - camera1_params.yaml 已统一为 device 来源，标定与其保持一致可避免双份内参漂移。
+  - 移除 OST 覆盖后，标定仍保留 undistort_images/undistort_depth 的设备内参语义。
+  related_tasks:
+  - 手眼标定准备
+  reversal_plan: '若需确定性固定内参，把 device 读取的内参与畸变写回 camera1_ost.yaml，
+    并恢复 calibration.launch.py 的 ost_yaml 覆盖。'
+  status: active
+  supersedes: []
+  title: 手眼标定相机内参改用设备来源
+  updated_at: '2026-08-21'
+  user_approval: approved
+- action: -> pan-pour-sub-policy
+  actual_result: null
+  authority: C
+  category: architecture
+  conditions:
+  - 新 PanPour 子 Policy 参考旧 PanPour 流程，但只做编排，不修改 Motion Skill。
+  - 本轮底盘控制保持空逻辑占位，不修改 FullPolicy；Home Planner 后续接入底盘能力后再恢复。
+  - 视觉等待、视觉点计算和工具→法兰换算由子 Policy 处理，Motion/Driver 负责中心→目标臂 base。
+  context: |+
+    用户已确认新倾倒菜品子 Policy 的动作链使用现有 manipulation、增量轨迹回放和 API。
+    完整链路包括：等待锅把 → PickSkill 预抓取/抓取/闭合/抬锅 → 底盘占位 →
+    等待盘子视觉 → API 或 PourSkill 移动到倾倒开始点 → pour_action 增量回放 →
+    upright_action 回正 → 底盘返回占位 → PlaceSkill 放回/张开/回 home。
+  created_at: '2026-08-23'
+  decision: |+
+    新 PanPour 子 Policy 以已确认的 manipulation/API 链路为开发基线：
+    PickSkill 负责抓取段，PourSkill 的 local_delta_replay + upright_action 负责倾倒与回正，
+    MoveCartesianApi 或 PourSkill.move_to_pour_initial 负责视觉引导到倾倒起点，
+    PlaceSkill 负责放回原位置、张开手、回 home；底盘移动本轮空逻辑占位。
+  expected_result: |+
+    子 Policy 与 YAML 只需编排现有 Skill/API，不新增或修改 Motion Skill；
+    增量轨迹文件在 pour_action 中以 mode: local_delta_replay 使用。
+  hypothesis: |+
+    现有 Pick/Pour/Place、local_delta_replay 和 move_cartesian API 已具备承载完整
+    PanPour 机械臂动作链的全部能力，唯一的非运动环节是底盘占位。
+  id: DEC-027
+  observation: |+
+    已逐段核对 manipulation.py 的 PickSkill/PourSkill/PlaceSkill、delta replay、
+    MoveCartesianApi、FullPolicy 等待机制与 chassis 接线状态；当前生产代码未改。
+  options:
+  - name: 复用现有 manipulation/API
+    benefits:
+    - 不改 Motion Skill，符合当前 Robam 开发边界
+    - Pick/Pour/Place 固定动作槽能覆盖机械臂动作链
+    costs:
+    - 子 Policy 需要计算视觉 waypoint 并生成 skill_params_json
+    risks:
+    - 视觉点或坐标语义错误时不易在 Skill 层发现
+  - name: 新建专用 PanPour Skill
+    benefits:
+    - 可以完全复刻旧 skill 的自包含结构
+    costs:
+    - 与约定冲突，需要动 Motion 仓库
+    - 与 manipulation 能力重复
+    risks:
+    - 增加团队维护边界和后续接口不一致风险
+  outcome_status: not-observed
+  reason_summary:
+  - PickSkill 已覆盖预抓取、抓取、闭合、抬锅。
+  - PourSkill 已支持 local_delta_replay 与 upright_action。
+  - PlaceSkill 已覆盖放回、张开、撤离、回 home。
+  - MoveCartesianApi 可作为视觉引导到倾倒起点的直接 API。
+  - 底盘导航 Motion 侧已有接口，但 Home Planner 未接通，本轮保持占位。
+  related_tasks:
+  - Robam pan_pour 子 Policy
+  reversal_plan: |+
+    若真机验证发现视觉点语义或 Driver 中心→base 换算不成立，先回到坐标链路审计，
+    再调整 Policy 下发内容，不直接新增 Motion Skill。
+  status: active
+  supersedes: []
+  title: 新 PanPour 子 Policy 动作链复用 manipulation/API 方案
+  updated_at: '2026-08-23'
+  user_approval: approved
+- action: -> pan-pour-implementation-details
+  actual_result: null
+  authority: C
+  category: architecture
+  conditions:
+  - 视觉引导到倾倒起点使用 MoveCartesianApi
+  - 增量轨迹文件放在 motion/robam/trajectories 目录
+  - 左臂手部动作参考旧版 hand_presets.yaml
+  - 锅把视觉字段参考旧版 perception_adapter.py；盘子字段暂不展开
+  - 抓取接近方向为中心坐标系 Z 轴正方向，预抓取点位于抓取点正上方
+  context: |+
+    REQ-002 中“视觉引导到倾倒起点”原先保留 MoveCartesianApi 与
+    PourSkill.move_to_pour_initial 二选一；增量轨迹资源目录 Q-028 也未定。
+    用户于 2026-08-24 明确：倾倒起点使用 MoveCartesianApi，增量轨迹文件
+    放入 motion/robam/trajectories，手部 open/grasp_pan 参数沿用旧版，
+    锅把字段参照旧版感知适配器。随后确认抓取接近方向固定为中心坐标系
+    Z 轴，预抓取点位于抓取点正上方。
+  created_at: '2026-08-24'
+  decision: |+
+    倾倒起点视觉引导使用 MoveCartesianApi；
+    增量轨迹文件选择
+    `robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/trajectories/pour_delta.json`，
+    并从备份 `skills/pan_pour/resources/delta_trajectories/pour_delta.json`
+    复制到当前仓库（103 点，arm_side=left）；
+    抓取接近方向固定为中心坐标系 Z 轴，预抓取点由抓取点沿 +Z 外推，
+    抓取运动沿 -Z 下降到抓取点；
+    PanPour 左臂抓取/松开参数参考旧版 hand_presets.yaml 的
+    `open` 与 `grasp_pan`；
+    锅把视觉字段参考旧版 perception_adapter.py 的
+    `pot_handle_center` / `pot_inner_handle` 及 PCA 轴计算。
+  expected_result: |+
+    PanPour 子 Policy 实现时使用 MoveCartesianApi 到达倾倒起点，
+    `pour_action.replay_file` 指向 trajectories/pour_delta.json，
+    YAML 手部动作参数按旧版 open/grasp_pan 落实；
+    盘子视觉字段后续补齐后再完成倾倒目标点计算。
+  hypothesis: |+
+    这些决定补齐全链路中此前未定的外部依赖，使 PanPour 实现进入
+    “代码骨架 + 等待盘子字段”阶段。
+  id: DEC-028
+  observation: |+
+    已确认目标目录存在且为空，复制的 pour_delta.json 可解析；
+    校验字段为 trajectory_type=flange_delta、arm_side=left、
+    coordinate_system=flangeInBase、waypoint_count=103。
+    旧版 hand_presets.yaml 的 open 为 angles=[100]*6/torques=[5]*6，
+    grasp_pan 为 angles=[30,88.5,17,14,15,16]/torques=[100]*6。
+  options:
+  - name: 采用用户指定的实现细节
+    benefits:
+    - 消除倾倒起点二选一和轨迹目录不确定性
+    - 手部参数复用已调好的旧版数值
+    costs:
+    - 仍待盘子视觉字段后才能完整实现倾倒目标计算
+    risks:
+    - trajectories 目录的安装/打包引用方式需在实现时验证
+  outcome_status: active
+  reason_summary:
+  - 用户明确指定 MoveCartesianApi。
+  - 用户明确指定增量轨迹文件目录和源文件。
+  - 用户明确抓取接近方向为中心坐标系 Z 轴，预抓取点在抓取点正上方。
+  - 用户明确手部参数沿用旧版。
+  - 用户明确锅把字段参考旧版，盘子字段稍后确认。
+  related_business_logic:
+  - BL-PANPOUR-001
+  related_tasks:
+  - Robam pan_pour 子 Policy
+  reversal_plan: |+
+    若 trajectories 目录无法在安装后稳定解析，或旧版手部参数不能满足
+    新框架 GripperAction，则回到本决策重新确认资源和手部动作承载方式。
+  status: active
+  supersedes: []
+  title: PanPour 实现细节确定
+  updated_at: '2026-08-24'
+  user_approval: approved
 version: '0.4'

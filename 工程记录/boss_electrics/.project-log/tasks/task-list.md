@@ -19,3 +19,4 @@ Active goal: `GOAL-001`
 - `TASK-015` 验证 V1 左手倾倒入盘最小动作闭环 — `pending`
 - `TASK-016` 固定工位拖动示教拿锅-端锅-倾倒-放锅测试路径 — `in_progress`（完整轨迹真机回放已成功；待系统化安全/取消验收及批次衔接平滑性优化）
 - `TASK-017` 新增 teach_pan_pour_delta 增量倾倒回放套件（policy+skills，不动现有 teach_pan_pour） — `in_progress`（增量回放与固定点放锅真机验证成功；待系统化安全/取消验收及批次衔接平滑性优化）
+- `TASK-020` 实现新 Robam PanPour 子 Policy（私有参数放 Python 顶层，YAML 保存 skill 模板，状态机、注册、左臂手部动作） — `done`（compileall、完整状态机流程、colcon build、install 态导入与配置加载均通过；真机相机帧复测待做）

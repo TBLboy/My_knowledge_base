@@ -1077,6 +1077,7 @@ tasks:
     - ros2 service call /task_planner/get_status dexbot_interfaces/srv/GetTaskStatus '{}'
     evidence:
     - EVID-TASK-016-DELTA-HW-001
+    - EVID-TASK-016-DELTA-HW-002-NEWROBOT-GEMINI2
     limitations:
     - 成功证据为操作员现场确认，控制器逐窗口/姿态日志未全套归档。
     - 急停、取消、xCore/robot_driver 控制权竞争和重复任务恢复尚未系统化验收。
@@ -1092,7 +1093,7 @@ tasks:
     follow_ups:
     - 系统化安全/取消/重复任务恢复验收与批次衔接平滑性优化。
   created_at: '2026-08-06'
-  updated_at: '2026-08-06'
+  updated_at: '2026-08-17'
 - id: TASK-019
   title: 手眼标定（相机外参）自动标定前置问题逐个解决
   kind: task
@@ -1234,3 +1235,79 @@ tasks:
     - 真机时避免 robot_driver 与 xCore 短连接同时占用同一左臂。
   created_at: '2026-08-06'
   updated_at: '2026-08-06'
+- id: TASK-020
+  title: 实现新 Robam PanPour 子 Policy（YAML、状态机、注册、左臂手部动作）
+  kind: task
+  parent_id: null
+  phase: implementation
+  goal: 在 kitchen_robot_home 新建 Robam PanPour 子 Policy，通过现有 manipulation Pick/Pour/Place、增量轨迹回放和占位接口完成倾倒锅业务编排，并补齐左臂手部动作配置。
+  status: done
+  priority: high
+  risk: high
+  authority: B
+  owner: tbl
+  tags:
+  - robam
+  - pan-pour
+  - implementation
+  related_business_logic:
+  - BL-PANPOUR-001
+  acceptance_refs: []
+  related_decisions:
+  - DEC-028
+  depends_on:
+  - TASK-018
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-engineering-landing
+  - a-verification
+  spec_ref: /home/tbl/Project/boss_electrics/.project-log/requirements/baseline.yaml
+  inputs:
+  - 现有 manipulation PickSkill/PourSkill/PlaceSkill
+  - 备份 pour_delta.json 增量轨迹资源
+  - 旧版左臂固定关节点位和手部动作参数
+  outputs:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pan_pour.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/sub_policy_pan_pour.yaml
+  - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/trajectories/pour_delta.json
+  - O6_positions.yaml LEFT_HAND 预抓把手/抓把手
+  plan:
+  - 同步两个仓库到远端 code_integration，确认无新的远端提交
+  - 新增 PanPour YAML，只保存 pick/pour/place skill 动作模板，速度/手型名/回放文件放在动作槽
+  - 私有业务参数按 PlatePourPolicy 模式放 sub_policy_pan_pour.py 顶层常量
+  - 新增 PanPourPolicy 状态机，复用 PickSkill/PourSkill/PlaceSkill
+  - 公共配置与 TaskPlanner 注册改动使用 ###robam陶柏霖### 标注
+  - 复制增量轨迹文件到 motion robam/trajectories
+  - 执行 compileall、完整状态机验证、colcon build 和 diff/marker 校验
+  done_when:
+  - PanPourPolicy 可在无锅把/无餐盘时等待感知
+  - 锅把和餐盘出现后依次生成 pick/pour/place skill step
+  - pour_action 使用 local_delta_replay，轨迹文件解析且 arm_side=left
+  - 手部动作名从 PanPour YAML 读取，公共改动按开发规则标注
+  - compileall、colcon build、状态机验证通过
+  verification:
+    status: implemented-unverified
+    commands:
+    - "python -m compileall -q src/dexbot_task_planner/dexbot_task_planner"
+    - "python - <<PY 完整状态机验证脚本"
+    - "colcon build --symlink-install --packages-up-to dexbot_task_planner"
+    evidence:
+    - .project-log/current-session.md
+    limitations:
+    - 未做真机/相机帧联调，未验证手部动作实机角度效果。
+  result:
+    summary: 新增新 Robam PanPour 子 Policy 并注册；私有参数按 PlatePourPolicy 模式放 Python 顶层，YAML 仅保存 skill 模板；Pick/Pour/Place 与增量轨迹回放链路完成；最终复验 compileall、状态机、build、diff 和标注检查通过。
+    changed_files:
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pan_pour.py
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/sub_policy_pan_pour.yaml
+    - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py
+    - kitchen_robot_home/src/dexbot_bringup/config/robot_driver/hand/O6_positions.yaml
+    - robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/trajectories/pour_delta.json
+    deviations:
+    - 增量轨迹文件当前在 motion 仓库内为未跟踪资源，尚未提交或推送。
+    follow_ups:
+    - 真机/相机帧复测 plate_center 和 PanPour 动作链。
+    - 负责人同意后再提交并推送两个仓库。
+  created_at: '2026-08-24'
+  updated_at: '2026-08-24'

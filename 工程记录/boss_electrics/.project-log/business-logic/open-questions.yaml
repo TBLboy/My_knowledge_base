@@ -433,3 +433,358 @@ questions:
   source_refs:
   - 用户于 2026-08-05 确认
   answered_at: '2026-08-05'
+- id: Q-021
+  title: 是否在 motion/robam 增加增量轨迹回放能力
+  category: technical-selection
+  status: answered
+  priority: P2
+  authority: C
+  created: 2026-08-21
+  context: |+
+    倾倒 Policy 开发前已完成 motion 仓库能力盘点：`PourSkill` 是绝对点位式倾倒
+    （`move_to_pour_initial → pour_action → upright_action → move_to_pour_end`），
+    不含增量轨迹回放；executor 端无 REPLAY 原语，旧 `teach_pan_pour_delta`
+    与轨迹资源仅存在于备份仓库。
+    若倾倒需要“锅具 TCP 增量轨迹回放”，则不只是 Policy 开发，
+    还涉及 motion 侧 Skill/Executor/资源资产的补齐或迁移。
+    GUI 增量轨迹资源已带 `arm_side`；`arm_ip` 只作为录制元数据，
+    回放时不校验 IP，只校验 `arm_side` 与目标机械臂一致。
+  decision_candidate: |+
+    若小组确认需要增量轨迹回放，从备份迁移/重建 teach_pan_pour_delta 能力与
+    轨迹资源并注册到 code_integration 的 motion 仓库；确认不需要则沿用现有
+    `PourSkill`，用绝对点位方式实现倾倒 Policy。回放端不校验轨迹 `arm_ip`，
+    按 `arm_side` 匹配后由 executor 通过 `left/right_arm.ip_address` 连接控制器。
+  requires: ""
+  answer: |+
+    已确认需要增量轨迹回放，并确定倾倒部分调用 manipulation 中的轨迹回放能力。
+    当前 motion code_integration 已完成集成：`PourSkill.pour_action` 支持
+    `mode: local_delta_replay`，回放端校验轨迹 `arm_side` 与目标机械臂一致，
+    不校验 `arm_ip`。不需要再从旧备份迁移 teach 专用 Skill。
+  source_refs:
+  - 用户于 2026-08-21 提出与组员沟通是否增加增量轨迹回放能力
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/manipulation.py
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/delta_flange_replay_client.py
+  - 用户于 2026-08-23 确认倾倒部分调用轨迹回放 skills
+  answered_at: '2026-08-23'
+
+- id: Q-022
+  title: 新倾倒子 Policy 的基准与是否替换现有 pour_food
+  category: business-scope
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    现仓库已有 `sub_policy_pour_food.py`，基于旧 `plate_pour_policy`，
+    用 Pick/Pour/Place 大颗粒 Skill 实现并由刘哲豪提交，注册为 FullPolicy
+    的 `"food"` 子 Policy。用户现在要求以旧 PanPour 流程为参考开发新的
+    倾倒菜品子 Policy，保留工具→法兰转换、去掉中心→base 转换，并且不开发
+    新 Skill。
+    旧 PanPour 流程比 plate_pour 更细：包含锅把 PCA 抓取、底盘两次等待、
+    增量倾倒回放、put_fixed/return_home 等阶段。
+  decision_candidate: |+
+    推荐以旧 PanPour 为业务基准，直接重构当前 `food` 对应的
+    `sub_policy_pour_food.py` 和 `config/robam/sub_policy_pour_food.yaml`，
+    避免 FullPolicy 出现两个含义重叠的倾倒子 Policy；若团队确认新旧流程
+    必须并存，再新建独立命名。
+  requires: ""
+  answer: |+
+    现有 `food` 是别人的子 Policy，不替换；本次新建我们自己的子 Policy。
+    业务基准仍按旧 PanPour 流程，保留工具→法兰转换、去掉中心→base 转换，
+    并且不修改 Motion Skill。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/备份/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pour_food.py
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/manipulation.py
+  answered_at: '2026-08-23'
+
+- id: Q-023
+  title: 新 PanPour 子 Policy 是否包含两次底盘等待
+  category: business-scope
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    旧 PanPour 流程包含提锅到准备倾倒后等待底盘到位，以及增量倾倒回放后
+    等待底盘返回。已核查 Driver 开放
+    `/robot_driver/chassis/navigate_to_marker` 等底盘服务，Motion 注册了
+    `chassis_control` Skill 和 `CHASSIS_NAVIGATE_TO_MARKER` Primitive。
+    但当前 Home Planner 的 `PlanType`/`PlannedStep` 没有导航字段，
+    `planstep_factory`/`task_planner_node` 未接 chassis step，FullPolicy
+    也没有旧版 `update_base_positioned` 对应接口。
+  decision_candidate: |+
+    推荐保留两次底盘等待作为子 Policy 的内部等待阶段，但本轮先定义
+    policy 状态和外部完成上报接口的占位，不要求立即接入 chassis 导航；
+    若团队需要本轮直接跑通底盘移动，则需在 Home 侧补充 chassis step
+    路由并调整 FullPolicy 的导航/等待机制。
+  requires: ""
+  answer: |+
+    本轮底盘控制做空逻辑占位；不修改 FullPolicy。两次底盘等待先保留为
+    子 Policy 内的空逻辑占位，后续 FullPolicy 接入底盘能力后，再由子
+    Policy 控制底盘。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/备份/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_policy.py
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/full_policy.py
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/chassis_control.py
+  answered_at: '2026-08-23'
+
+- id: Q-024
+  title: 空逻辑占位步骤在当前版本如何运行
+  category: business-scope
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    用户确认底盘控制、工具坐标系设定等暂不实现的环节可以空逻辑占位。
+    需要在澄清中定义这些占位在当前版本是“直接跳过、任务继续”，还是
+    “等待外部状态/外部完成信号”。
+  decision_candidate: |+
+    推荐当前版本空逻辑占位直接视为禁用步骤：子 Policy 不生成动作，
+    按已完成跳过并推进到下一步；代码和 YAML 保留步骤名和
+    `placeholder: true` 标记，后续接入时再恢复。
+  requires: ""
+  answer: |+
+    底盘移动、工具坐标系设定等暂未正式接入的功能只保留接口占位，
+    当前版本不写正式接入逻辑、不等待外部状态、不阻塞任务执行。
+    后续框架功能补充完整后，再在占位位置写入正式接入。
+  source_refs:
+  - 用户于 2026-08-23 确认底盘控制可空逻辑占位
+  - 用户于 2026-08-23 确认底盘和工具坐标系占位只保留接口
+  answered_at: '2026-08-23'
+
+- id: Q-025
+  title: PickSkill 是否覆盖预抓取、抓取、闭合、抬锅
+  category: business-flow
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    新 PanPour 子 Policy 计划全程使用 manipulation、增量轨迹回放和 API。
+    老逻辑抓取段分为先移动到预抓取点、再移动到抓取点；用户需要确认现有
+    manipulation PickSkill 能否直接承担“预抓取/抓取/闭合/抬锅”，而不修改
+    Motion Skill。
+  decision_candidate: |+
+    推荐 PickSkill 承担该段：`move_to_pre_pick` 为预抓取点，
+    `move_to_pick` 为抓取点，`pick_gesture` 为闭合，
+    `move_to_pick_retreat` 为抬锅/安全高位；其余动作槽 `enabled: false`。
+    PickSkill 的必选动作是 `move_to_pick` 与 `pick_gesture`。
+  requires: ""
+  answer: |+
+    可以。PickSkill 固定序列中的
+    `move_to_pre_pick -> move_to_pick -> pick_gesture -> move_to_pick_retreat`
+    覆盖老逻辑的两段抓取、闭合和抬锅。
+    抬锅点只是抓完锅后的安全抬高位/倾倒准备高位，不是倾倒开始点；
+    倾倒开始点后续通过盘子检测信息由视觉引导移动得到，直接调用现有 API。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/manipulation.py
+  - 用户于 2026-08-23 确认抬锅点不是倾倒开始点
+  answered_at: '2026-08-23'
+
+- id: Q-026
+  title: 放回、张开、回 home 是否由 PickSkill 覆盖
+  category: business-flow
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    底盘移动完成后，流程需要把锅放回原来的位置、张开手、回到 home 位置。
+    用户问现有 manipulation 的 PickSkill 能否完美覆盖该收尾段；
+    语义上 PickSkill 是抓取技能，放回段应由 PlaceSkill 承接。
+  decision_candidate: |+
+    推荐收尾段使用 PlaceSkill：
+    `move_to_place` 放回原位置，`place_gesture` 张开手，
+    `move_to_place_retreat` 撤离，`move_to_place_end` 回 home。
+    其他动作槽可用 `enabled: false` 关闭。
+  requires: ""
+  answer: |+
+    不是 PickSkill，而是 PlaceSkill；PlaceSkill 可以完整覆盖。
+    `move_to_place -> place_gesture -> move_to_place_retreat -> move_to_place_end`
+    对应“放回原位置 -> 张开手 -> 撤离 -> 回 home”，其中
+    `move_to_place_end` 可用绝对 cartesian 点位或固定 joints 回 home。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/manipulation.py
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/sub_policy_cook.yaml
+  - 用户于 2026-08-23 确认底盘移动完成后放回并张开回 home
+  answered_at: '2026-08-23'
+
+- id: Q-027
+  title: PanPour 子 Policy 工具坐标系转换占位
+  category: business-flow
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    新 PanPour 子 Policy 开始时需要先执行“设定为我们自己的工具坐标系”的
+    逻辑；结束之后原本要为下一个子 Policy 再切换工具坐标系。
+    我们的工具坐标系参数全 0，因为子 Policy 会从配置文件读取工具坐标系
+    参数，并先把工具目标点手算成法兰目标点，再下发法兰目标点在中心坐标系
+    下的表示。
+    工具坐标系正式切换能力尚未搭建完成，底盘能力也尚未在 FullPolicy 接通。
+  decision_candidate: |+
+    推荐子 Policy 开头和结尾都保留工具坐标系接口占位；当前版本占位不产生
+    实际动作。参数存放位置和具体转换方式等框架/团队确定后再补全。
+  requires: ""
+  answer: |+
+    子 Policy 开头保留“切换/设定为我们的工具坐标系（全 0）”接口占位；
+    子 Policy 结尾保留“转换为下一个子 Policy 工具坐标系”的注释占位，
+    不写实际逻辑。
+    当前版本下底盘移动和工具坐标系设定都只保留接口，不执行、不等待，
+    不阻塞任务；后续框架功能补齐后再正式接入。
+  source_refs:
+  - 用户于 2026-08-23 补充 PanPour 工具坐标系接口细节
+  answered_at: '2026-08-23'
+
+- id: Q-028
+  title: 框架内增量轨迹资源目录约定
+  category: technical-selection
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    用户确认倾倒部分使用 `PourSkill.pour_action` + `local_delta_replay`，
+    并询问框架内是否有专门保存增量轨迹文件的文件夹。
+    当前 `code_integration` 中没有已打包的增量轨迹资源目录：
+    `dexbot_task_planner/resources/trajectories/` 只含 `.gitkeep`，
+    motion 仓库的 `resource/` 也只有 ROS 包标记文件。
+  decision_candidate: |+
+    在 `robot_motion_executor` 或 `kitchen_robot_home` 选择一个业务资源目录，
+    例如 `dexbot_motion_executor/resources/trajectories/` 或
+    `dexbot_task_planner/config/robam/`，并把目录加入 `setup.py` 的
+    `data_files`，随后在 PanPour YAML 中通过稳定相对路径或安装后 share
+    路径引用 `replay_file`。
+  requires: 确认轨迹资源由 Motion 还是 Home/Policy 侧承载
+  answer: |+
+    已确定增量轨迹文件存放在
+    `robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/trajectories/`，
+    PanPour YAML 的 `pour_action.replay_file` 使用该目录下的
+    `pour_delta.json`。
+    已从备份仓库
+    `robot_motion_executor/.../skills/pan_pour/resources/delta_trajectories/pour_delta.json`
+    复制得到当前文件：103 点、`trajectory_type=flange_delta`、
+    `arm_side=left`、`coordinate_system=flangeInBase`、
+    `translation_unit=m`、`rotation_unit=rad`、`rpy_order=xyz`。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/robam/manipulation.py
+  - /home/tbl/Project/boss_electrics/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/utils/delta_flange_replay_client.py
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/setup.py
+  - /home/tbl/Project/boss_electrics/备份/robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/pan_pour/resources/delta_trajectories/pour_delta.json
+  answered_at: '2026-08-24'
+
+- id: Q-029
+  title: 左臂抓取和松开手部动作是否需要新增
+  category: business-flow
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    PanPour 使用左臂。当前 `O6_positions.yaml` 的 `RIGHT_HAND` 已有
+    `预抓把手`/`抓把手`，但 `LEFT_HAND` 尚未新增对应的左臂动作。
+    用户确认后续会新增左臂抓取和松开手部动作。
+  decision_candidate: |+
+    在 `O6_positions.yaml` 的 `LEFT_HAND` 下新增左臂抓取/松开动作的
+    `ACTION_NAME + POSITION`，再在 PanPour 子 Policy YAML 的 gripper
+    action 中引用动作名。
+  requires: ""
+  answer: |+
+    后续会新增左臂“抓取”和“松开”手部动作。正式实现 PanPour 时，
+    先在 `O6_positions.yaml` 的 `LEFT_HAND` 下补齐
+    `ACTION_NAME + POSITION`，再在 `sub_policy_pan_pour.yaml` 中引用。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_bringup/config/robot_driver/hand/O6_positions.yaml
+  - 用户于 2026-08-23 确认后续新增左臂手部动作
+  answered_at: '2026-08-23'
+
+- id: Q-030
+  title: PanPour 预抓取点如何得到
+  category: business-flow
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-23
+  context: |+
+    用户确认抓取点由视觉感知得到，并询问预抓取点来源。
+    现有 `sub_policy_pour_food.py` 已展示“视觉目标 -> 抓取点 ->
+    接近偏移 -> 预抓取点”的计算模式；旧 PanPour 由
+    `pot_handle_center` / `pot_inner_handle` 和 PCA 轴计算抓取点。
+    新 PanPour 使用 PickSkill 的 `move_to_pre_pick`，因此需要明确
+    预抓取点是否固定录制、由视觉单独提供，还是 Policy 外推。
+  decision_candidate: |+
+    预抓取点不由视觉单独检测，也不作为固定录制点位；
+    由 Policy 基于视觉抓取点沿中心坐标系 Z 轴正方向和 YAML 配置的
+    接近距离外推生成。
+  requires: ""
+  answer: |+
+    视觉先提供锅把中心/PCA（或对应把手类目标）；Policy 根据
+    `grasp_offset_m` / `grasp_offset_center_m` 计算抓取点，
+    再从抓取点沿中心坐标系 Z 轴正方向外推出预抓取点，
+    RPY 与抓取姿态一致。
+    接近方向固定为中心坐标系 Z 轴正方向，`approach_distance_m` 放
+    PanPour YAML；预抓取点 = 抓取点 + [0, 0, approach_distance_m]，
+    位于抓取点正上方。抓取运动从预抓取点沿中心坐标系 -Z 方向下降到抓取点。
+  source_refs:
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pour_food.py
+  - /home/tbl/Project/boss_electrics/备份/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/pan_pour/pan_pour_params.yaml
+  - 用户于 2026-08-24 确认接近方向为中心坐标系 Z 轴、预抓取点在抓取点正上方
+  answered_at: '2026-08-24'
+
+- id: Q-031
+  title: 感知包是否已提供盘子中心点字段
+  category: perception-contract
+  status: answered
+  priority: P1
+  authority: C
+  created: 2026-08-24
+  context: |+
+    用户提供新版
+    `ros-humble-dexbot-perception_1.0.19-0jammy_all.deb`，
+    要求安装并检查是否已有盘子中心点字段。
+    此前 `perception_plate_center_requirement.md` 登记的是
+    `boss_kitchen_scene_stir_frying` 后处理未输出 `plate_center`。
+  decision_candidate: |+
+    若新版后处理已把 `plate` 加入中心类输出，则 PanPour 消费
+    `ScenePerception.objects` 中 `class_name=plate_center` 的
+    `pose.position` 作为中心坐标系餐盘中心。
+  requires: ""
+  answer: |+
+    已安装桌面包 `ros-humble-dexbot-perception_1.0.19-0jammy_all.deb`，
+    系统版本为 1.0.19-0jammy。
+    `scene_stir_frying/post_processor.py` 的 `CENTER_CLASSES` 已包含
+    `plate`；`_append_source_center` 按 `f"{class_name}_center"`
+    输出，因此 `/perception/scene` 的对象中会出现
+    `class_name=plate_center`，位置在 `pose.position`。
+    `plate` 进入 `CENTER_CLASSES` 已通过源码静态断言确认；
+    真机/相机帧复测待后续做。
+  source_refs:
+  - /home/tbl/桌面/ros-humble-dexbot-perception_1.0.19-0jammy_all.deb
+  - /opt/ros/humble/lib/python3.10/site-packages/dexbot_perception/tasks/boss_kitchen/scene_stir_frying/post_processor.py
+  - /opt/ros/humble/share/dexbot_perception/config/perception_params.yaml
+  - /home/tbl/Project/boss_electrics/.project-log/docs/perception_plate_center_requirement.md
+  answered_at: '2026-08-24'
+
+- id: Q-032
+  title: 假视觉测试是否需要分阶段切换发布对象
+  status: answered
+  authority: C
+  impact: medium
+  context: |-
+    真实机械臂 + 假视觉测试中，原方案可能先发布锅把对象，待抓锅完成后再切换发布
+    餐盘对象。用户确认这样会引入额外时序控制，因此决定不需要分阶段。
+  recommendation: |-
+    假视觉节点一次发布 `pot_handle_center`、`pot_inner_handle`、`plate_center`，
+    全部为中心坐标系且 `scene_valid=true`，让 PanPour 按自身状态机消费。
+  related_business_logic:
+  - BL-FAKEVISION-001
+  answer: |-
+    不需要分阶段。直接一次发布全部对象，避免控制切换发布对象的时机；
+    后续无需定时或按阶段切换假视觉输出。
+  source_refs:
+  - 用户于 2026-08-25 确认“直接全部发”
+  created_at: '2026-08-25'
+  answered_at: '2026-08-25'

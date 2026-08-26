@@ -1,3 +1,555 @@
+## 当前状态
+- 最近状态：PanPour 已接入 `initialize` skill，状态机为 `set_tcp -> initialize -> wait_handle -> pick -> wait_plate -> pour -> place -> completed`；`InitializeSkill` 已支持手部 `hand_angles` 与机器人 `joints` 回家两种模式
+- 当前阶段：implementation
+- 当前任务：把 `InitializeSkill` 接入 PanPour；待用户提供 home 左臂关节角和手部关节角后替换当前占位
+- 状态：`initialize.py` 支持 `open_gesture.mode=hand_angles` 和 `move_home.mode=joints`；PanPour 新增 `INITIALIZE` phase；YAML 新增 `initialize` step；home 左臂关节已按用户给的度数值换算为弧度并写入，手部复用 `预抓把手`（`[100,100,100,100,100,100]`）
+- 最近验证：`python3 -m compileall` 通过；完整状态机流程通过；`colcon build --symlink-install --packages-up-to dexbot_task_planner` 成功；install 态 policy 导入/配置加载通过；现有 `PlatePourPolicy` 回归导入通过
+- 状态更新：新子 Policy 使用 PickSkill/PourSkill/PlaceSkill；工具到法兰转换在 Policy 内完成并下发中心坐标系法兰目标；底盘移动和工具坐标系切换保留空接口占位
+- 底盘 API 结论：Driver 已开放 `/robot_driver/chassis/navigate_to_marker` 等服务，Motion 已注册 `chassis_control` Skill 和相关 Primitive；但当前 Home Planner 的 `PlanType`/`PlannedStep` 没有导航字段，FullPolicy 也未接导航
+- 底盘占位结论：本轮不改 FullPolicy，底盘控制做空逻辑占位；后续 FullPolicy 接入底盘能力后，再由子 Policy 调用
+- PickSkill 编排边界已确认：`move_to_pre_pick -> move_to_pick -> pick_gesture -> move_to_pick_retreat` 可覆盖旧“预抓取/抓取/闭合/抬锅”；抬锅点不是倾倒开始点
+- 收尾编排已确认：放回原位置、张开手、回 home 使用 PlaceSkill，不是 PickSkill；`move_to_place -> place_gesture -> move_to_place_retreat -> move_to_place_end` 可完整覆盖
+- 全链路覆盖结论：Pick/Pour/Place、增量轨迹回放、move_cartesian API 可覆盖机械臂动作链；底盘移动仍因 Home Planner 未接导航字段而保持占位
+- 用户已确认该链路并同意作为本次 PanPour 子 Policy 的开发基线
+- 占位语义已确认：底盘移动、工具坐标系设定只保留接口，当前不执行、不等待、不阻塞任务
+- 工具坐标系接口已确认：子 Policy 开头设定为我们的全 0 工具坐标系；结尾保留“切到下一个子 Policy 工具坐标系”的注释占位
+- 增量轨迹回放能力已确认：直接使用 manipulation 的 `PourSkill.pour_action` + `local_delta_replay`，Q-021 已标记为 answered
+- 增量轨迹目录检查：框架内目前没有专门且已打包的增量轨迹资源目录；`dexbot_task_planner/resources/trajectories/` 仅为空 `.gitkeep`，Motion 仓库无对应资源目录
+- 倾倒起点与轨迹资源（Q-028/DEC-028）：视觉引导到倾倒起点使用 MoveCartesianApi；`pour_delta.json` 已复制到 motion/robam/trajectories；左臂手部参数参考旧版 `open`/`grasp_pan`；锅把字段参考旧版 `pot_handle_center`/`pot_inner_handle`
+- 感知包更新（Q-031）：已安装新版 `ros-humble-dexbot-perception_1.0.19-0jammy_all.deb`；`scene_stir_frying` 后处理已把 `plate` 加入中心类，输出 `class_name=plate_center`，位置在 `pose.position`；真机复测待做
+- 点位配置检查：现有 Robam 子 Policy 模式支持把固定运动点位、手部动作名、速度/加速度直接写进 `sub_policy_*.yaml` 的 `steps.*.skill_params.actions`；视觉动态点位由 Policy 运行时覆盖
+- 左臂手部动作约定：后续 PanPour 会在 `O6_positions.yaml` 的 `LEFT_HAND` 下新增左臂抓取和松开手部动作，并在 `sub_policy_pan_pour.yaml` 中引用动作名
+- 预抓取点来源（Q-030）：视觉只提供锅把中心/PCA 或把手类目标；Policy 先算抓取点，再从抓取点沿中心坐标系 Z 轴正方向、按 `approach_distance_m` 外推出预抓取点，抓取从预抓取点沿 `-Z` 下降到抓取点
+- 抬锅运动方式：`move_to_pick_retreat` 支持 `mode: joints`，固定抬锅点可直接写 7 个弧度关节角，走 `MOVE_JOINTS -> /robot_driver/move_joints`；当前 food 参考实现是 `linear_cartesian`
+- 需求基线已固化：新增 `BL-PANPOUR-001` 与 `REQ-002` revision 2（active），`REQ-001` revision 3 标记为 superseded
+- PanPour 视觉目标修正：只消费 `pot_handle_center` + `pot_inner_handle`（PCA 参考点）和 `plate_center`，不使用原始 `pot_handle`/`plate`；抓取点按 `normalize(pot_handle_center - pot_inner_handle)` 方向做偏移，抓取姿态仍为固定 RPY
+- 最近验证补充：`pot_handle_center`/`pot_inner_handle`/`plate_center` 定向逻辑断言通过；`compileall` 通过；`colcon build --symlink-install --packages-select dexbot_task_planner` 通过
+- 手眼标定准备：已在当前新工作区创建本机忽略的 `.localconfig`（xCore SDK 0.5.1）；同步左右臂 IP 为 `.160/.161`，相机切到 Gemini 2 `AY3Z33100DJ` 的 1280x720@15 配置；标定启动使用 device `CameraInfo`，不再强制旧 OST；中心标定默认输出已改到 `dexbot_bringup/config/calibration/center_calibration_result.yaml`；`VERSIONS.yaml` 已和本机实际 `.deb` 对齐，`verify_versions.sh` 7/7 通过
+- PanPour set_tcp 接入：任务首个 step 下发 `left_default` 全 0 TCP；Planner/Motion 字段链路验证通过；真机未验证
+- 假视觉测试业务逻辑已固化：真实机械臂 + 假视觉，不依赖手眼标定；假视觉一次发布 `pot_handle_center`/`pot_inner_handle`/`plate_center`，全部中心坐标系、`scene_valid=true`；PanPour 全链 `set_tcp -> wait_handle -> pick -> wait_plate -> pour -> place -> completed`，底盘继续占位跳过
+- 假视觉节点已落地：私有包 `src/dexbot_fake_vision`，通过 `.git/info/exclude` 排除 Git 跟踪；一次发布全部三个对象到 `/perception/scene`，点位配置文件先置 `null` 防误跑
+- 下一步：填写实测假视觉点位后做真机全链路验证；待负责人同意后推送
+
+## 当前会话（2026-08-26 InitializeSkill 接入 PanPour）
+
+- 用户确认接入既有 `initialize` skill，在 PanPour 进入预抓取前先回 home 并设置手部。
+- `robot_motion_executor`：`InitializeSkill` 已扩展两种模式：`open_gesture.mode=hand_angles`（6 个 0-100 手部关节角）生成 `SET_HAND_ANGLES`；`move_home.mode=joints`（7 个弧度关节角）生成 `MOVE_JOINTS`；原 `gripper` 和 `cartesian/linear_cartesian` 模式保留。
+- `kitchen_robot_home`：`PanPourPhase` 新增 `INITIALIZE`；`SET_TCP` 完成后先执行 `initialize`，再进入 `WAIT_HANDLE`；`sub_policy_pan_pour.yaml` 新增 `initialize` step，`move_home` 的 `joints` 运行时由 `HOME_JOINTS` 填充。
+- 用户提供 home 左臂关节角度：`127.1、77.2、-89.3、123.2、-14.1、7.0、0` 度；接口传弧度，已换算为 `[2.2183134793, 1.3473941825, -1.558579022, 2.1502456385, -0.2460914245, 0.1221730476, 0.0]`，同时更新 `HOME_JOINTS` 与 YAML。
+- 手部按用户要求复用当前预抓取姿势：`预抓把手`，对应 `O6_positions.yaml` 中 `LEFT_HAND.POSITION=[100,100,100,100,100,100]`。
+- 用户提供 `move_to_pick_initial` 关节角度 `67.6/41.6/52.8/84.9/32.5/3.69/13.5` 度后，又换成 `77/35/-60/90/36/-7/17` 度；已启用该动作并换算为弧度写入 YAML：`[1.343903524, 0.6108652382, -1.0471975512, 1.5707963268, 0.6283185307, -0.1221730476, 0.2967059728]`。
+- `move_to_place_retreat` 改为由 Policy 填充 `pick_initial`（即 `move_to_pick_initial` 的关节角）；`move_to_place_end` 已启用并由 Policy 填充回 `home`。
+- 验证：两个仓库 `compileall` 通过；`colcon build --packages-select dexbot_task_planner` 与 `dexbot_motion_executor` 通过；Policy 实际生成 `initialize` 步骤并转成 Motion `GRIPPER_ACTION + MOVE_JOINTS` 通过；`hand_angles` 模式生成 `SET_HAND_ANGLES + MOVE_JOINTS` 通过。
+- 未验证：真机回家与手部动作；未提交、未推送。
+
+## 当前会话（2026-08-26 感知 scene_valid 排查）
+
+- 用户报 full launch 中 perception 持续输出 `没有所有相机数据就绪，已发布无效场景: []/1`，询问是否订阅错话题。
+- 核对结论：`dexrob_full.launch.py` 将相机 remap 为 `/camera1/color/image_raw`、`/camera1/depth/image_raw`、`/camera1/color/camera_info`；perception 参数 `camera_namespaces=["camera1"]`，订阅代码拼出这三个话题，未订阅错。
+- 本机实机复测（`source /home/tbl/camera_env/calibration_env.sh` + robot site-packages 环境）：Gemini 336L `CPCS253000KD` 正常启动；三话题均有 publisher，perception 也有 subscriber；RGB 约 9Hz，depth 约 10-13Hz，camera_info 约 30Hz。
+- 独立运行 camera+perception 后，perception 日志从 `[]/1` 转为 `[pipeline] 总耗时...`，说明 RGB/depth/camera_info 已就绪并进入处理。
+- 当前 `/perception/scene` 仍是 `scene_valid=false`，但原因是 `objects=[]`，不是相机数据未就绪；`.localconfig` 的 `yolo_model_dir=/home/tbl/Project/boss_electrics/kitchen_robot_home/local_models/yolo` 当前不存在，YOLO 模型未配置/未加载，因此无检测目标。
+- 未修改仓库文件；临时 camera/perception 进程已停止；若继续真机感知，需先放入 YOLO 模型或用假视觉节点测试。
+
+## 当前会话（2026-08-26 左臂标定误差定位与修正）
+
+- 用户重标右臂正常（11 样本，`1.99 mm / 0.865°`），左臂 16 样本仍报 `68.98 mm / 19.80°`；同时最后一个候选 `[0.560, 0.112, -0.023]` 因 IK 无可行解被跳过，该跳过不是误差主因。
+- 离线复算确认：左臂 16 个样本本身一致。把 `get_arm_pose` 已按 `pose_frame_rot_x_deg=-90` 做过的 `Rx(+90)` 补偿恢复成 SDK 原始 `endInRef` 位姿后，求解结果降至 `1.71 mm / 0.354°`。
+- 根因：当前 `dexbot_toolbox 2.0.1` 的 hand-eye 求解器对这批左臂补偿后位姿落到了错误初值/局部解；同一批数据只改变坐标系口径后即可低残差求解。不是 ArUco 安装松动、相机内参或样本数问题。
+- 已用同一批 16 点样本将 `left_calibration_result.yaml` 修正为低残差结果：`T_base_cam` 平移 `[0.122216684, -0.245523390, -0.058624099]`，`T_tcp_marker` 偏移 `[0.070910684, 0.029446451, 0.124618452]`，`rmse=0.001523565`，`rot_rmse_deg=0.344030782`。
+- 中心坐标系已按用户要求实际落盘，命令：
+  ```bash
+  cd /home/tbl/Project/boss_electrics/kitchen_robot_home
+  source /home/tbl/camera_env/calibration_env.sh
+  python3 scripts/generate_robot_center_frames.py \
+    --left-calibration src/dexbot_bringup/config/calibration/left_calibration_result.yaml \
+    --right-calibration src/dexbot_bringup/config/calibration/right_calibration_result.yaml \
+    --robot-params src/dexbot_bringup/config/robot_driver/robot_params.yaml \
+    --calibration-result-output src/dexbot_bringup/config/calibration/center_calibration_result.yaml
+  ```
+- 最终中心结果：`camera_rotation_residual_deg=0.638365812`，`shoulder_width_m=0.157482023`，`T_center_cam` 平移 `[0.117868992, 0.020116912, 0.242031855]`。
+- `robot_params.yaml` 已写入：左臂 `pose_frame_rot_x_deg=0.0`、`base_frame.rpy=[-1.570796327,0,0]`、`toolset.ref.trans=[0,-0.078741011,0]`；右臂 `pose_frame_rot_x_deg=0.0`、`base_frame.rpy=[1.570796327,0,0]`、`toolset.ref.trans=[0,0.078741011,0]`。
+- `.localconfig` 已指向新生成的 `center_calibration_result.yaml` 和 `right_calibration_result.yaml`，运行时感知点下发中心坐标系。
+- 三份标定 YAML 与 `robot_params.yaml` 均可解析；`git diff --check` 通过。
+- 风险提示：当前肩宽 `0.157482 m` 与历史有效值约 `0.188627 m` 不一致。旋转残差虽低，但左右标定样本/相机位置已变化，未真机验证中心点前不能把该肩宽当作物理结构确认。
+- 后续如果用标准左臂流程重跑标定，不能直接接受 `dexbot_toolbox 2.0.1` 写出的左臂结果；需要用最新样本 JSON 按“恢复 raw 帧求解，再旋转回项目帧”后处理，避免再次覆盖为高误差局部解。
+
+## 当前会话（2026-08-25 新 336L 相机识别与序列号更新）
+
+- 用户切换到新 Orbbec Gemini 336L，USB PID `2bc5:0807`，内核识别名 `Orbbec Gemini 336L`，实际序列号 `CPCS253000KD`；`/dev/video0..7` 已枚举。
+- `camera1_params.yaml` 的 `serial_number` 从旧 `CPCAC53000FP` 更新为 `CPCS253000KD`，改动用 `###robam陶柏霖###` 标记；内参、分辨率、`camera_info_source` 和畸变配置按用户要求保持不动。
+- YAML 解析通过；pyorbbecsdk 枚举到同一序列号，配置与设备匹配。
+- SDK 可见 profile：彩色 `1280x800 MJPG@30`，深度 `1280x800 Y16@30`；当前配置仍为 1280x720/ost_yaml，未按用户要求改动。
+- 左臂手眼标定完成：16 个样本，平移 RMSE `0.001167 m`，旋转 RMSE `0.6516°`，结果保存到 `left_calibration_result.yaml`。
+- 右臂手眼标定完成：22 个样本，平移 RMSE `0.001143 m`，旋转 RMSE `0.6180°`，结果保存到 `right_calibration_result.yaml`。
+- 左右两份标定 YAML 均为完整 `T_base_cam` + `T_tcp_marker` + `calibration_info` 格式；左右样本 CSV/JSON 已生成，当前为未跟踪文件。
+- 用户本轮暂不需要中心坐标系，因此未运行 center 生成脚本，`robot_params.yaml` 未因标定修改。
+- 下一步：确认左右标定结果可直接用于现有 Driver/感知链路；如需继续统一中心坐标系，再按 README 运行 `generate_robot_center_frames.py`。
+- 已生成中心坐标系试算，但结果**不可用**：`camera_rotation_residual_deg=179.7`，`shoulder_width_m=0.4853`，与历史有效结果（约 0.1886 m、残差 2.8°）明显不匹配。
+- 根因确认：`robot_params.yaml.bak` 时间 14:38、内容为未 reset 的旧配置，说明左右标定是在未执行 reset 的状态下完成的；`generate_robot_center_frames.py` 需要 reset 后的 `T_base_cam` 口径。
+- 当前脚本已把 `robot_params.yaml` 改写为 `toolset.ref.trans=[0, ±0.242633885, 0]`，该值来自不可用的中心试算，不能作为运行配置使用。
+- 下一步：若需要真实中心坐标系，必须先 reset `robot_params.yaml`，再重跑左右标定，最后重新生成 center；不要直接使用当前 `center_calibration_result.yaml` 和 `robot_params.yaml`。
+- reset 后右臂标定成功：21 样本，平移 RMSE `0.001167 m`，旋转 RMSE `0.5835°`。
+- reset 后左臂标定失败：16 样本，平移 RMSE `0.067378 m`，旋转 RMSE `19.7664°`；运动失败目标 `[0.588, 0.102, 0.035]` 只是跳过一个点，不是主因。
+- 逐样本残差：右臂全部小于约 `2.7 mm / 1.45°`；左臂绝大多数样本平移误差达几十毫米，旋转残差分成约 `0.3–4°` 与 `20–34°` 两簇，说明左臂采样集内部不一致。
+- 下一步：重跑左臂前先确认 ArUco 标记安装刚性、视野可见且没有位姿翻转；左臂采样范围避开 `x≈0.588` 的不可达点，并考虑缩小到实际工作空间内。
+
+## 当前会话（2026-08-25 PanPour 接入 set_tcp）
+
+- 按当前框架能力把 PanPour 开头的工具坐标系占位替换为正式 `set_tcp` 步骤：新增 `PanPourPhase.SET_TCP`，`clear()` 后任务先返回 `PlanType.PLAN_SET_TCP` 的 `PlannedStep`，`arm_type=0`、`tcp_name=left_default`。
+- `_tool_coordinate_placeholder()` 已移除；`_restore_tool_coordinate_placeholder()` 仍保留为“结束后切下一个子 Policy TCP”的注释占位。
+- 状态机验证通过：`set_tcp → wait_handle → pick → wait_plate → pour → place → completed`，无视觉时仍正确等待，`clear()` 后重新从 `set_tcp` 开始。
+- Planner/Motion 字段链路验证通过：`TaskPlannerNode._build_set_tcp_goal()` 生成 `set_tcp_command.arm=0` 和 `tcp_name=left_default`；`SetTcpApi` 转成 `SET_TCP` primitive 且 `arm_value=LEFT_ARM`。
+- 验证命令：`py_compile`、`colcon build --packages-select dexbot_task_planner`、robot 环境状态机脚本、calibration_env + motion install 下的 Planner/Motion 字段脚本。
+- 未验证项：真机 `/robot_driver/set_tcp` 实际切换与后续运动语义；未提交、未推送。
+
+## 当前会话（2026-08-25 假视觉测试业务逻辑固化）
+
+- 用户确认暂不实施“分阶段切换发布对象”，假视觉节点直接一次发布全部三个目标对象到 `/perception/scene`：`pot_handle_center`、`pot_inner_handle`、`plate_center`；避免在真机测试中额外控制发布时间点。
+- 三个点位都定义在中心坐标系，`scene_valid=true`；假视觉的姿态可用 identity 四元数，PanPour 不消费假视觉姿态，倾倒起始姿态仍使用固定 `POUR_INITIAL_FLANGE_RPY`。
+- 点位来源：用户手动把左臂摆到抓锅点后读取 `/robot_driver/get_arm_pose`，把返回位置作为 `pot_handle_center`；`pot_inner_handle` 由用户根据转换后的点位手动填写；把左臂摆到倾倒轨迹回放起始位后读取 `get_arm_pose`，把返回位置作为 `plate_center`。
+- 测试阶段临时参数：`GRASP_OFFSET_ALONG_HANDLE_M=0.0`，`TCP_GRASP_TRANSLATION/RPY` 与 `TCP_PAN_TRANSLATION/RPY` 均为全 0；Policy 仍先做工具点→法兰点换算，最终下发中心坐标系法兰目标，再由 Driver 依据中心坐标参数转换到左臂 base。
+- 业务链：`set_tcp(left_default) -> wait_handle -> pick -> wait_plate -> pour（视觉引导到倾倒起点 + local_delta_replay + 回抬锅点） -> place -> completed`；底盘移动继续保留占位跳过。
+- 安全注意：假视觉点只需位置，姿态由 Policy 固定；`POUR_INITIAL_FLANGE_RPY` 必须与 `pour_delta.json` 起始姿态一致，否则轨迹回放会从错误起始姿态开始。用户已确认本轮直接全链路测试，不关闭 `pour_action`。
+- 已新增业务原子 `BL-FAKEVISION-001` 并记录到 `.project-log/business-logic/atoms.yaml`，作为后续实现假视觉节点和真机全链路验证的业务事实源。
+
+## 当前会话（2026-08-25 假视觉节点落地）
+
+- 已新建私有 ROS 2 Python 包 `kitchen_robot_home/src/dexbot_fake_vision`，包含 `fake_vision_node`、`config/fake_scene.yaml`、`launch/fake_vision.launch.py` 和标准 ament_python 元数据。
+- 该目录已通过 `kitchen_robot_home/.git/info/exclude` 添加 `/src/dexbot_fake_vision/`，`git status` 不显示该包，属于本机私人测试资源，不会进入提交。
+- 节点一次发布 `ScenePerception` 到 `/perception/scene`，同一帧包含 `pot_handle_center`、`pot_inner_handle`、`plate_center`；支持 `publish_once` 和可配置发布频率；点位默认读私有 YAML。
+- 配置文件中三个点位初始为 `null`，节点启动前必须填写实测中心坐标系点位，防止未填数据时直接驱动真机；姿态默认 identity 四元数。
+- 验证通过：`py_compile`、YAML 解析、`colcon build --symlink-install --packages-select dexbot_fake_vision`；用临时填好点位的配置启动节点后，`ros2 topic echo /perception/scene --field scene_id` 收到 `fake_vision_panpour_test`，节点日志确认每帧发布 3 个对象。
+- 已实测抓锅点：临时启动 `robot_driver_node` 后调用 `/robot_driver/get_arm_pose(arm=0)`，返回 `position=[0.4916976981832586, 0.23448587093862516, -0.4142114965496718]`、`orientation=[-1.7002223769961087, 0.07631439939668051, -1.7317019136357201]`；该返回即为中心坐标系下的左臂法兰位姿，已写入 `dexbot_fake_vision/config/fake_scene.yaml` 的 `pot_handle_center`。
+- 已按用户手填值写入 `pot_inner_handle=[0.4916976981832586, 0.20448587093862516, -0.4142114965496718]`，当前 `pot_handle_center - pot_inner_handle = [0.0, 0.03, 0.0]`，方向为中心坐标系 +Y。
+- 已读取准备倾倒点并写入 `plate_center=[0.6061564087867737, 0.37664303183555603, -0.2658723294734955]`；该值来自同一 `get_arm_pose(arm=0)` 中心坐标系返回，方向为当前左臂法兰在中心坐标系下的位置。
+- 下一步：用户把 `pot_handle_center`、`pot_inner_handle`、`plate_center` 换成真机读取值后，再进行 PanPour 全链路真机验证。
+
+## 当前会话（2026-08-25 远端 TCP 切换链路合并）
+
+- 检查远端两个仓库，home 与 motion 均有新提交：home `6ee4eb4 0825_王韵博_TCP切换链路打通`，motion `176bc9f 0825_王韵博_TCP切换链路打通`。
+- motion 已合并且无冲突；home 存在 `calibration.launch.py` 与 TCP 配置路径相关冲突，已手动解决并保留本地相机/标定 viewer 修复。
+- 远端 TCP 改动已合并进 home：`SetTcp.srv` 增加 `arm` 字段、`PlanType.PLAN_SET_TCP`、`PlannedStep.tcp_name` 和 `_build_set_tcp_goal`；launch 不再通过独立参数文件注入 TCP 表，改由 `robot_params.yaml` 的 `tcp_config` + 本机 `.localconfig` 的 `tcp_config_path` 定位。
+- 本机忽略的 `.localconfig` 已把 `tcp_config_path` 更新到 `config/robot_driver/tcp`；`tcp_profiles.yaml` 保留 `left/right` 分组格式，`TcpProfileLoader` 成功加载 4 个 profile。
+- 验证通过：`py_compile`、`diff --cached --check`、home `colcon build --packages-select dexbot_bringup dexbot_interfaces dexbot_task_planner`、motion `colcon build --packages-select dexbot_motion_executor`、`calibration_env` 下 `calibration.launch.py --show-args`。
+- 本地已创建合并提交：home `5b6fb5d`、motion `18094ce`；按项目规则未推送。
+
+## 当前会话（2026-08-25 标定启动错误修复）
+
+- 首次启动左臂标定 launch 报 `tcp_config_path 未在 .localconfig 中配置`，已在本机忽略的 `kitchen_robot_home/.localconfig` 增加 `tcp_config_path=/home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_bringup/config/robot_driver`。
+- 同一轮确认当前 `tcp_profiles.yaml` 格式与当前 driver 的 `TcpProfileLoader` 不匹配：配置文件顶层应是 `left/right`，原文件写成了 profile 名。已改成 `left`/`right` 分组，保留 `left_default`/`right_default`/`test_offset0`/`test_offset1` 共 4 个 profile。
+- 验证：`ConfigReader.get_path("tcp_config_path")` 可解析；`TcpProfileLoader.load_tcp_profiles()` 成功加载 4 个 profile；YAML 解析通过。
+- 相机枚举与通信诊断：首次 launch 时 `lsusb` 无 `2bc5:0670` 且 `/dev/video*` 不存在；重新接上后设备可枚举，`/dev/video*` 有 ACL 读写权限，但 SDK 打开 `Pipeline` 时返回 `Device response with bad magic`，随后 `pipeline.start` 报 `uvc_stream_open_ctrl failed`。这是相机固件/设备通信异常残留，不是相机参数或驱动配置问题，需要给相机断电重插/重启后重试；`setXu failed` 和 `High Accuracy` preset 警告属非致命噪声。
+- 标定 launch 实机启动已成功（2026-08-25）：重新插拔相机后，`camera_driver_node` 真实启动 `Orbbec Gemini 2` 1280x720@15，机械臂左右各连接成功，灵巧手左右初始化成功；用户 Ctrl-C 前未触发标定。同时修复 `camera_viewer_node` 订阅：给它传 `camera_ns=camera`，并把 `/camera/aruco/debug_image` 重映射到 `/aruco/debug_image`；之前 viewer 订阅 `/color/image_raw`，所以看不到相机窗口。
+
+## 当前会话（2026-08-24 移除抬锅后准备倾倒固定点）
+
+- 用户确认正式 PanPour 不需要旧 teach 的“准备倾倒”固定关节点：抬锅 `move_to_pick_retreat` 完成后直接进入底盘移动占位。
+- 已删除 `sub_policy_pan_pour.py` 的 `POUR_READY_JOINTS` 和 `ARM_POSES["pour_ready"]`，并移除 `move_to_pick_end` 的 joints 填充。
+- `sub_policy_pan_pour.yaml` 的 `move_to_pick_end` 显式 `enabled: false`，PickSkill 序列到 `move_to_pick_retreat` 结束。
+- `REQ-002` 更新为 revision 4，记录抬锅后不执行第二个固定点。
+- 验证通过：robot 环境 `compileall`、PanPour YAML 解析、完整状态机（pick → wait_plate → pour → place → completed）以及 `colcon build --symlink-install --packages-up-to dexbot_task_planner`。
+
+## 当前会话（2026-08-25 倾倒回放后回到抬锅点）
+
+- 用户确认：`pour_action` 增量轨迹回放完成后要先回到抬锅点，再进入底盘返回移动占位，避免底盘移动时锅碰周围物体。
+- 已把 `upright_action` 从笛卡尔回倾倒起点改为 joints 回 `LIFT_JOINTS`；YAML 同步改为 `mode: joints` 并传入 `LIFT_JOINTS`。
+- `REQ-002` 更新为 revision 5，记录“回放完成 → 回到抬锅点 → 底盘返回占位”的链路。
+
+## 当前会话（2026-08-25 三套 TCP 参数检查）
+
+- 用户确认新框架需要三套 TCP：抓锅阶段 TCP、倾倒阶段 TCP、以及 set_tcp 全 0 TCP；前两套用于 Policy 内 TCP 目标转法兰目标，第三套用于调用 `/robot_driver/set_tcp` 保证 Driver/SDK 当前工具坐标为零，因为 Policy 下发的是法兰目标点。
+- 旧版 PanPour 确有 `tcp_grasp.flange_to_tcp` 和 `tcp_pan.flange_to_tcp` 两套参数，并通过 `grasp_flange_target()`/`pan_flange_target()` 做 TCP 到法兰换算；当前新 `sub_policy_pan_pour.py` 只有一套 `TOOLSET_TRANSLATION/RPY` 全 0，未区分抓锅/倾倒 TCP。
+- 框架 Motion 侧已有 `SetTcpApi`、`SET_TCP` primitive 和 `/robot_driver/set_tcp` 服务，但 Home Planner 目前没有 `set_tcp` 的 PlanType/PlannedStep/goal builder 路由。
+- 当前 `tcp_profiles.yaml` 用 `TcpProfileLoader` 验证会报 `tcp_profiles 顶层键必须为 left/right/0/1`，且当前接口 `SetTcp.srv` 与已安装 driver 回调读取的 `request.arm` 不一致；正式实现 set_tcp 前需要先对齐这些公共契约。
+- 用户确认：set_tcp 的接口路由/配置不在本轮职责范围，框架补齐前继续保留逻辑占位，不接正式 set_tcp；当前子 Policy 已有 TCP 目标→法兰目标换算，但抓锅/倾倒暂时共用 `TOOLSET_TRANSLATION/RPY` 全 0 的一套 TCP。
+- 已把换算拆成两套：`TCP_GRASP_TRANSLATION/RPY`（抓锅，沿用旧 `tcp_grasp`）和 `TCP_PAN_TRANSLATION/RPY`（倾倒，沿用旧 `tcp_pan`），`_flange_pose_from_tcp_pose()` 改为按阶段传入 T_F_TCP；`_tool_coordinate_placeholder()` 保留 set_tcp 全 0 逻辑占位，不接接口路由。
+- 已移除 `SET_TCP_ZERO_TRANSLATION/RPY`：这两组参数不是换算参数，不能与抓锅/倾倒 TCP 并列为换算三套；运行时全 0 工具坐标由 `tcp_profiles.yaml` 的 `left_default` profile 承接，正式接入 set_tcp 时调用该 profile。抓锅/倾倒两套 TCP 才是 Policy 内 TCP→法兰换算参数。
+
+## 当前会话（2026-08-25 视觉目标字段修正）
+
+- 用户确认 PanPour 不需要原始 `pot_handle`/`plate`：原始类只用于让感知包生成中心点，不应作为 Policy 抓取/倾倒目标。
+- 用户澄清旧版 PCA 用途：`pot_inner_handle` 不是用来确定抓取姿态，而是与 `pot_handle_center` 一起计算锅把方向，用于沿锅把方向位移抓取位置。
+- `sub_policy_pan_pour.py` 已移除 `POT_HANDLE_CLASSES`/`PLATE_CENTER_CLASSES` 候选集合，改为精确常量 `POT_HANDLE_CENTER_CLASS`、`POT_INNER_HANDLE_CLASS`、`PLATE_CENTER_CLASS`。
+- 锅把抓取位置计算恢复旧逻辑：`grasp_point = pot_handle_center + GRASP_OFFSET_ALONG_HANDLE_M * normalize(pot_handle_center - pot_inner_handle) + GRASP_OFFSET_CENTER_M`；`GRASP_OFFSET_ALONG_HANDLE_M=0.03` 沿用旧 `pan_pour.grasp_offset_m`。
+- 抓取姿态仍固定使用 `GRASP_TCP_ORIENTATION_RPY`，PCA 不参与姿态计算；缺少 `pot_handle_center` 或 `pot_inner_handle` 任一点时继续等待感知。
+- 验证通过：定向断言确认原始 `pot_handle`/`plate` 不会误选，锅把偏置方向和预抓取点正确；`compileall` 与目标包 `colcon build` 通过。
+
+## 当前会话（2026-08-25 新框架手眼标定准备）
+
+- 用户确认本轮执行：创建当前工作区 `.localconfig` 并使用现有 xCore SDK `0.5.1.ar_12`；更新左右臂 IP、Gemini 2 相机/内参配置、中心标定输出路径和 `.deb` 版本锁定。标定前重置坐标系补偿暂不执行。
+- 已新增 `kitchen_robot_home/.localconfig`（被 `.gitignore` 忽略）：SDK、灵巧手配置、模型目录以及运行时 `calibration_path`/`right_calibration_path` 都指向当前新工作区。
+- `robot_params.yaml` 左右臂控制器 IP 更新为左 `192.168.2.160`、右 `192.168.2.161`。
+- `camera1_params.yaml` 更新到 Gemini 2 序列号 `AY3Z33100DJ`、1280x720@15；标定时使用 SDK 的 device `CameraInfo`，关闭去畸变，不再把旧 `camera1_ost.yaml` 强制注入 launch。`camera1_ost.yaml` 已更新为 Gemini 2 实测 K（fx=690.8、fy=690.7、cx=641.9、cy=361.0），但畸变仍是占位零值，完成正式内参标定后需要覆盖该文件并将运行时切回 `ost_yaml`。
+- `generate_robot_center_frames.py` 默认输出从已不存在的 `src/dexbot_perception/...` 改为 `src/dexbot_bringup/config/calibration/center_calibration_result.yaml`。
+- `VERSIONS.yaml` 已对齐实际安装：camera-driver 1.0.9、perception 1.0.19、robot-driver 1.0.6、toolbox 2.0.1；`verify_versions.sh` 7/7 通过。
+- 验证：所有修改 YAML 可解析；`calibration.launch.py` 与中心坐标脚本可编译；`dexbot_bringup` 构建通过；标定专用 `camera_env` 下 `ros2 launch dexbot_bringup calibration.launch.py --show-args` 成功。普通 shell 会受用户目录 NumPy 2 与系统 OpenCV ABI 冲突影响，必须使用 `/home/tbl/camera_env/calibration_env.sh` 启动。
+
+## 当前会话（2026-08-24 PanPour 子 Policy 实现）
+
+- 两个仓库均先同步到远端 `code_integration`；`kitchen_robot_home` 无更新，`robot_motion_executor` 已快进 1 个提交。
+- 新增 `policy/robam/sub_policy_pan_pour.py`：状态机 `wait_handle -> pick -> wait_plate -> pour -> place -> completed`。
+- 新增 `config/robam/sub_policy_pan_pour.yaml`：`pan_pick`/`pan_pour`/`pan_place` 使用 `manipulation_skill_params_v1`，固定关节角来自旧版左臂点位，增量轨迹指向 motion 仓库 `robam/trajectories/pour_delta.json`。
+- 公共改动均用 `###robam陶柏霖###` 包裹：`task_planner_node.py` 导入与注册、`O6_positions.yaml` 左臂手部动作；`sub_policy_config.py` 未做公共改动。
+- 源码态验证：无感知时返回 `None` 且 `is_waiting_for_perception=True`；锅把出现生成 pick；盘子中心出现生成 pour，并解析到存在的轨迹文件；place 完成后结束；`clear()` 可复位。
+- 安装态验证：`colcon build --symlink-install --packages-up-to dexbot_task_planner` 成功，`sub_policy_pan_pour.yaml` 已进入 share 目录软链接，install 态 policy 导入和配置加载成功。
+- 最终复验（2026-08-24）：补上 `_restore_tool_coordinate_placeholder()` 调用后，重新跑 `compileall`、完整状态机（`wait_handle → pick → wait_plate → pour → place → completed → clear`）和目标包构建均通过；place 完成时也会执行收尾工具坐标占位。
+- 远端复核与代码补齐（2026-08-24）：两个仓库重新 `fetch` 后均与 `origin/code_integration` 对齐，无新远端提交；手部动作名改为从 PanPour YAML `hand` 配置读取；`task-list.yaml` 新增并落盘 `TASK-020` 结构化拆解。
+- 最终验证（2026-08-24）：`compileall`、PanPour YAML 与 task-list YAML 解析、完整状态机、`colcon build --packages-up-to dexbot_task_planner`、install 态导入回归和两仓库 `git diff --check` 均通过。
+- 参数位置收尾（2026-08-24）：用户撤销 `raw_config` 公共改动后，已仿照 `PlatePourPolicy` 把 `toolset/grasp/pour/arm_poses` 私有参数迁移到 `sub_policy_pan_pour.py` 顶层常量；YAML 只保留 skill 动作模板，`replay_file` 放在 `pour_action` 槽；`REQ-002` 更新为 revision 3。
+- 未验证项：未做真机/相机帧联调，未验证手部动作在实机上的实际角度效果；未推送，待负责人确认。
+
+## 当前会话（2026-08-24 抓取接近方向确认）
+
+- 用户确认抓取时从上方垂直接近，接近方向为中心坐标系 Z 轴正方向。
+- 预抓取点 = 抓取点 + `[0, 0, approach_distance_m]`，位于抓取点正上方，RPY 与抓取姿态一致。
+- PickSkill 抓取段运动方向：从预抓取点沿中心坐标系 `-Z` 下降到抓取点。
+- `approach_distance_m` 放入 PanPour YAML；不再保留可配置接近方向字段。
+- 已同步更新 Q-030、REQ-002 和 DEC-028；YAML 校验通过，生产代码未改。
+
+## 当前会话（2026-08-24 新版感知包 plate_center 检查）
+
+- 用户提供新版感知包 `ros-humble-dexbot-perception_1.0.19-0jammy_all.deb`，已用 `sudo dpkg -i` 安装覆盖为 1.0.19-0jammy。
+- 源码检查：`scene_stir_frying/post_processor.py` 的 `CENTER_CLASSES` 已包含 `plate`；`_append_source_center` 按 `class_name + "_center"` 发布，因此 `/perception/scene` 会出现 `plate_center` 点目标。
+- 消费方式：`ScenePerception.objects[].class_name == "plate_center"`，坐标读取 `pose.position`。
+- 已用 robot 环境加载安装包做静态断言：`plate in CENTER_CLASSES` 为 True。
+- 真机/离线相机帧复测待后续做；本轮未修改生产代码。
+
+## 当前会话（2026-08-24 抬锅运动方式确认）
+
+- 用户确认抬锅点是固定机械臂位姿，询问能否直接写关节角。
+- 已检查 `manipulation.py`：`PickSkill.move_to_pick_retreat` 是通用动作槽，`mode: joints` 可映射到 `MOVE_JOINTS`。
+- `joints` 要求 7 个关节角（弧度），`speed`、`wait_time` 必填；执行层调用 `/robot_driver/move_joints`。
+- 现有 `sub_policy_pour_food.yaml` 的抬锅槽位参考写法是 `linear_cartesian`，但新版允许 PanPour 使用 `joints`。
+- 已把该结论写入 REQ-002 revision 2；生产代码未改。
+
+## 当前会话（2026-08-23 PanPour 需求基线固化）
+
+- 已将当前 PanPour 业务逻辑固化为 `REQ-002` revision 1，状态 active。
+- 新增业务原子 `BL-PANPOUR-001`，记录 PanPour Pick/Pour/Place + local_delta_replay + API 动作链、预抓取点外推、工具坐标/底盘占位和左臂手部动作约定。
+- `requirements.md` 已切到 `REQ-002` 摘要。
+- `REQ-001` revision 3 标记为 superseded，历史内容保留在 baseline 中。
+- 校验：`requirements/baseline.yaml` 通过 schema；新增 `BL-PANPOUR-001` 通过 atom schema；生产代码未改动。
+- 待实现前仍需确认 `Q-028`、视觉 `class_name` 映射、API 选择、接近方向和左臂手部动作参数。
+
+## 当前会话（2026-08-23 预抓取点来源确认）
+
+- 用户确认抓取点由视觉感知得到，并询问预抓取点如何得到。
+- 当前 `sub_policy_pour_food.py` 的模式：从视觉 handle/center 计算 `grasp_contact`，再用 `APPROACH_DISTANCE_M` 沿选择方向外推出 `approach_pose`，作为 `move_to_pre_pick` waypoint，RPY 与抓取姿态一致。
+- 旧 PanPour 的模式：视觉提供 `pot_handle_center` / `pot_inner_handle`，Policy 用 PCA 轴和 `grasp_offset_m` / `grasp_offset_center_m` 计算抓取点。
+- 结论：新 PanPour 中预抓取点应由 Policy 基于视觉抓取点外推生成，方向参数和 `approach_distance_m` 放 YAML；不把预抓取点作为独立视觉类或固定录制点位。
+- 接近方向的具体选择（沿 PCA、垂直方向、z 抬高或工位固定方向）需要在真机标定/联调时确认。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 左臂手部动作新增约定）
+
+- 用户确认：后续会新增左臂“抓取”和“松开”两个手部动作。
+- 当前 `O6_positions.yaml` 的 `RIGHT_HAND` 已有 `预抓把手`/`抓把手`，`LEFT_HAND` 还没有这两个或对应自定义动作；后续 PanPour 用左臂时需要补充到 `LEFT_HAND`。
+- 约定：先在 `config/robot_driver/hand/O6_positions.yaml` 的 `LEFT_HAND` 下添加 `ACTION_NAME + POSITION`，再在 `sub_policy_pan_pour.yaml` 的 `pick_gesture/place_gesture` 等 gripper action 中引用动作名。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 Robam 点位配置位置检查）
+
+- 用户询问手部点位、home 位置、抬锅等待位置等参数是否可以直接放在子 Policy 配置文件中。
+- 现有 `RobamPolicyConfig` 会把整个 step 配置深拷贝给子 Policy，因此固定运动参数放在 `sub_policy_pan_pour.yaml` 的 `steps.<step>.skill_params.actions.<slot>` 下是可行的。
+- 当前 `sub_policy_cook.yaml`、`sub_policy_pour_food.yaml` 已经采用此模式：`waypoints`、`hand_action_name`、`speed`、`accel`、`wait_time`、`elbow` 都写在 YAML。
+- 手部动作当前 `manipulation` 的 `gripper` 模式走 `hand_action_name`，因此动作名可直接放 YAML；若后续要下发数字角度/力矩，当前通用 manipulation 不直接支持，需要再确认是否走专用 API。
+- `hand_action_name` 的具体定义在 Driver 手部配置中，例如 `dexbot_bringup/config/robot_driver/hand/O6_positions.yaml` 的 `ACTION_NAME: 抓把手`；PanPour YAML 只引用该名称，不复制手部角度/力矩。
+- `O6_positions.yaml` 按 `LEFT_HAND` / `RIGHT_HAND` 分两段；如果 PanPour 用左臂，需要确认 `LEFT_HAND` 下已有所需 `ACTION_NAME + POSITION`，子 Policy 只引用名称。
+- 视觉相关目标点（锅把抓取点、倾倒起点等）不作为固定点位写死，Policy 在运行时覆盖 waypoint；YAML 只保留偏移、速度等参数。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 框架增量轨迹目录检查）
+
+- 用户在确认倾倒轨迹回放链路后，询问框架内是否有专门保存增量轨迹文件的文件夹。
+- 检查结果：当前 `code_integration` 两个仓库没有专门用于增量轨迹回放的资源目录。
+- `kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/resources/trajectories/` 只包含 `.gitkeep`，且 `setup.py` 没有把该目录安装到 share。
+- `robot_motion_executor` 的 `resource/` 只有 ROS 包标记文件，不包含轨迹资源目录；`setup.py` 也未配置轨迹资源。
+- `manipulation.py` 的 `local_delta_replay` 只把 YAML 的 `replay_file` 原样传给 `delta_flange_replay_client`，由调用方提供绝对或相对路径，框架没有默认目录约定。
+- 结论：开发 PanPour YAML 前需要先确定增量轨迹资源的存放目录和打包/引用方式。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 PanPour 占位接口与工具坐标系细节确认）
+
+- 用户补充：底盘移动、工具坐标系设定目前只留接口，等框架功能补充完整后再写正式接入。
+- 空占位语义已收敛：当前版本不产生实际动作、不等待外部状态、不阻塞任务。
+- 子 Policy 开始时先执行“设定/切换为我们自己的工具坐标系”接口占位。
+- 我们的工具坐标系参数全 0；子 Policy 从配置文件读取工具坐标参数，手动把工具目标点算成法兰目标点，再下发“法兰目标点在中心坐标系下的表示”。
+- 子 Policy 完成后，原本应切换为下一个子 Policy 的工具坐标系；由于 pan_pour 逻辑上是最后一个子 Policy，此部分只写注释占位，不写实际逻辑。
+- 工具坐标系的正式转换方式、参数存放位置后续再补全。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 PanPour 全链路 manipulation/API 覆盖确认）
+
+- 机械臂动作链用现有 `PickSkill`、`PourSkill`、`PlaceSkill` 与 `local_delta_replay` 可完整覆盖；不需要新增 Motion Skill。
+- `home_open`：可用 PickSkill `move_to_pick_initial`，通过 `cartesian` 或 `joints` 到初始位。
+- `wait_handle`：子 Policy 等待感知，通过 `is_waiting_for_perception()` 实现，不是 Skill。
+- `move_to_grasp/close_hand/move_to_pour_ready`：PickSkill 的 `move_to_pre_pick -> move_to_pick -> pick_gesture -> move_to_pick_retreat`。
+- `wait_plate/move_to_pour_position`：子 Policy 等待盘子视觉后计算绝对点，可通过 `move_cartesian` API 或 PourSkill 的 `move_to_pour_initial` 下发；Motion 已有 MoveCartesianApi。
+- `pour_delta_replay/return_to_pour_ready`：PourSkill `pour_action` 使用 `mode: local_delta_replay`，`upright_action` 回正。
+- `put_fixed/open_hand/return_home`：PlaceSkill `move_to_place -> place_gesture -> move_to_place_retreat -> move_to_place_end`。
+- 底盘移动：Motion 已有 `chassis_control` Skill/Primitive，但 Home Planner 的 `PlanType`/`PlannedStep`/FullPolicy 未接导航；按已确认方案本轮保持空逻辑占位。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 PlaceSkill 放回与回 home 编排边界确认）
+
+- 用户确认底盘移动完成后，需要把锅放回原位置、张开手、回到 home。
+- 该收尾段应使用 `PlaceSkill`，不是 `PickSkill`；`PickSkill` 只负责抓取。
+- `PlaceSkill.SEQUENCE` 可映射为：`move_to_place`（放回原位置）→ `place_gesture`（张开）→ `move_to_place_retreat`（撤离）→ `move_to_place_end`（回 home）。
+- `move_to_place` 与 `place_gesture` 是 `PlaceSkill.REQUIRED_ACTIONS`；`move_to_place_end` 支持 `cartesian` 或 `joints`，可用于回到固定 home 位。
+- `move_to_place_initial`、`initial_gesture`、`move_to_pre_place`、`pre_place_gesture`、`retreat_gesture` 可按需要 `enabled: false`。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 PickSkill 抓取与抬锅编排边界确认）
+
+- 用户确认：抓完锅后的“抬锅点”不是倾倒开始点，`move_to_pick_retreat` 只作为安全抬高位/倾倒准备高位。
+- 倾倒开始点后续通过盘子检测信息由视觉引导移动得到，直接调用现有 API 即可，不属于 PickSkill 或固定抬锅点。
+- `PickSkill` 已能覆盖老逻辑两阶段抓取：`move_to_pre_pick`（预抓取绝对位）→ `move_to_pick`（抓取位）→ `pick_gesture`（闭合）→ `move_to_pick_retreat`（抬锅）。
+- `move_to_pick` 与 `pick_gesture` 是 `PickSkill.REQUIRED_ACTIONS`；`move_to_pre_pick` 与 `move_to_pick_retreat` 通过 `enabled: true` 启用，其余不需要的动作槽用 `enabled: false` 关闭。
+- 本轮未修改生产代码，只更新项目日志。
+
+## 当前会话（2026-08-23 Robam 倾倒菜品子 Policy 业务澄清）
+
+- 用户目标：新建倾倒菜品的 Robam 子 Policy 与其 YAML 配置；业务流程参考旧版 PanPour，新版本主要写编排逻辑，通过现有 API/Skill 执行，不再开发专用 Skill。
+- 旧 PanPour 流程：`home_open → wait handle → move_to_grasp → close_hand → move_to_pour_ready → wait base → wait plate → move_to_pour_position → pour_delta_replay → return_to_pour_ready → wait base return → put_fixed → open_hand → return_home`。
+- 旧坐标转换：Policy 内先做 `T_C_TCP -> T_C_F = T_C_TCP @ inverse(T_F_TCP)`，再做 `T_C_F -> T_B_F = T_B_C @ T_C_F`。新版本保留前者，去掉后者；Motion/Driver 负责中心→目标臂 base 的换算。
+- 当前 `sub_policy_pour_food.py` 已存在，作者为刘哲豪，基于旧 `plate_pour_policy`，注册为 FullPolicy 的 `"food"` 子 Policy；它目前没有 TCP→法兰转换，并且流程是大颗粒 Pick/Pour/Place，不是旧 PanPour 的精细阶段。
+- 当前 `skills/robam/manipulation.py` 的 Pick/Pour/Place Skill 已覆盖 `cartesian/linear_cartesian/joints/gripper/local_delta_replay/rt_impedance/force_guided_insert`，可承载绝对点位、增量回放和夹爪动作。
+- 技术边界：新 Policy 不修改 Motion Skill；固定动作结构、速度、手型名、增量轨迹文件等放 YAML；视觉目标、姿态和业务参数在 Policy 内覆盖后生成 `skill_params_json`。
+- 用户已确认：现有 `food` 是别人的子 Policy，不替换；本次新建我们自己的子 Policy。
+- 用户已确认命名：`sub_policy_pan_pour.py` + `sub_policy_pan_pour.yaml` + FullPolicy 键 `pan_pour`。
+- 当前 `manipulation.py` 已支持 `local_delta_replay`，轨迹回放原语可在 `pour_action` 槽位使用。
+- 当前 Robam `FullPolicy` 不负责底盘导航；旧 PanPour 有两次 `WAITING_FOR_BASE_POSITION`，新架构还没有对应完成上报接口，待确认是否纳入本轮。
+- 用户已确认：本轮底盘控制留空逻辑占位，不修改 FullPolicy；后续由 FullPolicy 接通后子 Policy 再控制底盘。
+- 用户已确认：工具坐标系设定等暂不实现的环节也允许空逻辑占位。
+
+## 当前会话（2026-08-23 底盘导航 API 核查）
+
+- Home 接口已声明并编译：`ControlChassis.srv`、`MarkChassisCurrentPose.srv`、`NavigateChassisToMarker.srv`、`GetChassisNavigationStatus.srv`、`InitializeChassis.srv`。
+- Driver 已开放服务：`/robot_driver/chassis/initialize`、`/robot_driver/chassis/control`、`/robot_driver/chassis/mark_current_pose`、`/robot_driver/chassis/navigate_to_marker`、`/robot_driver/chassis/get_navigation_status`。
+- Motion 已注册 `chassis_control` Skill，并实现 `CHASSIS_CONTROL`、`CHASSIS_MARK_CURRENT_POSE`、`CHASSIS_NAVIGATE_TO_MARKER` Primitive 及其服务调用。
+- 当前 Home Planner 未完成导航接入：`PlanType` 没有 `PLAN_NAVIGATE_TO_MARKER`，`PlannedStep` 没有 `navigation_marker_name`，`planstep_factory` 也不支持 chassis/navigate step；`policy/robam/test_policy_navigate.py` 引用了当前不存在的枚举/字段。
+- 备份中的 `policy/robom/full_policy.py` 有按子 Policy 导航点前进的旧实现，但当前 code_integration 的 Robam `FullPolicy` 没有使用它。
+
+## 当前会话（2026-08-23 Robam 子 Policy 配置文件位置确认）
+
+- 确认 Robam 子 Policy 的配置文件目录就是源码中的 `kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/`。
+- 现有约定：一份子 Policy 对应一份 YAML，例如 `sub_policy_cut.py` -> `sub_policy_cut.yaml`，`sub_policy_pour_food.py` -> `sub_policy_pour_food.yaml`。
+- 代码实际通过 `RobamPolicyConfig("sub_policy_xxx.yaml")` 加载，路径由 `get_package_share_directory("dexbot_task_planner")/config/robam/` 解析，不是直接硬编码源码路径。
+- 使用 `colcon build --symlink-install` 时该共享路径指向源码目录；若没有安装/共享配置或未 build，运行时会找不到 YAML。
+
+## 当前会话（2026-08-23 SetTcp/TCP 切换能力核查）
+
+- Motion 已有 API：`SetTcpApi` 读取 `ExecuteTask.set_tcp_command.arm/tcp_name`，生成 `MotionPrimitive(kind="SET_TCP", arm_value=..., tcp_name=...)`，并在 `motion_executor_node.py` 注册为 `self._apis["set_tcp"]`。
+- Motion 执行 `SET_TCP` 时调用 `/robot_driver/set_tcp`，但只设置了 `request.tcp_name`，没有显式设置 `request.arm`；当前 `SetTcp.Request` 默认 arm=0，因此经 Motion 调用时右臂 profile 可能实际上仍会切到左臂。
+- Driver `/robot_driver/set_tcp` 按 `request.arm` 路由左/右臂 `LuoshiArm.set_tcp(tcp_name)`；`TcpToolsetManager.apply()` 只替换 xCore SDK `toolset.end.trans/rpy`，`toolset.load/ref` 继续沿用 `robot_params.yaml`。
+- 当前 `tcp_profiles.yaml` 的 profile 顶层键是 `left_default`/`right_default` 等，但安装版 `TcpProfileLoader` 要求顶层键为 `left`/`right` 或 `0`/`1`；直接加载当前文件已复现 `ValueError`。
+- 当前 launch 把 `tcp_profiles.yaml` 作为 ROS 参数文件传给 driver，`TcpToolsetManager.from_arm_config()` 实际依赖 `.localconfig` 的 `tcp_config_path` 和 `tcp_config` 参数；当前主仓库启动 cwd 没有 `.localconfig`，运行时加载也会失败。
+- 结论：框架提供的是“预置 TCP profile 切换”，不是“工具坐标系标定/测量”功能；标定本身仍需要外部脚本或手工把 `toolset.end` 写入 profile/配置。
+
+## 当前会话（2026-08-23 坐标换算链核查）
+
+- 修正先前结论：安装版 `dexbot_perception` 不写死 `"base"` 或 `"center"`，而是通过 `dexbot_utils.config_reader.ConfigReader` 读取进程 cwd 下 `.localconfig` 的 `calibration_path`；矩阵变量名 `T_base_cam` 只是旧命名，真实目标坐标系由标定文件决定。
+- 备份 `.localconfig` 中 camera1 的 `calibration_path` 指向 `center_calibration_result.yaml`；已复算确认该文件内容等于脚本生成的 `T_center_cam`（diff 为空）。因此在备份/旧运行配置下，感知检测对象坐标是中心坐标系。
+- `ScenePerception.header.frame_id` 不权威：`format_detections()` 从 `latest_pointcloud.header.frame_id` 取，而当前 `perception_params.yaml` 的 `enable_pointcloud=false` 时没有点云管线，最终 fallback 成 `camera_color_optical_frame`，与对象坐标的中心系语义不一致。
+- 当前新仓库根目录没有 `.localconfig`；若不把该运行配置文件放到启动 cwd，感知无法加载中心标定，正式实机启动前需要确认这一配置存在。
+- `TaskPlannerNode._on_scene()` 只把 `obj.pose` 原样存进 `WorldObject`，不检查 `msg.header.frame_id`，也不做任何坐标变换。
+- Motion `MOVE_CARTESIAN` 链路只把 waypoint 的 position/rpy 原样转发给 `/robot_driver/move_cartesian`，不携带 frame 字段，也没有 center->base 换算。
+- Driver `execute_cartesian_trajectory()` 同样原样传给 `control_arm_cartesian()`；坐标系换算发生在 LuoshiArm 的肘部 IK 路径：`ElbowRangeSearcher._target_end_to_flange_transform()` 先按 `pose_frame_rot_x_deg` 补偿，再用 SDK `EndInRefToFlanInBase(baseFrame, toolset, pose_6d)` 转成 `flangeInBase` 后交给 IK。
+- 当前 `robot_params.yaml` 的 `base_frame.rpy` 和 `toolset.ref.trans` 已经在编码中心参考系：左臂 `[-pi/2,0,0] + [0,-0.094313551,0]`，右臂 `[pi/2,0,0] + [0,0.094313551,0]`；`toolset.end` 为 identity。用 SDK 实测中心 `[0.5,0,0.1]` 可转成左右臂 `flangeInBase` 并反向还原，说明标准 MoveCartesian 下 Driver/SDK 会做中心到目标臂 base 的换算，前提是这套 robot_params 始终生效。
+- 结论修正：当前安装版 driver（1.0.6）内部有“中心 → 目标机械臂 base”的换算能力，但它是通过 `base_frame + toolset.ref + EndInRefToFlanInBase` 隐式完成的，不是 Motion/Driver service 里的显式矩阵；当前机器按 `VERSIONS.yaml` 仍锁定 2.0.3，而本机安装的是 1.0.6，若升级驱动需重新核对这段路径。
+- `EndInRefToFlanInBase(baseFrame, toolset, end_in_ref)` 的语义已确认：它把“工具末端在外部参考系 Ref 下的目标位姿”解算成“法兰在该机械臂 base 下的目标位姿”。解算输入包含 `baseFrame`、`toolset.ref`、`toolset.end`，不是只做中心原点平移。
+- 当 `toolset.end` 为 identity 时，`end == flange`，上层传入中心法兰目标是正确的；当 `toolset.end` 非零时，`/robot_driver/move_cartesian` 的输入语义变为“工具 TCP 在中心/Ref 坐标系下的目标”，SDK 仍会反推出 flangeInBase，但 Policy 必须下发 TCP 目标而不能下发法兰目标。
+- SDK 实测证据：`base=[0.1,0.2,0.3]`、`ref=[0,0.5,0.1]`、`target=[0.4,0.5,1.1]`，`toolset.end=identity` 时 `flangeInBase=[0.3,0.8,0.9]`；`toolset.end=[0.1,0.2,0.3]` 时 `flangeInBase=[0.2,0.6,0.6]`，差值正是工具偏移。
+- 备份中的旧 `pan_pour` 架构与上述相反：Policy 通过 `PanPourParameters.left_base_from_center`（`T_B_C`）和 `tcp_from_flange` 显式做 `center -> left_arm_base` 换算，再把换算后的位姿下发给 Motion。即“Policy 内部做转换、下发给 Motion 的是目标臂 base 点位”是旧版正确做法。
+- 当前新 `sub_policy_pour_food.py` 直接拿视觉 `WorldObject` 计算 offset 并写入 waypoint，文件中没有 `T_B_C`/`T_B_R`/`flange_target` 等 center->base 换算；如果感知真的改发中心坐标，这一层会缺少换算，不能依赖 driver 自动补。
+
+## 当前会话（2026-08-23 核查 motion manipulation 增量轨迹回放）
+
+- 已确认 `skills/robam/manipulation.py` 支持 `mode: local_delta_replay`，通过 `_build_delta_replay()` 生成 `MotionPrimitive(kind="LOCAL_DELTA_FLANGE_REPLAY", arm_value=目标臂, trajectory_file=replay_file)`。
+- `entities/motion_primitive.py` 已注册 `LOCAL_DELTA_FLANGE_REPLAY`；`motion_executor_node.py` 会按 `prim.arm_value` 转成 `expected_arm_side=left/right` 后调用 `execute_local_delta_flange_replay()`。
+- `utils/delta_flange_replay_client.py` 负责解析 GUI 增量 JSON、仅校验轨迹 `arm_side`、从 `robot_params.yaml` 按左右臂取 IP/local_ip、读取当前法兰位姿、展开 delta、IK 解算并以关节点执行。
+- 左右臂适配符合约定：轨迹文件里的 `arm_ip` 不参与匹配，实际 IP 来自 driver 配置。
+- 来源提交：`df12a0d 增加增量轨迹回放能力`、`83a9dfc 整理manipulation`、后续 code_integration 拉取。
+- 验证：相关 4 个文件 `python3 -m compileall` 通过；仓库当前无针对增量回放的专门单元测试，本次未做真机回放验证。
+
+## 当前会话（2026-08-23 拉取两个仓库 code_integration 远端更新）
+
+- `kitchen_robot_home`：`47f6e88 -> aaac9a7`，fast-forward 15 个文件；新增 `policy/robam/sub_policy_cut.py`、`sub_policy_pour_food.py`、`config/robam/sub_policy_*.yaml`，并在 `task_planner_node.py` 注册 `FullPolicy.policies`。
+- `robot_motion_executor`：`fe57fcd -> 54a9b44`，fast-forward 11 个文件；新增 `utils/delta_flange_replay_client.py`、`utils/force_guided_insert_client.py`、`skills/robam/initialize.py`、`skills/robam/rotate.py`，`manipulation.py` 新增 `local_delta_replay` 模式，并注册 `MotionPrimitive.LOCAL_DELTA_FLANGE_REPLAY`。
+- 增量回放相关代码已随远端更新进入 motion，左/右臂通过 `prim.arm_value` 与轨迹 `arm_side` 校验；`arm_ip` 不作为匹配条件。
+- 两个仓库拉取后均与上游一致，`git status --short --branch` 无本地改动。
+
+## 当前会话（2026-08-21 倾倒 Policy 规划：motion 能力盘点）
+
+- 后续开发只做 Policy，不再开发 Skill；Skill 与 Policy 都放在 `robam` 目录，遵循既定协作协议。
+- 盘点 motion 仓库（`code_integration`）：
+  - 有 `skills/robam/manipulation.py` 的 `PourSkill`，已注册 `"pour"`；走 `manipulation_skill_params_v1`，固定序列 `move_to_pour_initial → pour_action → upright_action → move_to_pour_end`，属绝对点位式倾倒，不含增量轨迹回放。
+  - 有 `skills/path_record.py`（`RECORD_PATH`，控制器级录制）与 `utils/smoothie_path_record_replay.py`（控制器已存路径回放 CLI），用于冰沙演示；executor 端无 REPLAY 原语。
+  - 无 robam 专属“法兰增量轨迹回放”Skill，也无倾倒轨迹资源 JSON；旧 `teach_pan_pour_delta` 仅存在于备份仓库。
+- home 侧 `policy/robam/` 与 `config/robam/` 只有脚手架（子 Policy 与 YAML 均为空）；`task_planner_node.py:327` 的 `task_type=="robam"` 目前是 `FullPolicy(policies={})`，尚未挂子 Policy。
+- 结论已记录，待小组确认是否补增量轨迹回放能力后再开始 Policy 开发。
+- 增量轨迹资产的回放校验约定：`arm_ip` 只作为录制环境元数据保留，不作为回放匹配条件；回放时只校验资源声明的 `arm_side` 与当前要控制的机械臂侧一致，实际连接 IP 从 node 参数 `left_arm.ip_address` / `right_arm.ip_address` 获取，因为机械臂 IP 可能变化。
+
+## 当前会话（2026-08-21 GUI 点位迁移至 GUI 自身目录）
+
+- 需求：录制的点位文件不要再写回机器人工作区，像轨迹一样存到 GUI 自身目录，避免工作区切换后点位丢失。
+- 新增 `services/gui_paths.py` 统一点位路径：`arm_preset_path(side)` 指向 `gui/arm_preset/arm_poses_{side}.json`，`hand_pose_dir(model, side)` 指向 `gui/poses/poses_{model}_{side}`。
+- 修改 `services/hand/control.py` 的 `pose_dir()` 使用 GUI 目录；`pages/arm_hand.py`、`pages/dual_arm.py`、`pages/advanced_arm.py` 的臂点位路径改走 `arm_preset_path`。
+- `gui/.gitignore` 增加 `arm_preset/` 与 `poses/` 忽略规则，和 `trajectory/` 一致。
+- 已把工作区 `kitchen_robot_home/arm_preset` 与 `kitchen_robot_home/poses` 点位迁移到 `gui/arm_preset`、`gui/poses/poses_o6_left`，并从工作区删除。
+- 验证：`py_compile` 通过；`arm_preset_path`/`hand_pose_dir` 解析到 GUI；gitignore 命中；`kitchen_robot_home` 工作区干净。
+- 注意：GUI 仓库中 `README.md`、`services/arm/flange_delta.py`、`services/registry.py`、`tests/test_flange_delta.py` 为已有未提交改动，非本次修改，未动。
+
+## 当前会话（2026-08-21 Robam 协作与开发规则写入 AGENTS.md）
+
+- 阅读了两份 README：motion 侧 `skills/robam/README.md`、home 侧 `policy/robam/README.md`，并整合协调消息。
+- 已在 `AGENTS.md` 增加“Robam 项目协作与开发规则”：分支协作（`code_integration` 上开发、robam 目录、头部注释、`###robam自己的名字###` 标注、负责人同意后才推送）、职责分工、Skill 实现与注册要点、子 Policy 实现与注册要点。
+- 规则落点与原文一致，未改动两份 README 与两个仓库代码。
+
+## 当前会话（2026-08-21 开发仓库切换为远端 code_integration 全新拉取）
+
+- 用户已将原 `kitchen_robot_home` 与 `robot_motion_executor` 两个仓库移动到 `备份/`，并在原路径重新拉取两个新仓库，切换到 `code_integration` 分支。
+- 新仓库状态：
+  - `kitchen_robot_home`：分支 `code_integration`，HEAD `47f6e88`，与 `origin/code_integration` 一致，工作区干净。
+  - `robot_motion_executor`：分支 `code_integration`，HEAD `fe57fcd`，与 `origin/code_integration` 一致，工作区干净。
+- 新仓库无旧仓库遗留：无 `skip-worktree` 文件、无未跟踪/暂存/修改文件；旧仓库中的 `teach_pan_pour` 本地文件与标定采样产物仅存在于备份仓库。
+- 此前本地提交（如 `3e24435`、`7ef5af6`、`299862e`）只保留在备份仓库，未出现在新的 `code_integration` 分支。
+- 本轮只做检查与记录，未修改任何代码。
+
+## 当前会话（2026-08-21 手眼标定配置修正）
+
+- 用户准备重新手眼标定，检查后确认阻塞点：`calibration.launch.py` 强制 `ost_yaml` + 旧 `camera1_ost.yaml`（fx≈610.8），与新 Gemini 2（fx≈690.84）不一致，会静默算错 `T_base_cam`。
+- 已修改：
+  - `kitchen_robot_home/src/dexbot_bringup/launch/calibration.launch.py`：移除 `camera_info_source: ost_yaml` 与 `calibration_file` 覆盖，相机只传 `camera1_params.yaml`（device 内参）。
+  - 同一 launch 内的 `camera_viewer_node` 增加 `camera_ns=camera`，并把 `/camera/aruco/debug_image` 重映射到实际的 `/aruco/debug_image`，修复可视化窗口收不到 `/camera/color/image_raw` 的问题。
+  - `/home/tbl/camera_env/calibration_env.sh`：旧提示 `DEXBOT_ROBOT_IP=192.168.2.159` 更新为 `.160`。
+- 核实无误：Gemini 2 在线（2bc5:0670、6 个 /dev/video*）；robot_params 左 `.160`/右 `.161`、本机 `192.168.2.100`；`can0`/`can1` UP；camera→aruco→hand_eye 话题链路一致。
+- 首次实机标定观察：自动采样到 `[3/6]`，出现 `ArUco 未稳定检测到，跳过`，未能产出标定结果；需确认 ArUco 板在相机视野内、字典/边长匹配及 color 流稳定。
+- 提交：`kitchen_robot_home` 两个提交 `3e24435`（相机/机械臂/标定配置）、`7ef5af6`（teach 策略路由）；`robot_motion_executor` 一个提交 `299862e`（teach 技能 + IP）。未跟踪的 `left_calibration_result_samples.csv/json` 保留在工作区，未纳入版本控制。
+- 待办：现有 left/right/center 标定结果是旧相机/旧机器人生成，需重新标定覆盖，并重新生成 center 结果。
+- 验证：`py_compile` 与 `ros2 launch dexbot_bringup calibration.launch.py --show-args` 均通过。
+
+## 当前会话（2026-08-17 手眼标定启动预检：launch 可解析，内参仍不匹配）
+
+## 当前会话（2026-08-20 full launch 感知 torch 环境问题已解决）
+
+- 现象：双臂已能连接（`xMateErProRobot connected successfully`），但 `perception_node` 崩在 `import torch`，报 `ModuleNotFoundError`；相机另报 Gemini 设备未找到，属相机硬件/枚举问题，与本次环境问题无关。
+- 根因：`dexbot_perception` 用系统 Python 启动，而 `torch` 在 `/home/tbl/miniforge3/envs/robot/` 的 site-packages，当前 shell 的 `PYTHONPATH` 未包含它。
+- 已解决：按 `.project-log/docs/full_launch_env.md` 的运行配方补齐 `PYTHONPATH`（robot site-packages + `.local` can + 保持 ROS 路径）。
+- 已记录易错点：`unset PYTHONPATH` 必须放在所有 `source` 之前；`export PYTHONPATH=...` 是整条覆盖，必须用 `${PYTHONPATH:+:$PYTHONPATH}` 保留 ROS/工作空间路径，否则启动后 ROS 包导入失败。
+- 后续再次出现同类环境问题时，先查 `full_launch_env.md`，不要把个人绝对路径写进团队公共 launch。
+
+## 当前会话（2026-08-19 起草视觉组 plate_center 需求）
+
+- 用户要求给视觉组提“盘子中心点接入视觉接口”的需求，已把 `.project-log/docs/perception_plate_center_requirement.md` 从 `pending` 升级为 `ready-to-submit`。
+- 需求要点：`boss_kitchen_scene2` 后处理把 `plate` 加入 `CENTER_CLASSES`，通过 `ScenePerception.objects` 发布 `class_name=plate_center`，坐标为机器人中心坐标系 C，明确 `frame_id`、时空戳新鲜度、无盘/遮挡/深度无效时不发布，验收含真机与离线样本。
+- `requirements.md` 已同步状态。主仓库消费侧适配（`ScenePerception → PanPourPolicy.update_plate_center`）留待感知组确认最终类名后实现。
+
+## 当前会话（2026-08-18 teach_pan_pour_delta 抓取/放锅点替换为抓取点2）
+
+- 用户提供新机器人的左臂抓取点2，要求把 `teach_pan_pour_delta` 的抓取点和放锅点统一替换为该点；确认不需要独立资源，直接改共享点位。
+- 改动（均在 `robot_motion_executor` 本地 teach 资源内，目录已被 `.gitignore` 忽略）：
+  - `skills/teach_pan_pour/resources/arm_poses_left.json` 新增 `"5"`（抓取点2），关节：`[0.970653, 1.332814, -0.695393, 0.682575, 0.941487, -0.169161, 0.328385]`。
+  - `skills/teach_pan_pour_delta/resources/resource_manifest.yaml` 中 `grasp_ready` 和 `put_fixed` 均改为 `"5"`。
+  - `skills/teach_pan_pour_delta/teach_pan_pour_delta_skill.py` 的 `put_fixed` 由硬编码 `grasp_ready` 改为明确读取 `put_fixed` 点位。
+- 验证：JSON 解析通过、`"5"` 唯一；delta 五个点位映射 `home=1/grasp_ready=5/put_fixed=5/lift=3/pour_ready=4` 均能解析为 7 关节；`compileall` 通过；`test_teach_pan_pour_delta_skill.py` 4 个定向测试通过。
+- 注意：普通 `teach_pan_pour` 的旧 `"2"` 抓取点保持不变；如果后续也要换成 `"5"`，需另行确认。
+
+- 检查结论：`ros2 launch dexbot_bringup calibration.launch.py --show-args/--print-description` 均通过；`camera_driver_node`、`aruco_detector_node`、`hand_eye_calibration_node`、`robot_driver_node` 四个可执行文件均存在；当前无标定/驱动进程正在运行。
+- 阻塞风险：`calibration.launch.py` 仍强制 `camera_info_source: ost_yaml` + `calibration_file=camera1_ost.yaml`；当前 `camera1_params.yaml` 已切到 Gemini 2 设备内参，但 `camera1_ost.yaml` 仍是旧相机 fx≈610.8，Gemini 2 实测 fx≈690.8，直接标定会算错 ArUco 位姿和 `T_base_cam`。
+- 环境注意：仅 `source /home/tbl/camera_env/calibration_env.sh` 时 `import can` 失败；启动 calibration launch 前建议追加 `/home/tbl/.local/lib/python3.10/site-packages`，避免灵巧手 CAN 初始化报错。
+- 下一步：先改 `calibration.launch.py` 的相机内参来源（使用 device 或更新 `camera1_ost.yaml`），再实际启动左/右臂标定。
+
+## 当前会话（2026-08-17 Gemini 2 full launch 与 teach_pan_pour_delta 新机器人复测）
+
+- 用户确认相机硬件已连接，重新枚举后系统识别到 `2bc5:0670`、6 个 `/dev/video*`；pyorbbecsdk 确认为 `Orbbec Gemini 2`、SN `AY3Z33100DJ`、固件 `1.4.72`。
+- 本机环境补齐：创建 `/home/tbl/camera_env/extensions -> /home/tbl/.local/lib/python3.10/orbbec-sdk/extensions` 软链，Gemini 2 深度扩展可加载。
+- 相机配置已切到新相机：
+  - `kitchen_robot_home/src/dexbot_bringup/config/cameras/camera1_params.yaml`
+  - `serial_number: AY3Z33100DJ`
+  - `fx/fy/cx/cy` 更新为设备实测约 `690.84 / 690.74 / 641.94 / 361.04`
+  - `camera_info_source: device`，不再沿用旧 Gemini 336L 的 OST 内参。
+- full launch 本机环境必须显式加入：
+  - `/home/tbl/miniforge3/envs/robot/lib/python3.10/site-packages`（torch，否则 perception 启动即报 ModuleNotFoundError）
+  - `/home/tbl/.local/lib/python3.10/site-packages` 放在 PYTHONPATH 末尾（python-can，否则灵巧手 CAN 初始化报 No module named 'can'）
+  - camera_env 仍保持在最前，实测 `numpy 1.26.4 / cv2 4.5.4 / torch 2.12.0 / can 4.6.1 / pyorbbecsdk` 可用。
+- full launch 验证：
+  - camera driver 真机启动：`Camera backend: real device (Orbbec Gemini 335L)`，SDK 内参读回 `fx=690.8, fy=690.7, cx=641.9, cy=361.0`
+  - perception YOLO 模型加载成功，`/perception/scene` 约 30 Hz
+  - 左臂 `.160`、右臂 `.161` 均连接成功；左手 CAN `can0` 初始化成功；右手 `can1` 仍报 operstate down，本次任务只使用左臂，未阻塞。
+- `teach_pan_pour_delta` 真机复测成功：
+  - `ros2 service call /task_planner/start_task ... task_type=teach_pan_pour_delta` 返回 accepted
+  - task_id `b2c07f60-0b1d-4d7b-9895-398a730ea776`
+  - `GetTaskStatus` 最终 `robot_state=success`、`current_phase=task_completed`、`current_step_index=8`
+  - 日志显示完整执行到 `move_to_lift → move_to_pour_ready → ... → return_home` 链路，未出现退段重试。
+- 已知剩余项：
+  - 右手 CAN 接口 `can1` 未 ready，后续若测右臂/双手需先确认 CAN 总线。
+  - full launch 未启用 `safety_layer_node`，`SafetyHeartbeat` 持续失联告警为当前 launch 配置下的预期现象，不阻塞本次左臂测试。
+  - Gemini 2 调用 `depth_preset` 会报 `preset manager not found`，当前驱动非致命；后续标定/深度后处理应确认是否需要新驱动适配。
+
+## 当前会话（2026-08-17 teach 测试 Policy 注册完成）
+
+- 用户要求注册 `teach_pan_pour` 与 `teach_pan_pour_delta`，便于真机运行。
+- 主线 `dexbot_task_planner`：
+  - `task_planner_node.py` 已导入并实例化两个 teach Policy，加入 `valid_task_types`，并把对应 `plan_type` 路由到通用 Skill 目标构建。
+  - `setup.py` 恢复两个 teach 包及其 params YAML 的打包。
+  - `test_task_planner_decision_dispatch.py` 新增两个 teach 路由测试。
+- 执行仓库 `dexbot_motion_executor`：
+  - `motion_executor_node.py` 注册 `teach_pan_pour`、`teach_pan_pour_delta` 两个 Skill。
+  - `setup.py` 恢复两个 teach Skill 包及轨迹/资源打包。
+  - `skills/teach_pan_pour/__init__.py` 导出 `TeachPanPourSkill`。
+- 验证：主线定向测试 15 passed；执行仓库 teach/pan_pour 定向测试 22 passed；两个包 `colcon build --symlink-install` 成功；`git diff --check`、`compileall` 通过。
+- 注意：两个 teach 目录仍被 `.gitignore` 忽略，属于本地保留资源；若之后要提交/推送，需先取消 ignore 并把这些文件纳入版本控制，否则远端 clone 缺少 teach 文件会无法 import 注册代码。
+
+## 2026-08-17 teach Policy 注册改动清单（供后续剥离）
+
+### 已修改的跟踪文件
+
+- `kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/task_planner_node.py`
+  - 新增两个 teach Policy import。
+  - `_initialize_policy()` 新增 `teach_pan_pour`、`teach_pan_pour_delta` 分支。
+  - `valid_task_types` 新增两个任务类型。
+  - `_generate_goal_by_task_type()` 将两个 `plan_type` 路由到 `_build_skill_goal()`。
+- `kitchen_robot_home/src/dexbot_task_planner/setup.py`
+  - `find_packages()` 移除两个 teach 包排除项。
+  - `data_files` 新增两个 teach params YAML。
+- `kitchen_robot_home/src/dexbot_task_planner/test/test_task_planner_decision_dispatch.py`
+  - 新增 `test_teach_pan_pour_string_routes_to_skill_goal_builder()`。
+  - 新增 `test_teach_pan_pour_delta_string_routes_to_skill_goal_builder()`。
+- `robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/motion_executor_node.py`
+  - 新增两个 teach Skill import。
+  - `_initialize_skills()` 注册 `teach_pan_pour`、`teach_pan_pour_delta`。
+- `robot_motion_executor/src/dexbot_motion_executor/setup.py`
+  - `find_packages()` 移除两个 teach Skill 包排除项。
+  - `package_data` 新增 teach 资源与轨迹。
+
+### 已修改但被 `.gitignore` 忽略的本地文件
+
+- `kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/teach_pan_pour/`
+- `kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/teach_pan_pour_delta/`
+- `kitchen_robot_home/src/dexbot_task_planner/test/test_teach_pan_pour*.py`
+- `robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour/`
+  - 本轮只补充了 `__init__.py` 的 `TeachPanPourSkill` 导出。
+- `robot_motion_executor/src/dexbot_motion_executor/dexbot_motion_executor/skills/teach_pan_pour_delta/`
+- `robot_motion_executor/src/dexbot_motion_executor/test/test_teach_pan_pour*.py`
+
+### 未来剥离 teach 注册的步骤
+
+1. `task_planner_node.py`：删除 teach import、`_initialize_policy()` 分支、`valid_task_types` 条目和 goal 路由。
+2. 主线 `setup.py`：恢复两个 teach 包的 `find_packages` 排除，删除两个 params `data_files` 条目。
+3. `test_task_planner_decision_dispatch.py`：删除两个新增测试。
+4. `motion_executor_node.py`：删除 teach import 和 `_initialize_skills()` 注册。
+5. 执行仓库 `setup.py`：恢复两个 teach Skill 包的排除，删除 teach `package_data` 条目。
+6. 本地 teach 文件已由 `.gitignore` 忽略，不需要额外删除；只要不 `git add -f`，就不会进入提交。
+
+### 本轮验证
+
+- 主线定向测试：15 passed。
+- 执行仓库 teach/pan_pour 定向测试：22 passed。
+- `dexbot_task_planner`、`dexbot_motion_executor` 两个包 `colcon build --symlink-install` 成功。
+- `compileall`、`git diff --check` 通过。
+
 ## 当前进度快照（2026-08-16）
 
 - 正式抓锅两段接近已实现：Policy 下发最终法兰目标 `a`，PanPourSkill 先到 `b = a + [0,0,0.05]` 再到 `a`，通过现有 `/robot_driver/move_cartesian` 执行；主仓库和执行仓库各有未提交改动。
@@ -5,6 +557,18 @@
 - 正式链路检查确认无同类坐标 bug；本地脚本仍在 `.git/info/exclude` 排除范围，不进入 Git。
 - 当前硬件状态：已解决脚本报错，尚未重新执行实机移动；下一步先 `--move --dry-run` 确认两个 IK 解，再 `--move --yes` 实测 `b -> a` 和最终法兰位姿。
 - SDK 已回退到 `xcoresdk_python-v0.5.1.ar_12`，用于兼容新控制器 xCore `3.0.1.6`。
+
+## 当前会话（2026-08-17 新机械臂双臂 IP 配置）
+
+- 用户确认新机械臂调试成功，当前地址：左臂 `192.168.2.160`，右臂 `192.168.2.161`。
+- `kitchen_robot_home/src/dexbot_bringup/config/robot_driver/robot_params.yaml` 已对应更新：左臂 `.160`、右臂 `.161`。
+- 同步更新运行/调试配置：
+  - `robot_motion_executor`：`motion_executor_node.py` 默认参数、`path_record.py` 注释示例、`pan_pour` 与 `teach_pan_pour*` 共 8 个轨迹 JSON 的 `arm_ip`。
+  - GUI：`arm_hand.py`、`dual_arm.py`、`advanced_arm.py`、`registry.py`、`README.md` 默认/示例地址。
+  - 本机脚本：`local_visual_grasp_test` 左臂脚本、`local_tcp_calibration/tcp_calibration.py` 与 README。
+  - `.project-log/docs/hand_eye_calibration.md` 当前事实部分更新为左 `.160`、右 `.161`。
+- 验证：运行配置中不再使用旧左臂 `.159`；改动的 Python 文件 `compileall` 通过；8 个轨迹 JSON `json.tool` 校验通过。
+- 仍未处理的历史日志、历史文档旧记录和测试 fixture 中的旧 IP 保留，不作为当前运行配置使用。
 
 ## 当前会话（2026-08-16 SDK 回退到 v0.5.1 并修正路径引用）
 
@@ -1598,3 +2162,42 @@
 - 最近失败目标：`position=[0.606205536, 0.434084815, 0.132872672]`，`rpy=[2.573030983, 1.392851630, 2.696301008]`。
 - 已排除：标定文件未变；offset 全 0 等价旧逻辑；问题来自固定法兰姿态与目标位置组合不在当前 IK 可达/可解范围内。
 - 处理状态：暂不改代码，等待用户一起讨论抓取姿态生成策略，例如固定 TCP 姿态、随锅把方向自适应、IK 多解选择等。
+
+## 当前会话（2026-08-26 下午 全流程打通）
+
+### 本次解决的问题
+1. **perception task_name 缺失**：添加 `task_name: "boss_kitchen_scene_stir_frying"` 到 `perception_params.yaml`，使后处理输出 `pot_inner_handle`/`pot_inner_tip`/`plate_center`
+2. **左手 CAN 接口错误**：切换为正确 CAN 接口后手部动作正常执行
+3. **倾倒阶段 IK 无解**：调整 `POUR_OFFSET_CENTER_M`（从 0.08 → 0.2）、`POUR_INITIAL_FLANGE_RPY`（改为与抓锅相同姿态）、`TCP_PAN_TRANSLATION`（改为非零偏移）
+4. **YOLO 模型路径**：`local_models/yolo/` 目录不存在，创建并软链接 `yolo26x_obb.pt` → `boss_kitchen_scene_stir_frying_obb.pt`
+5. **TCP 标定脚本迁移**：`tcp_calibration.py` 从备份迁移到 `local_tcp_calibration/`，加入 `.git/info/exclude`
+
+### 当前状态
+- 视觉全流程跑通：pick（抓锅）→ wait_plate → pour（倾倒）→ place
+- 不带底盘，底盘步骤占位跳过
+- 坐标系：中心坐标系，驱动侧 `toolset.ref.trans` 左臂 `[0, -0.0787, 0]` 右臂 `[0, +0.0787, 0]`
+- `get_arm_pose` 返回 `flangeInBase`（BASE 坐标系），和 SDK 原生坐标系一致
+- TCP 偏移量 xyz 定义在**法兰坐标系**自身，不是 BASE/center/camera 坐标系
+
+### 关键参数（当前有效）
+- `TCP_GRASP_TRANSLATION = (-0.006, 0.012, 0.116)` 法兰坐标系
+- `TCP_PAN_TRANSLATION = (-0.286, 0.012, 0.116)` 法兰坐标系
+- `POUR_OFFSET_CENTER_M = (0, 0, 0.2)` 中心坐标系偏移
+- `POUR_INITIAL_FLANGE_RPY = (-1.70, 0.076, -1.73)` 与抓锅姿态相同
+- `ref.trans` 左臂 `[0, -0.0787, 0]` 右臂 `[0, +0.0787, 0]`
+
+### 下一步
+- 真机带底盘联调（底盘步骤打通后接入）
+- 或继续优化倾倒轨迹回放
+
+## 当前会话（2026-08-26 code_integration 历史清理）
+
+- 检查 `git fetch origin`：home 本地 `code_integration` 领先远端 6，motion 本地领先 2、落后 1；已合并 motion 远端王韵博的 `pickplace 力控触觉双闭环` 提交。
+- 发现本地 `code_integration` 未推送历史里包含不应提交的大模型 `.pt` 和 `robot_params.yaml.bak`，共约 165MB。
+- 已创建备份分支 `backup/code_integration_before_cleanup_0826`。
+- 普通 rebase 因远端已迁移 `tcp_profiles.yaml`/修改 `calibration.launch.py` 而冲突，改用 `filter-branch` 只重写本地未推送提交，未重写 `origin/code_integration`。
+- 已从 Git 历史移除：`local_models/boss_kitchen_scene_stir_frying_obb.pt`、`local_models/yolo/yolo26x_obb.pt`、`local_models/yolo26l_obb.pt`、`local_models/yolo26l_obb_scene1.pt`、`src/dexbot_bringup/config/robot_driver/robot_params.yaml.bak`。
+- 本地磁盘文件已从备份提交恢复：模型、yolo 软链接、`.bak` 仍在工作区，但不再被 Git 跟踪。
+- `.git/info/exclude` 已追加 `/local_models/*.pt`、`/local_models/yolo/`、`/src/dexbot_bringup/config/robot_driver/*.bak`。
+- 验证：`git ls-files` 无大模型/`.bak`；`git diff --name-status origin/code_integration..HEAD` 只剩 19 个正常代码/配置/标定文件；`git diff --check` 通过；工作区无待暂存改动。
+- 下一步：确认后推送 `origin/code_integration`；推送前不要用 `--all` 以免带上本地备份分支。

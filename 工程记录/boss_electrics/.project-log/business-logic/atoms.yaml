@@ -340,3 +340,206 @@ atoms:
   created_at: '2026-07-22'
   updated_at: '2026-07-28'
   last_verified_at: null
+
+- id: BL-PANPOUR-001
+  title: Robam PanPour 倾倒菜品子 Policy 动作链
+  kind: flow
+  domain: robam_pan_pour
+  status: active
+  priority: high
+  risk: high
+  authority: user-confirmed
+  source:
+    type: user-statement
+    reference: 用户于 2026-08-23 确认新 PanPour 子 Policy 业务逻辑与 manipulation/API 动作链
+  description: 新建 Robam PanPour 子 Policy，作为当前最后一个子 Policy，只编排现有 manipulation、增量轨迹回放和 API；不开发新 Motion Skill，底盘和正式工具坐标切换先留接口占位。
+  actors:
+  - TaskPlanner / FullPolicy
+  - PanPour 子 Policy
+  - MotionExecutor / manipulation Skill
+  - 左臂机器人
+  - 左臂 O6 灵巧手
+  - 视觉感知系统
+  - 底盘（未来接入，当前占位）
+  trigger: FullPolicy 路由到 pan_pour，或用户指定从 pan_pour 子 Policy 开始执行
+  preconditions:
+  - 当前 PanPour 是 FullPolicy 中逻辑上的最后一个子 Policy
+  - 现有 PickSkill、PourSkill、PlaceSkill 和 local_delta_replay 已可用
+  - 视觉锅把/餐盘目标通过 WorldState 可供子 Policy 消费
+  - 左臂 O6 手部配置中已有 PanPour 需要的动作名
+  inputs:
+  - 锅把中心/PCA（或把手类视觉目标）
+  - 餐盘或倾倒目标视觉信息
+  - '`sub_policy_pan_pour.yaml` 中的固定点位、速度、手部动作名、偏移和回放文件参数'
+  - 工具坐标系全 0 参数
+  rule:
+    statement: >-
+      新 PanPour 子 Policy 开头保留“设定为我们的全 0 工具坐标系”接口占位，
+      结尾保留“切换给下一个子 Policy 工具坐标系”的注释占位，当前不执行、不等待。
+      固定点位和手部动作名放 YAML；视觉抓取点、餐盘点等动态点由 Policy 运行时覆盖。
+      流程为：等待锅把 → PickSkill move_to_pre_pick/move_to_pick/pick_gesture/
+      move_to_pick_retreat（预抓取/抓取/闭合/抬锅）→ 底盘占位 → 等待餐盘 →
+      MoveCartesianApi 或 PourSkill move_to_pour_initial 视觉引导到倾倒起点 →
+      pour_action local_delta_replay → upright_action 回正 → 底盘返回占位 →
+      PlaceSkill move_to_place/place_gesture/move_to_place_retreat/move_to_place_end
+      （放回/张开/回 home）。Policy 只做工具目标点到法兰目标点的转换，
+      下发法兰目标点在中心坐标系下的表示，不做中心坐标系到目标臂 base 的转换。
+  outputs:
+  - PanPour 子 Policy 的 Pick/Pour/Place 编排目标
+  - 左臂完成抓锅、抬锅、倾倒回放、放回并回 home 的业务流程
+  - 工具坐标与底盘接口占位记录
+  side_effects:
+  - 锅可能被抬起并转移位置
+  - 左臂手部执行闭合/松开动作
+  exceptions:
+  - 视觉缺少锅把或餐盘时继续等待感知，不生成下一步动作
+  - 增量轨迹文件路径或 arm_side 无效时拒绝回放
+  - 当前版本不实现失败重试、抓取确认和成熟异常回退，失败按既有执行层结果上报
+  failure_handling:
+  - 视觉缺失：通过 is_waiting_for_perception() 等待
+  - 执行层失败：上报当前 step 失败，不自动重推下一阶段
+  - 底盘/工具坐标占位不阻塞任务
+  invariants:
+  - 不修改现有 food 子 Policy
+  - 不修改 Motion Skill、manipulation.py 或执行器原语
+  - 不修改 FullPolicy 接入底盘能力
+  - 底盘移动、工具坐标正式切换本轮只保留接口占位
+  - Policy 发送法兰目标点在中心坐标系下的表示，不发送 TCP 点或 base 点
+  - trajectory replay 校验 arm_side，不校验 arm_ip
+  acceptance:
+  - id: BL-PANPOUR-001-AC-001
+    given: 用户已确认 PanPour 全链路使用现有 manipulation/API
+    when: 子 Policy 编排动作链
+    then: 抓取段用 PickSkill，倾倒/回正用 PourSkill + local_delta_replay，放回/张开/回 home 用 PlaceSkill，不新增 Motion Skill
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-PANPOUR-001-AC-002
+    given: 视觉已提供锅把中心/PCA 或把手目标
+    when: 子 Policy 生成预抓取点
+    then: 先计算视觉抓取点，再用 YAML 的 approach_direction * approach_distance_m 外推出预抓取点，RPY 与抓取姿态一致
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-PANPOUR-001-AC-003
+    given: PanPour 子 Policy 开始和结束
+    when: 执行工具坐标接口占位
+    then: 开头保留全 0 工具坐标设置接口，结尾保留切换下一子 Policy 工具坐标的注释占位；当前不执行、不等待、不阻塞
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-PANPOUR-001-AC-004
+    given: PanPour 使用左臂手部动作
+    when: 子 Policy YAML 引用 hand_action_name
+    then: 左臂 O6 手部配置中已有对应 ACTION_NAME+POSITION；没有则需先补充后才能实机执行
+    method: null
+    evidence: null
+    status: not-verified
+  dependencies:
+  - BL-PLATING-001
+  - BL-TRAJECTORY-001
+  - BL-TRAJECTORY-002
+  baseline_refs:
+  - REQ-002
+  decision_refs:
+  - DEC-027
+  implementation_refs:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pan_pour.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/sub_policy_pan_pour.yaml
+  test_refs: []
+  supersedes: []
+  notes: 当前业务澄清已固化；Q-028 已于 2026-08-24 确定业务资源目录，视觉锅把字段参考旧版，盘子字段仍需确认。
+  created_at: '2026-08-23'
+  updated_at: '2026-08-23'
+  last_verified_at: null
+
+- id: BL-FAKEVISION-001
+  title: PanPour 真机链路假视觉测试
+  kind: integration
+  domain: robam_pan_pour
+  status: experimental
+  priority: high
+  risk: high
+  authority: user-confirmed
+  source:
+    type: user-statement
+    reference: 用户于 2026-08-25 确认“真实机械臂 + 假视觉”测试业务逻辑
+  description: >-
+    在手眼标定和真实感知尚未就绪时，由假视觉节点一次发布三个中心坐标系目标对象，
+    驱动 PanPour 子 Policy 在真实机械臂上跑通完整动作链；底盘保持占位跳过。
+  actors:
+  - PanPour 子 Policy
+  - 假视觉节点
+  - MotionExecutor / manipulation Skill
+  - 左臂机器人
+  - 左臂 O6 灵巧手
+  trigger: 假视觉节点向 `/perception/scene` 发布有效场景，用户调用 PanPour
+  preconditions:
+  - 真机 Driver、MotionExecutor、TaskPlanner 和假视觉节点已启动
+  - "`sub_policy_pan_pour.py` 测试参数满足 `GRASP_OFFSET_ALONG_HANDLE_M=0.0`、`TCP_GRASP=0`、`TCP_PAN=0`"
+  - "`set_tcp(left_default)` 链路可用"
+  - "`pot_handle_center`、`pot_inner_handle`、`plate_center` 已按 `get_arm_pose` 中心坐标填写"
+  inputs:
+  - "`pot_handle_center`"
+  - "`pot_inner_handle`"
+  - "`plate_center`"
+  - "`scene_valid=true`"
+  rule:
+    statement: >-
+      假视觉节点一次发布所有目标到 `/perception/scene`，不采用分阶段切换发布对象，
+      这样 PanPour 不需要依赖“何时切换发布对象”的外部时序。三个对象全部定义在
+      中心坐标系：`pot_handle_center` 取自用户手动把左臂移动到抓锅点时读取的法兰位姿，
+      `pot_inner_handle` 由用户根据转换后的点位手动填写，`plate_center` 取自用户手动把
+      左臂移动到倾倒轨迹回放起始位时读取的法兰位姿。姿态使用 identity 四元数；
+      PanPour 不消费假视觉姿态，倾倒起始姿态仍使用固定 `POUR_INITIAL_FLANGE_RPY`。
+      测试阶段 `TCP_GRASP`、`TCP_PAN` 和 `GRASP_OFFSET_ALONG_HANDLE_M` 临时设为全 0，
+      Policy 下发法兰目标点（中心坐标系），Driver 再经中心坐标系参数转换为左臂 base 控制。
+      流程为 `set_tcp -> wait_handle -> pick -> wait_plate -> pour -> place -> completed`，
+      底盘占位跳过。
+  outputs:
+  - 假视觉驱动的 PanPour 真机完整动作链执行结果
+  side_effects:
+  - 真机左臂和灵巧手会实际运动
+  exceptions:
+  - 假视觉点与实际机械臂姿态不一致可能造成碰撞或轨迹起点错误
+  - 倾倒起点固定 `POUR_INITIAL_FLANGE_RPY` 必须与 `pour_delta.json` 起始姿态一致
+  failure_handling:
+  - 真机安全停止沿用本机急停规则，本轮不实现自动重试
+  invariants:
+  - 假视觉一次发布全部对象，不切换发布对象
+  - 点位语义统一为中心坐标系，`scene_valid=true`
+  - 底盘保持占位跳过，不阻塞回放
+  acceptance:
+  - id: BL-FAKEVISION-001-AC-001
+    given: 真机、假视觉节点和 PanPour 子 Policy 已启动
+    when: "假视觉一次发布 `pot_handle_center`、`pot_inner_handle`、`plate_center` 且 `scene_valid=true`"
+    then: "PanPour 从 `set_tcp` 开始依次完成 pick、pour、place，不等待真实感知"
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-FAKEVISION-001-AC-002
+    given: 测试阶段 TCP 与沿锅把偏移参数已临时置 0
+    when: 子 Policy 根据假视觉点生成运动目标
+    then: 下发的法兰目标点在中心坐标系下与假视觉抓取/倾倒点一致，Driver 负责转换到左臂 base
+    method: null
+    evidence: null
+    status: not-verified
+  - id: BL-FAKEVISION-001-AC-003
+    given: 需要采集假视觉点位
+    when: "用户填写 `pot_handle_center` 和 `plate_center`"
+    then: "用户分别控制左臂到抓锅点和倾倒轨迹回放起始位，读取 `get_arm_pose` 的中心坐标系位置"
+    method: null
+    evidence: null
+    status: not-verified
+  dependencies:
+  - BL-PANPOUR-001
+  baseline_refs: []
+  decision_refs: []
+  implementation_refs:
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pan_pour.py
+  test_refs: []
+  supersedes: []
+  notes: 用户确认不需要分阶段发布；直接全部发给 PanPour，避免切换发布对象的时序控制。
+  created_at: '2026-08-25'
+  updated_at: '2026-08-25'
+  last_verified_at: null
