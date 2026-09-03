@@ -1,18 +1,40 @@
 ## 当前状态
-- 最近状态：PanPour 已接入 `initialize` skill，状态机为 `set_tcp -> initialize -> wait_handle -> pick -> wait_plate -> pour -> place -> completed`；`InitializeSkill` 已支持手部 `hand_angles` 与机器人 `joints` 回家两种模式
+- 2026-09-02 临时跳过 PourServe 开头的 `set_tcp`：live graph 确认 `/robot_driver/set_tcp` 只是 motion client，`robot_driver_node` 没有该 service server；driver deb 1.0.9 未在 `ArmServer` 注册该接口。
+- 2026-09-02 已加 `SET_TCP_ENABLED=False`，`SET_TCP_ENABLED=True` 时可恢复原流程；当前 skip 模式从 `set_tcp` 首步改为直接 `CAPTURE_HANDLE -> move_joints(lift)`，非 skip 模式直接从 `initialize` 开始。
+- 2026-09-02 临时跳过两次底盘导航：`CHASSIS_NAVIGATION_ENABLED=False`，PICK/LIFT 完成后直接进入 `WAIT_PLATE`，POUR 完成后直接进入 `PLACE`；`True` 可恢复 `serve`/`cook` 导航。
+- 2026-09-02 当前待真机流程为 `CAPTURE_HANDLE -> move_joints(lift) -> wait_plate -> pour -> place -> completed`，不再出现 `set_tcp` 与 `chassis_control`。
+- 2026-09-02 验证通过：`compileall`、`colcon build --symlink-install --packages-select dexbot_task_planner`、9/9 unittest（含导航开关恢复路径）；未提交，等真机测试后按用户决定回滚或保留。
+- 2026-09-02 用户确认跳过模式真机测试通过，已把临时 set_tcp/导航跳过改动回滚到 HEAD `f332c3e 跳过抓锅阶段`；home 工作区 clean，`colcon build` 通过。
+- 2026-09-02 回滚后定向 unittest 暴露 HEAD 既有测试不一致：`test_skip_mode_disabled_keeps_initialize_flow` 未把 `_skip_mode` 设为 0，但源码默认 `SKIP_MODE=1`，该用例在 HEAD 上失败；未改动 HEAD 内容。
+- 2026-09-02 已把 home 当前 PourServe skip_mode 状态迁移到 `/home/tbl/桌面/111/kitchen_robot_home`：`sub_policy_pour_serve.py` 的 `SKIP_MODE` 对齐为 `PRE_GRASPED`，YAML 与测试文件已一致，目标仓库 compileall 通过；未提交，目标仓库同有该既有测试不一致。
+- 2026-09-02 PourServe `skip_mode` 实现完成：`SKIP_MODE=0` 保持原 `set_tcp -> initialize -> pick -> navigate_to_serve -> wait_plate -> pour -> navigate_to_cook -> place`；`SKIP_MODE=1` 进入时左臂已抓锅，流程为 `set_tcp -> get_arm_pose -> move_joints(lift) -> navigate_to_serve -> wait_plate -> pour -> navigate_to_cook -> place`，跳过 initialize/wait_handle/pick。
+- 2026-09-02 skip_mode 的 place 快照在 `set_tcp` 完成后、抬锅前直接调用 `/robot_driver/get_arm_pose(arm=0)` 获取；因 default TCP 为全 0，返回的 `endInRef` 即中心坐标系下法兰位姿，不再叠加 `TCP_GRASP_TRANSLATION`；已按用户要求放在 Policy 内部实现。
+- 2026-09-02 验证通过：源码仓库 `compileall`、`colcon build --packages-select dexbot_task_planner`、定向 unittest 7/7（含 FullPolicy skip 全链冒烟）；两个改动文件已同步到 `/home/tbl/桌面/111/kitchen_robot_home` 且目标仓库 compileall 通过。
+- 2026-09-02 PourServe 导航实现完成：`PourServePolicy` 已正式插入两次 `PLAN_CHASSIS_CONTROL -> move_to_point`，pick 后到 marker `serve`，pour 后回 marker `cook`；流程为 `set_tcp -> initialize -> pick -> navigate_to_serve -> wait_plate -> pour -> navigate_to_cook -> place -> completed`。
+- 2026-09-02 已同步本轮三个导航相关文件到 `/home/tbl/桌面/111/kitchen_robot_home`：`sub_policy_pour_serve.py`、`sub_policy_pour_serve.yaml`、`test_pour_serve_navigation_policy.py`；新仓库未提交、未推送。
+- 实现仅改 PourServe 子 Policy/配置并新增状态机测试，未改动 pick/pour/place 数据来源；place 继续使用 pick 阶段 approach/grasp 法兰快照。
+- 验证通过：`compileall`、2 个定向 unittest、`colcon build --packages-select dexbot_task_planner`、FullPolicy 全链路冒烟；实际步骤为 `set_default_tcp -> initialize -> pick -> move_to_point(serve) -> pour -> move_to_point(cook) -> place`。
+- 环境限制：全包 `colcon test` 在本机被 pytest/anyio 插件兼容问题阻断（`No module named '_pytest.scope'`），与本次代码无关。
 - 当前阶段：implementation
-- 当前任务：把 `InitializeSkill` 接入 PanPour；待用户提供 home 左臂关节角和手部关节角后替换当前占位
-- 状态：`initialize.py` 支持 `open_gesture.mode=hand_angles` 和 `move_home.mode=joints`；PanPour 新增 `INITIALIZE` phase；YAML 新增 `initialize` step；home 左臂关节已按用户给的度数值换算为弧度并写入，手部复用 `预抓把手`（`[100,100,100,100,100,100]`）
-- 最近验证：`python3 -m compileall` 通过；完整状态机流程通过；`colcon build --symlink-install --packages-up-to dexbot_task_planner` 成功；install 态 policy 导入/配置加载通过；现有 `PlatePourPolicy` 回归导入通过
-- 状态更新：新子 Policy 使用 PickSkill/PourSkill/PlaceSkill；工具到法兰转换在 Policy 内完成并下发中心坐标系法兰目标；底盘移动和工具坐标系切换保留空接口占位
+- 下一步：真机确认 skip_mode 下 get_arm_pose/抬锅/导航全链，以及底盘端已保存 `serve`/`cook` marker；经负责人同意后提交/推送本轮改动。
+- 2026-09-02 业务澄清固化：PourServe 子 Policy 正式接入底盘导航，marker 名规划为 `serve`（出餐区）和 `cook`（灶台区）；目标流程为 `initialize -> pick -> navigate serve -> wait plate -> pour -> navigate cook -> place -> completed`，导航步骤复用 Gather 的 `chassis_control -> move_to_point` 模式；用户确认只增加导航，place 沿用现有 pick 快照，不修改其他阶段；已固化 `BL-POURSERVE-NAV-001`，失败语义沿用现有步骤失败/重试。
+- 2026-09-02 底盘 marker 实查：本机到云迹底盘 `192.168.10.10:31001` 不通（本机 `eno1` 为 `192.168.2.100/24`，无 `192.168.10.0/24` 路由）；当前 Driver 只提供保存/导航服务，没有列出 marker 的 ROS service；仓库历史可找到的 marker 引用为 `stove_station`、`plate_station`、`gather`，不能确认底盘端实际保存列表。
+- 当前 PanPour 业务已迁移到框架预留的 `sub_policy_pour_serve.py` / `sub_policy_pour_serve.yaml`，类名改为 `PourServePolicy`，FullPolicy 注册键为 `pour_serve`
+- 旧 `sub_policy_pan_pour.py` / `sub_policy_pan_pour.yaml` 已删除；迁移前已备份提交 `083960f`
+- 已按用户要求移除 `hold_or_not`：抓取流程恢复为单次 `pour_serve_pick`，完整流程为 `set_tcp -> initialize -> pick -> pour -> place`
+- `pour_delta.json` 资源路径和 `default` TCP profile 均保留
+- 已从 home 本地分支历史移除整个 `src/sdk/`，本地 SDK 文件保留且已加入 `.git/info/exclude`；远程分支尚未强推
+- 当前阶段：implementation
+- 下一步：迁移与本轮删除改动尚未提交/推送；真机验证 `set_tcp -> initialize -> pick -> pour -> place` 全链路
 - 底盘 API 结论：Driver 已开放 `/robot_driver/chassis/navigate_to_marker` 等服务，Motion 已注册 `chassis_control` Skill 和相关 Primitive；但当前 Home Planner 的 `PlanType`/`PlannedStep` 没有导航字段，FullPolicy 也未接导航
-- 底盘占位结论：本轮不改 FullPolicy，底盘控制做空逻辑占位；后续 FullPolicy 接入底盘能力后，再由子 Policy 调用
+- 底盘占位结论：此前底盘控制仅空逻辑占位；本轮已把该占位替换为子 Policy 的正式 chassis_control 步骤，不修改 FullPolicy
 - PickSkill 编排边界已确认：`move_to_pre_pick -> move_to_pick -> pick_gesture -> move_to_pick_retreat` 可覆盖旧“预抓取/抓取/闭合/抬锅”；抬锅点不是倾倒开始点
 - 收尾编排已确认：放回原位置、张开手、回 home 使用 PlaceSkill，不是 PickSkill；`move_to_place -> place_gesture -> move_to_place_retreat -> move_to_place_end` 可完整覆盖
 - 全链路覆盖结论：Pick/Pour/Place、增量轨迹回放、move_cartesian API 可覆盖机械臂动作链；底盘移动仍因 Home Planner 未接导航字段而保持占位
 - 用户已确认该链路并同意作为本次 PanPour 子 Policy 的开发基线
 - 占位语义已确认：底盘移动、工具坐标系设定只保留接口，当前不执行、不等待、不阻塞任务
 - 工具坐标系接口已确认：子 Policy 开头设定为我们的全 0 工具坐标系；结尾保留“切到下一个子 Policy 工具坐标系”的注释占位
+
 - 增量轨迹回放能力已确认：直接使用 manipulation 的 `PourSkill.pour_action` + `local_delta_replay`，Q-021 已标记为 answered
 - 增量轨迹目录检查：框架内目前没有专门且已打包的增量轨迹资源目录；`dexbot_task_planner/resources/trajectories/` 仅为空 `.gitkeep`，Motion 仓库无对应资源目录
 - 倾倒起点与轨迹资源（Q-028/DEC-028）：视觉引导到倾倒起点使用 MoveCartesianApi；`pour_delta.json` 已复制到 motion/robam/trajectories；左臂手部参数参考旧版 `open`/`grasp_pan`；锅把字段参考旧版 `pot_handle_center`/`pot_inner_handle`
@@ -29,6 +51,92 @@
 - 假视觉测试业务逻辑已固化：真实机械臂 + 假视觉，不依赖手眼标定；假视觉一次发布 `pot_handle_center`/`pot_inner_handle`/`plate_center`，全部中心坐标系、`scene_valid=true`；PanPour 全链 `set_tcp -> wait_handle -> pick -> wait_plate -> pour -> place -> completed`，底盘继续占位跳过
 - 假视觉节点已落地：私有包 `src/dexbot_fake_vision`，通过 `.git/info/exclude` 排除 Git 跟踪；一次发布全部三个对象到 `/perception/scene`，点位配置文件先置 `null` 防误跑
 - 下一步：填写实测假视觉点位后做真机全链路验证；待负责人同意后推送
+
+## 当前会话（2026-09-02 PourServe skip_mode/已抓锅直接抬锅实现）
+
+- 用户临时不开底盘，`PourServePolicy` 继续增加 `CHASSIS_NAVIGATION_ENABLED=False`；导航分支代码保留，恢复底盘后改回 `True` 即可重新生成两次 `chassis_control`。
+- 测试同步调整为默认跳过导航，另保留 `CHASSIS_NAVIGATION_ENABLED=True` 时 serve/cook 导航生成的覆盖；9/9 unittest 通过。
+
+- 用户确认当前 driver deb 1.0.9 未提供 `/robot_driver/set_tcp` service server；`ros2 node info /robot_driver_node --include-hidden` 的 Service Servers 中没有该接口，`motion_executor_node` 的 Service Clients 中有。
+- 为继续真机测试，临时新增 `SET_TCP_ENABLED=False`；不删 set_tcp 相关代码，之后把常量改回 `True` 可恢复原步骤。
+- 已同步调整测试：`test_skip_mode_full_sequence_skips_pick` 首步不再断言 `PLAN_SET_TCP`，改为直接 `PLAN_MOVE_JOINTS`；7/7 unittest 通过。
+
+- 用户确认上游开盖 Policy 结束后左臂已抓锅，但仍保留完整 pick 链路作保险；新增顶层 `SKIP_MODE`：`0=原完整链路`，`1=跳过 initialize/wait_handle/pick`。
+- `PourServePhase` 新增 `CAPTURE_HANDLE` 与 `LIFT`；`SET_TCP` 完成后按 `SKIP_MODE` 分流到 `INITIALIZE` 或 `CAPTURE_HANDLE`。
+- skip 模式在 Policy 内调用 `/robot_driver/get_arm_pose(arm=0)`，将返回值直接作为 `_grasp_flange_pose`，并按中心坐标 +Z 偏移 `GRASP_APPROACH_DISTANCE_M` 计算 `_approach_flange_pose`；随后生成 `PLAN_MOVE_JOINTS` 抬锅（`LIFT_JOINTS`），place 复用这两个法兰快照。
+- 实现依据：driver `get_arm_pose` 使用 `CoordinateType.endInRef`；`tcp_profiles.yaml` left/default 的 `trans/rpy=[0,0,0]`，所以返回点就是中心坐标系下的法兰点，不再转换 TCP 偏移。
+- 测试扩展：新增 5 个用例，覆盖 set_tcp 分流、capture 失败、抬锅 move_joints、place 直接使用捕获快照、FullPolicy skip 全链；源码仓库 7/7 unittest 通过。
+- 已同步 `sub_policy_pour_serve.py` 和 `test_pour_serve_navigation_policy.py` 到新仓库 `/home/tbl/桌面/111/kitchen_robot_home`，目标仓库 `compileall` 通过；未提交、未推送，真机未验证。
+
+## 当前会话（2026-09-02 PourServe 底盘导航接入实现）
+
+- 用户确认本轮只把导航接入现有 PourServe 流程，不修改 pick/pour/place 其他阶段。
+- `PourServePhase` 新增 `NAVIGATE_TO_SERVE` 与 `NAVIGATE_TO_COOK`；`update_step_status` 在 PICK 完成后先切到 `NAVIGATE_TO_SERVE`，POUR 完成后先切到 `NAVIGATE_TO_COOK`，导航完成后分别进入 `WAIT_PLATE` / `PLACE`。
+- `_build_navigation_step()` 仿 Gather：生成 `PlanType.PLAN_CHASSIS_CONTROL`，`action_name="move_to_point"`，`fruit_id=marker`，`control_positions=[navigation_timeout_sec, poll_period_sec]`。
+- `sub_policy_pour_serve.yaml` 的 `sequence` 已插入 `navigate_to_serve` 与 `navigate_to_cook`；两个步骤配置 `marker=serve/cook`、timeout=120s、poll=0.5s。
+- 新增 `test/test_pour_serve_navigation_policy.py`，覆盖 pick 完成 -> serve 导航 -> WAIT_PLATE，以及 pour 完成 -> cook 导航 -> PLACE。
+- 验证命令与结果已记录到 `EVID-POURSERVE-NAV-001`；FullPolicy 冒烟输出 `set_default_tcp -> initialize -> pour_serve_pick -> navigate_to_serve -> pour_serve_pour -> navigate_to_cook -> pour_serve_place`；未启动真机，底盘 marker 和硬件端到端导航仍待验证。
+
+## 当前会话（2026-09-02 PourServe 已抓锅跳过模式澄清）
+
+- 用户确认当前上游开盖 Policy 结束后左臂已抓锅；为保险仍保留完整 pick 链路，同时新增 `skip_mode` 开关。
+- 已确认 skip 模式采用方案 2：`set_tcp` 保留为第一步，跳过 `initialize` 与 `wait_handle`，直接生成 `PLAN_MOVE_JOINTS` 抬锅，使用默认速度。
+- Place 点位来源确认：skip 模式下在 `set_tcp` 完成后、抬锅前读取左臂当前位姿，作为抓锅法兰快照，再在中心坐标系 +Z 方向按 `GRASP_APPROACH_DISTANCE_M` 计算预放置点。
+- 坐标系结论：当前 `PlaceSkill` waypoint 是 Policy 换算后的法兰/末端点在中心坐标系；`get_arm_pose` 在左臂 `set_tcp default`（`toolset.end=0`）后返回 `endInRef` 即法兰/末端点在中心坐标系，因此读取结果直接作为 `_grasp_flange_pose`，不要再叠加 `TCP_GRASP_TRANSLATION`。
+- 实现依据：`luoshi_arm.get_arm_pose()` 使用 `CoordinateType.endInRef`；`tcp_profiles.yaml` 左臂 `default` 的 `trans/rpy=[0,0,0]`，因此 end==flange；`MoveCartesian`/`control_cartesian` 同样按 `endInRef` 解释输入。
+
+## 当前会话（2026-09-01 移除 PourServe 的 hold_or_not）
+
+- 用户确认不再需要抓取判定步骤，要求删除 `hold_or_not` 及拆分抓取逻辑，恢复“回到初始位置 -> 直接抓取 -> 倾倒 -> 放回”的原流程。
+- 参照无判定版本提交 `61d520d^`（`initialize -> pick -> pour -> place`），已把 PICK 阶段恢复为单个 `pour_serve_pick` step。
+- 删除的内容：子 Policy 中的 `_build_pick_substep`、`_build_pick_grasp_step`、`_build_hold_or_not_step`、`_encode_hold_param`、`_build_pick_retreat_step` 及对应动作填充方法；YAML 中的 `hold_or_not` block、`pour_serve_pick_grasp`、`pour_serve_pick_retreat` 拆分模板；`_pick_substep` 状态。
+- 保留内容：`initialize` 自定义 home、`move_to_pick_initial`、`move_to_pre_pick`、`move_to_pick`、`pick_gesture`、`move_to_pick_retreat`（抬锅 `LIFT_JOINTS`）、`pour` 与 `place` 原编排。
+- 未删除公共 `hold_or_not` skill 支持；只让当前 `PourServePolicy` 不再使用该判定步骤。
+- 验证通过：
+  - `python3 -m compileall -q src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pour_serve.py`
+  - YAML `sequence = ['initialize', 'pour_serve_pick', 'pour_serve_pour', 'pour_serve_place']`
+  - `colcon build --symlink-install --packages-select dexbot_task_planner`
+  - `FullPolicy(target_class="pour_serve")` 状态机冒烟：`set_tcp -> initialize -> pick -> pour -> place -> completed`
+  - Motion `PickSkill/PourSkill/PlaceSkill.build_primitives()` 对同一策略生成的参数构造成功，primitive 链路无缺失动作槽
+- 未提交、未推送；继续保留当前未提交的迁移、old pan_pour 删除和其他用户本机改动。
+
+## 当前会话（2026-09-01 从 home 历史移除 src/sdk）
+
+- 用户确认需要把 `src/sdk/` 从历史提交中移除，同时保留本机 SDK 文件用于运行。
+- `.git/info/exclude` 已改为忽略整个 `/src/sdk/`。
+- 已用 `git filter-branch --index-filter 'git rm -r --cached --ignore-unmatch src/sdk'` 重写本地 `code_integration` 与 `backup/code_integration_before_cleanup_0826`；`main` 本身未包含 `src/sdk`，保持未变。
+- 重写前备份：`/tmp/kitchen_robot_home_pre_sdk_remove_20260901.bundle`、`/tmp/kitchen_robot_home_src_sdk_20260901.tar.gz`、`/tmp/kitchen_robot_home_uncommitted_20260901.patch`。
+- 重写后恢复：`src/sdk/` 本地完整 131M，0.5 SDK 的 `example/setup_path.py`、arm_api、linkerbot、0.7 SDK 均恢复；未提交改动已从 stash 恢复。
+- 验证：三个本地分支 `git log -- src/sdk` 均为 0；`git ls-files src/sdk` 为 0；`refs/original` 已清除；`git status` 不再出现 SDK。
+- 重要：远程 `origin/*` 仍是旧历史，未推送；要让远端也移除 SDK，需要负责人协调后对相应分支执行 force push，并让其他协作者重新同步。
+
+## 当前会话（2026-09-01 PanPour 迁移到 PourServe）
+
+- 用户要求把自建 PanPour 子 Policy 和配置迁移到框架预留的 `sub_policy_pour_serve.py` / `.yaml`，并把 FullPolicy 注册改为新 Policy。
+- 先创建备份提交 `083960f`，包含迁移前的感知配置、PanPour Python/YAML 和新增 `resources/trajectories/pour_delta.json`。
+- 完成迁移：新文件为 `PourServePolicy` / `PourServePhase`，配置加载 `sub_policy_pour_serve.yaml`，步骤名/profile 统一为 `pour_serve_*`。
+- `task_planner_node.py` import 与 FullPolicy 注册由 `"pan_pour": PanPourPolicy` 改为 `"pour_serve": PourServePolicy`。
+- 旧 `sub_policy_pan_pour.py` 与 `sub_policy_pan_pour.yaml` 已从工作区删除。
+- 验证：`compileall` 通过；YAML `sequence` 解析通过；`colcon build --symlink-install --packages-select dexbot_task_planner` 通过；`FullPolicy(target_class="pour_serve")` 状态机从 set_tcp 到 place 全链通过；全仓库未发现旧文件路径/类名残留引用。
+- 当前迁移改动未提交、未推送。
+
+## 当前会话（2026-09-01 hold_or_not 参数传递修正）
+
+- 问题确认：`HoldOrNotSkill` 只从 `target.action_name` 读取 key:value 参数，不读取 `skill_params_json`；此前 PanPour 的 `hold_or_not` 步骤由 `build_json_skill_step()` 生成时 `action_name` 为普通步骤名，YAML 参数实际未生效。
+- 修正：`sub_policy_pan_pour.yaml` 的 `hold_or_not` 改为顶层 `parameters`；`sub_policy_pan_pour.py` 的 `_build_hold_or_not_step()` 按 `GatherPolicy` 现有模式直接生成 `PLAN_HOLD_OR_NOT`，并把参数编码进 `action_name`。
+- 当前生成结果：`action_name="fail_if_not_holding:true,hold_threshold:4.0,required_joints:2"`。
+- 验证：`compileall` 通过；`colcon build --symlink-install --packages-select dexbot_task_planner` 通过；状态机冒烟输出 `pick -> hold_or_not -> pick_retreat -> pour -> place`，hold step 参数串正确；Motion `HoldOrNotSkill.build_primitives()` 从该 `action_name` 解析出 `HOLD_OR_NOT` primitive，threshold/required_joints/fail 参数正确。
+- 未修改 motion scope：`hold_or_not.py` 的调用约定保持不变；未提交、未推送。
+
+## 当前会话（2026-09-01 合并后校准、感知配置与轨迹资源迁移）
+
+- 已完成 home `code_integration` 合并并提交 `36d53ad`，冲突已手动解决；当前未推送。
+- `tcp_profiles.yaml` 合并后保留 `left/right` 分组；PanPour Policy 的 `SET_TCP_PROFILE_NAME` 与 `action_name` 已对齐为 `default`，与当前配置一致。
+- 感知场景已恢复为 PanPour 使用的 `boss_kitchen_scene_stir_frying`；`.localconfig` 的 `yolo_model_dir` 改为模型目录，`yolo26l_obb.pt` 已放回 `local_models/yolo/` 且保持不受 Git 跟踪。
+- PanPour 增量轨迹已从 motion 仓库切换到 home 包资源：`sub_policy_pan_pour.yaml` 的 `replay_file=pour_delta.json`；`_resolve_replay_file()` 改为从 `dexbot_task_planner` 的 `resources/trajectories` 解析。
+- 已验证：`dexbot_task_planner` 编译和 `colcon build --symlink-install --packages-select dexbot_task_planner` 通过；安装空间 `pour_delta.json` 存在；Policy 解析结果指向 home 资源。
+- 当前工作区：home 有 `perception_params.yaml`、`sub_policy_pan_pour.yaml/py` 修改和新增 `resources/trajectories/pour_delta.json`；motion 已暂存删除旧的 `skills/robam/trajectories/pour_delta.json`。
+- 下一步：整理本次合并后的未提交改动，确认是否提交 home；随后继续 PanPour 真机验证或 hold_or_not 参数标定。
 
 ## 当前会话（2026-08-26 InitializeSkill 接入 PanPour）
 
@@ -2173,6 +2281,7 @@
 5. **TCP 标定脚本迁移**：`tcp_calibration.py` 从备份迁移到 `local_tcp_calibration/`，加入 `.git/info/exclude`
 
 ### 当前状态
+- 感知检查：`ros-humble-dexbot-perception 1.0.23-0jammy` 已安装且与 VERSIONS 对齐；1.0.23 注册表支持 cut_cucumber / scene_cutting / scene_stir_frying；当前 perception_params.yaml 仍是 stir_frying
 - 视觉全流程跑通：pick（抓锅）→ wait_plate → pour（倾倒）→ place
 - 不带底盘，底盘步骤占位跳过
 - 坐标系：中心坐标系，驱动侧 `toolset.ref.trans` 左臂 `[0, -0.0787, 0]` 右臂 `[0, +0.0787, 0]`
@@ -2201,3 +2310,19 @@
 - `.git/info/exclude` 已追加 `/local_models/*.pt`、`/local_models/yolo/`、`/src/dexbot_bringup/config/robot_driver/*.bak`。
 - 验证：`git ls-files` 无大模型/`.bak`；`git diff --name-status origin/code_integration..HEAD` 只剩 19 个正常代码/配置/标定文件；`git diff --check` 通过；工作区无待暂存改动。
 - 下一步：确认后推送 `origin/code_integration`；推送前不要用 `--all` 以免带上本地备份分支。
+
+## 待解决：hold_or_not 判定未抓住时的恢复策略
+
+- 当前实现：`fail_if_not_holding=true` 时 hold_or_not step 返回 FAILED，`update_step_status` 走 `_fail()` 路径，整条 PanPour 任务直接置 FAILED，由 harness API 或人工决定重发。
+- 待决策：是否在 sub_policy 层做局部重抓（张开手 → 退到 pre_pick → 重跑 pick_grasp + hold_or_not），加 `_retry_count` 限重试 3 次。
+- 临时策略：先用方案 A（直接 FAILED）跑通全流程验证 hold 判定是否符合预期，再决定升级方案 B。
+- 详见 [Q-033](business-logic/open-questions.md)。
+
+## 当前会话（2026-09-01 PickSkill 必需动作显式禁用问题，已回退）
+
+- 真机 `pour_serve` 跑到第二次 pick（`pour_serve_pick_retreat`）时报 `manipulation skill params missing required action: move_to_pick`。
+- 根因：`BaseManipulationSkill._validate_required_actions()` 把 `enabled:false` 的 REQUIRED_ACTIONS 也判定为缺失；第二次 pick 只启用 `move_to_pick_retreat`，因此校验失败。
+- 修复：motion `manipulation.py` 新增 `_has_required_action()`，必需动作槽位显式存在即可；是否执行仍由 `_iter_action_items()` 按 enabled 决定。改动已用 `###robam陶柏霖###` 包裹。
+- 验证：`compileall` 通过；motion `colcon build --symlink-install --packages-select dexbot_motion_executor` 通过；source kitchen + motion install 后 PickSkill 对 disabled `move_to_pick`/`pick_gesture` 校验通过。
+- 注意：motion 仓库 install 需在 kitchen install 之后 source，否则 `ros2 pkg prefix dexbot_motion_executor` 仍指向 apt `/opt/ros/humble`；尚未提交。
+- 用户确认不需要该修改，已回退 `manipulation.py` 到 HEAD，并重新 build motion 包；当前 motion 仓库工作区无改动，原始校验行为已恢复。

@@ -460,3 +460,27 @@ evidence:
   - 右手 CAN `can1` 未就绪，未覆盖双手/右臂验证。
   - Gemini 2 的 depth preset 与当前驱动预设接口不匹配，仅记录非致命告警，未做深度算法验收。
   - SafetyHeartbeat 失联为 full launch 当前 safety layer 注释配置下的预期现象，未作为本次任务验收项。
+- id: EVID-POURSERVE-NAV-001
+  task_id: POURSERVE-NAV-20260902
+  business_logic:
+  - BL-POURSERVE-NAV-001
+  acceptance_criteria:
+  - BL-POURSERVE-NAV-001-AC-001
+  - BL-POURSERVE-NAV-001-AC-002
+  - BL-POURSERVE-NAV-001-AC-003
+  result: partial
+  level: 2
+  commands:
+  - cd kitchen_robot_home && python3 -m compileall -q src/dexbot_task_planner/dexbot_task_planner
+  - cd kitchen_robot_home/src/dexbot_task_planner/test && source /opt/ros/humble/setup.bash && source /home/tbl/Project/boss_electrics/kitchen_robot_home/install/setup.bash && python3 -m unittest test_pour_serve_navigation_policy -v
+  - cd kitchen_robot_home && source /opt/ros/humble/setup.bash && colcon build --symlink-install --packages-select dexbot_task_planner
+  artifacts:
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pour_serve.py
+  - kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/sub_policy_pour_serve.yaml
+  - kitchen_robot_home/src/dexbot_task_planner/test/test_pour_serve_navigation_policy.py
+  limitations:
+  - 已通过状态机单测验证 pick 后导航到 serve、pour 后导航到 cook，以及导航完成后进入 WAIT_PLATE / PLACE。
+  - place 继续使用 pick 法兰快照已通过代码检查确认，未新增重新感知。
+  - FullPolicy 冒烟输出 `set_default_tcp -> initialize -> pour_serve_pick -> navigate_to_serve -> pour_serve_pour -> navigate_to_cook -> pour_serve_place`。
+  - 未启动真实 ROS 节点、云迹底盘和机械臂硬件；marker `serve`/`cook` 是否已保存在底盘端仍需真机确认。
+  - colcon test --packages-select dexbot_task_planner 在测试运行前被本机 pytest/anyio 插件兼容问题阻断（`No module named '_pytest.scope'`），与本次代码无关；定向 unittest 已通过。

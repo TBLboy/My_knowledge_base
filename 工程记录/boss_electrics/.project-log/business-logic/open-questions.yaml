@@ -788,3 +788,23 @@ questions:
   - 用户于 2026-08-25 确认“直接全部发”
   created_at: '2026-08-25'
   answered_at: '2026-08-25'
+- id: Q-033
+  title: hold_or_not 判定未抓住时的恢复策略
+  status: open
+  authority: B
+  impact: medium
+  uncertainty: medium
+  rework_cost: medium
+  related_business_logic:
+  - BL-PANPOUR-001
+  related_tasks:
+  - TASK-011
+  context: 当前 fail_if_not_holding=true 直接 FAILED 整条任务；备选是 policy 层局部重抓。
+  recommendation: 先用方案 A（直接 FAILED）跑通全流程验证 hold 判定是否符合预期，再决定升级到方案 B（局部重抓 + _retry_count）。
+  alternatives:
+  - 局部重抓：松开手 → 退到 pre_pick → 重跑 pick_grasp + hold_or_not，最多 3 次
+  - 调参重试：降低 hold_threshold
+  - 换 grasp pose 重抓
+  answer: null
+  source_refs:
+  - .project-log/current-session.md

@@ -543,3 +543,97 @@ atoms:
   created_at: '2026-08-25'
   updated_at: '2026-08-25'
   last_verified_at: null
+- id: BL-POURSERVE-NAV-001
+  title: PourServe 子 Policy 底盘导航接入
+  kind: flow
+  domain: robam_pour_serve_chassis
+  status: active
+  priority: high
+  risk: high
+  authority: user-confirmed
+  source:
+    type: user-statement
+    reference: 用户于 2026-09-02 确认只增加两次底盘导航，不修改 pick/pour/place 阶段
+  description: >-
+    PourServe 子 Policy 在现有动作链中正式接入两次底盘 marker 导航：
+    pick 完成后导航到 `serve`，再开始等待餐盘感知；pour 完成后导航到 `cook`，
+    再执行现有 place。接入方式参考 Gather 的 `chassis_control -> move_to_point` 模式。
+  actors:
+  - TaskPlanner / FullPolicy
+  - PourServe 子 Policy
+  - MotionExecutor / ChassisControlSkill
+  - Yunji 底盘
+  - 左臂机器人
+  trigger: PourServe 的 pick 或 pour 阶段执行完成
+  preconditions:
+  - 底盘端已保存 `serve` 和 `cook` 两个 marker
+  - Motion 已注册并可用 `chassis_control` 的 `move_to_point`
+  - 现有 pick/pour/place 数据快照保持可用
+  inputs:
+  - marker 名 `serve`
+  - marker 名 `cook`
+  - 现有 pick 阶段快照
+  - 现有 pour 阶段回放结果
+  rule:
+    statement: >-
+      只在 PourServePolicy 中插入两次底盘导航步骤：pick 完整执行完成后、进入
+      WAIT_PLATE 前，生成 `move_to_point` 到 marker `serve`；导航完成后才允许
+      等待餐盘感知。pour 完整执行完成后、进入 PLACE 前，生成 `move_to_point`
+      到 marker `cook`；导航完成后才执行现有 place。pick/pour/place 的生成逻辑
+      和数据来源一律不改；place 继续使用现有 pick 阶段的抓取/预抓取法兰快照，
+      不新增回 cook 后的重新感知。导航步骤复用 Gather 的 `PLAN_CHASSIS_CONTROL`
+      表达：`action_name=move_to_point`、`object_id=marker`、
+      `control_positions=[timeout, poll]`。
+  outputs:
+  - 两次 `PLAN_CHASSIS_CONTROL` 导航 PlannedStep
+  - PourServe 状态机按导航完成推进到 WAIT_PLATE / PLACE
+  side_effects:
+  - 底盘在左臂持锅姿态下移动到 serve/cook
+  - 底盘导航完成前不启动餐盘感知或 place
+  exceptions:
+  - marker 名为空或底盘 marker 不存在时，chassis skill 返回失败
+  - 底盘断连、导航超时或取消时，chassis skill 返回失败
+  failure_handling:
+  - 沿用现有 MotionExecutor / TaskPlanner 的步骤失败与重试语义，不新增 Policy 级补偿逻辑
+  invariants:
+  - 不修改 pick/pour/place 阶段及其现有数据来源
+  - place 不重新感知锅位，继续使用 pick 阶段快照
+  - 底盘导航期间左臂保持 pick 或 pour 结束后的当前持锅姿态
+  - marker 名固定为 `serve` 和 `cook`
+  acceptance:
+  - id: BL-POURSERVE-NAV-001-AC-001
+    given: PourServe 已进入 pick 阶段且 pick 执行成功
+    when: pick 完成回调触发
+    then: 子 Policy 在进入 WAIT_PLATE 前生成导航到 serve 的 chassis_control 步骤，导航完成后才等待餐盘
+    method: unittest test_pour_serve_navigation_policy.py::test_pick_completion_queues_serve_navigation_then_wait_plate
+    evidence: EVID-POURSERVE-NAV-001
+    status: passed
+  - id: BL-POURSERVE-NAV-001-AC-002
+    given: PourServe 已进入 pour 阶段且 pour 执行成功
+    when: pour 完成回调触发
+    then: 子 Policy 在生成 place 前生成导航到 cook 的 chassis_control 步骤，导航完成后才执行 place
+    method: unittest test_pour_serve_navigation_policy.py::test_pour_completion_queues_cook_navigation_then_place
+    evidence: EVID-POURSERVE-NAV-001
+    status: passed
+  - id: BL-POURSERVE-NAV-001-AC-003
+    given: 底盘已导航回 cook
+    when: 子 Policy 生成 place 步骤
+    then: place 继续使用 pick 阶段的 approach/grasp 法兰快照，不新增重新感知
+    method: 代码检查 `_populate_place_actions` 仅读取 `_approach_flange_pose`/`_grasp_flange_pose`，不调用感知；FullPolicy 冒烟确认 place 步骤在导航后直接生成
+    evidence: EVID-POURSERVE-NAV-001
+    status: passed
+  dependencies:
+  - BL-PANPOUR-001
+  baseline_refs: []
+  decision_refs: []
+  implementation_refs:
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_pour_serve.py
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/config/robam/sub_policy_pour_serve.yaml
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/dexbot_task_planner/policy/robam/sub_policy_gather.py
+  test_refs:
+  - /home/tbl/Project/boss_electrics/kitchen_robot_home/src/dexbot_task_planner/test/test_pour_serve_navigation_policy.py
+  supersedes: []
+  notes: 用户明确本次只增加导航，不修改其他阶段；place 沿用现有实现。
+  created_at: '2026-09-02'
+  updated_at: '2026-09-02'
+  last_verified_at: '2026-09-02'
