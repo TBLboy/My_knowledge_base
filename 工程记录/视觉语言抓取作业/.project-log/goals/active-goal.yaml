@@ -1,0 +1,77 @@
+schema_version: 1
+goal:
+  id: GOAL-001
+  statement: >-
+    完成语言驱动抓取检测研究工程：基于 Grasp-Anything++，实现图像与自然语言输入到
+    5 参数抓取矩形的可训练、可评估、可提交流水线，并交付 GitHub 代码仓库和 2 页
+    CVPR 风格英文论文。
+  success_conditions:
+    - id: SC-001
+      statement: Grasp-Anything++ 可加载，image-text-grasp 样本解析正确，标注、划分、坐标与角度约定已确认并记录。
+      status: pending
+      evidence_refs: []
+    - id: SC-002
+      statement: 模型同时接受图像和语言输入，并输出 (x, y, w, h, theta) 抓取矩形。
+      status: pending
+      evidence_refs: []
+    - id: SC-003
+      statement: 训练端到端可运行，checkpoint 可保存和加载。
+      status: pending
+      evidence_refs: []
+    - id: SC-004
+      statement: 验证评估端到端可运行，使用明确指标并产生定量结果。
+      status: pending
+      evidence_refs: []
+    - id: SC-005
+      statement: 单样本推理和抓取矩形可视化可运行，并演示语言条件化效果。
+      status: pending
+      evidence_refs: []
+    - id: SC-006
+      statement: 提出的方法贡献可辨识，至少有一个 baseline 或可行性对比。
+      status: pending
+      evidence_refs: []
+    - id: SC-007
+      statement: GitHub 仓库包含可运行代码、依赖、数据准备、训练、评估、推理和可视化说明。
+      status: pending
+      evidence_refs: []
+    - id: SC-008
+      statement: 2 页 CVPR 英文论文包含全部要求章节和 GitHub 链接，最终 PDF 按 FirstName_LastName.pdf 命名。
+      status: pending
+      evidence_refs: []
+  non_goals:
+    - 不要求 SOTA 精度。
+    - 不要求从零实现所有组件。
+    - 不以大规模训练或完整数据训练为必要目标。
+    - 不提交最终代码压缩包，代码通过 GitHub 链接访问。
+  constraints:
+    - 数据集固定为 Grasp-Anything++。
+    - 输入为 RGB 图像和自然语言抓取 prompt，输出为 2D 抓取矩形五参数。
+    - 最终论文为英文、CVPR LaTeX 模板、含参考文献不超过 2 页。
+    - 截止时间为接收任务后一周，GPU 受限可接受。
+    - PDF 文件命名必须为 FirstName_LastName.pdf。
+  required_evidence:
+    - kind: dataset-inspection
+      subject: Grasp-Anything++ 标注、划分、坐标和角度约定
+      evidence_refs: []
+    - kind: model-forward
+      subject: 图像语言联合输入到五参数抓取输出
+      evidence_refs: []
+    - kind: training-log
+      subject: 端到端训练、checkpoint 保存与加载
+      evidence_refs: []
+    - kind: evaluation-metrics
+      subject: 验证集定量评估结果
+      evidence_refs: []
+    - kind: inference-visualization
+      subject: 推理结果与抓取矩形可视化
+      evidence_refs: []
+    - kind: repository
+      subject: GitHub 仓库和运行文档
+      evidence_refs: []
+    - kind: paper-pdf
+      subject: 2 页 CVPR 英文论文及 GitHub 链接
+      evidence_refs: []
+  risk_level: normal
+  status: active
+  created_at: '2026-08-28T05:00:00Z'
+  updated_at: '2026-08-28T05:00:00Z'

@@ -1,0 +1,387 @@
+version: "0.2"
+active_goal: GOAL-001
+tasks:
+  - id: TASK-001
+    title: 完成 Grasp-Anything++ 与官方 LGD baseline 技术调查报告
+    kind: research
+    parent_id: null
+    phase: solution-research
+    goal: GOAL-001
+    status: done
+    priority: high
+    risk: medium
+    authority: A
+    owner: agent
+    tags:
+      - grasp-anything-plusplus
+      - lgd-baseline
+      - technical-investigation
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions: []
+    depends_on: []
+    blocked_by: []
+    required_skills: []
+    spec_ref: docs/technical-investigation-report.md
+    inputs:
+      - 任务说明
+      - Hugging Face Dataset Card
+      - Fsoft-AIC/LGD main branch
+      - CVPR 2024 LGD paper
+    outputs:
+      - docs/technical-investigation-report.md
+    plan:
+      - 核对 Grasp-Anything 与 Grasp-Anything++ 的关系和文件结构
+      - 确认 GT 格式、坐标、角度和 positive/negative 语义
+      - 追踪官方 DataLoader、模型、loss、evaluation 执行链
+      - 记录源码与 HF 发布不一致点和待验证项
+    done_when:
+      - 回答 sample/GT/DataLoader/model/language/loss/decode/evaluation 九个问题
+      - 附上官方文件、Dataset Card 或论文出处
+      - 不确定项明确标为 Unknown/To Verify
+    verification:
+      status: passed
+      commands:
+        - 读取 HF API 与 zip 尾部中央目录
+        - 读取实际 instruction/positive/part-mask/base-scene/negative 样本
+        - 阅读 LGD DataLoader、models、train/evaluate 脚本
+      evidence:
+        - EV-20260828-dataset-card
+        - EV-20260828-lgd-code-path
+      limitations:
+        - 未下载完整 plusplus/base 数据
+        - 未运行端到端训练或模型 forward
+        - 官方代码与 HF 数据结构的兼容性未完全解决
+    result:
+      summary: 已确认数据集文件命名、GT 行格式、split 数量和评估协议；发现 LGD 当前代码与 HF 发布目录/指令读取存在多处不一致。
+      changed_files:
+        - docs/technical-investigation-report.md
+      deviations: []
+      follow_ups:
+        - 对真实 plusplus zip 做 sample index 对齐 smoke test
+        - 跑最小 subset forward/loss/eval，检查网络输出 shape
+    created_at: "2026-08-28T06:20:00Z"
+    updated_at: "2026-08-28T06:20:00Z"
+  - id: TASK-002
+    title: 用真实 Grasp-Anything++ 样本跑通完整 baseline smoke chain
+    kind: spike
+    parent_id: null
+    phase: solution-research
+    goal: GOAL-001
+    status: done
+    priority: high
+    risk: medium
+    authority: B
+    owner: agent
+    tags:
+      - grasp-anything-plusplus
+      - lgd-baseline
+      - smoke-test
+      - data-alignment
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions:
+      - DEC-002
+    depends_on:
+      - TASK-001
+    blocked_by: []
+    required_skills: []
+    spec_ref: null
+    inputs:
+      - external GPT action chain: image + instruction + positive GT smoke fixture
+      - research/scripts/download_from_range evidence
+    outputs:
+      - research/smoke-data/
+      - data_utils/grasp_anything_pp.py
+      - scripts/inspect_sample.py
+      - scripts/smoke_test.py
+    plan:
+      - 从真实样本中验证 image/instruction/positive/negative 对齐
+      - 建立最小 adapter 复用官方 dense-map pipeline
+      - 跑通 lgrconvnet3 forward、loss、backward
+      - 跑通 post-process 与 IoU evaluation
+    done_when:
+      - 至少一个真实 sample 可从磁盘加载
+      - image + instruction + positive grasp 可通过 adapter 转成官方张量
+      - lgrconvnet3 输出四张 dense map 且 shape 正确
+      - loss、backward、post-process、IoU evaluation 均执行成功
+    verification:
+      status: passed
+      commands:
+        - /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/smoke_test.py
+        - /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/inspect_sample.py
+      evidence:
+        - EV-20260828-smoke-chain-runs
+      limitations:
+        - 只使用 1 个真实 stem，未覆盖 5~10 个样本
+        - part_mask 未纳入 fixture
+        - instruction 直接 encode .pkl 字符串，官方 reproduction 语义未知
+    result:
+      summary: 真实 RGB + instruction + positive grasps 已跑通 dataset -> dense maps -> lgrconvnet3 -> loss -> backward -> post-process -> IoU evaluation。
+      changed_files:
+        - data_utils/grasp_anything_pp.py
+        - scripts/smoke_test.py
+        - scripts/inspect_sample.py
+        - LGD-main/inference/post_process.py
+        - research/smoke-data/
+      deviations:
+        - part_mask 未纳入；当前 baseline 不消费该文件
+      follow_ups:
+        - 视用户/外部 GPT 决策扩到 5~10 个真实 stem
+        - 确认 instruction encoding 官方语义
+    created_at: "2026-08-28T07:45:00Z"
+    updated_at: "2026-08-28T07:45:00Z"
+  - id: TASK-003
+    title: 路线图 gate ① 环境自包含 + ② batch smoke + ③ 官方 instruction 语义核对
+    kind: task
+    parent_id: null
+    phase: solution-research
+    goal: GOAL-001
+    status: pending
+    priority: high
+    risk: medium
+    authority: B
+    owner: agent
+    tags:
+      - environment
+      - batch-smoke
+      - instruction-semantics
+      - gate
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions:
+      - DEC-003
+    depends_on:
+      - TASK-002
+    blocked_by: []
+    required_skills: []
+    spec_ref: .project-log/docs/context-briefing-20260828b.md
+    inputs:
+      - DEC-003 路线图
+      - 当前 grasp-lgd env 与 ~/.local 包分布
+      - 已下载中的 grasp_instructions / grasp_label_positive / image_part
+    outputs:
+      - requirements.txt 或 environment.yml
+      - scripts/batch_smoke.py
+      - outputs/batch_smoke/{metrics.json, sample_*.png, summary.txt}
+      - 官方 instruction 用法确认记录或 Unknown/To Verify
+    plan:
+      - gate ① PYTHONNOUSERSITE=1 smoke，记录缺什么并补装进 grasp-lgd，导出 requirements
+      - gate ② 本地 5~10 个不同 scene 真实 stem 跑 batch_smoke.py
+      - gate ③ ≤1h 检查 paper / dataset card / 官方 train code
+      - 三 gate 通过后退出 solution-research，进入 Proposed Method 设计
+      - 最小训练 sanity → 正式 subset 训练 → table + 可视化
+    done_when:
+      - gate ①：PYTHONNOUSERSITE=1 + scripts/smoke_test.py 输出与当前一致，requirements 已生成
+      - gate ②：batch_smoke.py 对 5~10 个 stem 全部 forward/loss/eval 成功，metrics.json 记录
+      - gate ③：grasp_instructions 用法有明确结论或标 Unknown/To Verify
+      - current-session.md、progress.md、decision-log.yaml 同步更新
+    verification:
+      status: not-run
+      commands:
+        - PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/smoke_test.py
+        - /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/batch_smoke.py
+      evidence: []
+      limitations:
+        - 大依赖重装可能受磁盘/时间影响
+        - 若 image_part_aa/ab 未完全落盘，batch smoke 只能跑已落盘的 stem
+    result:
+      summary: null
+      changed_files: []
+      deviations: []
+      follow_ups:
+        - 进入 Proposed Method 设计
+    created_at: "2026-08-28T16:05:00Z"
+    updated_at: "2026-08-28T16:05:00Z"
+  - id: TASK-004
+    title: gate ② batch smoke：5~10 个不同 scene 真实 stem 跑完整 pipeline
+    kind: task
+    parent_id: null
+    phase: solution-research
+    goal: GOAL-001
+    status: done
+    priority: high
+    risk: medium
+    authority: B
+    owner: agent
+    tags:
+      - batch-smoke
+      - gate-2
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions:
+      - DEC-003
+      - DEC-004
+    depends_on:
+      - TASK-003
+    blocked_by: []
+    required_skills: []
+    spec_ref: .project-log/docs/context-briefing-20260828b.md
+    inputs:
+      - 真实 stem 列表（5~10 个不同 scene）
+      - 落盘后的 grasp_label_positive.zip 与 image_part_aa/ab
+      - 已验证的 self-contained env (gate ①)
+    outputs:
+      - scripts/batch_smoke.py
+      - outputs/batch_smoke/{metrics.json, sample_*.png, summary.txt}
+    plan:
+      - 等 grasp_label_positive.zip 下载完成后，从 HF plusplus 中央目录挑 5~10 个不同 scene 的 stem
+      - 为每个 stem 抓对应 scene.jpg + instruction + positive
+      - scripts/batch_smoke.py 读取列表跑完整 pipeline（forward/loss/post-process/IoU eval）
+      - 记录 metrics.json（forward_success / loss_success / eval_success），并生成 sample_*.png 与 summary.txt
+      - 当前不追求 accuracy，正确率本就不高（未训练模型）
+    done_when:
+      - 5~10 个 stem 全部完成 forward / loss / post-process / evaluation
+      - outputs/batch_smoke/ 产物齐全
+      - batch evidence 已记录
+    verification:
+      status: passed
+      commands:
+        - PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python research/scripts/batch_smoke.py --stems research/smoke-data/stems.txt --image-dir processed/grasp-anything/images --cpu
+      evidence:
+        - EV-20260902-batch-smoke
+      limitations:
+        - 结果来自随机初始化 lgrconvnet3，不构成模型质量证据
+        - part_mask 仍不消费
+    result:
+      summary: 10/10 个不同 scene 的真实 RGB stem 全部跑通 forward/loss/backward/post-process/IoU evaluation。
+      changed_files:
+        - research/scripts/batch_smoke.py
+        - research/smoke-data/stems.txt
+        - research/smoke-data/stems_meta.tsv
+        - research/scripts/prepare_rgb_archive.sh
+      deviations: []
+      follow_ups:
+        - 进入 diffusion baseline smoke（TASK-006）
+    created_at: "2026-08-28T17:15:00Z"
+    updated_at: "2026-09-02T06:12:00Z"
+  - id: TASK-006
+    title: 核对当前 LGD 仓库的 diffusion 版 LGDM baseline 能否在真实样本上跑通
+    kind: spike
+    parent_id: null
+    phase: solution-research
+    goal: GOAL-001
+    status: done
+    priority: high
+    risk: high
+    authority: B
+    owner: agent
+    tags:
+      - lgdm
+      - diffusion
+      - baseline
+      - smoke-test
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions:
+      - DEC-009
+    depends_on:
+      - TASK-004
+    blocked_by: []
+    required_skills: []
+    spec_ref: null
+    inputs:
+      - LGD-main/inference/models/lgdm/network.py
+      - LGD-main/train_network_diffusion.py
+      - LGD-main/diffusion/gaussian_diffusion.py
+      - 真实 Grasp-Anything++ instruction / positive / RGB
+    outputs:
+      - research/scripts/diffusion_smoke.py
+      - outputs/diffusion_smoke_2/metrics.json
+      - env/requirements-diffusion.txt
+      - .project-log/verification/diffusion-smoke-20260902.md
+    plan:
+      - 安装 transformers / timm / ruamel.yaml 等 diffusion 依赖
+      - 实例化 LGDM 并下载 BERT，确认依赖兼容
+      - 用真实 stem 跑 training_losses、dense-map backward、10-step p_sample_loop、post-process、IoU evaluation
+      - 记录官方训练代码对 diffusion loss 的处理
+    done_when:
+      - 至少 1 个真实 stem 走通 diffusion baseline 全链路
+      - sample shape 为 (1,1,224,224) 且 sample finite
+      - 官方的 diffusion loss / dense loss / backward 路径可复现
+    verification:
+      status: passed
+      commands:
+        - HF_ENDPOINT=https://hf-mirror.com PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python research/scripts/diffusion_smoke.py --max-stems 2 --sample-steps 10 --out outputs/diffusion_smoke_2
+      evidence:
+        - EV-20260902-diffusion-smoke
+      limitations:
+        - 只验证 2 个真实 stem
+        - 使用 10 步 respaced p_sample_loop，未跑完整 1000 步与完整训练
+        - instruction 直接使用 .pkl 字符串；官方历史 query 语义未知
+    result:
+      summary: LGDM diffusion baseline 在真实样本上 2/2 跑通；确认官方训练代码只对 dense-map loss backward。
+      changed_files:
+        - research/scripts/diffusion_smoke.py
+        - env/requirements-diffusion.txt
+        - env/requirements-freeze.txt
+        - environment.yml
+        - research/README.md
+      deviations:
+        - 官方 README 的 --network lgd 未注册，smoke 使用 lgdm
+      follow_ups:
+        - 决定 diffusion baseline 训练入口与 diffusion objective 的 backward 策略
+        - 确认 LSAR 插入点并开始 100 sample training sanity
+    created_at: "2026-09-02T06:12:00Z"
+    updated_at: "2026-09-02T06:12:00Z"
+  - id: TASK-005
+    title: Proposed Method (LSAR) 设计：模块实现、训练与 ablation
+    kind: task
+    parent_id: null
+    phase: architecture-decision
+    goal: GOAL-001
+    status: pending
+    priority: high
+    risk: medium
+    authority: B
+    owner: agent
+    tags:
+      - proposed-method
+      - lsar
+      - architecture
+    related_business_logic: []
+    acceptance_refs: []
+    related_decisions:
+      - DEC-005
+    depends_on:
+      - TASK-004
+    blocked_by: []
+    required_skills: []
+    spec_ref: .project-log/docs/proposed-method-LSAR.md
+    inputs:
+      - batch smoke 结果（gate ②）
+      - 官方 instruction 语义核对结果（gate ③）
+      - 当前 self-contained env
+    outputs:
+      - models/lsar/*.py
+      - configs/ours.yaml
+      - train.py / evaluate.py（最小训练脚本）
+      - 论文 Methodology + Experiment + Ablation 章节草稿
+    plan:
+      - 基于 Option 1 CNN baseline 编码 LSAR 模块
+      - 把 A_vl 与可选 F_v 接入 LGD baseline conditioning 分支
+      - 实现 affordance refinement loss（L_aff）
+      - 跑 100 sample sanity check → 5k subset → 20k+ final
+      - ablation：with/without LSAR、不同 refinement 结构
+      - 记录 evidence、表格、可视化
+    done_when:
+      - 代码可在 self-contained env 跑通
+      - baseline vs ours 在 small subset 上有可比结果
+      - 论文草稿含 Method / Experiment / Ablation 章节
+    verification:
+      status: not-run
+      commands:
+        - PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/train.py --config configs/ours.yaml
+        - /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/evaluate.py --checkpoint outputs/ours/best.pt
+      evidence: []
+      limitations:
+        - LSAR 与 LGD diffusion 真实实现细节尚未确认（需要复盘官方训练代码）
+        - GPU 训练时间受限于本机/Colab
+    result:
+      summary: null
+      changed_files: []
+      deviations: []
+      follow_ups:
+        - Flow Matching 生成头（可选扩展）
+    created_at: "2026-08-28T17:40:00Z"
+    updated_at: "2026-08-28T17:40:00Z"

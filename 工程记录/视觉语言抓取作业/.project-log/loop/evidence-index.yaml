@@ -1,0 +1,509 @@
+schema_version: 1
+evidence:
+- id: EV-20260828-dataset-card
+  kind: dataset-inspection
+  subject: Grasp-Anything/Grasp-Anything++ HF结构、文件名、体积、样本与GT格式
+  status: candidate
+  command: null
+  result_ref: HF API; actual sample files; LGD-main loader/evaluation code
+  covers:
+    files:
+    - docs/technical-investigation-report.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      docs/technical-investigation-report.md: 42ac3318cefee48fb5d2ca0aca204a3b5e367c4dafc104b25792a8cdc3a251af
+  recorded_at: '2026-08-28T06:18:52Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260828-lgd-code-path
+  kind: solution-research
+  subject: Official LGD baseline DataLoader-model-loss-evaluation code path
+  status: candidate
+  command: null
+  result_ref: LGD-main DataLoader, inference models, train scripts, evaluation.py,
+    CVPR paper
+  covers:
+    files:
+    - docs/technical-investigation-report.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      docs/technical-investigation-report.md: 42ac3318cefee48fb5d2ca0aca204a3b5e367c4dafc104b25792a8cdc3a251af
+  recorded_at: '2026-08-28T06:19:08Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260828-smoke-chain-runs
+  kind: integration-smoke
+  subject: Real Grasp-Anything++ sample through adapter -> lgrconvnet3 -> loss ->
+    backward -> post-process -> IoU evaluation
+  status: valid
+  command: /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/smoke_test.py
+  result_ref: scripts/smoke_test.py
+  covers:
+    files:
+    - scripts/smoke_test.py
+    - data_utils/grasp_anything_pp.py
+    - LGD-main/inference/post_process.py
+    requirements: []
+    tasks:
+    - TASK-002
+  version_binding:
+    git_commit: ea46d1892ecbb21415f59fd8b699a96aff51fae9
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      scripts/smoke_test.py: bf2fc66961f3621f23d5971403ef14c4b09c652eb5816b447348886959762a7f
+      data_utils/grasp_anything_pp.py: bc652850495c0bace0521077a1aeef3c503fd1cdfbbb754b7b711c6aecfc35d1
+      LGD-main/inference/post_process.py: 5135ed84138d24f57736dfb1aa811a06441e5773ee8e899e5c32444ae2ba48e1
+  recorded_at: '2026-08-28T07:53:32Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260828-env-self-contained
+  kind: environment-isolation
+  subject: 'grasp-lgd env self-contained: PYTHONNOUSERSITE=1 下所有关键包解析到 env、CUDA 可用、smoke
+    chain 通过'
+  status: valid
+  command: PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python scripts/smoke_test.py
+  result_ref: scripts/smoke_test.py
+  covers:
+    files:
+    - requirements.txt
+    - environment.yml
+    - scripts/smoke_test.py
+    requirements: []
+    tasks:
+    - TASK-003
+  version_binding:
+    git_commit: 7c3acf416fd8fed44683d47ee3552a2a60aa4f4a
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      requirements.txt: c7a7ccfe69b5525e0aadb4dc40a4d409e6651c8fba21a2d40bfacf035a5cb214
+      environment.yml: 5099f96e27ba3cc4dfc7774e1cc01c182cd17c312cbe26b9d165371d2796ccfc
+      scripts/smoke_test.py: bf2fc66961f3621f23d5971403ef14c4b09c652eb5816b447348886959762a7f
+  recorded_at: '2026-08-28T09:18:09Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-diffusion-smoke
+  kind: integration-smoke
+  subject: 'Real Grasp-Anything++ stems through LGDM diffusion baseline: dataset ->
+    dense maps -> forward -> loss -> backward -> 10-step sample -> post-process ->
+    IoU evaluation'
+  status: valid
+  command: HF_ENDPOINT=https://hf-mirror.com PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python
+    research/scripts/diffusion_smoke.py --max-stems 2 --sample-steps 10 --out outputs/diffusion_smoke_2
+  result_ref: .project-log/verification/diffusion-smoke-20260902.md
+  covers:
+    files:
+    - .project-log/verification/diffusion-smoke-20260902.md
+    requirements: []
+    tasks:
+    - TASK-006
+  version_binding:
+    git_commit: d574b48d853dea7984b3b3f1ebc5203d7a0b2798
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      .project-log/verification/diffusion-smoke-20260902.md: 54da5fd6d978e54119ac066355216c0af0a965cd6cfe5bdaf5d5fe84af2b8454
+  recorded_at: '2026-09-02T06:08:17Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-batch-smoke
+  kind: integration-smoke
+  subject: 10 real Grasp-Anything++ stems from different scenes through RGB + instruction
+    + positive GT -> dense maps -> lgrconvnet3 forward -> loss -> backward -> post-process
+    -> IoU evaluation
+  status: valid
+  command: PYTHONNOUSERSITE=1 /home/tbl/miniforge3/envs/grasp-lgd/bin/python research/scripts/batch_smoke.py
+    --stems research/smoke-data/stems.txt --image-dir processed/grasp-anything/images
+    --cpu
+  result_ref: .project-log/verification/batch-smoke-20260902.md
+  covers:
+    files:
+    - .project-log/verification/batch-smoke-20260902.md
+    requirements: []
+    tasks:
+    - TASK-004
+  version_binding:
+    git_commit: d574b48d853dea7984b3b3f1ebc5203d7a0b2798
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      .project-log/verification/batch-smoke-20260902.md: e95e464f7f4fc14a00042e610374fa31370c1177a62a7a58a4284dfb50338a25
+  recorded_at: '2026-09-02T06:10:40Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-lsar-scale-sweep
+  kind: experiment
+  subject: LSAR fixed scale sweep 0.01/0.02/0.05/0.10 on 1000 stems
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_scale_sweep
+  covers:
+    files:
+    - .project-log/docs/lsar-experimental-validation-plan-20260902.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 279e5d7453e494876cad59644c897200534c38a0
+    diff_hash: 4b60e7d489de5b31b3843549a7f64e701b42fdd082172b298f722c9fead9a9fa
+    file_hashes:
+      .project-log/docs/lsar-experimental-validation-plan-20260902.md: ac04451d4b9878f7aaa1d22db967e603cf5fc1ad78828811f54c1e6e2ee5a8ea
+  recorded_at: '2026-09-02T11:36:15Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-lsar-affordance-ablation
+  kind: experiment
+  subject: LSAR affordance loss ablation at scale 0.01 on 1000 stems
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_aff_ablation
+  covers:
+    files:
+    - .project-log/docs/lsar-experimental-validation-plan-20260902.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 279e5d7453e494876cad59644c897200534c38a0
+    diff_hash: 4b60e7d489de5b31b3843549a7f64e701b42fdd082172b298f722c9fead9a9fa
+    file_hashes:
+      .project-log/docs/lsar-experimental-validation-plan-20260902.md: ac04451d4b9878f7aaa1d22db967e603cf5fc1ad78828811f54c1e6e2ee5a8ea
+  recorded_at: '2026-09-02T11:36:23Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-lsar-affordance-visual
+  kind: experiment
+  subject: LSAR affordance heatmap overlay for handle and stem instructions
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_aff_ablation/visuals_affordance
+  covers:
+    files:
+    - .project-log/docs/lsar-experimental-validation-plan-20260902.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 279e5d7453e494876cad59644c897200534c38a0
+    diff_hash: 4b60e7d489de5b31b3843549a7f64e701b42fdd082172b298f722c9fead9a9fa
+    file_hashes:
+      .project-log/docs/lsar-experimental-validation-plan-20260902.md: ac04451d4b9878f7aaa1d22db967e603cf5fc1ad78828811f54c1e6e2ee5a8ea
+  recorded_at: '2026-09-02T11:36:36Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-larger-subset-3k-ready
+  kind: experiment
+  subject: 2968-stem / 1010-scene subset with local RGB availability verified
+  status: valid
+  command: null
+  result_ref: research/smoke-data/train_subset_3k.tsv
+  covers:
+    files:
+    - research/smoke-data/train_subset_3k.tsv
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 6aa7304c6806c4bb9cd1b2f7b6705d52d84a01dc
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/smoke-data/train_subset_3k.tsv: 4ba3554c28ada30fa189dfee2ca64a8c93fc0c7b77d4e457368f91214cc91a72
+  recorded_at: '2026-09-02T14:00:19Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-larger-subset-baseline
+  kind: experiment
+  subject: 'Official LGDM baseline on 2968-stem subset: single 151/594, repeat mean
+    152.0'
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_larger_subset/none
+  covers:
+    files:
+    - .project-log/docs/lsar-larger-subset-validation-plan-20260902.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 6aa7304c6806c4bb9cd1b2f7b6705d52d84a01dc
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      .project-log/docs/lsar-larger-subset-validation-plan-20260902.md: da7c3fa9a1d910b43d737335652dded08004320fdef8a0c0a56af5007e320be2
+  recorded_at: '2026-09-02T14:00:25Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260902-larger-subset-lsar
+  kind: experiment
+  subject: 'LSAR-full on 2968-stem subset: single 185/594, repeat mean 179.0'
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_larger_subset/lsar_full
+  covers:
+    files:
+    - .project-log/docs/lsar-larger-subset-validation-plan-20260902.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 6aa7304c6806c4bb9cd1b2f7b6705d52d84a01dc
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      .project-log/docs/lsar-larger-subset-validation-plan-20260902.md: da7c3fa9a1d910b43d737335652dded08004320fdef8a0c0a56af5007e320be2
+  recorded_at: '2026-09-02T14:00:31Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260903-subset-5k-ready
+  kind: dataset-inspection
+  subject: 'Grasp-Anything++ 5k subset: 5000 stems / 5000 unique scenes / RGB 5000/5000
+    from local archive'
+  status: valid
+  command: null
+  result_ref: prepare_training_subset.py --scene-list; extract_rgb_subset.sh extracted=5000
+    missing=0
+  covers:
+    files:
+    - research/smoke-data/train_subset_5k.tsv
+    requirements: []
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: 5838b5b095f6cf086cc03598b419417702d4008c
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/smoke-data/train_subset_5k.tsv: 2b1cced645f7042f1d6f7108f8fd9c9fac30e8c1597640b988778ba3da27a15c
+  recorded_at: '2026-09-02T16:14:24Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260903-larger-subset-baseline-5k
+  kind: experiment
+  subject: 'LSAR validation on 5000-stem subset: official LGDM baseline'
+  status: candidate
+  command: train_lgdm_clean.py --stems-tsv research/smoke-data/train_subset_5k.tsv
+    --out outputs/lgdm_5k/none --epochs 15 --condition-mode none
+  result_ref: 'outputs/lgdm_5k/none: single 211/1000; repeat mean 202.7 std 4.93'
+  covers:
+    files: []
+    requirements: []
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: 5838b5b095f6cf086cc03598b419417702d4008c
+    diff_hash: dd26c24102baece908416b5550d8223aa5fd502860a0fcd25e708d96b7d22b75
+    file_hashes: {}
+  recorded_at: '2026-09-02T16:14:29Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260903-larger-subset-lsar-5k
+  kind: experiment
+  subject: 'LSAR validation on 5000-stem subset: LSAR-full proposed method'
+  status: candidate
+  command: train_lgdm_clean.py --stems-tsv research/smoke-data/train_subset_5k.tsv
+    --out outputs/lgdm_5k/lsar_full --epochs 15 --condition-mode lsar --lsar-scale
+    0.01 --lsar-fixed-scale --lsar-affordance-weight 0.1
+  result_ref: 'outputs/lgdm_5k/lsar_full: single 299/1000; repeat mean 309.7 std 3.51'
+  covers:
+    files: []
+    requirements: []
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: 5838b5b095f6cf086cc03598b419417702d4008c
+    diff_hash: cdcabf1279eb0414c1c9095b559e1fbfc4bac8c121bd34b97d77871aab22cfa6
+    file_hashes: {}
+  recorded_at: '2026-09-02T16:14:36Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260903-subset-10k-final-repeat
+  kind: experiment
+  subject: 10k final three-model repeated evaluation and sampling sensitivity
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_10k/*/repeated_eval.json and sensitivity/*.json
+  covers:
+    files:
+    - research/results/10k_validation_summary.md
+    requirements: []
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: dd62c10a62839def48a7297b741fabcad78abb5f
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/results/10k_validation_summary.md: 615153c5bf382ff455e04dc281917be8e8a6bddeccfe2b851c3c2b573a3a4af7
+  recorded_at: '2026-09-03T10:42:16Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-lambda-sweep
+  kind: experiment
+  subject: '10k lambda_aff sweep: 0.0/0.01/0.05/0.1'
+  status: candidate
+  command: null
+  result_ref: 0.0 repeat=653.7; 0.01 single=662; 0.05 repeat=678.0; 0.1 repeat=605.3
+  covers:
+    files:
+    - research/results/lambda_aff_sweep.md
+    - research/results/final_method_summary.md
+    requirements: []
+    tasks:
+    - TASK-007
+  version_binding:
+    git_commit: 578e2fc240840f57802f73e66a9609822b5999ea
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/results/lambda_aff_sweep.md: ee84b42a80ade841deb150f01732a848942aa40ccba5daab2747c53782359fec
+      research/results/final_method_summary.md: 860578817b223ae0530674a20345c78b54f9f6d7b02b589c2ecdf25ce9d8b608
+  recorded_at: '2026-09-03T20:51:13Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-lsar-final-second-seed
+  kind: experiment
+  subject: Final LSAR lambda_aff=0.05 trained under seed42 and seed43 with same split-seed
+  status: candidate
+  command: null
+  result_ref: seed42 repeat=678.0; seed43 repeat=661.7
+  covers:
+    files:
+    - research/results/10k_validation_summary.md
+    - research/results/final_method_summary.md
+    requirements: []
+    tasks:
+    - TASK-007
+  version_binding:
+    git_commit: 578e2fc240840f57802f73e66a9609822b5999ea
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/results/10k_validation_summary.md: d47e007c7890f7795d5e9c917fd14cd14378ad944cdc46491cf3051d06e49226
+      research/results/final_method_summary.md: 860578817b223ae0530674a20345c78b54f9f6d7b02b589c2ecdf25ce9d8b608
+  recorded_at: '2026-09-03T20:51:16Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-final-005-paired-visual
+  kind: visualization
+  subject: Final LSAR lambda_aff=0.05 paired qualitative figure
+  status: candidate
+  command: null
+  result_ref: outputs/lgdm_10k/paired_visuals_final_005/paired_qualitative.png; research/assets/qualitative_10k_paired_lsar_0.05.png;
+    6 samples
+  covers:
+    files:
+    - research/results/final_method_summary.md
+    requirements: []
+    tasks:
+    - TASK-007
+  version_binding:
+    git_commit: 578e2fc240840f57802f73e66a9609822b5999ea
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/results/final_method_summary.md: 860578817b223ae0530674a20345c78b54f9f6d7b02b589c2ecdf25ce9d8b608
+  recorded_at: '2026-09-03T20:51:20Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-sampling-sensitivity-final-005
+  kind: experiment
+  subject: 10/50-step sampling sensitivity for final LSAR lambda_aff=0.05
+  status: candidate
+  command: null
+  result_ref: '200-sample subset: 10 steps=65, 50 steps=67'
+  covers:
+    files:
+    - research/results/10k_validation_summary.md
+    - research/results/final_method_summary.md
+    requirements: []
+    tasks:
+    - TASK-007
+  version_binding:
+    git_commit: 578e2fc240840f57802f73e66a9609822b5999ea
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/results/10k_validation_summary.md: d47e007c7890f7795d5e9c917fd14cd14378ad944cdc46491cf3051d06e49226
+      research/results/final_method_summary.md: 860578817b223ae0530674a20345c78b54f9f6d7b02b589c2ecdf25ce9d8b608
+  recorded_at: '2026-09-03T20:51:20Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-paper-2pages
+  kind: paper
+  subject: Two-page CVPR-style paper compiled from main.tex
+  status: valid
+  command: null
+  result_ref: pdfinfo pages=2; sections Abstract/Introduction/Related Work/Method/Experiment/Conclusion/References
+  covers:
+    files:
+    - research/paper/main.pdf
+    - research/paper/main.tex
+    requirements: []
+    tasks:
+    - TASK-008
+    - TASK-009
+  version_binding:
+    git_commit: 32f8ce4a9c4bb60ac7999bccfab5d7a7db913b8d
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/paper/main.pdf: 565fb2935d13f2230722ba32548fa26cfb6a2b17b127f68530073f7765c9a057
+      research/paper/main.tex: 7c1855eb92d3d7820e85aea1ef4ede8811886a6f3d425d1a317679bf1388a1ee
+  recorded_at: '2026-09-03T21:13:38Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-github-published
+  kind: repository
+  subject: Public GitHub repository published with clean code tree and paper
+  status: valid
+  command: null
+  result_ref: https://github.com/TBLboy/language-driven-grasp-detection; PUBLIC; curl
+    I HTTP 200; raw PDF HTTP 200; 198 files about 33 MiB
+  covers:
+    files:
+    - research/results/paper_and_repo_summary.md
+    requirements: []
+    tasks:
+    - TASK-010
+  version_binding:
+    git_commit: 32f8ce4a9c4bb60ac7999bccfab5d7a7db913b8d
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      research/results/paper_and_repo_summary.md: 48b85d93a7e258df55fa43129662951e5eee8e8e6577e2f91f5c4c7b63394d4c
+  recorded_at: '2026-09-03T21:13:43Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-grad-accum-10k
+  kind: experiment
+  subject: LGDM+LSAR grad accum 4 10k repeat eval
+  status: candidate
+  command: train.py --grad-accum-steps 4 ...; evaluate.py --repeats 3
+  result_ref: outputs/lgdm_10k/grad_accum_4/lsar_final/repeated_eval.json
+  covers:
+    files:
+    - research/scripts/train_lgdm_clean.py
+    - .project-log/docs/grad-accum-experiment-20260904.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 19b0e8e4597591d93a3b54f3698a84b4cc4dcf98
+    diff_hash: 7a9e12fac78aefada644147446efe6b980c13ae374da45e2780a60c52419cb96
+    file_hashes:
+      research/scripts/train_lgdm_clean.py: aa5b8d27083cebff141618515920db2b106bd46a42170a7292e1bd08cc6948e5
+      .project-log/docs/grad-accum-experiment-20260904.md: 79e735def858b0a254166aff0297b9615ad70d3c7d9344df3f86ceb8624b3907
+  recorded_at: '2026-09-04T08:31:33Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-20260904-paper-revision-v2
+  kind: paper-revision
+  subject: Paper Revision V2 success-rate and tone pass
+  status: candidate
+  command: tectonic -X compile research/paper/main.tex; tectonic -X compile CVPR_2026_Submission_Template/main.tex
+  result_ref: research/paper/main.pdf; CVPR_2026_Submission_Template/main.pdf; Bolin_Tao.pdf
+  covers:
+    files:
+    - research/paper/main.tex
+    - CVPR_2026_Submission_Template/main.tex
+    - .project-log/docs/paper-revision-v2-execution-20260904.md
+    requirements: []
+    tasks: []
+  version_binding:
+    git_commit: 2b3cdc7d651fa92f96a21d639914310a4547f8b5
+    diff_hash: f01612e7b82b7c02932d4a0aa45aaf1f69fb22b72ca073206d54e0b6ad1e5e1d
+    file_hashes:
+      research/paper/main.tex: 1c7c23c8bd2e9c9e2be2d3600adaaa627784d4026394d98fe8561c53f2eee5ea
+      CVPR_2026_Submission_Template/main.tex: 815cc41d9a1e5889db6891b84cae5579951ccd6a541eb356cad2ba0a46717993
+      .project-log/docs/paper-revision-v2-execution-20260904.md: 9b53f4b00bbff7eb5977cd87ba4f25c1135d24a5875f7b59fe3f4415f4ec9784
+  recorded_at: '2026-09-04T11:45:23Z'
+  invalidated_at: null
+  invalidation_reason: null

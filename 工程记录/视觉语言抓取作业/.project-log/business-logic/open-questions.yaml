@@ -1,0 +1,25 @@
+version: "0.2.1"
+questions:
+  - id: Q-001
+    title: Grasp-Anything++ 数据与评估协议的关键实现细节
+    status: open
+    authority: B
+    impact: high
+    uncertainty: high
+    rework_cost: high
+    related_business_logic: []
+    related_tasks: []
+    context: >-
+      任务说明未指定目录/标注文件结构、train-validation-test 划分、单个 image-prompt 是否可能有
+      多个合法抓取矩形、坐标与角度约定、图像分辨率、对象区域标注以及官方评估指标和阈值。
+    recommendation: >-
+      先读取 Grasp-Anything++ 官方 release、仓库和文档，检查实际数据文件与评估代码，再固定
+      模型、损失、指标和实验范围。
+    alternatives:
+      - 在无法下载完整数据时，先用官方样例和文档确认字段格式，再明确标注限制。
+      - 若官方指标不可获得，采用已发表 grasp detection 的 IoU/角度误差协议并记录来源。
+    answer: null
+    source_refs:
+      - language_driven_grasp_detection_task_spec.md
+    created_at: '2026-08-28T05:00:00Z'
+    answered_at: null

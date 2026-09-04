@@ -1,0 +1,448 @@
+version: '0.2'
+decisions:
+- id: DEC-001
+  title: 使用 hf-mirror /datasets 路径与本地 HF token 下载核心数据集
+  category: data
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks: []
+  related_business_logic: []
+  context: 官方 huggingface.co 不可达；Grasp-Anything 与 Grasp-Anything-pp 是需鉴权的 HF dataset，mirror
+    必须带 token 并访问 /datasets/.../resolve/main/...
+  hypothesis: 使用 https://hf-mirror.com/datasets/... + Authorization 后可稳定下载且支持 Range
+    断点续传
+  options:
+  - name: mirror /datasets + token
+    benefits:
+    - 可访问需鉴权数据集
+    - 支持 Range 206 和断点续传
+    costs:
+    - 下载和预检必须带 token
+    risks:
+    - mirror 若更新路径需要重新预检
+  - name: 官方域名经 127.0.0.1:10808 代理
+    benefits:
+    - 使用官方 CDN
+    costs:
+    - 官方仍返回需鉴权错误
+    - 依赖代理稳定性
+    risks:
+    - 大文件代理下载风险更高
+  decision: 使用 hf-mirror /datasets 路径配合本机 HF token；下载脚本采用 curl -C - 续传和字节数校验
+  reason_summary:
+  - mirror 预检 4 个文件全部返回 200/206
+  - 远程大小与调研记录完全一致
+  - token 不写入脚本，由 HF_TOKEN 或本机 token 文件读取
+  conditions: []
+  action: 已创建 research/scripts/download_grasp_anything_data.sh 并跑通 --check
+  expected_result: 用户手动执行 --download 后按字节数校验完成下载
+  reversal_plan: 可改用官方域名经 127.0.0.1:10808 代理下载或在 mirror 不可用时删除脚本重写
+  observation: --check 输出 4/4 OK，Range 返回 206，可用空间 203.7 GiB
+  actual_result: null
+  outcome_status: partial
+  lesson: null
+  evidence:
+  - research/scripts/download_grasp_anything_data.sh
+  supersedes: []
+  created_at: '2026-08-28T15:40:00+08:00'
+  updated_at: null
+- id: DEC-002
+  title: 用最小数据 adapter 复用官方 LGD dense-map pipeline，不改模型与评估
+  category: technical
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks:
+  - TASK-002
+  related_business_logic: []
+  context: HF Grasp-Anything++ 当前发布目录是 grasp_instructions/grasp_label_positive，而 LGD
+    官方代码预期 positive_grasp/prompt；若直接改官方 loader 会混入数据兼容问题，后续论文无法清楚区分 baseline 与 proposed
+    method。
+  hypothesis: 只在 Dataset 入口做 adapter，把真实 instruction + positive [N,6] 转为官方要求的 dense
+    pos/cos/sin/width maps，即可复用模型、loss、post-process 与 evaluation。
+  options:
+  - name: 最小 adapter
+    benefits:
+    - 不改模型和评估语义
+    - 后续可明确区分数据修复与模型贡献
+    costs:
+    - 多一层 loader 代码
+    risks:
+    - 如果官方 instruction 语义不是直接 encode .pkl，需要后续修正
+  - name: 直接改写官方 DataLoader
+    benefits:
+    - 少一层封装
+    costs:
+    - 难以把 baseline 与数据集修复分开
+    risks:
+    - 污染官方 pipeline
+  decision: 新增 data_utils/grasp_anything_pp.py 作为 GraspAnythingPPSampleDataset，输出格式与
+    LGD 一致。
+  reason_summary:
+  - 真实 sample smoke 已跑通 adapter -> lgrconvnet3 -> loss -> backward -> post-process
+    -> IoU
+  - 官方代码与 HF 发布目录差异被隔离在数据入口
+  conditions:
+  - instruction 当前直接 encode .pkl 字符串；official reproduction semantics 保持 Unknown/To
+    Verify
+  action: 已实现 scripts/smoke_test.py 和 data_utils/grasp_anything_pp.py，并记录 EV-20260828-smoke-chain-runs。
+  expected_result: 后续最小训练、评估、可视化都可复用同一 adapter。
+  reversal_plan: 若官方语义确认不同，只改 adapter 的 instruction 与 query 生成部分。
+  observation: positive (5,6) 被转成 224x224 dense maps，四张输出 shape 一致，链路正确执行且未训练 correct=False。
+  actual_result: smoke chain runs
+  outcome_status: successful
+  lesson: null
+  evidence:
+  - EV-20260828-smoke-chain-runs
+  supersedes: []
+  created_at: '2026-08-28T15:50:00+08:00'
+  updated_at: null
+- id: DEC-003
+  title: 采纳“先修环境 → batch smoke → 语义核对 → Proposed Method”路线作为接下来两天的执行计划
+  category: process
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks:
+  - TASK-003
+  related_business_logic: []
+  context: 单样本 smoke chain 已通过；环境非独立、用户站点依赖仍是正式训练前最大隐患；需要在不阻塞主流程的前提下，依次打通三个 gate。
+  hypothesis: 如果按 gate 顺序推进，每一项都能在合理代价下产出可验证证据：① env self-contained ② batch smoke
+    ③ instruction 语义核对，之后即可干净进入 Proposed Method 设计。
+  options:
+  - name: 立即进入 Proposed Method 设计
+    benefits:
+    - 更早完成 paper story
+    costs:
+    - 环境隐患未消除，GitHub 不可复现
+    - 数据集尚未落地到本地，baseline 不易对齐
+  - name: 先扩 5~10 stem，再修环境
+    benefits:
+    - 保留时间给 baseline 验证
+    costs:
+    - 环境隐患仍在
+    - 顺序与用户给的最优顺序不符
+  - name: 先环境自包含，再 batch smoke，再语义核对
+    benefits:
+    - 环境可复现
+    - batch smoke 验证 adapter 通用性
+    - 语义核对限定 ≤1h，不拖主线
+    costs:
+    - 重装 numpy/torch/torchvision 等大依赖需 ~3 GB 磁盘与时间
+    risks:
+    - 若 user-site 顺序仍优先，可能需 PYTHONNOUSERSITE=1 才能验证独立
+  decision: 采纳第三选项；明确三个 gate 与显式不要做清单
+  reason_summary:
+  - smoke chain 已证明 pipeline 可行，环境是唯一可复现性短板
+  - 外部 GPT 路线与本地实际状态匹配
+  - 限定 semantic 检查 ≤1h，避免反复考古
+  conditions:
+  - gate ① 失败时回到该决策重新评估
+  action: 已在 .project-log/current-session.md、progress.md 中记录路线图，新增 TASK-003
+  expected_result: 三项 gate 通过后退出 solution-research，进入 Proposed Method 设计
+  reversal_plan: 若 gate ① 出现不可解决的依赖冲突，回到仅保留 user-site 方案并显式记录为环境降级
+  observation: 尚未启动 gate ①
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence: []
+  supersedes: []
+  created_at: '2026-08-28T16:05:00+08:00'
+  updated_at: null
+- id: DEC-004
+  title: gate ① 完成：grasp-lgd env 已 self-contained；GPU torch 暂通过拷贝 user-site 实现
+  category: process
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks:
+  - TASK-003
+  related_business_logic: []
+  context: 此前 env 实际依赖 ~/.local，PYTHONNOUSERSITE=1 下无法跑 smoke；网络暂时拿不到 cu126 官方 wheel，但
+    user-site 已有可用的 GPU torch/torchvision。
+  hypothesis: 如果把 ~/.local 下的 torch/torchvision/nvidia_*/cuda_*/triton 整个拷进 env，并配合
+    PYTHONNOUSERSITE=1，env 就能独立跑 smoke；之后只要网络恢复即可替换为官方 wheel。
+  options:
+  - name: 继续等待官方 cu126 wheel
+    benefits:
+    - 使用官方二进制，来源干净
+    costs:
+    - 短期阻塞 gate ①
+  - name: 把 user-site 的 torch 拷进 env
+    benefits:
+    - 立即跑通 self-contained smoke
+    - 二进制与原始一致
+    costs:
+    - 本质仍依赖 user-site 内容（拷贝来源）
+    risks:
+    - 若 user-site 包被清理/升级，env 内可能失同步
+  - name: 改用 CPU torch
+    benefits:
+    - 可立即从 PyPI 安装
+    costs:
+    - 失去 GPU 能力，后续训练不可用
+  decision: 采用第二选项，把 ~/.local 下的 torch/torchvision/nvidia_*/cuda_*/triton 拷进 env；记录为临时方案，待网络恢复后切换为官方
+    wheel。
+  reason_summary:
+  - smoke chain 已在 PYTHONNOUSERSITE=1 下完整通过
+  - 二进制来源已知，路径明确，便于后续替换
+  - CUDA 可用，避免 CPU 折中
+  conditions:
+  - 若后续 pip 能正常下载 cu126 wheel，env 内的 torch/torchvision 应被覆盖安装
+  action: 已完成拷贝、生成 requirements.txt / environment.yml、记录 EV-20260828-env-self-contained
+  expected_result: env 自包含，gate ② 可启动
+  reversal_plan: 若后续发现 user-site 拷贝的 torch 与官方 wheel 有差异，重新 `pip install --force-reinstall`
+    即可覆盖
+  observation: ENABLE_USER_SITE=False；sys.path 不含 ~/.local；所有 12 个关键包都在 env；cuda.is_available()=True；smoke
+    loss 1.656031 / correct=False
+  actual_result: gate ① 通过
+  outcome_status: successful
+  lesson: 对已有 user-site 包污染的 env，最快独立化路径是 cp -a + PYTHONNOUSERSITE=1，精度足够覆盖短期需求
+  evidence:
+  - EV-20260828-env-self-contained
+  supersedes: []
+  created_at: '2026-08-28T17:15:00+08:00'
+  updated_at: null
+- id: DEC-005
+  title: plusplus zip 自带顶层目录，验证脚本使用嵌套子目录
+  category: data
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks: []
+  related_business_logic: []
+  context: 解压 grasp_instructions.zip / grasp_label_positive.zip 后，文件实际落在 .../grasp_instructions/grasp_instructions
+    与 .../grasp_label_positive/grasp_label_positive 子目录
+  hypothesis: 保留嵌套结构并让脚本指向子目录，避免大量小文件改名/迁移
+  options:
+  - name: 保留嵌套结构，脚本使用子目录路径
+    benefits:
+    - 保留 zip 原始语义
+    - 不需要额外重命名
+    costs:
+    - 调用路径变长
+    risks:
+    - 后续维护需记住路径
+  - name: 把所有 .pkl/.pt 提取到平铺目录
+    benefits:
+    - 路径短
+    costs:
+    - 需要复制/移动大量小文件
+    - 额外磁盘 IO
+    risks:
+    - 若后续脚本假设原文件名，需要二次改名
+  decision: 保留嵌套结构，验证脚本和后续 data loader 使用 .../grasp_instructions/grasp_instructions
+    与 .../grasp_label_positive/grasp_label_positive 路径
+  reason_summary:
+  - 保留 zip 原始组织
+  - 避免大量小文件复制/重命名
+  - 只需在文档/脚本里说明一次路径
+  conditions: []
+  action: 已创建 research/scripts/verify_downloaded_dataset.py 并完成 5/5 对齐
+  expected_result: 后续 code 与脚本以子目录为入口，5 sample 对齐通过
+  reversal_plan: 若出现大量样本缺失再考虑平铺目录
+  observation: 5/5 aligned，pkl 为 str、pt 为 [N,6]
+  actual_result: null
+  outcome_status: successful
+  lesson: null
+  evidence:
+  - research/scripts/verify_downloaded_dataset.py
+  supersedes: []
+  created_at: '2026-08-31T15:00:00+08:00'
+  updated_at: null
+- id: DEC-006
+  title: image_part_aa + image_part_ab 视为同一 zip 的 split，必须 cat 后再 unzip
+  category: data
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks: []
+  related_business_logic: []
+  context: aa 头部 magic=PK\x03\x04，ab magic 不匹配；aa+ab 字节数都符合 DEC-001；ab 是 aa 的续段而非独立
+    zip
+  hypothesis: 用 prepare_rgb_archive.sh --auto-merge 把 aa+ab cat 成完整 zip，再用 unzip 处理
+  options:
+  - name: cat aa+ab 后整体解压
+    benefits:
+    - 得到标准 zip，可随机访问
+    costs:
+    - 合并文件 65 GiB
+    risks:
+    - 磁盘占用
+  - name: 把 aa 当 zip 直接解压，再单独处理 ab
+    benefits:
+    - 不需要合并
+    costs:
+    - ab 不合法 zip 单独无法解压
+    risks:
+    - image 中段无法获得
+  - name: 不下载 ab，用 aa 范围内的 subset 训练
+    benefits:
+    - 省磁盘
+    costs:
+    - scene 覆盖不全
+    risks:
+    - gate ② 全 scene 验证无法完成
+  decision: 采用 cat aa+ab 后整体 unzip；挑选需要的 scene 单独解压，避免全量展开
+  reason_summary:
+  - aa+ab 字节数对齐 DEC-001
+  - 合并后 file/zip 识别正常，member 含 image/<scene>.jpg
+  conditions: []
+  action: 已用 prepare_rgb_archive.sh --auto-merge 合并并解压 stems.txt 所需 10 张 jpg；image_archive
+    已删除
+  expected_result: 真 RGB pipeline 10/10 OK；不再依赖中间合并文件
+  reversal_plan: 如未来要展开全量 RGB，重新 cat aa+ab 然后 unzip；磁盘需预留 60+ GiB
+  observation: 10/10 OK，metrics.json 记录每条 loss/correct；image_archive 已删除，/mnt/data
+    剩余 107 GiB
+  actual_result: null
+  outcome_status: successful
+  lesson: null
+  evidence:
+  - outputs/batch_smoke/metrics.json
+  - outputs/batch_smoke/summary.txt
+  supersedes: []
+  created_at: '2026-08-31T21:00:00+08:00'
+  updated_at: null
+- id: DEC-007
+  title: 合并 RGB zip 后只挑 batch smoke 需要的 scene 解压，避免展开 60 GiB
+  category: data
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks: []
+  related_business_logic: []
+  context: 当前 /mnt/data 剩余 107 GiB；image_archive 65 GiB；若再全量解压 RGB 60 GiB 会吃满
+  hypothesis: 只需要 batch smoke 对应的 10 个 scene jpg，其余保留在 raw zip 以备后续
+  options:
+  - name: 展开全量 RGB
+    benefits:
+    - 一次到位
+    costs:
+    - 磁盘紧张
+    risks:
+    - /mnt/data 被写满
+  - name: 只解压 batch smoke 用 scene
+    benefits:
+    - 磁盘占用 < 1 MB
+    - 灵活性高
+    costs:
+    - 后续大规模训练需再解压
+    risks:
+    - 需要保留 raw zip
+  decision: 只解压 batch smoke 用 10 张 jpg；raw zip 保留以便后续再展开
+  reason_summary:
+  - disk budget 不允许全量
+  - stems.txt 固定 10 scene，重跑一致
+  conditions: []
+  action: 已用 unzip -j -o ... image/<scene>.jpg 抽取 10 个文件到 processed/grasp-anything/images/
+  expected_result: batch smoke 10/10 OK
+  reversal_plan: 如要做大规模训练/评估，重新执行 prepare_rgb_archive.sh --auto-merge 并 unzip 全部成员
+  observation: 10/10 OK; processed/grasp-anything/images 750 KiB
+  actual_result: null
+  outcome_status: successful
+  lesson: null
+  evidence:
+  - outputs/batch_smoke/summary.txt
+  supersedes: []
+  created_at: '2026-08-31T21:05:00+08:00'
+  updated_at: null
+- id: DEC-008
+  title: "采纳 LSAR（Language-conditioned Spatial Affordance Refinement）作为 Proposed Method"
+  category: technical
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks:
+    - TASK-005
+  related_business_logic: []
+  context: "项目处于 solution-research → architecture-decision 阶段；需要在不改 grasp 表示、扩散过程、评估协议的前提下提出一个可解释、可插拔的改进。"
+  hypothesis: "现有 vision-language fusion 主要给出 ‘Which region is related to description’，而 grasp 检测需要 ‘Which region gives best affordance’。引入 LSAR 对 A_vl 与可选 F_v 做空间细化，可以提升定位。"
+  options:
+    - name: "Option 1 轻量 CNN (Conv 3x3 + ReLU + Conv 3x3 + Sigmoid)"
+      benefits:
+        - "实现简单、计算量低、易于 ablation"
+      costs:
+        - "建模能力相对受限"
+    - name: "Option 2 Spatial Attention (Q/K/V)"
+      benefits:
+        - "更强的空间建模"
+      costs:
+        - "结构稍复杂，需要对齐 Q/K/V 来源"
+    - name: "Option 3 轻量 Transformer"
+      benefits:
+        - "表达力最强"
+      costs:
+        - "实现复杂度高、显存占用大"
+  decision: "采纳 LSAR 作为 Proposed Method；实现优先级 Option 1 → Option 2 → Option 3，先跑 CNN baseline 再考虑升级。"
+  reason_summary:
+    - "方案明确限定‘只改 conditioning 分支’，与 baseline 区分清晰"
+    - "CNN 实现成本最低，可在 batch smoke 数据上先验证"
+    - "后续 ablation 可以在三选项间直接对比"
+  conditions:
+    - "若 batch smoke 数据集足够小可跑通 CNN baseline，再决定升级到 attention / transformer"
+  action: "已存档 .project-log/docs/proposed-method-LSAR.md；新增 TASK-005 跟踪编码实现"
+  expected_result: "得到一个可解释、与 LGD baseline 形成清晰对比的 LSAR 模块"
+  reversal_plan: "若 CNN baseline 在小规模实验中无明显收益，可直接退化为 no-op（保持 baseline）"
+  observation: "尚未启动编码"
+  actual_result: null
+  outcome_status: not-observed
+  lesson: null
+  evidence: []
+  supersedes: []
+  created_at: '2026-08-28T17:40:00+08:00'
+  updated_at: null
+- id: DEC-009
+  title: 后续 Proposed Method 的 baseline 固定为 diffusion 版 LGDM
+  category: technical
+  status: active
+  authority: B
+  user_approval: not-required
+  related_tasks:
+    - TASK-006
+  related_business_logic: []
+  context: >-
+    用户明确要求调用/验证当前 LGD 仓库里的 diffusion 版本，后续 LSAR 应基于
+    diffusion baseline，而不是已经跑过的 lgrconvnet3 dense-map baseline。
+  hypothesis: >-
+    LGDM + 官方 diffusion pipeline 已在真实样本上 2/2 跑通；后续 Proposed Method
+    只需在 LGDM conditioning 分支插入 LSAR，grasp 表示、扩散过程和评估协议保持不变。
+  options:
+    - name: 继续使用 lgrconvnet3 dense-map baseline
+      benefits:
+        - 已有 10/10 batch smoke 证据
+      costs:
+        - 不符合用户指定的 diffusion baseline 方向
+        - LSAR 原方案描述的是 diffusion conditioning 分支
+      risks:
+        - 论文方法与用户目标脱节
+    - name: 使用 diffusion 版 LGDM baseline
+      benefits:
+        - 与用户要求和 LSAR 方案一致
+        - 后续可训练 diffusion objective 或保留官方 dense-map 更新
+      costs:
+        - 需要额外处理官方训练脚本中 diffusion loss 未 backward 的问题
+      risks:
+        - 训练显存/时间高于 lgrconvnet3
+  decision: 采用 diffusion 版 LGDM 作为 Proposed Method 的 baseline。
+  reason_summary:
+    - LGDM 参数约 573.6M，但 batch=1 smoke 峰值 GPU 约 2.51 GiB
+    - 官方 diffusion 链路已通过真实样本验证
+    - 与 LSAR 的“只改 conditioning 分支”边界一致
+  conditions:
+    - 正式训练前需决定 diffusion objective 是否 backward，以及 dense-map loss
+      是否保留
+  action: >-
+    新增 research/scripts/diffusion_smoke.py，记录 EV-20260902-diffusion-smoke；
+    环境快照加入 transformers/timm/ruamel.yaml 等依赖。
+  expected_result: 后续 Baseline vs Ours 实验以 LGDM 为 baseline。
+  reversal_plan: 若扩散训练在有限 GPU 上不可行，再回退到 lgrconvnet3 并明确调整论文声明。
+  observation: 2/2 真实 stem 跑通；官方训练代码只对 dense-map loss backward。
+  actual_result: LGDM diffusion baseline smoke passed
+  outcome_status: successful
+  lesson: null
+  evidence:
+    - EV-20260902-diffusion-smoke
+  supersedes: []
+  created_at: '2026-09-02T06:12:00+08:00'
+  updated_at: null
