@@ -178,6 +178,10 @@
   - `Bolin_Tao.pdf` 已从修订版官方模板更新
   - GitHub 发布仓库已同步论文修订并推送：
     remote commit `bea378d`
+  - 工程日志已归档到知识库：
+    `~/Project/My_knowledge_base/工程记录/视觉语言抓取作业/.project-log`
+  - 知识库归档提交：`1724b20`
+  - 知识库 `.gitignore` 例外提交：`50918db`
   - README 与本机绝对 Python 路径已解耦，改用 `python` 通用命令
   - 曾出现两个进程写同一 `lsar_full` 目录的冲突；
     已停止后启动的 resume 进程，保留 seed 42 从头训练的
