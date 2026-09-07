@@ -1,0 +1,69 @@
+id: ARCH-PRESENTATION-001
+status: active
+based_on:
+  - BASELINE-PRESENTATION-001
+  - SR-PRESENTATION-001
+  - DEC-PRESENTATION-001
+business_atoms:
+  - DEMO-001
+  - DEMO-002
+  - DEMO-003
+  - DEMO-004
+  - DEMO-005
+responsibilities:
+  - module: DemoConfig
+    owner: backend/app/core/config.py
+    owns: demo 模式开关、DEMO_DATA_ROOT、DEMO_BUCKET、演示媒体令牌配置
+  - module: LocalObjectService
+    owner: backend/app/services/local_object_service.py
+    owns: 本地文件系统的 list_objects/get_object/presigned_get_object 兼容适配
+  - module: StorageFactory
+    owner: backend/app/services/minio_client.py
+    owns: 根据 demo 模式返回 LocalObjectService 或 MinioService，两个模式隔离
+  - module: DemoLocalImport
+    owner: backend/app/services/demo_local_import.py
+    owns: 一次性把本地原始数据集导入演示数据库，复用 scanner v3 解析
+  - module: DemoMediaRoute
+    owner: backend/app/api/routes/demo_media.py
+    owns: 带短时签名令牌的本地媒体预览/下载；校验 bucket/key 路径，禁止目录穿越
+  - module: DemoFrontendMode
+    owner: frontend/src
+    owns: 隐藏/禁用 MinIO 扫描、AI 设置与相关文案，展示为演示数据源
+  - module: DemoOps
+    owner: scripts/deploy 文档与 docker compose demo profile
+    owns: 演示启动、数据目录绑定、重置脚本、部署说明
+interfaces:
+  - object_service.list_objects(bucket, prefix, recursive) -> 与 MinIO 枚举兼容的对象项
+  - object_service.get_object(bucket, object_key) -> 可读文件对象
+  - object_service.presigned_get_object(bucket, object_key, expires) -> 演示本地媒体 URL 或 MinIO presigned URL
+  - demo_import CLI 读取 DEMO_DATA_ROOT/DEMO_BUCKET 并调用 discover_namespaces + build_list_snapshot + resolve_list_snapshot
+  - DemoMediaRoute 通过短时签名令牌访问本地文件，返回视频/下载响应
+data_flow:
+  - 本地原始数据集 -> LocalObjectService -> discover_namespaces -> build_list_snapshot -> business_resolver -> PostgreSQL/SQLite 演示库 -> 资产重算
+  - manual QC qc-context/telemetry -> LocalObjectService -> DemoMediaRoute/曲线数据 -> 前端
+  - 前端不再出现 MinIO bucket/扫描入口；对象访问由后端返回地址承载
+state_and_concurrency:
+  - 演示导入单机顺序执行，幂等：按 bucket+list_prefix+episode 指纹合并
+  - 导入与重置互斥；重置前备份或重建演示库
+  - manual QC 状态流转沿用现有模型，不引入第二条状态机
+failure_behavior:
+  - DEMO_DATA_ROOT 缺失/为空：演示导入失败并返回可读错误，不产生空库
+  - 单 episode 缺必要对象：跳过该 episode 的 QC 展示，导入继续
+  - 媒体文件缺失：DemoMediaRoute 返回 404，manual QC 显示该 object 不可用
+  - 非法 bucket/key 或路径穿越：拒绝请求并记录日志
+security_privacy:
+  - demo 模式不连接内网 MinIO，不读取生产数据库
+  - 仓库不包含 54GB 数据、MinIO 凭据或内网地址
+  - 本地媒体 URL 使用短时签名令牌；前端不拼接文件路径
+  - 公网部署需 HTTPS、CORS 白名单、可替换门槛（域名/端口待定）
+observability:
+  - 演示导入记录开始/结束/导入条数/失败 episode
+  - backend 健康检查保持可用；demo 模式记录本地存储与 MinIO 未连接的运行时标记
+deployment_and_compatibility:
+  - 只改 presentation 分支，main 生产分支行为不变
+  - 演示服务运行在本机，数据目录路径可配置；公网 URL 映射待用户提供
+  - 前端沿用现有构建方式；Docker demo profile 不启动 scan-coordinator/scan-worker
+  - 文档说明演示账号、密钥替换、CORS 与 HTTPS 要求
+assumptions:
+  - 数据运行在本机 /mnt/data，路径可配置
+  - 允许公网访客交互，并提供重置脚本

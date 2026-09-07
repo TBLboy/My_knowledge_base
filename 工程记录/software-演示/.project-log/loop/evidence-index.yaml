@@ -1,0 +1,79 @@
+schema_version: 1
+evidence:
+- id: EV-DEMO-REAL-IMPORT-001
+  kind: verification
+  subject: 演示版本地对象导入对真实数据 end-to-end
+  status: valid
+  command: backend/.conda-env/bin/python /tmp/demo_import_verify.py
+  result_ref: 90 episodes imported, 126516 objects, path-sort fix verified
+  covers:
+    files:
+    - tests/test_demo_local_import.py
+    requirements: []
+    tasks:
+    - DEMO-IMPLEMENT-001
+  version_binding:
+    git_commit: 1265104a07ddca2c2b68e521372de1bb958c0269
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      tests/test_demo_local_import.py: 846cb365f6f10c1aaafb171cd825785f511ad9509d03e70b1d6524b6f6cba55b
+  recorded_at: '2026-08-19T05:35:37Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-BACKEND-TESTS-001
+  kind: verification
+  subject: 后端既有测试与 compileall
+  status: valid
+  command: backend/.conda-env/bin/python tests/test_data_assets.py && tests/test_l3_v2.py
+    && tests/test_ai_qc_explain.py && compileall
+  result_ref: 11 + 6 tests passed, compileall OK
+  covers:
+    files: []
+    requirements: []
+    tasks:
+    - DEMO-IMPLEMENT-001
+  version_binding:
+    git_commit: 1265104a07ddca2c2b68e521372de1bb958c0269
+    diff_hash: 834a58f19b999b5f94065048ca2ebefe5123d0a86e4721d65ee6e857d5b72f44
+    file_hashes: {}
+  recorded_at: '2026-08-19T05:35:37Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-FRONTEND-TSC-001
+  kind: verification
+  subject: frontend vue-tsc 类型检查
+  status: valid
+  command: cd frontend && npx vue-tsc --noEmit
+  result_ref: TSC_OK
+  covers:
+    files: []
+    requirements: []
+    tasks:
+    - DEMO-IMPLEMENT-001
+  version_binding:
+    git_commit: 1265104a07ddca2c2b68e521372de1bb958c0269
+    diff_hash: 834a58f19b999b5f94065048ca2ebefe5123d0a86e4721d65ee6e857d5b72f44
+    file_hashes: {}
+  recorded_at: '2026-08-19T05:35:37Z'
+  invalidated_at: null
+  invalidation_reason: null
+- id: EV-DEMO-TEST-001
+  kind: verification
+  subject: demo local import 单测
+  status: valid
+  command: backend/.conda-env/bin/python tests/test_demo_local_import.py
+  result_ref: 6/6 tests passed
+  covers:
+    files:
+    - tests/test_demo_local_import.py
+    requirements: []
+    tasks:
+    - DEMO-IMPLEMENT-001
+  version_binding:
+    git_commit: 1265104a07ddca2c2b68e521372de1bb958c0269
+    diff_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    file_hashes:
+      tests/test_demo_local_import.py: 846cb365f6f10c1aaafb171cd825785f511ad9509d03e70b1d6524b6f6cba55b
+  recorded_at: '2026-08-19T05:35:37Z'
+  invalidated_at: null
+  invalidation_reason: null

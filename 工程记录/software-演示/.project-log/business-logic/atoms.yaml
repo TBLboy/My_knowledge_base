@@ -1,0 +1,72 @@
+version: "0.1"
+status: draft
+atoms:
+  - id: DEMO-001
+    status: draft
+    actor: 演示管理员
+    trigger: 首次启动演示版或执行本地数据导入命令
+    precondition: 本地原始数据集目录存在且可读
+    rule: 系统从本地 processed 目录导入数据到演示数据库，不连接 MinIO
+    outputs: List/Batch/Episode/EpisodeObject 记录与资产 rollup
+    exception: 数据目录缺失或为空时导入失败并给出可读错误
+    invariants: 不写入生产数据库，不暴露内网凭据
+    acceptance:
+      - Given 本地目录存在 processed/episode_XXXX
+      - When 执行演示导入
+      - Then 生成可用 List/Batch/Episode，manual QC 可访问媒体与 telemetry
+    source: user-confirmed-2026-08-19
+  - id: DEMO-002
+    status: draft
+    actor: 演示访客
+    trigger: 公网访问演示 URL
+    precondition: 演示服务已启动并导入本地数据
+    rule: 演示版保留核心闭环功能真实可用
+    outputs: 登录、工作台、数据总库、派发、manual QC、历史/导出、BUG、重检审批
+    exception: AI 助手不可用；MinIO 扫描入口隐藏或禁用
+    invariants: 不依赖内网服务
+    acceptance:
+      - Given 访客使用演示账号登录
+      - When 浏览核心页面并操作 manual QC
+      - Then 核心流程可完成且数据来自本地数据集
+    source: user-confirmed-2026-08-19
+  - id: DEMO-003
+    status: draft
+    actor: 演示访客
+    trigger: 打开 manual QC 页面
+    precondition: 该 episode 已完成本地数据导入
+    rule: MP4 媒体与 telemetry 曲线由后端从本地文件服务，不签发 MinIO presigned URL
+    outputs: 可播放视频、可查看曲线与 L3 评分
+    exception: 媒体文件缺失时该 object 显示不可用但不阻断页面
+    invariants: 前端不拼接 MinIO bucket/key，不持有任何存储凭据
+    acceptance:
+      - Given 一个已导入 episode
+      - When 请求 qc-context 与 telemetry-curve
+      - Then 返回本地文件 URL/数据，不依赖 MinIO
+    source: clarified-from-code-and-user-intent
+  - id: DEMO-004
+    status: draft
+    actor: 仓库维护者
+    trigger: 提交演示代码
+    precondition: presentation 分支
+    rule: 仓库不包含 54GB 数据、内网地址或 MinIO 凭据
+    outputs: 可公开的轻量演示仓库与本地数据配置
+    exception: 误提交敏感信息时阻止提交或清除
+    invariants: 公网 clone/演示不暴露内网环境
+    acceptance:
+      - Given presentation 分支提交
+      - Then 代码库中不存在内网 MINIO 凭据与大数据文件
+    source: user-confirmed-2026-08-19
+  - id: DEMO-005
+    status: draft
+    actor: 演示管理员
+    trigger: 演示数据被访客修改后
+    precondition: 演示服务运行
+    rule: 提供演示库重置脚本，可把数据还原到初始演示状态
+    outputs: 已重置的演示数据库
+    exception: 重置与导入互斥，避免中间状态暴露
+    invariants: 重置不触碰正式生产库
+    acceptance:
+      - Given 演示库已被修改
+      - When 执行重置脚本
+      - Then 数据库恢复初始演示数据
+    source: inferred-safe-default

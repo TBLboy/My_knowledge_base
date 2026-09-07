@@ -1,0 +1,214 @@
+# Open Business Logic Questions
+
+## Active Questions
+
+
+### Q-20260716-023
+
+- Related node: D（数据总库资产画像升级）
+- Related edge: F->D
+- Question: 任务资产列表默认排序、默认筛选，以及 inactive task 是否允许继续持有 active-scope batch，是否需要额外业务约束？
+- Why it matters: 影响前端默认体验，以及 `SUM(task rollups) == global summary` 校验是否总能成立
+- Current status: Partially resolved
+- Answer: 默认排序按 `taskTypeName` 升序；默认筛选优先 active task，且 `task_type:unclassified` 始终展示；支持 `include_inactive`。当前实现不额外禁止 inactive task 持有 active-scope batch：task/global 校验仍按 active-scope batch 汇总，不依赖“页面默认可见 task 集合”。若后续产品要求 inactive 不得持有 active batch，再单独收紧写路径约束。
+
+### Q-20260629-017
+
+
+- Related node: D2
+- Related edge: D→D2
+- Question: 批次驳回阈值 \(\theta\) 的默认值应该设为多少？当前暂定 0.10（抽检失败率 > 10% 触发驳回），但这是基于"分母=批次总数"时代的经验值。分母改为抽检数后，同一批次的失败率会显著放大（例如从 12% → 48%），阈值可能需要相应调高（例如 0.30 或 0.40）
+- Why it matters: 阈值直接影响整批数据的可用性判定，过高则劣质数据漏进训练集，过低则频繁驳回增加采集成本
+- Current status: Open
+- Answer: Pending。建议先用默认 0.10 上线，积累真实 QC 数据后根据实际失败率分布做校准
+
+### Q-20260629-018
+
+- Related node: D2
+- Related edge: D→D2
+- Question: 设置页"通用"tab 除了批次驳回阈值外，还需要哪些全局参数？是否需要任务目标数量（targetEpisodeCount）也放在这里？
+- Why it matters: 决定设置页的 tab 结构和参数范围
+- Current status: Open
+- Answer: Pending。首版先放驳回阈值一个参数，后续按需扩展
+
+### Q-20260623-005（Resolved 2026-06-23）
+
+- Related node: D
+- Related edge: F->D
+- Question: V1 中 manual QC 的视频/媒体对象最终采用什么访问协议？
+- Resolution: 采用混合协议。预览/播放类 MP4 由后端签发短时 presigned URL，供 manual QC 页面直接播放；`manifest.json`、`metadata.json`、`telemetry.npz` 等结构化对象继续由后端读取/解析；显式下载、导出和非预览对象访问继续走后端受控接口。前端只接收后端返回的 media descriptors，不拼接 bucket/key 规则，也不直接持有 MinIO 凭据
+
+### Q-20260623-007（Resolved 2026-06-23）
+
+- Related node: D
+- Related edge: F->D
+- Question: Node D 中 `ManualQcContext.media[]`、预览 URL 刷新与显式下载的 API 合同应该如何收口？
+- Resolution: `GET /api/episodes/{episode_id}/qc-context` 直接返回 embedded `media[]` descriptors，字段至少包含 `objectId`、`role`、`label`、`variant`、`slot`、`mimeType`、`previewUrl`、`previewExpiresAt`、`refreshable`、`downloadable`、`sortOrder` 以及可选媒体元数据。URL 刷新通过 `POST /api/episodes/{episode_id}/media/refresh` 按 `objectId` 定向更新；显式下载走独立 `GET /api/episodes/{episode_id}/objects/{object_id}/download`。前端不拼接 bucket/key，不请求通用 access endpoint，也不把 preview 与 download 语义混用
+
+### Q-20260624-011（Resolved 2026-06-24）
+
+- Related node: F
+- Related edge: C->F
+- Question: 任务类型与 batch 的人工管理模型应该如何正式落地？尤其是“新 batch 默认进 `待分类`”、“已人工分类 batch 的 rescan 不覆盖”、“删除任务类型后批次自动回收到 `待分类`”这三条规则，对 schema/API/UI 的最终约束分别是什么？
+- Resolution: 已确定方向。任务类型改为 `admin/qc_manager` 人工维护主数据；扫描器只同步数据，不自动决定正式任务类型；新 batch 默认进入 `task_type:unclassified` / `待分类`；从任务中移除 batch 或删除任务类型时，batch 都回收到 `待分类`；错分 batch 的标准纠正流程是“先移出到待分类，再加入正确任务”；`数据总库` 负责按批次确认当前归属，后续任务类型管理页负责改挂与维护
+
+### Q-20260715-020
+
+- Related node: D（数据总库资产画像升级）
+- Related edge: F->D
+- Question: `batches.list_id` 在完成第一阶段回填和一段时间双写观察后，是否应该进一步收紧为 `NOT NULL`，以及是否允许 / 需要一个 `List` 对应多个业务 `Batch`？
+- Why it matters: 这决定显式 Batch–List 关系的最终基数模型，也决定后续是否可以彻底移除旧的 ID 推导兼容逻辑，以及是否能在数据库层施加更强的一致性约束
+- Current status: Open
+- Answer: Pending。当前已确认长期方向是新增显式 `batches.list_id`，但在历史映射质量、异常批次类型和未来是否存在人工拆分/合并 batch 场景未完全验证前，先保持可空与兼容观察
+
+### Q-20260624-012（Resolved 2026-06-24）
+
+- Related node: D
+- Related edge: F->D
+- Question: `database` 页面在真实数据继续增长、并进入多用户远程使用后，长期正式方案应该优先做前端缓存、`KeepAlive`、前端本地分页，还是直接切换到服务端分页/筛选？
+- Resolution: 已确认长期正式方案应直接切换到“服务端分页 + 服务端筛选 + 前端短时缓存”。后端负责 `page/page_size/total` 与 `keyword/batch_id/qc_status/qc_result` 查询语义，前端只渲染当前页并可在短 TTL 内复用最近一次结果做秒开体验。`KeepAlive`、前端本地全量分页和只靠缓存掩盖卡顿都不作为长期主方案
+
+### Q-20260624-013（Resolved 2026-06-24）
+
+- Related node: D
+- Related edge: F->D
+- Question: 任务派发的长期正式流程到底应该留在 `task-pool` 这种单条任务操作页里，还是迁移到工作台中做 batch 级生成与批量分配？
+- Resolution: 已确定长期正式方案应迁移到工作台中完成。工作台负责选择 batch、生成待派发任务池、选择 reviewer 并执行平均派发或自定义条数派发；`manual-qc` 页面只做质检，`task-pool` 不再作为主派发入口
+
+### Q-20260624-014（Resolved 2026-06-24）
+
+- Related node: D
+- Related edge: F->D
+- Question: 当一个 batch 已经做过 `full` 派发，又重新切回 `sampled` 生成任务时，系统应如何处理旧任务？
+- Resolution: 已确定应引入“活跃派发版本”语义。每次重生成都创建新的当前版本；旧版本中未开始的任务必须退役或标记 superseded，不再参与当前运营视图。历史任务保留用于审计，但不能继续污染当前任务统计与派发状态
+
+## Resolved Questions
+
+### Q-20260623-004（Resolved 2026-07-17）
+
+- Related node: C / F
+- Related edge: C->F
+- Question: `yaocao` bucket 当前完整有多少个 List，raw-only / processed-only / both 分布是什么？
+- Resolution: List census 不再作为固定业务常量，而是 v3 namespace discovery 的动态基线和 Shadow 验收产物。2026-07-17 PostgreSQL 快照为 58 个 active List，其中 raw-only 6、processed-only 0、raw+processed 52；一级 49、二级 9。由于旧扫描存在部分提交，v3 Step 0 仍必须执行只读 MinIO census，并对差异逐项解释。数量不阻塞 v3 架构实施。
+
+### Q-20260624-008（Resolved 2026-07-17）
+
+- Related node: F / D
+- Related edge: F->D
+- Question: 全量扫描、增量发现和定向重扫如何形成长期生产主路径？
+- Resolution: 正式采用 v3 四职责：`smart / incremental / full / manual_prefix`。每日定时与前端主按钮使用 smart；smart 先 discovery，再扫描新发现、需确认、失败重试和 `next_scan_at` 到期 List；每周 full 忽略退避做最终一致性对账；管理员可定向重扫。任何 adaptive List 最长 7 天必须扫描，禁止永久跳过。
+
+### Q-20260624-009（Resolved 2026-07-17）
+
+- Related node: F
+- Related edge: C->F
+- Question: 是否强制 bucket 下一层必须直接是 List？
+- Resolution: 不强制一级目录。真实库已有 9 个 active List 位于二级 `K1/<list>`。扫描使用 `recursive=False` 按层 namespace discovery，结构特征是硬约束，目录深度不是。推荐新数据使用一级 List，但允许业务分组层；`raw/processed` 必须是 List 直接子级。List 移动/改名视为旧实体缺失和新实体出现，不自动迁移 QC 历史。
+
+### Q-20260624-010（Resolved 2026-07-17）
+
+- Related node: F / D
+- Related edge: F->D
+- Question: MinIO 中 List/Episode/对象被删除或替换后，PostgreSQL 如何同步？
+- Resolution: 采用二次成功观测确认的软删除状态机：`present -> suspect_missing -> missing`。第一次完整成功扫描未见只标 suspect 并安排确认；第二次独立成功扫描仍未见才 missing；失败/跳过/取消/超时扫描不得产生缺失证据；重新出现自动恢复。missing 从 active scope、预览、QC 新派发和导出中排除，但扫描器永不自动物理删除 Batch/Episode/QC/审计历史。
+
+### Q-20260716-022（Resolved 2026-07-16）
+
+- Related node: D（数据总库资产画像升级）
+- Related edge: F->D
+- Question: `task_asset_rollups.calculation_version` 的版本推进策略是否与 batch 层共用同一常量，还是任务层独立维护？若任务口径变更而 batch 口径未变，是否只提升 task version？
+- Resolution: 任务层独立维护字符串常量 `task-asset-rollup-v1`，风格对齐 batch 层 `batch-asset-rollup-v1`，但不共用同一常量。任务口径单独变化时只提升 task version 并全量 rebuild task 投影；batch 口径变化时先 rebuild batch，再 dirty/rebuild 受影响 task。
+
+
+### Q-20260716-021（Resolved 2026-07-16）
+
+- Related node: D（数据总库资产画像升级）
+- Related edge: F->D
+- Question: 数据总库是否需要新增 Task 级资产画像？若需要，是否要新建任务级投影表，还是请求时对 batch rollup / episodes 现算？最终可用、未质检、待裁定等指标如何定义？
+- Resolution: 正式采用 Route T2。新增 `task_asset_rollups` + `task_asset_recompute_jobs`；任务投影只从 `batch_asset_rollups` 汇总，不回扫 episodes，也不让前端按批次临时求和。最终可用性主口径固定为 `final_dataset_status`（QUALIFIED / UNQUALIFIED / PENDING）；人工质检进度使用 `manual_qc_status` 作为辅口径；`not_reviewed_count` 与 `pending_dataset_count` 必须拆开；比率分母为 0 时返回 `null`。正式 API 为 `GET /api/data-assets/tasks` 与 `GET /api/data-assets/tasks/{task_type_id}`，并扩展 `POST /api/data-assets/rebuild` 支持 batch/task/all。全局 summary 继续从 batch rollup 汇总；`task_types.total_*` 进入废弃流程。实现风格对齐现有 Route C'，不另起更重 workflow/dirty 字段设计。
+
+### Q-20260625-015（Resolved 2026-06-25）
+
+
+- Related node: D
+- Related edge: B->D
+- Question: 四层 QC 体系在 V1 中到底如何做人机分工？尤其是 L2 / L3 / L4 哪些由人审，哪些由程序算？
+- Resolution: 已确定 V1 分工：L1 硬性门控由上游 TeleDex 平台负责；L2 视觉质量（模糊/过曝/遮挡/抖动/深度异常/动作流程完整性）由质检员人工判断；L3 遥操作轨迹质量由程序自动计算；L4 任务完成度由质检员人工判断。manual QC 页面中的自动指标区只呈现 L3，不自动判定 L2/L4
+
+### Q-20260625-016（Resolved 2026-06-25）
+
+- Related node: D
+- Related edge: B->D
+- Question: L3 遥操作轨迹质量在 V1 中最终采用哪套方案和哪些指标？
+- Resolution: 已确定采用 Forge 作为主方案，并补少量 TeleDex/灵巧手专项自定义指标。V1 分档为 P0 必做 6 项（LDLJ、Dead Actions、Action Saturation、Static Detection、Timestamp Regularity、Qpos-Action Tracking Error）+ P1 增强 2 项（Per-finger Gripper Chatter、Joint Effort）；P2 的 SPARC / Action Entropy / 跨 episode consistency 等指标暂缓。输入统一来自 `processed/telemetry.npz`，hand_dims 先归一化到 [0,1] 后再参与手部相关指标计算
+
+### Q-20260623-006（Resolved 2026-06-23）
+
+- Related node: F
+- Related edge: C->F
+- Question: `yaocao` 现有 list basename 的真实样本中，哪些 token 可以 authoritative 自动映射到具体 `task_type`，哪些只能作为 suggest-only 候选？
+- Resolution: 真实样本盘点后，V1 authoritative 范围收敛到单义单物料 token：`huanggua`、`huangguakuai`、`tudou`、`tudoutiao`、`luobo`。复合或流程型 basename（如 `qingdaofanqieluobo`、`qingdaohuanggualuobo`、`chengfanghuanggualuobo`、`misezhuobu_tudoutiao`、`fengqintudou`、`tiaoliaoping`）仅生成 suggest-only `candidate_task_type`；`quanliucheng1`、`naguo`、`chengfanghuangguang`、`raw_data` 保持 no-match
+
+### Q-20260623-001（Resolved 2026-06-23）
+
+- Related node: F
+- Related edge: C->F
+- Question: V1 中 `candidate_task_type` 到最终 `task_type` 的具体规则映射表如何设计？
+- Resolution: 采用三层 seed 策略：高置信单义 token 用 authoritative 规则直接写 `final_task_type_id`；复合或歧义 token 只写 `candidate_task_type`；无命中保持 unclassified。匹配顺序按 `priority DESC`、`pattern` 长度 DESC、`basename` 优先、再按 rule id 稳定决胜；人工确认后的 `final_task_type_id` 不被 rescan 自动覆盖
+
+### Q-20260623-002（Resolved 2026-06-23）
+
+- Related node: F
+- Related edge: C->F
+- Question: V1 中 `qc_ready` 的最小对象清单是否需要按任务类型进一步细分？
+- Resolution: V1 不按 `task_type` 建模板，统一采用最小公约数清单：`manifest` + `metadata` + `telemetry_npz` + `>=1 camera_rgb_video`。其他对象进入 `episode_objects` 记录但不阻塞 `qc_ready`
+
+### Q-20260623-003（Resolved 2026-06-23）
+
+- Related node: F
+- Related edge: C->F
+- Question: 父子 prefix 同时命中 list 结构规则时，扫描器应如何消除重复识别？
+- Resolution: 采用 deepest-match；深层命中优先，但若父级自身拥有不属于子级的直接 raw/processed episode，则父级保留为独立 list 条目
+
+### Q-20260616-004（Resolved 2026-06-23）
+
+- Related node: C
+- Related edge: B->C
+- Question: 是否可以获取Linker TeleDex实际采集的数据样本？
+- Resolution: 已在 MinIO 对象存储中通过 `boto3` 直接读取了 `yaocao` 和 `20260527` bucket 中的真实样例数据，包括 `manifest.json`、`metadata.json`、`recording_info.json` 等完整 episode 元数据，以及 `telemetry.npz` 和多路 mp4 等媒体对象
+
+### Q-20260616-002（Resolved 2026-06-23）
+
+- Related node: C
+- Related edge: B->C
+- Question: Linker TeleDex系统是否已经内置部分QC功能？
+- Resolution: MinIO 实查确认平台确实内置了同步校验、结尾裁剪、sync_error 等 QC 基础能力。同时 MinIO 实查结果已提供足够证据进行后续方案设计，无需再追问 TeleDex 团队
+
+### Q-20260616-003（Resolved 2026-06-23）
+
+- Related node: D
+- Related edge: C->D
+- Question: QC方案是否需要考虑后续自动化实施的可行性？
+- Resolution: 用户已明确 AutoQC 暂时不需要做。当前工作集中在 manual QC 和 MinIO 数据湖控制面设计上
+
+### Q-20260616-005（Archived 2026-06-23）
+
+- Related node: B
+- Related edge: B->C
+- Question: LA7 和 Linker Hand 各 DOF 的关节上下限、安全范围、速度限制是否有正式表？
+- Resolution: 已降级。当前项目重心已转向 MinIO 数据湖架构，详细的 per-DOF limit 表可在后续 QC 指标精度提升时再做补充
+
+### Q-20260616-006（Archived 2026-06-23）
+
+- Related node: B
+- Related edge: B->C
+- Question: collect_tactile 是否在实际采集任务中启用？
+- Resolution: 已降级。tactile 相关指标不属于 V1 范围，待后续版本再评估
+
+### Q-20260706-019（Resolved 2026-07-15）
+
+- Related node: D (数据展示层)
+- Related edge: D→D (内部增强)
+- Question: 是否应该为平台新增一个"数据画像"展示界面？参考 LeRobot Dataset Visualizer 的 Statistics Panel，但需要结合我们的数据模型和业务需求做定制设计。
+- Why it matters: 当前工作台的指标（候选总量/已抽中样本/抽检通过率/待处理任务）都是业务进度指标，缺少数据集本身的质量画像（episode 长度分布、L3 指标分布、任务类型占比等）。有了数据画像，质检管理员可以一眼看出批次的数据健康度，而不是只看到"有多少条待质检"。
+- Resolution: 已确定需要为平台新增“数据总库资产画像”能力，但正式实现不走“直接在现有 Episode 明细接口上继续堆实时聚合”的路线，而采用 Route C'：显式 Batch–List 关系 + 批次级派生统计投影 + PostgreSQL 持久化 dirty 重算队列 + 周期性对账。第一版优先落地总体资产卡片和批次级资产画像，不把更高维的 L3 分布、任务趋势、关节覆盖率等可视化一起塞入首期范围；任务级画像作为后续正式扩展，见 Q-20260716-021

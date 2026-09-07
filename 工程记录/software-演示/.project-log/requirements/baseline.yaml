@@ -1,0 +1,79 @@
+id: BASELINE-PRESENTATION-001
+version: "0.1.0"
+status: active
+created_at: 2026-08-19
+updated_at: 2026-08-19
+supersedes: null
+goal:
+  id: GOAL-001
+  statement: 在 presentation 分支制作一个可公网访问的演示版：用本机本地原始数据集替代 MinIO，保留核心 QC 闭环，AI 助手不做
+actors:
+  - 演示者（简历作者）
+  - 演示访客（潜在雇主或面试官）
+  - 演示管理员（本机维护与演示库重置）
+in_scope:
+  - presentation 分支保留 demo 模式，不改变 main 正式版业务语义
+  - 本地数据源适配：从本地原始数据集目录导入/绑定到演示数据库，不连接 MinIO
+  - manual QC 的 MP4、telemetry 曲线、L3 评分、异常时间线真实可用，数据来自本地
+  - 核心业务闭环：登录/角色、工作台、数据总库、任务类型与派发、reviewer/manual QC、QC 历史/导出、数据集导出、BUG、申请重检/审批
+  - MinIO 扫描相关 UI、worker、endpoints 在演示版隐藏或禁用，替换为本地数据导入/绑定能力
+  - 提供演示库重置脚本
+  - 提供公网部署文档，包含 HTTPS/CORS/演示账号/密钥替换要求
+out_of_scope:
+  - AI 助手与 Ollama 公网演示
+  - 生产内网 MinIO 或生产 PostgreSQL 对接
+  - 把 54GB 原始数据提交进 git 仓库
+  - 公网 URL/域名/HTTPS 的实际开通与映射（待确认）
+  - leRobot 转换后的数据集作为演示数据源
+  - raw 到 processed 的转换工具链
+business_logic_refs:
+  - DEMO-001 本地数据导入/绑定
+  - DEMO-002 核心闭环演示范围
+  - DEMO-003 manual QC 媒体与 telemetry 本地化
+  - DEMO-004 演示仓库不包含敏感信息与大数据
+  - DEMO-005 演示库重置
+constraints:
+  - 演示版不得依赖或暴露内网 MinIO 地址、access key、secret key
+  - 演示数据留在本机本地目录，路径可通过配置指定
+  - 演示版与生产/正式数据源互相隔离
+  - 前端 API contract 尽量复用现有接口，只替换数据读取来源
+  - 原始目录结构 processed/episode_XXXX/cameras/*.mp4 + manifest.json + metadata.json + telemetry.npz 必须被支持
+  - 公网访问需要 HTTPS、CORS 白名单、可替换密钥与演示账号
+quality_attributes:
+  - 演示导入可重复执行且幂等，不重复创建业务记录
+  - manual QC 页面加载媒体与曲线时不应有任何 MinIO 依赖
+  - 单条 episode 媒体缺失只影响该 object，不阻断整个页面
+  - 演示重置与导入互斥，避免中间状态暴露
+  - 演示仓库 clone 后不包含大型数据文件或内网凭据
+assumptions:
+  - owner: 演示管理员
+    text: 演示运行主机可访问 /mnt/data/gr00t-finetune/datasets/double_linkerhand_qingdao_{1,2,3}
+    invalidation_trigger: 数据目录迁移或路径变化
+  - owner: 演示管理员
+    text: 287 条原始 episode 具备可演示必要的 manifest/metadata/telemetry 与 MP4
+    invalidation_trigger: 导入校验发现缺失对象比例过高
+  - owner: 演示访客
+    text: 公网访客被允许在演示库交互操作，并通过重置脚本恢复初始状态
+    invalidation_trigger: 用户希望演示库只读或禁止公网写入
+unresolved_questions:
+  - id: P-U-01
+    question: 公网 URL 采用哪种部署方式
+    blocking: false
+    options:
+      - 公网 IP + 端口或反向代理
+      - 域名 + HTTPS
+      - 隧道（如 Cloudflare/ngrok）
+evidence:
+  - ref: .project-log/business-logic/clarification.yaml
+    summary: 数据源、范围、AI 排除、数据存放方式均已由用户确认
+  - ref: .project-log/business-logic/atoms.yaml
+    summary: DEMO-001 至 DEMO-005 原子逻辑与验收标准
+  - ref: /mnt/data/gr00t-finetune/datasets
+    summary: 文件系统确认原始数据集存在且共 287 条
+approval:
+  - source: user-2026-08-19
+    decision: 允许公开使用本机原始数据集，数据留在本机，按核心闭环方案执行，AI 助手暂不做
+change_control:
+  - 与 active baseline 冲突的新需求必须先记录变更候选
+  - 变更必须评估影响的 atoms、任务、代码、接口、测试与交付风险后再生效
+  - 生效后提升 baseline 版本并保留旧版本

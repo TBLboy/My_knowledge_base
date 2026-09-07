@@ -1,0 +1,48 @@
+schema_version: 1
+goal:
+  id: GOAL-001
+  statement: 在 presentation 分支制作可公网访问的演示版，用本机本地原始数据集替代 MinIO，保留核心 QC 闭环，AI 助手不做
+  success_conditions:
+    - id: SC-001
+      statement: 演示服务可不连接内网 MinIO 启动并展示数据
+      status: pending
+      evidence_refs: []
+    - id: SC-002
+      statement: 本地原始数据集可导入/绑定为演示数据库并能被 manual QC 读取
+      status: pending
+      evidence_refs: []
+    - id: SC-003
+      statement: 核心闭环页面真实可用，事件与导出数据来自本地演示数据
+      status: pending
+      evidence_refs: []
+    - id: SC-004
+      statement: 仓库与演示环境不暴露内网 MinIO 地址、凭据或 54GB 大数据
+      status: pending
+      evidence_refs: []
+    - id: SC-005
+      statement: AI 助手不可用；MinIO 扫描入口隐藏或禁用
+      status: pending
+      evidence_refs: []
+  non_goals:
+    - AI 助手与 Ollama 公网演示
+    - 生产 MinIO/PostgreSQL 对接
+    - 公网 URL/域名/HTTPS 的实际开通
+  constraints:
+    - 演示版只改 presentation 分支，不改变 main 正式业务语义
+    - 数据留在本机本地目录，路径可配置
+    - 不把内网 MinIO 凭据写入仓库
+    - 前端 API contract 尽量复用，数据读取来源本地化
+  required_evidence:
+    - kind: test
+      subject: 本地数据导入/绑定与 manual QC 媒体/曲线
+      evidence_refs: []
+    - kind: scan
+      subject: 演示仓库不包含 MinIO 凭据与大数据文件
+      evidence_refs: []
+    - kind: run
+      subject: 演示服务在不连接 MinIO 的情况下可访问
+      evidence_refs: []
+  risk_level: normal
+  status: active
+  created_at: 2026-08-19
+  updated_at: 2026-08-19

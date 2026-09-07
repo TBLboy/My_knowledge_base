@@ -3,3 +3,5 @@
 !工程记录/视觉语言抓取作业/.project-log/
 !工程记录/视觉语言抓取作业/.project-log/**
 .playwright-mcp/
+!工程记录/software-演示/.project-log/
+!工程记录/software-演示/.project-log/**

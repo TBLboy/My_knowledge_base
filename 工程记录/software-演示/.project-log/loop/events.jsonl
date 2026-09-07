@@ -1,0 +1,25 @@
+
+{"schema_version":1,"event_id":"LE-000001","time":"2026-08-19T02:53:28Z","run_id":null,"type":"handoff-generated","reason":"active"}
+{"schema_version":1,"event_id":"LE-000002","time":"2026-08-19T03:20:53Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000003","time":"2026-08-19T03:20:53Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000004","time":"2026-08-19T03:20:53Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000005","time":"2026-08-19T03:21:01Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000006","time":"2026-08-19T03:21:01Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000007","time":"2026-08-19T03:21:01Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000008","time":"2026-08-19T03:21:14Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000009","time":"2026-08-19T03:21:14Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000010","time":"2026-08-19T03:21:14Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000011","time":"2026-08-19T03:21:20Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000012","time":"2026-08-19T03:21:24Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000013","time":"2026-08-19T03:21:36Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000014","time":"2026-08-19T03:22:05Z","run_id":null,"type":"work-unit-finished","tool_name":"Bash","changed_paths":[],"invalidated_evidence":[]}
+{"schema_version":1,"event_id":"LE-000015","time":"2026-08-19T04:04:39Z","run_id":"RUN-20260819-040439-d7753ae1","type":"run-started","phase":"business-clarification","task_id":null}
+{"schema_version":1,"event_id":"LE-000016","time":"2026-08-19T04:55:49Z","run_id":"RUN-20260819-045549-c4844e5d","type":"run-started","phase":"requirement-baseline","task_id":"DEMO-BASELINE-001"}
+{"schema_version":1,"event_id":"LE-000017","time":"2026-08-19T05:01:13Z","run_id":"RUN-20260819-050113-bfbc842d","type":"run-started","phase":"architecture-decision","task_id":"DEMO-ARCH-001"}
+{"schema_version":1,"event_id":"LE-000018","time":"2026-08-19T05:02:28Z","run_id":"RUN-20260819-050228-f8ca2cd7","type":"run-started","phase":"engineering-spec","task_id":"DEMO-SPEC-001"}
+{"schema_version":1,"event_id":"LE-000019","time":"2026-08-19T05:05:21Z","run_id":"RUN-20260819-050521-ed48a24a","type":"run-started","phase":"implementation","task_id":"DEMO-IMPLEMENT-001"}
+{"schema_version":1,"event_id":"LE-000020","time":"2026-08-19T05:35:37Z","run_id":"RUN-20260819-050521-ed48a24a","type":"evidence-recorded","evidence_id":"EV-DEMO-REAL-IMPORT-001","status":"valid"}
+{"schema_version":1,"event_id":"LE-000021","time":"2026-08-19T05:35:37Z","run_id":"RUN-20260819-050521-ed48a24a","type":"evidence-recorded","evidence_id":"EV-BACKEND-TESTS-001","status":"valid"}
+{"schema_version":1,"event_id":"LE-000022","time":"2026-08-19T05:35:37Z","run_id":"RUN-20260819-050521-ed48a24a","type":"evidence-recorded","evidence_id":"EV-FRONTEND-TSC-001","status":"valid"}
+{"schema_version":1,"event_id":"LE-000023","time":"2026-08-19T05:35:37Z","run_id":"RUN-20260819-050521-ed48a24a","type":"evidence-recorded","evidence_id":"EV-DEMO-TEST-001","status":"valid"}
+{"schema_version":1,"event_id":"LE-000024","time":"2026-08-19T05:37:53Z","run_id":"RUN-20260819-050521-ed48a24a","type":"work-unit-finished","summary":"demo local import verified on real data + tests + frontend build","evidence":["EV-DEMO-REAL-IMPORT-001","EV-DEMO-TEST-001","EV-BACKEND-TESTS-001","EV-FRONTEND-TSC-001"]}

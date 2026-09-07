@@ -1,0 +1,38 @@
+version: "0.1"
+tasks:
+  - id: DEMO-CLARIFY-001
+    title: presentation 演示版业务澄清
+    status: done
+    phase: business-clarification
+    done_when: 数据源、功能范围、AI 排除、本地数据存放方式均确认
+    notes: 2026-08-19 完成核心闭环方案确认
+  - id: DEMO-BASELINE-001
+    title: 演示版需求基线
+    status: done
+    phase: requirement-baseline
+    done_when: 将澄清结论固化为验收标准与范围边界
+    notes: BASELINE-PRESENTATION-001 已创建
+  - id: DEMO-SOLUTION-001
+    title: 演示版本地数据源方案研究
+    status: done
+    phase: solution-research
+    done_when: 比较本地对象适配、快照 seed、专用入库三种方式并给出推荐
+    notes: 推荐本地对象存储适配器，决策 DEC-PRESENTATION-001
+  - id: DEMO-ARCH-001
+    title: 演示版架构决策与工程规格
+    status: done
+    phase: architecture-decision
+    done_when: 明确模块边界、接口、数据流、失败处理与实现步骤
+    notes: ARCH-PRESENTATION-001 已创建
+  - id: DEMO-SPEC-001
+    title: 演示版工程规格
+    status: done
+    phase: engineering-spec
+    done_when: 把架构转为具体文件级实现、测试与验证清单
+    notes: DEMO-SPEC-001.md 已创建
+  - id: DEMO-IMPLEMENT-001
+    title: presentation 演示版本地数据源改造与公网部署
+    status: in_progress
+    phase: engineering-spec
+    done_when: 本地导入、manual QC 媒体/曲线本地化、MinIO 入口隐藏、部署文档完成
+    notes: 本地导入/媒体/隐藏项已实现并验证，公网部署方案待确认

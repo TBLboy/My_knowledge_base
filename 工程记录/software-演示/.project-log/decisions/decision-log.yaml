@@ -1,0 +1,46 @@
+version: "0.1"
+decisions:
+  - id: DEC-PRESENTATION-001
+    title: 演示版数据源采用本地对象存储适配器方案
+    status: accepted
+    authority: B
+    decision: presentation 演示版使用 LocalObjectService 接口兼容本地文件系统，复用扫描/业务解析数据流，并对 manual QC 媒体提供后端本地文件路由
+    rationale:
+      - 当前 MinioService 接口面小，scanner/manual QC 均通过该接口取数
+      - 复用 discover_namespaces/build_list_snapshot/business_resolver 可避免第二套入库逻辑
+      - 不改变 main 正式版，只改 presentation 分支
+    alternatives:
+      - 预生成 SQLite 快照 + 小样本：快但规模受限
+      - 专用 demo seed：维护第二套入库逻辑，不推荐
+    consequences:
+      - 需要实现本地枚举语义与文件读取路由
+      - 首次导入 287 条数据耗时取决于磁盘与校验强度
+    created_at: 2026-08-19
+    updated_at: 2026-08-19
+  - id: DEC-PRESENTATION-002
+    title: 演示版媒体本地签名路由与 AI 隐藏
+    status: accepted
+    authority: B
+    decision: 演示版通过带签名的 /api/demo/media 读取本地媒体，并在 demo 模式隐藏 MinIO 扫描、定时扫描、扫描 worker 与 AI 助手入口
+    rationale:
+      - 前端不直连对象存储，媒体访问保持签名隔离
+      - AI/Ollama 明确不纳入演示，隐藏入口避免误导评估者
+    consequences:
+      - 需要在 demo 模式配置 DEMO_MEDIA_SIGNING_SECRET
+      - 全量 287 集导入仅取决于磁盘与枚举耗时
+    created_at: 2026-08-19
+    updated_at: 2026-08-19
+  - id: DEC-PRESENTATION-003
+    title: 演示版公网入口采用 Tailscale Funnel
+    status: accepted
+    authority: B
+    decision: 短期限时展示使用 Tailscale Funnel，免费且公网网址不变，数据留在本机；不购买域名
+    rationale:
+      - 54GB 数据必须留本机，不适合免费云主机
+      - Funnel 提供稳定 https://*.ts.net 地址，适合有限时长简历展示
+      - 方案一 Cloudflare+域名有年费，用户明确不投入
+    consequences:
+      - 需要用户完成一次 Tailscale 账号登录与管理后台批准
+      - Funnel 为公网入口，需使用强演示密码并确认平台登录生效
+    created_at: 2026-08-19
+    updated_at: 2026-08-19

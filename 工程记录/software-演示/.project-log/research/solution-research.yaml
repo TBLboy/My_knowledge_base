@@ -1,0 +1,81 @@
+id: SR-PRESENTATION-001
+status: recommended
+decision_question: 演示版如何把当前 MinIO 唯一数据源替换为本机本地原始数据集，同时保留核心闭环并支持公网访问
+constraints:
+  - 数据留在本机 /mnt/data 原始 processed 目录，不提交 54GB 进 git
+  - 保留登录/角色、工作台、数据总库、派发、manual QC、历史/导出、数据集导出、BUG、重检审批
+  - AI 助手不做；MinIO 扫描入口在演示版隐藏或禁用
+  - 前端 API contract 尽量不变，只替换数据读取来源
+  - 公网 URL 具体部署方式未定，但不阻塞代码改造
+candidates:
+  - id: OPT-A
+    name: 本地对象存储适配器 + 复用扫描数据流 + 后端媒体路由
+    strategy: wrapper-adapter
+    requirement_fit: 高
+    integration_cost: 中
+    maintenance_cost: 低
+    performance: 中（本地文件直读；287 条在单机可接受）
+    reliability: 中
+    debuggability: 高
+    lock_in_and_exit: 低（演示适配器只活在 presentation 分支）
+    security_privacy: 高（不暴露内网；文件带短时令牌经过后端）
+    license_cost: 无新增商业依赖
+    risk: 需要保证 list_objects 枚举语义与 MinIO 一致；大目录首次导入耗时
+    fit_summary: 复用 scanner v3 的 namespace discovery、list_snapshot、business_resolver，改动面集中在存储取数与演示导入
+  - id: OPT-B
+    name: 预生成 SQLite 快照 + 拷贝小样本入仓库
+    strategy: direct-use
+    requirement_fit: 中
+    integration_cost: 低
+    maintenance_cost: 中
+    performance: 高（小样本）
+    reliability: 高
+    debuggability: 高
+    lock_in_and_exit: 中
+    security_privacy: 高
+    license_cost: 无
+    risk: 演示规模受限，无法体现 287 条真实数据；数据与扫描流程脱钩，后续维护 287 条需另做导入
+    fit_summary: 适合快速原型，但不符合“本机 287 条真实数据可访问”的演示口径
+  - id: OPT-C
+    name: 专用 demo seed 直接写数据库，不复用 scanner 逻辑
+    strategy: custom
+    requirement_fit: 低
+    integration_cost: 高
+    maintenance_cost: 高
+    performance: 中
+    reliability: 中
+    debuggability: 中
+    lock_in_and_exit: 高
+    security_privacy: 中
+    license_cost: 无
+    risk: 在业务解析层复制 scanner 逻辑，容易漂移
+    fit_summary: 不推荐，演示版没必要维护第二套入库逻辑
+recommendation:
+  choice: OPT-A
+  summary: 在 presentation 分支新增 LocalObjectService，作为 MinioService 的接口兼容替代，由 DEMO_MODE 配置切换；新增本地导入 CLI 复用 scanner v3 的发现/快照/业务解析；媒体预览与下载走带短时令牌的后端本地文件路由
+  implementation_path:
+    - 在 config 增加 demo 模式开关、DEMO_DATA_ROOT、DEMO_BUCKET
+    - 新增 local_object_service：list_objects/get_object/presigned_get_object，枚举与文件读取基于本地目录
+    - get_minio_service 在 demo 模式返回本地适配器；main 模式保持 MinioService 不变
+    - 新增 demo 导入命令，对三个 double_linkerhand_qingdao 目录执行 discover_namespaces + build_list_snapshot + resolve_list_snapshot 并触发资产重算
+    - manual QC 预览 URL 改为后端本地文件接口，带短时签名令牌；telemetry 与 metadata 由本地适配器读取
+    - 前端隐藏/禁用 MinIO 扫描表单、设置页扫描/AI 项，并替换 MinIO 宣传文案
+    - 提供演示部署文档与重置脚本；公网 URL/HTTPS/CORS 作为部署项
+  conditions_invalid:
+    - 用户希望仓库自包含、克隆后无需数据目录即可演示
+    - 公网 URL 部署被纳入代码内配置且必须在代码中硬编码
+    - 要求严格保留演示版与原扫描队列状态机完全一致
+fallback:
+  - 若 LocalObjectService 枚举语义造成导入失败，退化为 OPT-B：先生成一个含全部 287 条元数据、少量媒体样本的本地演示数据包，代码仍走本地文件读取
+evidence:
+  - ref: backend/app/services/minio_client.py
+    summary: MinioService 仅暴露 list_objects/get_object/presigned_get_object，接口面小，适合本地适配
+  - ref: backend/app/services/list_snapshot.py
+    summary: scanner 通过 service.list_objects/get_object 完成快照，可直接复用
+  - ref: backend/app/services/business_resolver.py
+    summary: 业务入库由 resolve_list_snapshot 承接，与存储来源解耦
+  - ref: backend/app/services/payloads.py
+    summary: manual QC 通过 service.presigned_get_object 生成预览 URL
+  - ref: /mnt/data/gr00t-finetune/datasets/double_linkerhand_qingdao_{1,2,3}
+    summary: 原始数据集共 287 条 episode，结构为 processed/episode_XXXX
+confidence: high

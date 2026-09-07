@@ -1,0 +1,12 @@
+version: "0.1"
+questions:
+  - id: P-U-01
+    status: open
+    question: 公网 URL 采用哪种部署方式
+    why: 决定最终演示地址、HTTPS/CORS 和部署文档
+    options:
+      - 公网 IP + 端口或反向代理
+      - 域名 + HTTPS
+      - 隧道（如 Cloudflare/ngrok）
+    resolved: false
+    resolved_at: null

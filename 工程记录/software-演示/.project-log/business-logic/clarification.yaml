@@ -1,0 +1,116 @@
+version: "0.4"
+status: active
+functional_business_logic:
+  actors:
+    - 演示者（简历作者）
+    - 演示访客（潜在雇主或面试官）
+    - 演示管理员（本机维护与演示库重置）
+  scenarios:
+    - 公网访客通过公开 URL 登录演示账号，浏览工作台、数据总库、manual QC 与历史/导出
+    - 演示者在本机执行一次本地数据导入/绑定，把原始数据集映射进演示数据库，不连接 MinIO
+    - 演示者或访客在 manual QC 中观看 MP4、查看 telemetry 曲线与 L3 评分并提交质检
+    - 演示者通过重置脚本把演示数据库还原到初始可展示状态
+  rules:
+    - 演示版数据源只能是本机本地原始数据集目录，禁止连接内网 MinIO
+    - 演示版保留核心闭环：登录/角色、工作台、数据总库、任务类型与派发、reviewer/manual QC、QC 历史/导出、数据集导出、BUG、申请重检/审批
+    - AI 助手不纳入公网演示；MinIO 扫描入口隐藏或禁用，替换为本地数据导入/绑定
+    - 仓库不得包含内网 MinIO 地址、凭据或 54GB 数据本体
+    - 演示版文案与配置不得指向内网地址或生产环境
+    - 演示库默认允许演示交互操作，并提供重置脚本
+  state_transitions:
+    - 本地数据集首次导入：本地 processed 目录 -> List/Batch/Episode/EpisodeObject 行 -> 资产重算
+    - 重复导入：按同一数据源幂等合并，不重复创建业务记录
+    - manual QC：claim -> in_review -> submit -> revision/QC_result，与正式版一致
+    - 演示重置：清空/替换演示库并重新导入初始数据源
+  exceptions:
+    - 本地数据目录不存在或为空时，导入失败并给出可读错误，不静默生产空库
+    - 单条 episode 缺少必要对象（manifest/metadata/telemetry/mp4）时，该 episode 不进入可演示 QC，但导入任务继续完成其余
+    - 媒体文件缺失时，manual QC 对该 object 显示不可用，不阻断整个页面
+    - 本地导入与正式生产数据源互相隔离
+  boundaries:
+    - 不做内网 MinIO 或生产数据库同步
+    - 不做训练/公网模型相关能力，AI 助手排除
+    - 不把 54GB 完整数据提交到 git 仓库
+    - 公网访问需 HTTPS/CORS/可替换密钥/演示账号
+technical_business_logic:
+  current_implementation_facts:
+    - MinIO 是当前扫描入库、manual QC 媒体预览、telemetry.npz 读取和对象下载的唯一数据源
+    - MinIO 凭据通过 backend/app/core/config.py 环境变量与 deploy/.env 注入，deploy/.env 当前包含内网 MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY
+    - manual QC 的 MP4 预览由后端签发 presigned URL（backend/app/services/payloads.py、backend/app/api/routes/qc.py）
+    - telemetry curve 由后端读取 processed/telemetry.npz（backend/app/api/routes/qc.py）
+    - scan coordinator/worker 与扫描 API 直接依赖 MinIO 对象枚举和读取
+    - frontend 多处含 MinIO 文案，数据库页提供扫描 MinIO 表单
+    - 原始演示数据位于 /mnt/data/gr00t-finetune/datasets/double_linkerhand_qingdao_{1,2,3}，分别为 90/97/100 条，共 287 条，约 54GB
+    - 每个 episode 为 processed/episode_XXXX/cameras/*.mp4 + camera_info.json + metadata.json + telemetry.npz + manifest.json
+    - 原始目录结构与当前系统的 processed List/Episode/对象模型天然对应，可直接做本地数据适配
+  interface_contracts:
+    - manual QC 媒体描述由 /api/episodes/{episode_id}/qc-context 提供 media[] + previewUrl
+    - 媒体刷新走 /api/episodes/{episode_id}/media/refresh
+    - 对象下载走 /api/episodes/{episode_id}/objects/{object_id}/download
+    - 演示版应尽量复用上述 API 合同，只替换 preview/file 的读取来源
+  data_and_state_rules:
+    - DB schema 沿用 List/Batch/Episode/EpisodeObject/ScanJob 模型；本地演示导入直接写业务表并触发资产重算
+    - 本地演示数据按 processed/episode_XXXX 结构映射，不改变 manual QC/评分算法
+    - 演示导入记录数据源路径与版本，避免重复导入歧义
+  consistency_and_concurrency:
+    - 演示导入在本机单机顺序执行，无分布式扫描并发需求
+    - 重置与导入互斥，避免演示库中间状态暴露给访客
+  external_constraints:
+    - 公网 URL/HTTPS/域名由部署环境提供，最终公开地址待确认
+    - 演示运行主机需要有足够磁盘/带宽服务该数据集，或只绑定其中可公开子集
+  compatibility_constraints:
+    - 不改变 main 正式版业务语义，只在 presentation 分支做演示适配
+    - 前端 API contract 尽量复用现有接口；扫描 UI 可隐藏但不移除核心业务
+alignment:
+  confirmed_matches:
+    - id: P-001
+      type: confirmed-match
+      summary: 演示数据可公开，来源为本机 /mnt/data 下 200+ 条原始采集数据
+      status: accepted
+      authority: C
+      evidence:
+        - 用户在 2026-08-19 确认可公开
+        - 文件系统确认三个数据集共 287 条 episode
+    - id: P-002
+      type: confirmed-match
+      summary: 不使用 leRobot 转换格式，直接使用 double_linkerhand_qingdao 原始数据集
+      status: accepted
+      authority: C
+      evidence:
+        - 用户明确指正转换后的格式不能直接使用
+    - id: P-003
+      type: confirmed-match
+      summary: 保留大部分可用功能，数据来源从 MinIO 替换为本地演示数据
+      status: accepted
+      authority: C
+      evidence:
+        - 用户确认按核心闭环方案执行
+    - id: P-004
+      type: confirmed-match
+      summary: 数据留在本机本地目录，不把 54GB 提交进 git
+      status: accepted
+      authority: C
+      evidence:
+        - 用户确认数据放在本机即可
+    - id: P-005
+      type: confirmed-match
+      summary: AI 助手暂时不需要纳入演示
+      status: accepted
+      authority: C
+      evidence:
+        - 用户确认 AI 助手暂时不做
+  conflicts: []
+  unknowns:
+    - id: P-U-01
+      type: unknown
+      summary: 公网 URL 的部署方式（公网 IP/域名/HTTPS/端口或隧道）仍待确认
+      status: deferred
+      authority: C
+      evidence: []
+  decisions_required:
+    - 公网 URL 的映射与访问方式
+gate:
+  status: passed
+  blocking_unknowns: []
+  notes: 演示版业务范围与数据源已确认；公网 URL 映射作为部署项延后，不阻塞演示版代码改造
+updated_at: 2026-08-19
