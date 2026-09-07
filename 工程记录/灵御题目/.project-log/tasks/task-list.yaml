@@ -1,0 +1,181 @@
+version: "0.2"
+active_goal: null
+tasks:
+- id: TASK-001
+  title: 初始化个人 Git 仓库与 Vibe 项目记录
+  kind: task
+  parent_id: null
+  phase: business-intent
+  goal: 将灵御题目目录初始化为个人 Git 仓库并建立可恢复的项目记录
+  status: done
+  priority: high
+  risk: low
+  authority: B
+  owner: agent
+  tags:
+  - project-init
+  - git
+  - project-log
+  related_business_logic: []
+  acceptance_refs: []
+  related_decisions:
+  - DEC-001
+  depends_on: []
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills:
+  - a-project-init
+  spec_ref: null
+  inputs:
+  - 目录原非 Git 仓库
+  - 无 AGENTS.md/.project-log
+  outputs:
+  - AGENTS.md
+  - .project-log
+  plan:
+  - git init
+  - init_project_agents.py
+  - loopctl restore/validate
+  done_when:
+  - 目录已初始化个人 Git 仓库
+  - .project-log 模板与根 AGENTS.md 存在
+  - Loop 校验通过
+  verification:
+    status: passed
+    commands:
+    - loopctl --json validate
+    - validate_project.py --root /home/tbl/Project/灵御题目
+    evidence:
+    - EVI-INIT-001
+    limitations:
+    - 尚未创建首次 Git commit
+  result:
+    summary: 初始化完成，Loop 与项目结构校验通过
+    changed_files:
+    - AGENTS.md
+    - .project-log
+    deviations: []
+    follow_ups:
+    - 由用户明确项目目标或笔试交付范围
+  created_at: '2026-09-01T11:06:00Z'
+  updated_at: '2026-09-01T11:06:00Z'
+- id: TASK-002
+  title: 完成笔试答案草稿与材料提交包
+  kind: task
+  parent_id: null
+  phase: business-intent
+  goal: 针对原题生成完整答案草稿，并把原题、论文、参考分析和源码汇总为提交包
+  status: done
+  priority: high
+  risk: low
+  authority: B
+  owner: agent
+  tags:
+  - exam-answer
+  - deliverable
+  - material-package
+  related_business_logic: []
+  acceptance_refs: []
+  related_decisions:
+  - DEC-002
+  depends_on:
+  - TASK-001
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: []
+  spec_ref: null
+  inputs:
+  - 具身智能笔试题.pdf
+  - 01326-AAAI24.LiuX.pdf
+  - KeypointFusion-main
+  - 感知组实习生笔试题目_提取与答题分析.md
+  outputs:
+  - 灵御笔试_提交包/04_答案草稿_感知组实习生笔试.md
+  - 灵御笔试_提交包/00_材料清单.md
+  - 灵御笔试_提交包
+  plan:
+  - 提取原题与论文关键信息
+  - 撰写 Part A/B/C 答案
+  - 汇总材料目录
+  done_when:
+  - 答案覆盖 Part A、Part B、Part C 全部题目
+  - 材料包包含原题、论文、参考分析和源码副本
+  - 项目日志与 Loop 校验通过
+  verification:
+    status: passed
+    commands:
+    - rg -n "^(## )?(Part A|Part B|Part C)" 灵御笔试_提交包/04_答案草稿_感知组实习生笔试.md
+    - find 灵御笔试_提交包 -maxdepth 1 -type f
+    - validate_project.py --root /home/tbl/Project/灵御题目
+    evidence:
+    - EVI-ANSWER-001
+    limitations:
+    - 未实际运行代码、安装环境或训练模型
+  result:
+    summary: 答案草稿已覆盖全部作答要求，材料包已汇总至灵御笔试_提交包
+    changed_files:
+    - 灵御笔试_提交包/00_材料清单.md
+    - 灵御笔试_提交包/04_答案草稿_感知组实习生笔试.md
+    deviations: []
+    follow_ups:
+    - 由用户送后续 GPT 润色后填写姓名和提交日期
+  created_at: '2026-09-01T11:20:00Z'
+  updated_at: '2026-09-01T11:20:00Z'
+- id: TASK-003
+  title: 生成可提交 LaTeX 版笔试答案
+  kind: task
+  parent_id: null
+  phase: business-intent
+  goal: 将笔试答案整理为可提交 LaTeX 文件并写入姓名与提交日期
+  status: done
+  priority: high
+  risk: low
+  authority: B
+  owner: agent
+  tags:
+  - exam-answer
+  - deliverable
+  - latex
+  related_business_logic: []
+  acceptance_refs: []
+  related_decisions:
+  - DEC-003
+  depends_on:
+  - TASK-002
+  blocked_by: []
+  blocked_by_questions: []
+  required_skills: []
+  spec_ref: null
+  inputs:
+  - 灵御笔试_提交包/04_答案草稿_感知组实习生笔试.md
+  - 感知组实习生笔试题目_提取与答题分析.md
+  - 01326-AAAI24.LiuX.pdf
+  outputs:
+  - 灵御笔试_提交包/04_答案可提交_陶柏霖.tex
+  plan:
+  - 将草稿改写为书面化 LaTeX 答案
+  - 填充姓名与提交日期
+  - 选择 Part C 第 3、4、5、7 题
+  done_when:
+  - Part A/B 完整，Part C 选择 4 题
+  - 文件头部 author/date 为陶柏霖和 2026年9月1日
+  - LaTeX 环境 begin/end 配对静态检查通过
+  verification:
+    status: passed
+    commands:
+    - python3 begin/end static check
+    - validate_project.py --root /home/tbl/Project/灵御题目
+    evidence:
+    - EVI-LATEX-001
+    limitations:
+    - 本机未安装 XeLaTeX，未在本机编译 PDF
+  result:
+    summary: 已生成可提交 LaTeX 文件，题目与基本信息均按要求整理
+    changed_files:
+    - 灵御笔试_提交包/04_答案可提交_陶柏霖.tex
+    - 灵御笔试_提交包/00_材料清单.md
+    deviations: []
+    follow_ups:
+    - 用户可用 xelatex 在本地编译 PDF
+  created_at: '2026-09-01T11:55:00Z'
+  updated_at: '2026-09-01T11:55:00Z'

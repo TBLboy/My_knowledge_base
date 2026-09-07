@@ -1,0 +1,84 @@
+schema_version: 1
+evidence:
+- id: EVI-INIT-001
+  kind: initialization
+  subject: Project initialized as personal Git repository with .project-log and AGENTS.md
+  status: stale
+  command: init_project_agents.py; loopctl validate; validate_project.py
+  result_ref: null
+  covers:
+    files:
+    - AGENTS.md
+    - .project-log/current-session.md
+    - .project-log/progress.md
+    - .project-log/workflow.yaml
+    - .project-log/loop/active-run.yaml
+    - .project-log/decisions/decision-log.yaml
+    - .project-log/tasks/task-list.yaml
+    requirements: []
+    tasks:
+    - TASK-001
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      AGENTS.md: b9b07028ff2a2b5d10ec28e23378c823227e344b14cb5a2db87ffe6e78668415
+      .project-log/current-session.md: d417848a4b27049c71ba03cf1abc910b99b025c7bfd63ff3ac4d08aa3e87e9fb
+      .project-log/progress.md: 6869f32c903505744b36fd7416cc6035279710afc451d1b7f263cf7a80e6d501
+      .project-log/workflow.yaml: ad2b315d71fd439c3e19307b56b04404a59edb698343d3801a7401fb0403eb46
+      .project-log/loop/active-run.yaml: 47180494c4ce8f08fc0cf5024827e16e92a0b2c4d5421f333028d4dedcaf986b
+      .project-log/decisions/decision-log.yaml: 9b1a3ff47d53198dc6cd68737e8386cebc95425f5a92cd3f8e74c9dbf92511d4
+      .project-log/tasks/task-list.yaml: d9f57b3d86be1b0431dee66a70369216da12632432853f1b5c8653ffde9271ee
+  recorded_at: '2026-09-01T11:10:54Z'
+  invalidated_at: '2026-09-01T11:31:49Z'
+  invalidation_reason: PostToolUse:apply_patch
+- id: EVI-ANSWER-001
+  kind: deliverable
+  subject: Complete exam answer draft and self-contained material package
+  status: stale
+  command: find 灵御笔试_提交包; rg Part headings; validate_project.py
+  result_ref: null
+  covers:
+    files:
+    - 灵御笔试_提交包/00_材料清单.md
+    - 灵御笔试_提交包/01_原题_具身智能笔试题.pdf
+    - 灵御笔试_提交包/02_论文_KeypointFusion_AAAI24.pdf
+    - 灵御笔试_提交包/03_参考分析_题目提取与答题分析.md
+    - 灵御笔试_提交包/04_答案草稿_感知组实习生笔试.md
+    requirements: []
+    tasks:
+    - TASK-002
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      灵御笔试_提交包/00_材料清单.md: 02ae10226865324a089ffffb860266b566821528d4f656a4ed29af535ec20714
+      灵御笔试_提交包/01_原题_具身智能笔试题.pdf: a92b3ced2976bfac3eebb35c1b8b019607777f77b2adad46122cc03fd5bfdeb4
+      灵御笔试_提交包/02_论文_KeypointFusion_AAAI24.pdf: 79b040f0300f381a9e9b5abd5d131e6498032c9ab422c7909615b19a0592d2ae
+      灵御笔试_提交包/03_参考分析_题目提取与答题分析.md: 3b60ee1db5b5281e51eb69d9ed7f7f80d0adf1c17c20d5c1c6f382c8fcbe8e94
+      灵御笔试_提交包/04_答案草稿_感知组实习生笔试.md: 1f9b84a14da0b3fc3971ac96ba26daf291737b2074b8689d6cfeb2f19e7b171d
+  recorded_at: '2026-09-01T11:58:00Z'
+  invalidated_at: '2026-09-01T12:08:59Z'
+  invalidation_reason: PostToolUse:apply_patch
+- id: EVI-LATEX-001
+  kind: deliverable
+  subject: 可提交 LaTeX 笔试答案，含姓名与提交日期
+  status: stale
+  command: python3 begin/end static check; rg author/date
+  result_ref: null
+  covers:
+    files:
+    - 灵御笔试_提交包/04_答案可提交_陶柏霖.tex
+    - 灵御笔试_提交包/00_材料清单.md
+    requirements: []
+    tasks:
+    - TASK-003
+  version_binding:
+    git_commit: null
+    diff_hash: null
+    file_hashes:
+      灵御笔试_提交包/04_答案可提交_陶柏霖.tex: a809fb47c1da02551847e2cd94d026530cf58e83268e2546421073eecf8b1107
+      灵御笔试_提交包/00_材料清单.md: 02ae10226865324a089ffffb860266b566821528d4f656a4ed29af535ec20714
+  recorded_at: '2026-09-01T11:57:50Z'
+  invalidated_at: '2026-09-01T12:08:59Z'
+  invalidation_reason: PostToolUse:apply_patch

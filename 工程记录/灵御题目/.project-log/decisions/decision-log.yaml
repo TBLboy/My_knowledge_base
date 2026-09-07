@@ -1,0 +1,132 @@
+version: "0.2"
+decisions:
+- id: DEC-001
+  title: 初始化个人 Git 仓库与 Vibe 项目记录
+  category: process
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-001
+  related_business_logic: []
+  context: 用户要求初始化该项目，目录原非 Git 仓库且无 AGENTS.md/.project-log。
+  hypothesis: 初始化轻量记录不会改变业务语义，后续笔试/复现工作可追溯。
+  options:
+  - name: git init + project log
+    benefits:
+    - 可版本化追踪后续变更
+    - 满足 Vibe 留痕与恢复要求
+    costs:
+    - 新增 .git 与 .project-log 结构
+    risks:
+    - 首次提交可能包含大文件，需用户后续决定
+  - name: 不初始化 Git
+    benefits:
+    - 不改变目录结构
+    costs:
+    - 缺少版本控制与 Vibe 恢复基础
+    risks:
+    - 无法可靠追踪后续变更
+  decision: 按用户确认执行 git init，并按个人仓库记录。
+  reason_summary:
+  - 用户明确回复“初始化个人仓库”
+  - 初始化技能要求 git init 前取得用户同意
+  action: git init; init_project_agents.py 创建 .project-log 与 AGENTS.md
+  expected_result: 根目录成为个人 Git 仓库且具备可恢复的 Vibe 项目记录
+  reversal_plan: 若不再需要，可删除 .git 与 .project-log 并恢复原目录
+  observation: git init 成功；AGENTS.md 创建；.project-log 模板文件就绪
+  actual_result: loopctl validate 通过
+  outcome_status: successful
+  lesson: 用户已确认个人仓库，后续不再改变仓库类型
+  evidence:
+  - EVI-INIT-001
+  supersedes: []
+  created_at: '2026-09-01T11:06:00Z'
+  updated_at: '2026-09-01T11:06:00Z'
+- id: DEC-002
+  title: 依据现有材料直接完成笔试答案草稿
+  category: process
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-002
+  related_business_logic: []
+  context: 原题、论文、代码和参考分析已齐备，题目只要求书面作答，无需实际运行环境。
+  hypothesis: 直接生成答案草稿和材料包可满足用户后续润色需求。
+  options:
+  - name: 直接作答并汇总材料
+    benefits:
+    - 满足一小时内提交要求
+    - 材料自包含
+    costs:
+    - 答案仍需后续人工润色
+    risks:
+    - 若题目另有实际运行要求则不足
+  - name: 先要求补充数据/权重/GPU
+    benefits:
+    - 可覆盖真实复现
+    costs:
+    - 不是本卷书面作答要求
+    - 延误提交
+    risks:
+    - 超出题目范围
+  decision: 按书面作答要求直接生成答案草稿，不实际运行代码。
+  reason_summary:
+  - 用户明确要求只需作答不用真实运行
+  - 材料充足
+  action: 创建答案 md 并汇总原题、论文、参考分析、源码副本到材料包
+  expected_result: Part A/B/C 均有可润色的草稿答案，材料包可直接给后续 GPT
+  reversal_plan: 若要真实复现，再补充数据集、预训练权重和 GPU 环境
+  observation: 答案文件 198 行，材料包约 14MB，源码副本 113 个文件
+  actual_result: 文件夹结构与答案覆盖校验通过
+  outcome_status: successful
+  lesson: 书面笔试题应先确认材料是否足够，再决定是否实际运行
+  evidence:
+  - EVI-ANSWER-001
+  supersedes: []
+  created_at: '2026-09-01T11:20:00Z'
+  updated_at: '2026-09-01T11:20:00Z'
+- id: DEC-003
+  title: 生成可提交 LaTeX 版笔试答案
+  category: process
+  status: active
+  authority: B
+  user_approval: approved
+  related_tasks:
+  - TASK-003
+  related_business_logic: []
+  context: 用户要求整理一版可直接编译为 PDF 的可提交答案，并提供姓名和提交日期。
+  hypothesis: 基于已有草稿生成书面化 LaTeX 文件，可以满足用户自行编译 PDF 的提交要求。
+  options:
+  - name: ctexart + XeLaTeX
+    benefits:
+    - 中文排版稳定
+    - 可本地编译，无需改环境
+    costs:
+    - 需要本机安装 XeLaTeX
+    risks:
+    - 若本机无中文 TeX 环境，编译前需安装
+  - name: 仅提供 Markdown
+    benefits:
+    - 无编译依赖
+    costs:
+    - 不满足用户要求的 LaTeX 输出格式
+    risks:
+    - 需要用户手工转格式
+  decision: 使用 ctexart + XeLaTeX 生成可提交 .tex 文件。
+  reason_summary:
+  - 用户明确要求输出 LaTeX 文件并由自己编译 PDF
+  - 草稿已经覆盖全部作答范围
+  action: 将答案草稿改写为 04_答案可提交_陶柏霖.tex，并填写基本信息。
+  expected_result: 用户拿到 .tex 后可直接执行 xelatex 编译。
+  reversal_plan: 若编译环境缺少字体或宏包，可继续规避特殊符号或切换字体配置。
+  observation: LaTeX begin/end 静态检查通过；本机无 XeLaTeX。
+  actual_result: 已生成 .tex 并更新材料清单与项目日志。
+  outcome_status: successful
+  lesson: 中文笔试交付优先采用 ctexart + XeLaTeX 的稳定模板。
+  evidence:
+  - EVI-LATEX-001
+  supersedes: []
+  created_at: '2026-09-01T11:55:00Z'
+  updated_at: '2026-09-01T11:55:00Z'
