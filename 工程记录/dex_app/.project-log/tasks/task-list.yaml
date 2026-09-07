@@ -144,4 +144,4 @@ tasks:
     verification:
       - "User field test: left arm marker detection successful."
     follow-up:
-      - "Right arm calibration is still pending; continue next workday, then record the result."
+      - "Right arm calibration is still pending; continue at the next field session, then record the result."
