@@ -7,3 +7,5 @@
 .playwright-mcp/
 !工程记录/software-演示/.project-log/
 !工程记录/software-演示/.project-log/**
+!工程记录/vibe-coding/.project-log/
+!工程记录/vibe-coding/.project-log/**
