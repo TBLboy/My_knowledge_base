@@ -1,6 +1,7 @@
 {
   "file_hashes": {
     ".project-log/docs/opencode-goal-plugin-probe.mjs": "6da035aba4a14e322e21467cd2ea3f7ec3d2db0b9443f8cd60be1c1727ee4d6e",
-    ".project-log/docs/opencode-goal-plugin-probe-output.txt": "231960ed07f62f0446e67e3160d58791f5f78a0f65000f234288d34fd599b629"
+    ".project-log/docs/opencode-goal-plugin-probe-output.txt": "231960ed07f62f0446e67e3160d58791f5f78a0f65000f234288d34fd599b629",
+    ".project-log/docs/opencode-goal-plugin-version-binding.json": "ba4ce10f49c3bb940da76c0664292c29289942255f866b4119f83f8de4752347"
   }
 }

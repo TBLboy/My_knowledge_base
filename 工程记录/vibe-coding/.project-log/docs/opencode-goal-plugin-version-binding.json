@@ -1,0 +1,15 @@
+{
+  "evidence_level": "plugin V1 callback contract harness; not OpenCode runtime end-to-end",
+  "probe_plugin": {
+    "version": "0.1.51",
+    "resolved_path": "/tmp/oc-goal-test/xdg/opencode/node_modules/@prevalentware/opencode-goal-plugin",
+    "dist_server_sha256": "d3a4825aea825ed3430d980c021e6d588e97c15554cc323539986d1265d02eb4",
+    "installed_at": "2026-09-22 (npm, isolated config dir)"
+  },
+  "opencode_shared_cache_plugin": {
+    "lock_version": "0.1.24",
+    "created_at": "2026-07-22",
+    "note": "What a real OpenCode process resolved before XDG_CACHE_HOME was isolated; it is NOT the version the probe exercised."
+  },
+  "isolation_gap": "Full XDG isolation (config+cache+data+state) with the plugin pinned to 0.1.51 could not complete because npm registry and GitHub were unreachable at 2026-09-22/23."
+}

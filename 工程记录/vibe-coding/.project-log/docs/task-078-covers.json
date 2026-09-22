@@ -1,7 +1,8 @@
 {
   "files": [
     ".project-log/docs/opencode-goal-plugin-probe.mjs",
-    ".project-log/docs/opencode-goal-plugin-probe-output.txt"
+    ".project-log/docs/opencode-goal-plugin-probe-output.txt",
+    ".project-log/docs/opencode-goal-plugin-version-binding.json"
   ],
   "tasks": [
     "TASK-078"
