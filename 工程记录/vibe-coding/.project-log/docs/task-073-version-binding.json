@@ -1,0 +1,11 @@
+{
+  "file_hashes": {
+    "vibe-coding/scripts/opencode_installer.py": "bed3db1c41ed99fb96684352781fd44e23a9a9fe6b06811d9e411a34eb6760c5",
+    "vibe-coding/tests/test_opencode_installer.py": "2642a26319e70e9e66a71c3bc496d6f3c75d3dce3b2e1cda34c740553d8d41c6",
+    "vibe-coding/runtime/opencode/install.sh": "5587684dcb731a14a1f60224b3b0c1f018fdef06ccc0303de4124c50ffe83c04",
+    "vibe-coding/runtime/opencode/README.md": "f4e3721cda381838b53fa2763690511df6adef1ae3eae2ffb9d26adc4c5d0a4c",
+    "vibe-coding/runtime/scripts/validate_package.py": "c20077e8f1682812b218f61a6e643efc82c42bdf600d838824aa06c89c791f5c",
+    "vibe-coding/tests/test_opencode_surface.py": "b26836764411ab65c8744bc14007017bb256e01b767d9e2fc693578153923976",
+    "vibe-coding/tests/test_opencode_plugin.py": "b21676a48071713c3157c72be0b53515389de49835eeb2c1c6a4f6437bf6dfc4"
+  }
+}

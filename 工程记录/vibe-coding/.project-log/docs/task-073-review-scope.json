@@ -1,0 +1,47 @@
+{
+  "branch": "opencode",
+  "environment": "opencode 1.18.31; @opencode-ai/plugin 1.18.4; node 22.23.1; vibe-coding python 3.11+",
+  "evidence": [
+    "focused installer tests: 34 tests OK",
+    "full regression: 240 tests OK (1 skipped)",
+    "package validation passed",
+    "git diff --check clean",
+    "isolated install/verify/uninstall smoke: all rc=0",
+    "pre-existing asset conflict aborts before writing (zero-write verified)",
+    "local modifications to skills/** and vibe-workflow/** preserved with PRESERVED local modification",
+    "user-edited managed permission rule is not reset by update and survives uninstall",
+    "package-removed permission rule is cleaned up; user-deleted rule is not restored",
+    "damaged AGENTS.md block refuses update/uninstall instead of truncating",
+    "package-manager failure rolls back files, lockfiles, node_modules and created dirs",
+    "corrupt package.json blocks uninstall before any deletion",
+    "state path traversal ('../outside', absolute) rejected",
+    "symlinked AGENTS.md/opencode.json/package.json/vibe-python/state/lockfile/node_modules/backups all refused",
+    "user-edited $schema survives update and uninstall",
+    "seven review rounds: NO-GO x6 -> fixes -> GO"
+  ],
+  "files": [
+    "vibe-coding/scripts/opencode_installer.py",
+    "vibe-coding/tests/test_opencode_installer.py",
+    "vibe-coding/runtime/opencode/install.sh",
+    "vibe-coding/runtime/opencode/README.md",
+    "vibe-coding/runtime/scripts/validate_package.py",
+    "vibe-coding/tests/test_opencode_surface.py",
+    "vibe-coding/tests/test_opencode_plugin.py"
+  ],
+  "head": "a14d8d01b3e8520509c531da3812229e0a1810e1",
+  "limitations": [
+    "real model-driven OpenCode session/compaction/write loop belongs to TASK-075",
+    "npm/bun dependency installation exercised mainly via fake package managers",
+    "opencode 1.18.31 vs plugin package 1.18.4 compatibility check belongs to TASK-075",
+    "symlinks created by npm/bun inside node_modules and .npmrc are out of installer audit scope",
+    "concurrent TOCTOU parent-directory swap is out of scope for this single-user installer",
+    "Windows is deferred by project decision"
+  ],
+  "requirements": [
+    "REQ-OPENCODE-001"
+  ],
+  "tasks": [
+    "TASK-073"
+  ],
+  "worktree": "uncommitted TASK-073 changes on branch opencode"
+}
