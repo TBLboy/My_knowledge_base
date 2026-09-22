@@ -1,15 +1,34 @@
 {
-  "evidence_level": "plugin V1 callback contract harness; not OpenCode runtime end-to-end",
+  "evidence_level": "real opencode 1.18.31 runtime (isolated XDG, phases 1-4) + plugin V1 callback contract harness; NOT a model-driven end-to-end run",
   "probe_plugin": {
     "version": "0.1.51",
     "resolved_path": "/tmp/oc-goal-test/xdg/opencode/node_modules/@prevalentware/opencode-goal-plugin",
     "dist_server_sha256": "d3a4825aea825ed3430d980c021e6d588e97c15554cc323539986d1265d02eb4",
     "installed_at": "2026-09-22 (npm, isolated config dir)"
   },
+  "real_runtime_probe": {
+    "date": "2026-09-23",
+    "opencode_version": "1.18.31",
+    "driver": ".project-log/docs/opencode-goal-plugin-runtime-probe.py",
+    "output": ".project-log/docs/opencode-goal-plugin-runtime-probe-output.txt",
+    "isolation": "config + cache + data + state all under one temp XDG root; no writes to ~/.config/opencode",
+    "verified": [
+      "the runtime resolves and installs the pinned 0.1.51 into the isolated cache",
+      "the installed dist/server.js sha256 equals the artifact the V1 harness exercised, so version alignment is closed",
+      "a live opencode serve registers the plugin commands goal / pause_goal / resume_goal",
+      "dispatching the goal command makes the plugin create <XDG_DATA_HOME>/opencode-goal-plugin/goals.json"
+    ],
+    "not_verified": [
+      "/goal -> set_goal actually creating a goal (needs a model turn)",
+      "idle auto-continuation starting a further assistant turn",
+      "compaction survival and pause/resume",
+      "budget accounting and TUI rendering"
+    ],
+    "blocker": "no usable model provider on this machine on 2026-09-23: opencode-go/* rejected for region/privacy, github-copilot/* rejects personal access tokens, opencode/*-free never returns"
+  },
   "opencode_shared_cache_plugin": {
     "lock_version": "0.1.24",
     "created_at": "2026-07-22",
-    "note": "What a real OpenCode process resolved before XDG_CACHE_HOME was isolated; it is NOT the version the probe exercised."
-  },
-  "isolation_gap": "Full XDG isolation (config+cache+data+state) with the plugin pinned to 0.1.51 could not complete because npm registry and GitHub were unreachable at 2026-09-22/23."
+    "note": "What a real OpenCode process resolved before XDG_CACHE_HOME was isolated; it is NOT the version the probes exercised."
+  }
 }

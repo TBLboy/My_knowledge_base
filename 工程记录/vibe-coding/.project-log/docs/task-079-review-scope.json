@@ -1,0 +1,43 @@
+{
+  "branch": "opencode",
+  "commits_reviewed": [
+    "942d4bf",
+    "6484a16",
+    "6595561",
+    "30b492b",
+    "a3929de",
+    "69a422c",
+    "2d43567",
+    "c913841",
+    "4af95d5"
+  ],
+  "reviewer": "verification-reviewer subagent (Curie), independent read-only audit",
+  "environment": "Linux; Git 2.34.1; local bare repositories as remotes; Python 3.11 (vibe-coding env)",
+  "rounds": "9 rounds: rounds 1-8 NO-GO (each found a real A-class bypass), round 9 GO with A-class = 0",
+  "convergence_rule": "an A-class finding is 'reports pushed while the real remote never received the ledger, or data loss'; A-class = 0 is GO, B-class items are advisory",
+  "a_class_findings_closed": [
+    "round 1: a staged-but-unchanged ledger made the archive report no-changes while the local ledger was ahead",
+    "round 2: the index ledger could differ from the local ledger while unrelated files still staged",
+    "round 3: a clean filter or EOL conversion could rewrite the ledger on the way into Git",
+    "round 4: a bare push obeyed remote.<name>.push / push.default and could publish an unrelated ref",
+    "round 5: an unverifiable remote probe was treated as 'the remote does not have the commit'",
+    "round 6: git pushurl / self-referential target handling could self-satisfy the verification",
+    "round 7: a linked worktree of the knowledge base was not recognised as the same repository",
+    "round 8: file:// URLs with a non-canonical authority skipped the self-reference check",
+    "round 9: a ~ home-relative target was never expanded, so ~/kb resolved to the knowledge base while the push reported success"
+  ],
+  "round_9_verification": [
+    "the ~/kb repro now fails before commit and copy; external bare remote holds no ledger; KB worktree stays clean",
+    "additional ~ forms replayed (~//kb, ~///kb, ~/./kb, ~/foo/../kb with foo existing, ~, home/~/kb) without finding a new bypass",
+    "B3 fallback re-tested with a Git wrapper that rejects --path-format=absolute: --git-common-dir yields the same common dir for the main and linked worktree",
+    "29 archive tests, 263 total tests, package validation and git diff --check all pass on commit 4af95d5",
+    "reviewer reported git status --porcelain empty (read-only audit)"
+  ],
+  "residual_advisory": [
+    "B2: branch.<name>.remote configured with a URL instead of a remote name is reported as 'no such remote'; fail-closed but the message is misleading",
+    "very old Git without --git-common-dir is not covered; Windows/UNC behaviour is not covered",
+    "network schemes (SSH/HTTPS) are treated as external by design; a loopback remote is not proven unreachable by this design"
+  ],
+  "verdict": "GO",
+  "supersedes": "REVIEW-OPENCODE-008 recorded the same round-9 GO verdict but failed to bind EV-OPENCODE-011 because the evidence-reference flag was omitted; this revision binds it. The verdict and reviewer are unchanged."
+}

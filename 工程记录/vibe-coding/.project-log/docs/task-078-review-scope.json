@@ -1,0 +1,26 @@
+{
+  "branch": "opencode",
+  "reviewer": "verification-reviewer subagent (Plato), independent read-only audit",
+  "environment": "Linux; Node v22.23.1; opencode 1.18.31; @prevalentware/opencode-goal-plugin 0.1.51 (probe) vs 0.1.24 (OpenCode shared cache)",
+  "rounds": "2 rounds: round 1 NO-GO (overstated evidence + version mismatch), round 2 GO after correction",
+  "round_1_findings": [
+    "probe validated the 0.1.51 V1 callback contract, but the real OpenCode process resolved a cached 0.1.24 from ~/.cache/opencode",
+    "idle/pause/close were never exercised through the real OpenCode runtime or event loop",
+    "'atomic persistence' and 'survives compaction' were stated more strongly than the harness evidence supports",
+    "EV-OPENCODE-009 did not bind the plugin version"
+  ],
+  "round_2_verification": [
+    "probe output reproduced line-for-line; probe file identical to the archived copy (cmp_rc=0)",
+    "hook and tool names confirmed to exist in dist/server.js, not self-invented interface",
+    "atomic write path confirmed in source (temp + exclusive open + fsync + rename + dir sync)",
+    "cached 0.1.24 independently loaded: 11 hooks, 8 tools, no command.execute.before, no list_all_goals",
+    "RESEARCH-OPENCODE-002 rev 2/3 and EV-OPENCODE-010 read back from the ledger and SQLite",
+    "no remaining claim presents harness results as runtime end-to-end verification"
+  ],
+  "residual_minor_items": [
+    "not_verified wording corrected after review: persisted credential is OpenCode Go, plus an unproven GitHub Copilot env token",
+    "the npm/registry outage was recorded as an operational explanation, not a proven technical blocker",
+    "engines expression and the XDG_CACHE_HOME observation were narrowed to their actual scope"
+  ],
+  "verdict": "GO as a candidate direction; TASK-072 must add version-pinned, fully XDG-isolated, real-runtime verification before claiming parity"
+}

@@ -1,0 +1,45 @@
+ISOLATED_ROOT /tmp/oc-goal-runtime-qqnpt5ps
+PHASE 0a resolve and install the pinned plugin
+    resolved_plugin=["@prevalentware/opencode-goal-plugin@0.1.51"]
+PHASE 0 launch opencode serve on port 41123
+PHASE 1 isolation
+    data       /tmp/oc-goal-runtime-qqnpt5ps/data/opencode
+    cache      /tmp/oc-goal-runtime-qqnpt5ps/cache/opencode
+    config     /tmp/oc-goal-runtime-qqnpt5ps/config/opencode
+    state      /tmp/oc-goal-runtime-qqnpt5ps/state/opencode
+    all_paths_under_isolated_root=True
+PHASE 2 version pin
+    configured_plugin ["@prevalentware/opencode-goal-plugin@0.1.51"]
+    pinned_as_expected=True
+    installed_version=0.1.51
+    dist_server_sha256=d3a4825aea825ed3430d980c021e6d588e97c15554cc323539986d1265d02eb4
+PHASE 3 registration
+    commands ["init", "review", "goal", "pause_goal", "resume_goal", "customize-opencode", "book-to-skill"]
+    missing_goal_commands=[]
+PHASE 4 state store
+    state_file=/tmp/oc-goal-runtime-qqnpt5ps/data/opencode-goal-plugin/goals.json
+    state_file_exists=True
+PHASE 5 live model turn SKIPPED (no --model); idle auto-continuation remains unverified
+PROBE_STATUS ok
+
+# ---------------------------------------------------------------------------
+# Environment note (probed 2026-09-23)
+#
+# Phase 5 (a real model turn, required for idle auto-continuation, compaction and
+# pause/resume evidence) could not complete on this machine. Every configured provider
+# was tried; the failures are provider/environment issues, not framework defects:
+#
+#   opencode-go/*          -> AI_APICallError: "This Go model requires Global regions.
+#                             Select Global in your workspace's Privacy settings."
+#   github-copilot/*       -> "Personal Access Tokens are not supported for this endpoint"
+#   opencode/*-free        -> request never returns (75s+ with no stream events)
+#
+# Consequence: /goal -> set_goal, idle auto-continuation, compaction survival and
+# pause/resume remain UNVERIFIED end-to-end. Phases 1-4 above are verified against a real
+# opencode 1.18.31 server and are sufficient to prove the plugin is loaded and registered,
+# but they are NOT sufficient to prove the behavioural claims.
+#
+# Design note discovered while probing: the plugin registers /goal as a *prompt template*
+# command, so the goal is created by the model calling the `set_goal` tool -- not by the
+# command handler. Phase 4 therefore only proves the command is dispatched and the plugin's
+# state store initialises; it does not prove a goal can be created without a model turn.
