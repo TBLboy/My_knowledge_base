@@ -1,0 +1,10 @@
+{
+  "files": [
+    "vibe-coding/skills/a-project-log-archive/scripts/archive.py",
+    "vibe-coding/skills/a-project-log-archive/SKILL.md",
+    "vibe-coding/tests/test_archive_skill.py"
+  ],
+  "tasks": [
+    "TASK-079"
+  ]
+}
