@@ -1,0 +1,9 @@
+{
+  "files": [
+    ".project-log/docs/opencode-goal-plugin-probe.mjs",
+    ".project-log/docs/opencode-goal-plugin-probe-output.txt"
+  ],
+  "tasks": [
+    "TASK-078"
+  ]
+}
