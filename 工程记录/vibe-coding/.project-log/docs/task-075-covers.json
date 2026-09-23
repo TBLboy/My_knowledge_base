@@ -1,0 +1,14 @@
+{
+  "files": [
+    ".project-log/docs/opencode-acceptance-probe.py",
+    ".project-log/docs/opencode-acceptance-output.txt",
+    "vibe-coding/runtime/opencode/agents/vibe-main.md",
+    "vibe-coding/runtime/opencode/opencode.json",
+    "vibe-coding/runtime/opencode/AGENTS.md",
+    "vibe-coding/runtime/opencode/plugins/vibe-workflow.ts",
+    "vibe-coding/scripts/opencode_installer.py"
+  ],
+  "tasks": [
+    "TASK-075"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "file_hashes": {
+    ".project-log/docs/opencode-acceptance-probe.py": "f4c90bdcfa75d9c227866ef82f3c5faead753c5aa4f8c3eb87eac4a4954a53d8",
+    ".project-log/docs/opencode-acceptance-output.txt": "020234510d2ac69529d2fe54c5015a3f61818410bb300b0b1d91e843b46bf78e",
+    "vibe-coding/runtime/opencode/agents/vibe-main.md": "a024e0294885af13393246a57220594ed576cc54d86704df7a7d159128b44f18",
+    "vibe-coding/runtime/opencode/opencode.json": "2ca9370d4659f31faa250ec034d779076d3217c94da4e8a328324201dea0d494",
+    "vibe-coding/runtime/opencode/AGENTS.md": "297be4b5c81f36554f360697d5a9b4593add047e2d0a7f5a38f5629bff09a3c3",
+    "vibe-coding/runtime/opencode/plugins/vibe-workflow.ts": "3ae6cf594c690c117fd9c2aa2312bf4d8594c2636857a96295ba6e48024ddbc7",
+    "vibe-coding/scripts/opencode_installer.py": "ac99dda0d2b8ffaf60cd85f9cc19ecfb67adde61ad6cfeb3360a1dfaa062b2d4"
+  }
+}

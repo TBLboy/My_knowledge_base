@@ -114,11 +114,14 @@
 | idle 自动续跑自行驱动后续回合 | 已验证 | RUN A：单命令注入 15 条续跑提示、33 条 assistant 消息 |
 | 目标持续到完成并记录完成证据 | 已验证 | RUN B：`status=complete` + `completionEvidence` 非空 |
 | 预算与时长记账 | 已验证 | 插件状态 `tokensUsed` / `timeUsedSeconds` |
-| compaction 后状态存活（`experimental.session.compacting`） | **未验证** | TASK-072 不得声称 |
-| `/pause_goal`、`/resume_goal` 真实行为 | **未验证** | TASK-072 不得声称 |
+| compaction 后状态存活（`experimental.session.compacting`） | 已验证 | TASK-075 S3：summarize 后 objective 不变、`status=active`（`opencode-acceptance-output.txt`） |
+| `/pause_goal`、`/resume_goal` 真实行为 | 已验证 | TASK-075 S2：暂停后静默且 `status=paused`，恢复后回合数继续增长（`opencode-acceptance-output.txt`） |
 | `max_auto_turns` 上限行为 | **未验证** | TASK-072 不得声称 |
 | 通过原生 `task` 工具做子 Agent 委派（真实会话） | 已验证 | `opencode-subagent-delegation-output.txt`：主 Agent 调用 `task`，OpenCode 创建 `@verification-reviewer subagent` 子会话（3 条消息） |
-| `permission.task` deny 是否真的拦住未授权角色、reviewer 只读边界 | **未验证** | TASK-075 |
+| `permission.task` deny 是否真的拦住未授权角色 | 已验证 | TASK-075 S4：委派 `build` 未创建子会话且出现拒绝措辞 |
+| reviewer 只读边界（`permission.edit` deny） | 已验证 | TASK-075 S5：`verification-reviewer` 会话未写出目标文件且声明拒绝 |
+| 真实会话读取权威 `.project-log` 状态并写入使其增长 | 已验证 | TASK-075 S1：报出的 `project_id` 与本地 `vibe status` 一致；账本 0 → 1 行 |
+| `task` 工具不可用时的串行降级 | 已验证 | TASK-075 S6：可用子 Agent 收敛为 0 后无子会话创建，主 Agent 串行完成并标出 `serial-role-fallback` |
 
 安装面：OpenCode 安装器现在把该插件写进受管 `opencode.json`，固定版本、逐项记录所有权、
 卸载时只移除安装器自己加的那条（用户原有的同名条目保留）。
@@ -230,8 +233,15 @@
 
 ## 6. 未完成验证
 
-- 尚未在真实 OpenCode TUI 中验证 `vibe-main`、8 个子 Agent、Skills 和 commands 的完整加载。
-- 尚未验证 Goal 插件的 idle continuation、compaction context 和 Task 子会话 defer 行为。
-- 尚未验证自研插件对 `tool.execute.after` 路径提取和证据失效的端到端行为。
+TASK-075 的端到端验收（`opencode-acceptance-output.txt`，10 项检查全 PASS）关闭了
+Goal idle continuation、compaction 存活、暂停/恢复、委派权限、reviewer 只读、
+真实状态读写与 `task` 不可用降级。仍未验证的项目：
 
-这些项目分别由 TASK-071、TASK-072 和 TASK-075 承担。
+- 尚未在真实 OpenCode TUI 中人工敲入 `/goal` 等命令（验收走 `opencode serve` 的
+  会话 API 与真实模型回合，与 TUI 共享同一命令/工具/权限实现，但该交互路径本身未执行）。
+- 尚未验证 `max_auto_turns` 上限行为（续跑观测只到 16 个 assistant 回合）。
+- 尚未验证自研插件对 `tool.execute.after` 路径提取和证据失效的端到端行为。
+- 仅以 `opencode-go/glm-5.3-flash` 单一模型交叉验证，未做多模型对照。
+- Windows 路径未验证（用户已明确暂不需要）。
+
+细节与复现命令见 `opencode-acceptance-limits.md`。上述剩余项由 TASK-071、TASK-074 跟进。

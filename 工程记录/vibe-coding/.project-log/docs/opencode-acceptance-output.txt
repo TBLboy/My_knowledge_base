@@ -1,0 +1,32 @@
+ISOLATED_ROOT /tmp/oc-acceptance-0msd96xi
+SURFACE installed via opencode_installer.py
+PROJECT_LOG init rc=0
+PORT 4096
+PHASE S1 lifecycle read/write
+    turns user=1 assistant=3
+CHECK s1.reads_authoritative_state PASS reported_project_id='079c814e194b407082215deac6a8e9c9' present=True
+CHECK s1.write_grows_ledger PASS ledger lines 0 -> 1 record_id_present=True
+PHASE S2 goal lifecycle
+    turns user=2 assistant=8
+CHECK s2.auto_continuation PASS assistant turns=8 goal_status='active'
+CHECK s2.pause_stops_continuation PASS in_flight_turns_after_pause=2 stable_after=True status='paused'
+    turns user=5 assistant=16
+CHECK s2.resume_restarts_continuation PASS assistant turns=16 status='active'
+PHASE S3 compaction survival
+    turns user=3 assistant=7
+CHECK s3.compaction_keeps_goal PASS summarize returned; objective preserved=True status='active'
+PHASE S4 permission.task enforcement
+    turns user=1 assistant=2
+CHECK s4.disallowed_role_blocked PASS child_sessions=0 refusal_language=True
+PHASE S5 reviewer read-only
+    turns user=1 assistant=2
+CHECK s5.reviewer_cannot_edit PASS file_created=False refusal_language=True
+PHASE S6 task-tool-unavailable degradation
+ISOLATED_ROOT /tmp/oc-acceptance-s6-2uu73ihy
+SURFACE installed via opencode_installer.py
+PORT 4096
+    turns user=1 assistant=2
+CHECK s6.no_subagent_when_task_disabled PASS child_sessions=0 child_agents=[]
+CHECK s6.serial_fallback_declared PASS marker_present=True reply_chars=722
+ACCEPTANCE_CHECKS 10 failed=0
+PROBE_STATUS ok

@@ -1,0 +1,48 @@
+{
+  "branch": "opencode",
+  "reviewed_commit": "613ba44",
+  "reviewer": "verification-reviewer subagent (Curie), independent read-only audit",
+  "rounds": "1 round, GO with A-class = 0",
+  "convergence_rule": "an A-class finding is 'a wrong conclusion or data loss'; A-class = 0 is GO, B-class is advisory",
+  "artifacts_reviewed": [
+    ".project-log/docs/opencode-acceptance-probe.py",
+    ".project-log/docs/opencode-acceptance-output.txt",
+    ".project-log/docs/opencode-acceptance-limits.md",
+    ".project-log/docs/task-075-covers.json",
+    ".project-log/docs/task-075-version-binding.json",
+    "EV-OPENCODE-015"
+  ],
+  "reviewer_verification": [
+    "all seven covered hashes reproduced; git status --porcelain empty at 613ba44",
+    "the probe drives the real opencode 1.18.31 binary and a real model round-trip; observed message parts of type 'tool' carry real state.status and error values, so the session is not stubbed",
+    "independent re-runs: --phases s4,s5 reproduced both checks PASS (2/2); --phases s1,s2 reproduced all four checks PASS (assistant turns 6/14, status paused/active)",
+    "no CHECK passes unconditionally: every pass condition reads an observable (message census, child session list, goal state file, ledger line count, filesystem target)",
+    "S5 mechanism independently forced: sending the same write instruction to edit:allow vibe-main created the file, while forcing a write tool call in the verification-reviewer session returned status=error ('{bash * deny}'), so read-only is really enforced, not just self-reported",
+    "S4 mechanism independently confirmed: the delegation call to subagent_type=build returned status=error naming '{task * deny}, {task business-analyst allow}'",
+    "probe does not write ~/.config/opencode, ~/.codex or the reviewed repository; all runs land in /tmp/oc-acceptance-*"
+  ],
+  "done_when_coverage": {
+    "真实 OpenCode 会话可完成端到端流程": "supported by S1: the reported project_id matched local `vibe status` and the ledger grew 0 -> 1 line",
+    "关键客户端能力可用": "supported by S2 (continue/pause/resume), S3 (state survives summarize), S4 (denied role), S5 (read-only reviewer), S6 (serial fallback), independently re-run",
+    "证据绑定到提交与版本": "supported by task-075-version-binding.json (7 file hashes) plus branch/commit recorded in opencode-acceptance-limits.md",
+    "未验证项明确记录": "supported by opencode-acceptance-limits.md sections 5-6, extended after review with B3 precision and the TASK-069..079 implemented-unverified note"
+  },
+  "b_class": [
+    "B1 (S5): '(not target.exists()) and refused' cannot by itself separate permission enforcement from model self-restraint; the reviewer proved enforcement by forcing a write call, but the shipped assertion should do the same",
+    "B2 (S4): 'len(children)==0 or refused' plus the over-broad word 'permission' lets a model that never attempts delegation pass; tighten to 'a task tool call exists with state.status==error'",
+    "B3 (S3): the check only shows plugin disk state is unchanged after summarize; a tolerant timeout also records 'summarize returned'. Either assert a real return value plus post-compaction goal awareness, or downgrade the wording",
+    "B4 (S6): 'children==0' plus the marker text can be satisfied by a compliant model; add a forced task call that must error",
+    "B5: version-binding carries only file_hashes with no commit field; commit/branch live in the limits document instead",
+    "B6: the limits document correctly records the unmet TASK-074 dependency; the reviewer noted TASK-074 falls outside the bounded 10-task status projection, so its 'ready' is only reproducible from the ledger (task.create present, task.begin absent) - now stated explicitly in the document"
+  ],
+  "follow_up_task": "TASK-081 (B1-B4 assertion hardening); B5/B6 closed by documentation in TASK-075",
+  "residual_unverified": [
+    "TUI-level manual invocation of /goal (acceptance used the opencode serve API with real model turns)",
+    "semantic-level compaction survival (only plugin state invariance was shown)",
+    "max_auto_turns ceiling",
+    "multi-model cross-checking (all runs used opencode-go/glm-5.3-flash)",
+    "Windows path handling",
+    "long-session performance and context growth"
+  ],
+  "verdict": "go"
+}
