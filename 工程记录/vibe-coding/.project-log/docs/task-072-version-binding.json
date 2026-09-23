@@ -1,0 +1,15 @@
+{
+  "file_hashes": {
+    "vibe-coding/scripts/opencode_installer.py": "ac99dda0d2b8ffaf60cd85f9cc19ecfb67adde61ad6cfeb3360a1dfaa062b2d4",
+    "vibe-coding/runtime/opencode/opencode.json": "2ca9370d4659f31faa250ec034d779076d3217c94da4e8a328324201dea0d494",
+    "vibe-coding/runtime/opencode/AGENTS.md": "297be4b5c81f36554f360697d5a9b4593add047e2d0a7f5a38f5629bff09a3c3",
+    "vibe-coding/prompts/vibe-global-agent.md": "f831583e6c947da6bd8c35222ef3cfeb26cc76fbe1b4e7e298642bacd7968dba",
+    "vibe-coding/tests/test_opencode_installer.py": "c01bdcf26dbdb1d7bf70709adb75f0536bcca734d7bba4015baed744a5cee4cb",
+    "vibe-coding/tests/test_opencode_surface.py": "3b0a8d6f3a02850d581f7f9738c2438f5039c9ba8c3488297dd218e1265b1651",
+    "vibe-coding/runtime/opencode/README.md": "f47b07d671218f6a658345c504345217072b13e8eee8cde6d178cd2be87da42a",
+    "vibe-coding/runtime/opencode/agents/vibe-main.md": "a024e0294885af13393246a57220594ed576cc54d86704df7a7d159128b44f18",
+    "vibe-coding/runtime/opencode/commands/vibe-status.md": "97e0990f98b1a6976d14c962bbd1639550ca2eaeee62e243339a801c0820b461",
+    "vibe-coding/skills/a-project-log/SKILL.md": "a284afe51bd96069de0f13e595eead7efbd8b6ef4219f385ea1f2a967093fe5a",
+    "vibe-coding/skills/a-session-handoff/SKILL.md": "50bb05c5c2851e1c7d11d7a21e5b3ad9eb70eae095f29d611371c237703e88f3"
+  }
+}

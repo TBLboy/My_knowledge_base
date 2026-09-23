@@ -1,0 +1,52 @@
+{
+  "branch": "opencode",
+  "reviewed_commit": "613ba44",
+  "codex_branch_commit": "cb65aad",
+  "reviewer": "verification-reviewer subagent (Curie), independent read-only audit",
+  "rounds": "2 rounds, both GO with A-class = 0: round 1 on a99ffba found B1-B4, round 2 on 613ba44 confirmed the B1/B2 fixes and found B-a to B-d",
+  "convergence_rule": "an A-class finding is 'a wrong conclusion or data loss'; A-class = 0 is GO, B-class is advisory",
+  "round_1_verification": [
+    "all seven covered file hashes reproduced; 265 tests OK (skipped=1); package validation passed; git diff --check clean",
+    "live installer verify against ~/.config/opencode returned rc=0",
+    "installer ownership attacked directly: a pre-existing different-version entry (@0.1.50) and an unpinned entry both survive install+uninstall, so no user plugin is deleted",
+    "the '/goal is available' rule matches the runtime probe (commands include goal, pause_goal, resume_goal)",
+    "no claim in the evidence files presents unexecuted work as verified; each lists its own open items"
+  ],
+  "round_1_b_class": [
+    "B1: four shipped instructions still deny session Goal (agents/vibe-main.md, commands/vibe-status.md, skills/a-project-log, skills/a-session-handoff) and contradict the new rule",
+    "B2: a same-package different-version entry makes the installer register a second Goal plugin entry",
+    "B3: opencode-goal-plugin-version-binding.json is stale and now superseded by the runtime e2e output",
+    "B4: the serial-role-fallback degradation is documented but not verified live"
+  ],
+  "done_when_coverage": {
+    "goal_runs_to_completion_or_explicit_stop": "supported by RUN A (15 injected continuations) and RUN B (status=complete with evidence)",
+    "subagent_role_boundary_and_review_evidence_recordable": "partially supported: the task tool created an addressable @verification-reviewer child session; read-only enforcement not verified",
+    "explicit_degradation_when_delegation_unavailable": "documentation only, no live verification",
+    "codex_differences_recorded_in_capability_matrix": "supported by opencode-parity-matrix.md section 3.2"
+  },
+  "residual_unverified": [
+    "permission.task deny actually blocking a disallowed role",
+    "reviewer read-only enforcement in a live session",
+    "compaction survival",
+    "/pause_goal and /resume_goal semantics",
+    "max_auto_turns ceiling",
+    "verbatim relay of the subagent answer",
+    "the degradation path when the task tool is unavailable"
+  ],
+  "verdict": "GO",
+  "round_2_verification": [
+    "all 11 covered hashes reproduced; 267 tests OK (skipped=1); package validation passed; git diff --check clean",
+    "both live installs verify (opencode_installer verify on ~/.config/opencode, global_installer verify on ~/.codex)",
+    "B1 closed: an independent grep across agents/, commands/, skills/ and the repo finds no surviving denial of session Goal",
+    "B2 attacked: @scope/name@ver, @scope/name, @scope/name@latest, @scope/name@ and a different version all normalise to one package name; local paths and non-strings normalise to None and are ignored",
+    "the conflict guard aborts with rc=2 before any config or AGENTS.md write; opencode.json is byte-identical afterwards",
+    "no collateral damage: unrelated plugins, local plugin paths and object entries install and uninstall unchanged",
+    "the two new tests are not tautological: removing the guard makes the first assertion fail"
+  ],
+  "round_2_b_class": [
+    "B-a: fail-closed abort still leaves a backup directory because backup() runs before merge_config(); the claim 'writes nothing' is imprecise, the config itself is untouched",
+    "B-b: the test suite only asserted a positive controller declaration for AGENTS.md; that gap is why B1 survived round 1",
+    "B-c: plugin_package_name is case-sensitive and does not strip whitespace; odd spellings such as 'pkg@1@2' do not normalise, but they are not installable as the same package either",
+    "B-d: the semantics changed from tolerating a same-package different-version entry to refusing the install; README should say so"
+  ]
+}

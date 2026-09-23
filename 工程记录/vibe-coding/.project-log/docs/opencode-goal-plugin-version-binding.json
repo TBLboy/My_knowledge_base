@@ -30,5 +30,9 @@
     "lock_version": "0.1.24",
     "created_at": "2026-07-22",
     "note": "What a real OpenCode process resolved before XDG_CACHE_HOME was isolated; it is NOT the version the probes exercised."
+  },
+  "superseded_by": {
+    "file": ".project-log/docs/opencode-goal-plugin-runtime-e2e-output.txt",
+    "reason": "This binding still describes the pre-model state and lists auto-continuation under not_verified. The runtime e2e output supersedes it: /goal -> set_goal, idle auto-continuation and completion with evidence are now verified. Kept for the TASK-078 evidence chain (EV-OPENCODE-010) rather than rewritten."
   }
 }

@@ -36,7 +36,7 @@
 | SessionStart 恢复 | plugin `event` + `experimental.chat.system.transform` | adapted | 首条消息/会话创建时注入有界状态；恢复不等于完成 |
 | PreCompact 恢复 | `experimental.session.compacting` | supported | 注入 `.project-log` 摘要并刷新 handoff/views |
 | PostToolUse 证据失效 | `tool.execute.after` | adapted | 从工具参数提取变更路径，调用 `vibe` 运行时使覆盖证据失效 |
-| Goal/自动续跑 | `@prevalentware/opencode-goal-plugin` | adapted | 复用成熟插件；pin 版本；作为会话运行时控制器 |
+| Goal/自动续跑 | `@prevalentware/opencode-goal-plugin@0.1.51` | adapted | 复用成熟插件并 pin 版本；安装器写入受管配置；真实运行时已验证加载注册、idle 续跑与完成证据（见 §3.2） |
 | Project Goal 与完成门禁 | `vibe goal` + format 2/3 状态库 | supported | 不改变既有状态契约；插件状态不替代业务事实源 |
 | 证据、复核、风险分流 | `vibe` CLI + reviewer subagent | supported | 高风险任务仍要求有效证据和独立复核 |
 | 长文档归档 / KB 对齐 | 现有 Skills + Python 脚本 | supported | 与客户端无关，保持原实现 |
@@ -99,7 +99,29 @@
 因此 **TASK-072 的验收口径修订为“可观察行为对齐 + 明确降级语义”**，并要求 **TASK-078 先完成**
 （用真实运行证据决定复用现成插件还是自研）。硬约束：Session Goal 状态永不作为完成依据；
 续跑失效必须显式告警，禁止静默停住。规则修订（“原生 Goal 是唯一线程控制器”在 OpenCode 侧的
-归属）是 C 级事项，见 `ALIGN-OPENCODE-002`，待用户授权。
+归属）是 C 级事项，见 `ALIGN-OPENCODE-002`。
+
+**2026-09-23 修订（ALIGN-OPENCODE-002 已授权 + RESEARCH-OPENCODE-003 实测）**：用户授权按客户端
+分别声明控制器；全局规则第 9 条已改为「Goal 控制器按客户端声明，完成出口唯一」，Codex 用原生
+`/goal`，OpenCode 用 `@prevalentware/opencode-goal-plugin@0.1.51`。真实运行时（opencode 1.18.31、
+全 XDG 隔离）实测结果：
+
+| 行为 | 状态 | 证据 |
+|---|---|---|
+| 运行时加载并注册插件（`/goal`、`/pause_goal`、`/resume_goal`） | 已验证 | `opencode-goal-plugin-runtime-probe-output.txt` |
+| 版本对齐（真实运行时与 harness 驱动同一产物） | 已验证 | `dist/server.js` sha256 `d3a4825a…` 一致 |
+| `/goal` → 模型调用 `set_goal`，目标逐字持久化 | 已验证 | RUN A/B |
+| idle 自动续跑自行驱动后续回合 | 已验证 | RUN A：单命令注入 15 条续跑提示、33 条 assistant 消息 |
+| 目标持续到完成并记录完成证据 | 已验证 | RUN B：`status=complete` + `completionEvidence` 非空 |
+| 预算与时长记账 | 已验证 | 插件状态 `tokensUsed` / `timeUsedSeconds` |
+| compaction 后状态存活（`experimental.session.compacting`） | **未验证** | TASK-072 不得声称 |
+| `/pause_goal`、`/resume_goal` 真实行为 | **未验证** | TASK-072 不得声称 |
+| `max_auto_turns` 上限行为 | **未验证** | TASK-072 不得声称 |
+| 通过原生 `task` 工具做子 Agent 委派（真实会话） | 已验证 | `opencode-subagent-delegation-output.txt`：主 Agent 调用 `task`，OpenCode 创建 `@verification-reviewer subagent` 子会话（3 条消息） |
+| `permission.task` deny 是否真的拦住未授权角色、reviewer 只读边界 | **未验证** | TASK-075 |
+
+安装面：OpenCode 安装器现在把该插件写进受管 `opencode.json`，固定版本、逐项记录所有权、
+卸载时只移除安装器自己加的那条（用户原有的同名条目保留）。
 
 ### 3.3 插件 hooks
 

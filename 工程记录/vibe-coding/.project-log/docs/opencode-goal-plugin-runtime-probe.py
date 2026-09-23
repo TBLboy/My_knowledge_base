@@ -96,6 +96,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", default=DEFAULT_VERSION)
     parser.add_argument("--model", help="provider/model for the live-turn phase")
+    parser.add_argument("--objective", default=(
+        "Step 1: create ping.txt containing exactly pong. "
+        "Step 2: stop and report that step 1 is done. "
+        "Do not create any other file and do not close the goal."
+    ), help="objective handed to the plugin's /goal command")
     parser.add_argument("--seconds", type=int, default=180,
                         help="how long to watch an idle session for auto-continuation")
     parser.add_argument("--keep", action="store_true", help="keep the isolated root")
@@ -121,6 +126,19 @@ def main() -> int:
         encoding="utf-8",
     )
     print(f"ISOLATED_ROOT {root}", flush=True)
+
+    if args.model:
+        # The live-turn phase needs a provider credential. Copy the user's existing
+        # credential into the isolated data root so the probe never writes to the real
+        # ~/.local/share/opencode, and never prints the secret.
+        source = Path(os.path.expanduser("~/.local/share/opencode/auth.json"))
+        if not source.is_file():
+            raise SystemExit(f"no credential at {source}; cannot run the live-turn phase")
+        destination = root / "data" / "opencode" / "auth.json"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
+        destination.chmod(0o600)
+        print(f"    credential_copied_for_isolation={destination}", flush=True)
 
     # A fresh isolated cache makes the runtime install the pinned plugin on first use.
     # Warm that here so "the server never answered" cannot be confused with "the plugin
@@ -212,25 +230,67 @@ def main() -> int:
             try:
                 http("POST", f"/session/{sid}/command",
                      {"command": "goal", "agent": "build", "model": args.model,
-                      "arguments": "create ping.txt containing pong, then close the goal"})
+                      "arguments": args.objective})
             except urllib.error.HTTPError as error:
                 print(f"    goal_command_status={error.code} {error.read()[:200]!r}")
-            deadline = time.time() + args.seconds
-            turns, texts = 0, []
-            while time.time() < deadline:
-                time.sleep(5)
+
+            def census():
                 messages = http("GET", f"/session/{sid}/message")
+                user_texts = [p.get("text", "") for m in messages
+                              if (m.get("info") or m).get("role") == "user"
+                              for p in m.get("parts", []) if p.get("type") == "text"]
+                users = len(user_texts)
+                assistants = sum(1 for m in messages
+                                 if (m.get("info") or m).get("role") == "assistant")
                 texts = [p.get("text", "") for m in messages
                          if (m.get("info") or m).get("role") == "assistant"
                          for p in m.get("parts", []) if p.get("type") == "text"]
-                if len(texts) != turns:
-                    turns = len(texts)
-                    print(f"    assistant_turns={turns}", flush=True)
+                return users, assistants, texts, user_texts
+
+            deadline = time.time() + args.seconds
+            seen = 0
+            while time.time() < deadline:
+                time.sleep(5)
+                users, assistants, _, _ = census()
+                if assistants != seen:
+                    seen = assistants
+                    print(f"    user_messages={users} assistant_messages={assistants}",
+                          flush=True)
+            users, assistants, texts, user_texts = census()
             goals = json.loads(state.read_text()).get("goals", {}) if state.exists() else {}
+            entry = next(iter(goals.values()), {}) if goals else {}
             print(f"    goal_registered={bool(goals)}")
+            print(f"    goal_objective={entry.get('objective', '<none>')!r}")
+            print(f"    goal_status={entry.get('status', '<none>')!r}")
+            print(f"    goal_entry={json.dumps(entry, ensure_ascii=False)[:600]}")
+            print(f"    user_messages={users} assistant_messages={assistants}")
+            # Exactly one user message is this probe's /goal command. Every further user
+            # message was written by the plugin through session.promptAsync, which is what
+            # auto-continuation looks like from the outside.
+            injected = max(0, users - 1)
+            print(f"    plugin_injected_user_messages={injected}")
+            for index, text in enumerate(user_texts[:3]):
+                print(f"    user_prompt[{index}]={text[:200]!r}")
+            print(f"    auto_continued={injected > 0}")
+            print("    sandbox_files="
+                  f"{sorted(p.name for p in (root / 'sandbox').iterdir())}")
             print(f"    last_text={texts[-1][:200] if texts else '<none>'}")
             if not goals:
                 print("    RESULT real model turn did not complete; see serve.log stream errors")
+                failure = 1
+            elif entry.get("status") in {"complete", "paused", "blocked", "cancelled"}:
+                # The goal reached a terminal state: either the objective was carried to
+                # completion, or the plugin stopped it explicitly. Continuation is only
+                # required when a model turn ends while the goal is still active, so
+                # seeing zero injected prompts here is correct, not a failure.
+                print(f"    RESULT goal reached a terminal state "
+                      f"({entry.get('status')!r}); completion evidence="
+                      f"{bool(entry.get('completionEvidence'))}")
+            elif injected > 0:
+                print("    RESULT goal still active and the plugin injected continuation "
+                      "prompts, so auto-continuation is observed")
+            else:
+                print("    RESULT goal still active but no auto-continuation was observed")
                 failure = 1
         else:
             print("PHASE 5 live model turn SKIPPED (no --model); "

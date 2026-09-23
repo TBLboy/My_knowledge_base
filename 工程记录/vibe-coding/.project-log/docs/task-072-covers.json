@@ -1,0 +1,18 @@
+{
+  "files": [
+    "vibe-coding/scripts/opencode_installer.py",
+    "vibe-coding/runtime/opencode/opencode.json",
+    "vibe-coding/runtime/opencode/AGENTS.md",
+    "vibe-coding/prompts/vibe-global-agent.md",
+    "vibe-coding/tests/test_opencode_installer.py",
+    "vibe-coding/tests/test_opencode_surface.py",
+    "vibe-coding/runtime/opencode/README.md",
+    "vibe-coding/runtime/opencode/agents/vibe-main.md",
+    "vibe-coding/runtime/opencode/commands/vibe-status.md",
+    "vibe-coding/skills/a-project-log/SKILL.md",
+    "vibe-coding/skills/a-session-handoff/SKILL.md"
+  ],
+  "tasks": [
+    "TASK-072"
+  ]
+}
