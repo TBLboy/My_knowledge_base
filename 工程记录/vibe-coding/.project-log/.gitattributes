@@ -1,0 +1,4 @@
+# The Project Log is authoritative: the ledger is archived byte-for-byte, so Git
+# must never apply end-of-line or clean/smudge conversion to it. One byte form on
+# every platform keeps an Ubuntu and a Windows checkout identical.
+* -text
