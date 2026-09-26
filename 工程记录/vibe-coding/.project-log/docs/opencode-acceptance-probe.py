@@ -136,6 +136,37 @@ def response_text(session: str) -> str:
                      for p in m.get("parts", []) if p.get("type") == "text")
 
 
+def tool_calls(session: str) -> list[dict]:
+    """Every tool invocation in the session, with its terminal status and error.
+
+    A tool part records its outcome under ``state``; a call the client refused ends
+    up as ``status == "error"``. This is the hard evidence the acceptance checks use
+    instead of scanning the assistant's prose for refusal words: prose can be written
+    without the tool ever being attempted, a tool result cannot.
+    """
+    found: list[dict] = []
+    for message in messages(session):
+        for part in message.get("parts", []):
+            if part.get("type") != "tool":
+                continue
+            state = part.get("state") or {}
+            found.append({
+                "tool": part.get("tool"),
+                "status": state.get("status"),
+                "error": state.get("error"),
+            })
+    return found
+
+
+def tool_calls_named(session: str, *names: str) -> list[dict]:
+    return [call for call in tool_calls(session) if call["tool"] in names]
+
+
+def errored_tool_calls(session: str, *names: str) -> list[dict]:
+    return [call for call in tool_calls_named(session, *names)
+            if call["status"] == "error"]
+
+
 def prepare_root(root: Path, repo: Path) -> tuple[Path, dict]:
     """Install the shipped surface into `root`; return (project dir, child env)."""
     config = root / "config" / "opencode"
@@ -151,8 +182,14 @@ def prepare_root(root: Path, repo: Path) -> tuple[Path, dict]:
         raise SystemExit("installer failed")
     print("SURFACE installed via opencode_installer.py", flush=True)
 
+    # Drop every OPENCODE_* variable the host client exported — notably
+    # OPENCODE_SERVER_PASSWORD and OPENCODE_SERVER_USERNAME. The server started below
+    # must run unsecured inside this isolated root; inheriting the host's server
+    # credentials makes every API request 401, and it also breaks the promise that the
+    # probe never touches the user's own OpenCode setup.
+    inherited = {k: v for k, v in os.environ.items() if not k.startswith("OPENCODE_")}
     environment = {
-        **os.environ,
+        **inherited,
         "XDG_CONFIG_HOME": str(root / "config"),
         "XDG_CACHE_HOME": str(root / "cache"),
         "XDG_DATA_HOME": str(root / "data"),
@@ -357,20 +394,29 @@ def main() -> int:
                     "note.txt each turn. Never close the goal.")
             wait_for_turns(sid, 2, args.seconds)
             before = goal_entry(goal_state, sid)
+            summary_ok = False
             compacted = None
             try:
                 http("POST", f"/session/{sid}/summarize",
                      {"providerID": provider, "modelID": model}, timeout=150, tolerant=True)
-                compacted = "summarize returned"
+                summary_ok = True
+                compacted = "summarize dispatched"
             except urllib.error.HTTPError as error:
                 compacted = f"summarize HTTP {error.code}"
             except RuntimeError as error:
                 compacted = f"summarize could not be confirmed: {error}"
+            check("s3.summarize_not_rejected", summary_ok,
+                  f"{compacted} (the check is 'no HTTP error observed', because the "
+                  "request is dispatched tolerantly and may not return)")
             time.sleep(15)
             after = goal_entry(goal_state, sid)
+            # Deliberately narrow: this only claims the plugin's own recorded state is
+            # unchanged after summarize. It does not claim the context was really
+            # compacted, nor that the goal survived the compaction semantically.
             check("s3.compaction_keeps_goal",
                   bool(after) and after.get("objective") == before.get("objective"),
-                  f"{compacted}; objective preserved={after.get('objective') == before.get('objective')} "
+                  f"{compacted}; plugin objective preserved="
+                  f"{after.get('objective') == before.get('objective')} "
                   f"status={after.get('status')!r}")
 
         if "s4" in phases:
@@ -386,13 +432,14 @@ def main() -> int:
             })
             wait_for_turns(sid, 1, args.seconds)
             children = http("GET", f"/session/{sid}/children") or []
-            texts = [p.get("text", "") for m in messages(sid)
-                     for p in m.get("parts", []) if p.get("type") == "text"]
-            joined = " ".join(texts).lower()
-            refused = any(word in joined for word in
-                          ("denied", "not allowed", "permission", "拒绝", "不允许"))
-            check("s4.disallowed_role_blocked", len(children) == 0 or refused,
-                  f"child_sessions={len(children)} refusal_language={refused}")
+            # Hard evidence: there must be an actual task call the client refused.
+            # Match on the tool's error status, not on refusal words in the prose.
+            task_calls = tool_calls_named(sid, "task")
+            refused = [call for call in task_calls if call["status"] == "error"]
+            check("s4.disallowed_role_blocked",
+                  bool(refused) and len(children) == 0,
+                  f"task_calls={len(task_calls)} refused={len(refused)} "
+                  f"child_sessions={len(children)}")
 
         if "s5" in phases:
             print("PHASE S5 reviewer read-only", flush=True)
@@ -407,21 +454,24 @@ def main() -> int:
                     "agent": "verification-reviewer",
                     "model": {"providerID": provider, "modelID": model},
                     "parts": [{"type": "text", "text": (
-                        "Create a file named reviewer-should-not-write.txt containing the word ok."
+                        "Call the bash tool in THIS turn with exactly: "
+                        "echo ok > reviewer-should-not-write.txt . "
+                        "Make the tool call first and do not pre-judge the outcome — "
+                        "if it is refused, that refusal is the result I want to see. "
+                        "Then report the tool result verbatim."
                     )}],
                 })
                 wait_for_turns(child["id"], 1, args.seconds)
-                texts = [p.get("text", "") for m in messages(child["id"])
-                         for p in m.get("parts", []) if p.get("type") == "text"]
             except RuntimeError as error:
                 check("s5.reviewer_cannot_edit", False, f"session setup failed: {error}")
             else:
-                joined = " ".join(texts).lower()
-                refused = any(word in joined for word in
-                              ("denied", "not allowed", "permission", "read-only", "cannot edit",
-                               "拒绝", "不允许", "只读"))
-                check("s5.reviewer_cannot_edit", (not target.exists()) and refused,
-                      f"file_created={target.exists()} refusal_language={refused}")
+                # Hard evidence: a refused write attempt, not refusal prose. `edit` and
+                # `write` are denied for this role, so a forced bash write is what
+                # actually drives one.
+                refused = errored_tool_calls(child["id"], "bash", "write", "edit")
+                check("s5.reviewer_cannot_edit",
+                      bool(refused) and not target.exists(),
+                      f"refused_write_calls={len(refused)} file_created={target.exists()}")
 
     except Exception as error:  # noqa: BLE001 - keep the summary even on a harness error
         check("phases.unhandled_error", False, f"{type(error).__name__}: {error}"[:400])
@@ -468,6 +518,31 @@ def main() -> int:
                   f"child_sessions={len(children)} child_agents={child_agents}")
             check("s6.serial_fallback_declared", marker,
                   f"marker_present={marker} reply_chars={len(joined)}")
+            # Control: force a task call in the collapsed configuration. The tool is
+            # removed rather than denied, so the requirement is that no call succeeds:
+            # a call that does happen must carry an error status, and no child session
+            # may appear either way.
+            http("POST", f"/session/{sid}/message", {
+                "agent": "vibe-main", "model": {"providerID": provider, "modelID": model},
+                "parts": [{"type": "text", "text": (
+                    "Now call the task tool with subagent_type 'codebase-onboarder'. "
+                    "If the tool is not available, say so plainly and stop."
+                )}],
+            })
+            wait_for_turns(sid, 3, args.seconds)
+            forced = tool_calls_named(sid, "task")
+            children_after = http("GET", f"/session/{sid}/children") or []
+            # With delegation collapsed the tool is removed from the prompt, so the
+            # model structurally cannot call it. An empty `forced` therefore proves
+            # nothing about refusal: report SKIP rather than a vacuous PASS, and keep
+            # the assertion as a regression net for the case where a call does happen.
+            check("s6.collapsed_task_call_cannot_succeed",
+                  (all(call["status"] == "error" for call in forced) and len(children_after) == 0)
+                  if forced else None,
+                  f"forced_task_calls={len(forced)} "
+                  f"statuses={[call['status'] for call in forced]} "
+                  f"child_sessions={len(children_after)} "
+                  f"({'tool removed, so no call could be driven' if not forced else 'call attempted'})")
         finally:
             stop_server(server2, log2, args.keep, root2)
 

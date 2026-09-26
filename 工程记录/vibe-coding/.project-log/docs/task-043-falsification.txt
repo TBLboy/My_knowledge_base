@@ -1,0 +1,33 @@
+test_write_exclusive_never_exposes_a_partial_object (tests.test_exchange_scenarios.ExchangeScenarioTests.test_write_exclusive_never_exposes_a_partial_object)
+A kill during the payload write can only leave a temporary file. ... FAIL
+
+======================================================================
+FAIL: test_write_exclusive_never_exposes_a_partial_object (tests.test_exchange_scenarios.ExchangeScenarioTests.test_write_exclusive_never_exposes_a_partial_object)
+A kill during the payload write can only leave a temporary file.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/tbl/Project/vibe-coding/vibe-coding/tests/test_exchange_scenarios.py", line 416, in test_write_exclusive_never_exposes_a_partial_object
+    self.assertEqual(seen, [False], "the object was visible before it was complete")
+AssertionError: Lists differ: [] != [False]
+
+Second list contains 1 additional elements.
+First extra element 0:
+False
+
+- []
++ [False] : the object was visible before it was complete
+
+----------------------------------------------------------------------
+Ran 1 test in 0.074s
+
+FAILED (failures=1)
+TASK-043 falsification record: revert the atomic publish, the guarded test must fail
+====================================================================================
+Guarded change : runtime/scripts/state_exchange.py::_write_exclusive
+Guarded test   : tests.test_exchange_scenarios.ExchangeScenarioTests
+                 .test_write_exclusive_never_exposes_a_partial_object
+
+Reverted _write_exclusive to the direct-write implementation.
+
+
+VERDICT: FAILED as required (falsification holds)

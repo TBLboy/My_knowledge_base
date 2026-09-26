@@ -1,0 +1,44 @@
+test_ledger_rewrite_cleans_up_and_ignores_its_temporary (tests.test_state_ledger.LedgerExportTests.test_ledger_rewrite_cleans_up_and_ignores_its_temporary)
+A killed rewrite must not leave a file that `git add -A` could stage. ... FAIL
+test_interrupted_ledger_rewrite_leaves_no_temporary_behind (tests.test_state_ledger.LedgerExportTests.test_interrupted_ledger_rewrite_leaves_no_temporary_behind) ... FAIL
+
+======================================================================
+FAIL: test_ledger_rewrite_cleans_up_and_ignores_its_temporary (tests.test_state_ledger.LedgerExportTests.test_ledger_rewrite_cleans_up_and_ignores_its_temporary)
+A killed rewrite must not leave a file that `git add -A` could stage.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/tbl/Project/vibe-coding/vibe-coding/tests/test_state_ledger.py", line 125, in test_ledger_rewrite_cleans_up_and_ignores_its_temporary
+    self.assertTrue(ignore.is_file(), "the ledger directory has no ignore rule")
+AssertionError: False is not true : the ledger directory has no ignore rule
+
+======================================================================
+FAIL: test_interrupted_ledger_rewrite_leaves_no_temporary_behind (tests.test_state_ledger.LedgerExportTests.test_interrupted_ledger_rewrite_leaves_no_temporary_behind)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/tbl/Project/vibe-coding/vibe-coding/tests/test_state_ledger.py", line 151, in test_interrupted_ledger_rewrite_leaves_no_temporary_behind
+    self.assertEqual(list(elsewhere.parent.glob("*.tmp*")), [])
+AssertionError: Lists differ: [PosixPath('/tmp/tmp_io9ldlq/.project-log/ledger/v1/other-ledger.jsonl.tmp')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+PosixPath('/tmp/tmp_io9ldlq/.project-log/ledger/v1/other-ledger.jsonl.tmp')
+
+- [PosixPath('/tmp/tmp_io9ldlq/.project-log/ledger/v1/other-ledger.jsonl.tmp')]
++ []
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.190s
+
+FAILED (failures=2)
+TASK-086 falsification record: revert the ledger rewrite, the guarded tests must fail
+======================================================================================
+Guarded change : runtime/scripts/state_ledger.py::export_ledger
+                 (temporary file naming + .gitignore + try/finally cleanup)
+Guarded tests  : tests.test_state_ledger.LedgerExportTests
+                 .test_ledger_rewrite_cleans_up_and_ignores_its_temporary
+                 .test_interrupted_ledger_rewrite_leaves_no_temporary_behind
+
+Reverted export_ledger to the direct '.tmp' implementation.
+
+
+VERDICT: FAILED as required (falsification holds)

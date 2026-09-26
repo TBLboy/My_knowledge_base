@@ -1,0 +1,18 @@
+TASK-087 反证工件：check-ignore 否定误判（生成于 2026-09-23T09:19:09Z）
+仓库: /home/tbl/Project/vibe-coding/vibe-coding  HEAD: 62b0d9b
+git: git version 2.34.1
+
+== 场景：KB .gitignore 含正确否定，ledger 尚未跟踪 ==
+.project-log/
+!工程记录/work/.project-log/
+!工程记录/work/.project-log/**
+
+check-ignore -v  rc = 0 (0 = 有任何规则匹配，含否定)
+check-ignore -q  rc = 1 (1 = 实际未被排除)
+
+HEAD(旧实现) ignored_rule() -> '.gitignore:3:!工程记录/work/.project-log/**\t"\\345\\267\\245\\347\\250\\213\\350\\256\\260\\345\\275\\225/work/.project-log/ledger/v1/ledger.jsonl"'
+当前(新实现) ignored_rule() -> None
+
+git add -A 是否真的能暂存该未跟踪文件 -> True
+
+结论：旧实现把否定行当作排除规则，会误拒首次归档；git add -A 实际可达。

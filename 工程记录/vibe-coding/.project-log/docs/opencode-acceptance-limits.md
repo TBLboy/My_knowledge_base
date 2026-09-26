@@ -29,11 +29,13 @@
 | S2 会话 Goal | `s2.auto_continuation` | PASS | 单次 `/goal` 后自主续跑，assistant 回合=8，status=active |
 | S2 会话 Goal | `s2.pause_stops_continuation` | PASS | `/pause_goal` 后会话静默且 status=paused |
 | S2 会话 Goal | `s2.resume_restarts_continuation` | PASS | `/resume_goal` 后回合数继续增长，status=active |
+| S3 压缩存活 | `s3.summarize_not_rejected` | PASS | summarize 未被拒（tolerant 派发，只断言未观察到 HTTP 错误） |
 | S3 压缩存活 | `s3.compaction_keeps_goal` | PASS | summarize 后目标 objective 保持不变，status=active（断言口径：**插件状态在 summarize 后未变**，不等价于“上下文确实被压缩且目标仍被正确恢复”） |
-| S4 委派权限 | `s4.disallowed_role_blocked` | PASS | 委派未授权角色 `build`：子会话=0 且出现拒绝措辞 |
-| S5 只读复核 | `s5.reviewer_cannot_edit` | PASS | `verification-reviewer` 会话未创建目标文件且声明拒绝 |
+| S4 委派权限 | `s4.disallowed_role_blocked` | PASS | 存在一次 task 工具调用且其 `state.status=error`（`task_calls=1 refused=1`），子会话=0 |
+| S5 只读复核 | `s5.reviewer_cannot_edit` | PASS | 强制一次 bash 写调用被拒（`refused_write_calls=1`，错误为权限规则），目标文件未创建 |
 | S6 降级路径 | `s6.no_subagent_when_task_disabled` | PASS | `task` 工具无可用子 Agent 时子会话=0 |
 | S6 降级路径 | `s6.serial_fallback_declared` | PASS | 主 Agent 串行完成工作并标出 `serial-role-fallback` |
+| S6 降级路径 | `s6.collapsed_task_call_cannot_succeed` | SKIP | 工具被移除，模型结构上无法发起调用，故无“被拒调用”可驱动；仅在确有调用时断言 `status=error`（回归网） |
 
 四个 `done_when` 的对应关系：
 
@@ -70,15 +72,20 @@
 - **归档 Skill 在 OpenCode 端的完整链路**未纳入本次验收（属于其他任务范围）。
 - **压缩的语义级存活未证**：只证明了 `summarize` 后插件磁盘状态未变，未证明
   上下文真的被压缩且目标语义仍被正确恢复。
-- **断言判据偏松（复核 B1–B4）**：S4/S5/S6 的通过条件可被“模型没有尝试”满足；
-  复核已用强制工具调用独立确证机制真实生效（`task` 被权限拒绝、reviewer 写工具
-  缺失且 `bash` 被拒），但这些断言本身待加固，已记录为后续任务。
+- **断言判据已加固（TASK-081）**：S4/S5 不再依赖散文拒绝词，改为读取会话消息
+  `type=tool` 部件的 `state.status=error` 作为硬证据（S5 另加强制 bash 写调用，
+  否则模型会预判拒绝而不调用）；S3 的 summarize 断言改名 `s3.summarize_not_rejected`
+  以匹配其真实强度；S6 增加 `s6.collapsed_task_call_cannot_succeed` 对照，并在
+  “工具已被移除、无法驱动调用”时如实报 SKIP。原始 B1–B4 见 REVIEW-OPENCODE-012。
+- **S6 对照的固有边界**：`collapse_task_permission` 是**移除** delegation，模型结构上
+  无法调用 task，因此“强制调用应报错”在该配置下不可驱动；真正的“被拒调用”证据
+  由 S4（工具保留、权限拒绝）提供。若要 S6 也产出该证据，需要改用 S4 形态的配置。
 
 ## 6. 可复现命令
 
 ```bash
 cd /home/tbl/Project/vibe-coding
-"$(cat ~/.codex/vibe-python)" .project-log/docs/opencode-acceptance-probe.py \
+"$(cat ~/.config/opencode/vibe-python)" .project-log/docs/opencode-acceptance-probe.py \
   --phases s1,s2,s3,s4,s5,s6 --model opencode-go/glm-5.3-flash --seconds 150
 ```
 
