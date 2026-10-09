@@ -1,0 +1,606 @@
+schema: vibe-clarification/2
+task: TASK-001
+goal: GOAL-001
+title: Transformer-Koopman 重构 —— 功能业务逻辑 / 技术业务逻辑 / 双向对齐
+written_at: 2026-09-28
+revision_note: v2 —— 依独立复核（verification-reviewer）修正 P2 lifting 错误、补 INV1 违反与基线损失语义偏离、修正 ALN-003 失败点、扩充 ALN-006、标注论文谱系未收敛
+stage: 阶段① 代码整理（阶段② 理论方法讨论、阶段③ 重训均在后续）
+
+authority_order:
+  - level: 1
+    source: 用户决策 DEC-001 ~ DEC-004（.project-log 状态库）
+    note: 最高权威。用户对范围、保真度契约与阶段顺序的裁决不可被代码或文档覆盖
+  - level: 2
+    source: 论文 论文.txt（eq:pretraining_loss、Algorithm 1）
+    note: 方法定义权威，但谱系未收敛，见 ALN-017
+  - level: 3
+    source: 老项目代码与配置
+    note: 当前实现事实，仅为证据，不自动成为规范
+  - level: 4
+    source: 老项目 .project-log（format 1）
+    note: 业务档案参考，已过期处需标注，不参与校验
+  - level: 5
+    source: onboarding 报告（codebase-onboarder eager-indigo-fox）
+    note: 静态推断；本 v2 已用独立复核替代其中未验证项
+
+# ---------------------------------------------------------------------------
+# 一、功能业务逻辑（系统应该做什么）
+# ---------------------------------------------------------------------------
+functional_business_logic:
+
+  actors:
+    - id: A1
+      name: 论文作者 / 研究者
+      needs: 可重跑的建模与消融实验，产出论文可引用的数字与图表
+      authority: 可修改配置、启动训练、决定方法论
+    - id: A2
+      name: 上位机操作员（实验室）
+      needs: 加载预训练资产后运行控制回路
+      authority: 只消费部署包，不接触训练代码
+    - id: A3
+      name: 复现者 / 审稿人
+      needs: 按配置重跑得到可比结果
+      authority: 只读
+
+  main_path:
+    id: MP1
+    chain: RawData(NPZ) -> KoopmanDataset -> [Encoder | LiftingFunction] -> KoopmanDynamics -> [Decoder] -> Evaluation -> DeployAssets -> RealTimeControl
+    steps:
+      - S1 数据: NPZ 键 x[N,n], u[N,m], t[N], trajectory_id[N]
+      - S2 数据集: 按 history_length 构造滑动窗口 (x_history[P,n], u_t[m]) -> x_next[n]，窗口不得跨轨迹边界
+      - S3 训练: 见 methods
+      - S4 评估: 半开环多步 rollout + RMSE/MAE + 轨迹对比图
+      - S5 部署: 导出独立资产到上位机目录
+      - S6 控制: 上位机按 BaseAlgorithm 接口调用控制器输出控制量
+
+  platforms:
+    - id: P1
+      hardware: 6-DOF 柔性机械臂
+      state_dim: 6
+      control_dim: 3
+      configured_lifting: robot
+      lifting_params: {}
+      lifting_features: 28
+      lifting_note: robot_lifting.py 是故意不完整的 3-DOF physics lifting（用于消融）
+      evidence: configs/platform1.yaml (state_dim 6, control_dim 3, traditional_edmd.lifting_function.type=robot)
+    - id: P2
+      hardware: 2-DOF 软体机器人
+      state_dim: 2
+      control_dim: 2
+      configured_lifting: polynomial
+      lifting_params:
+        degree: 2
+      upper_computer: FlexibleArmControl34 (C#/Qt)
+      evidence: configs/platform2.yaml (state_dim 2, control_dim 2, traditional_edmd.lifting_function.type=polynomial, params.degree=2)
+    - id: PX
+      name: threelink lifting（未绑定到任何平台）
+      facts: threelink_lifting.py n_input=6, n_features=57，自 MATLAB 翻译
+      conflict: n_input=6 与 P2 的 state_dim=2 结构不兼容；两个平台配置均未引用它
+      status: 角色未知，见 OQ-006
+
+  methods:
+    - id: M1
+      name: PatchTST-Koopman（主方法）
+      structure: PatchTST 编码器 -> Koopman 线性动力学 z_{k+1}=A z_k + B u_k -> 参数无关解码器 C=[I|0]
+      training: 三段法 Stage0 EDMD 初始化 / Stage1 预训练编码器 A,B / Stage2 闭式 EDMD 重估 A,B（ridge 正则）
+      evidence: training/edmd_trainer.py（Stage 0/1/2）, 论文.txt Algorithm 1
+    - id: M2
+      name: MLP-Koopman（对照基线）
+      caveat: 其一致性损失与论文 L_c 语义不同，见 ALN-016
+    - id: M3
+      name: LSTM-Koopman（对照基线）
+      caveat: 同 M2，且 platform2.yaml 无 lstm_koopman 段，见 ALN-003
+    - id: M4
+      name: Traditional EDMD（对照基线，手工升维 + 最小二乘）
+    - id: M5
+      name: End-to-End（联合训练，与 M1 同一训练器的另一 method）
+
+  stage1_loss_contract:
+    authority: 论文.txt eq:pretraining_loss（5 项）+ DEC-003（双平台统一）
+    terms:
+      - L_x
+      - L_z
+      - L_c
+      - L_multi_x
+      - L_multi_z
+    term_definitions:
+      L_x: "||x_hat_{k+1} - x_{k+1}||^2（单步物理预测）"
+      L_z: "||z_hat_{k+1} - z_k^+||^2（单步升维一致性）"
+      L_c: "||g_theta(W^+_pred) - z_k^+||^2（重编码鲁棒正则；论文明确保留）"
+      L_multi_x: sum_{i=1..N_L} ||x_hat_{k+i} - x_{k+i}||^2
+      L_multi_z: sum_{i=1..N_L} ||z_hat_{k+i} - z_{k+i}||^2
+    weights: lambda_x, lambda_z, lambda_c, lambda_multi_x, lambda_multi_z 均为非负超参，论文未写死数值
+    batch_constraint: mini-batch 必须保证 N_L 步未来状态与控制量可用
+    implementation_deviations:
+      - 代码用 F.mse_loss（均值）实现两个多步项，而非论文的 sum over i，见 ALN-018
+      - 仅 EDMDTrainer（M1/M5）实现多步项；MLP/LSTM 训练器完全无多步项
+    decision: DEC-003
+    pending: 具体 lambda 数值与 N_L 属阶段②，见 deferred_to_phase_2
+
+  ablation:
+    variant_axis:
+      - module
+      - hyperparameter
+    variants:
+      - no_patch
+      - no_attention
+      - no_positional
+      - window
+      - patch_size
+      - readout
+      - pure_feature
+    required_ordering_invariant: full_model 在全部变体中表现最好；去掉 Patch / Attention / PositionalEncoding 后性能必须下降
+    outputs:
+      - CSV
+      - LaTeX 表格
+      - 柱状图
+
+  outputs:
+    - 每方法的 checkpoint（含 config 与 Koopman 矩阵）
+    - RMSE / MAE 与轨迹对比图
+    - 消融 CSV / LaTeX / 图表
+    - 部署资产（独立于训练包的 .pth + metadata JSON）
+
+  invariants:
+    - id: INV1
+      rule: Koopman 矩阵谱半径 <= 1（控制器稳定性前提）
+      status: 当前被违反，见 ALN-015
+    - id: INV2
+      rule: 控制量受硬限制 u_limit 约束
+    - id: INV3
+      rule: 部署包不依赖训练包（上位机不安装训练包）
+    - id: INV4
+      rule: 滑动窗口样本不得跨越轨迹边界
+    - id: INV5
+      rule: val/test 必须复用 train 的归一化统计量，不得重算
+    - id: INV6
+      rule: history_length 必须能被 patch_length 整除
+
+  failure_semantics:
+    code_behaviors:
+      - NPZ 缺失 -> FileNotFoundError
+      - 维度不匹配 -> ValueError
+      - history_length % patch_length != 0 -> ValueError（在 __init__ 抛出，不得是隐晦的 reshape 错误）
+      - EDMD 矩阵出现 NaN/Inf -> RuntimeError（edmd_trainer.py 的 guard）
+    human_procedures:
+      - loss 出现 NaN -> 人工降低学习率或检查归一化（这是运维手段，不是代码行为）
+    not_implemented:
+      - 谱半径 > 1 时的警告：不存在。svd_clipping=false 时代码只打印"跳过SVD限制"，不报警告
+
+  scope:
+    in_scope:
+      - 双平台建模
+      - 四类方法训练与评估
+      - 消融实验
+      - 部署资产导出
+      - 论文配图
+    out_of_scope:
+      - 硬件在环测试
+      - 上位机 GUI 开发
+      - FlexibleArmControl34 本体代码
+    read_only:
+      - D:\Project\论文3老版本\Transformer-Koopman
+
+  constraints:
+    - 不使用第三方 Koopman 库（自制实现）
+    - 所有配置经 YAML 管理，不硬编码路径
+    - 新项目必须自包含可独立运行
+
+# ---------------------------------------------------------------------------
+# 二、技术业务逻辑（当前系统实际如何承载行为）
+# ---------------------------------------------------------------------------
+technical_business_logic:
+
+  code_layout:
+    package: src/patchtst_koopman/（可安装包）
+    entrypoints: scripts/（CLI 与 pipeline）
+    deploy: deploy/（独立部署包）
+    tests: 不存在 —— 没有 tests/、没有 pytest 配置、pyproject.toml 无 pytest 段
+
+  data_contract:
+    npz_keys:
+      - x
+      - u
+      - t
+      - trajectory_id
+    dtypes: x/u/t 按 experiment.precision 转 float32/float64；trajectory_id -> int32
+    sample_definition: x_history=x[i-P+1:i+1], u_t=u[i], x_next=x[i+1]
+    valid_index_range: i in [P-1, N - required_future)，required_future = max(1, N_L)
+    normalization: 仅 standard；train 上按全局 per-dim mean/std（std+1e-8）
+    denormalization: 由调用方负责，非 dataset
+    actual_disk_dtypes: unverified（无执行工具确认 NPZ 实际 dtype）
+
+  config_facts:
+    files:
+      - configs/platform1.yaml
+      - configs/platform2.yaml
+    read_but_missing_in_yaml:
+      - experiment.float32_matmul_precision（两平台均缺，seed.py 读到）
+      - platform2 缺: experiment.deterministic
+      - platform2 缺: experiment.amp
+      - platform2 缺: training.prefetch_factor
+      - platform2 缺: training.edmd.pretrain.multi_step.horizon
+      - platform2 缺: training.edmd.pretrain.loss_weights.multi_step_physical
+      - platform2 缺: training.edmd.pretrain.loss_weights.multi_step_latent
+      - koopman.lifted_dim（被消融与 sweep 写，模型从不读）
+    declared_but_never_read:
+      status: resolved（ALN-005，2026-09-28）
+      resolution: 用户选择"删除死键"；以下键已从 platform1.yaml / platform2.yaml 删除，
+        并由 tests/test_config_contract.py 的 KNOWN_UNREAD（现为空集）持续守护。
+      removed_keys:
+        - controller.*（整段）
+        - evaluation.*（整段）
+        - logging.*（整段）
+        - data.add_noise
+        - data.noise_level
+        - data.noise_type
+        - data.normalization_method
+        - encoder.positional_encoding（编码器恒为 sinusoidal）
+        - koopman.enforce_stability
+        - koopman.model_type
+        - decoder.decoder_type
+        - training.val_every_n_epochs
+        - training.save_every_n_epochs
+        - training.save_best_only
+        - training.edmd.pretrain.optimizer（Adam 硬编码）
+        - training.edmd.compute.batch_encode
+        - training.end_to_end.optimizer（Adam 硬编码）
+        - mlp_koopman.edmd.pretrain.optimizer
+        - mlp_koopman.end_to_end.optimizer
+        - lstm_koopman.edmd.pretrain.optimizer
+        - lstm_koopman.end_to_end.optimizer
+      retained_keys:
+        - experiment.log_dir（被 scripts/train_patchtst.py 读取，非死键）
+        - experiment.name（被 experiment4/common.py 写入，保留为标签）
+        - koopman.rho_max（被 koopman_dynamics.py / edmd_trainer.py 读取）
+    stability_switches_actually_set:
+      note: 稳定机制按平台与方法分叉，不存在统一关闭
+      platform1_edmd_M1: enforce_stability=false, svd_clipping=false -> 无保护
+      platform1_end_to_end_M5: svd_projection.enabled=true, frequency=1 -> 每 epoch 调用 ensure_stability()，有保护
+      platform2_edmd_M1: enforce_stability=false, svd_clipping=false -> 无保护
+      platform2_end_to_end_M5: svd_projection.enabled=false -> 无保护
+      baselines_MLP_LSTM_traditional: 无稳定性保证，代码仅打印谱半径
+
+  pipeline_facts:
+    orchestrators_count: 7
+    orchestrators:
+      - run_all.py
+      - train_transformer.py
+      - train_platform1.py
+      - train_platform2.py
+      - train_lstm_platforms.py
+      - run_ablation_pipeline.py
+      - run_experiment4_pipeline.py
+    run_all_job_matrix: 8 个 job = 2 平台 x 4 方法族
+    mutation_hazards:
+      - MLPKoopmanModel._patch_config 就地改写 config["encoder"]["latent_dim"]
+      - LSTMKoopmanModel._patch_config 同上
+      - apply_gpu_training_defaults 就地修改已加载 dict
+    multi_step_leak: dataset.py 对所有模型族读 N_L，导致 MLP/LSTM/traditional 在 platform1 白白构造未使用的 x_future 张量
+
+  deployment_facts:
+    independence_mechanism: 部署侧持有整份独立模型副本（tk_assets/transformer_koopman_model.py）以避免依赖训练包
+    drift_confirmed: 该副本缺少 ensure_stability / get_spectral_radius 与 P % p 守护，与 src/.../models/ 已结构性漂移
+    directory_name_hack: tk_assets/__init__.py 记录目录名排序依赖（原 aabb 改名），部署依赖目录名排序
+
+  legacy_documents:
+    location: 老仓库 git HEAD 的 .project-log/（worktree 中已删除）
+    format: format 1，仅参考，不参与校验
+    stale_statements:
+      - 老日志称论文仅用单步损失（3 项）—— 已过期，但论文谱系本身未收敛，见 ALN-017
+      - 老日志称 L_c 去留暂定保留 —— 论文.txt 已明确保留
+
+# ---------------------------------------------------------------------------
+# 三、双向对齐（应该怎样 vs 实际怎样）
+# ---------------------------------------------------------------------------
+alignment:
+
+  - id: ALN-001
+    class: constraint-conflict
+    subject: 双平台 Stage-1 损失项数不一致
+    should: 论文 eq:pretraining_loss 定义 5 项，适用于两个平台
+    actual: platform1.yaml 为 5 项（N_L=3）；platform2.yaml 为 3 项
+    evidence:
+      - configs/platform1.yaml:104-113
+      - configs/platform2.yaml:101-105
+      - 论文.txt:501-523
+      - training/edmd_trainer.py:324-330
+    impact: 两平台数字由不同损失函数产生，却共同支撑论文结论
+    status: 结构性已由 DEC-003 裁决；数值待阶段②
+    verification: 配置契约测试，断言两平台 5 个权重键齐全
+
+  - id: ALN-002
+    class: missing-implementation
+    subject: platform2 缺少多步损失配置
+    should: 与 platform1 同构
+    actual: 无 multi_step / 无 multi_step_* 权重
+    evidence:
+      - configs/platform2.yaml:101-105
+    impact: 见 ALN-001
+    status: 待阶段② 定值后补键
+    verification: 同 ALN-001
+
+  - id: ALN-003
+    class: implementation-drift
+    subject: 流水线调度了配置中不存在的任务
+    should: 每个 job 的配置键必须存在
+    actual: run_all.py 调度 LSTM x platform2，但 platform2.yaml 无 lstm_koopman 段
+    failure_site: train_lstm_koopman.py:62 构造 LSTMKoopmanModel -> models/lstm_koopman_model.py:31 访问 config["lstm_koopman"]["latent_dim"] -> KeyError
+    evidence:
+      - scripts/run_all.py:60-66
+      - scripts/train_lstm_koopman.py:62
+      - src/patchtst_koopman/models/lstm_koopman_model.py:31
+      - configs/platform2.yaml（全文无 lstm_koopman）
+      - utils/config_loader.py:7-13（plain safe_load，无默认注入）
+    counter_evidence: results/logs/Platform_2_LSTM-Koopman_20260529_173345.log 显示 P2 LSTM 曾成功跑过，故更像 config 回退（段被删除）而非从未存在
+    impact: 该 job 必然崩溃，8 job 矩阵实际不可整体跑通
+    status: open
+    verification: job x config 键存在性静态检查；或 pipeline dry-run
+
+  - id: ALN-004
+    class: implementation-drift
+    subject: 代码读取的配置键在 YAML 中缺失
+    should: 代码不依赖静默默认值
+    actual: 见 config_facts.read_but_missing_in_yaml
+    evidence:
+      - utils/seed.py:44
+      - utils/seed.py:61
+      - data/dataset.py:56-62
+      - training/edmd_trainer.py:328-329
+    impact: 静默走默认值，平台间行为差异不可见
+    status: open
+    verification: 配置契约测试（读取点 vs YAML 键集合双向比对）
+
+  - id: ALN-005
+    class: implementation-drift
+    subject: YAML 声明了从不被读取的键
+    should: 配置项要么生效要么删除
+    actual: 见 config_facts.declared_but_never_read
+    evidence:
+      - configs/platform1.yaml
+      - configs/platform2.yaml
+    impact: 读者会误以为这些配置生效
+    status: open
+    verification: 同 ALN-004（反向）
+
+  - id: ALN-006
+    class: constraint-conflict
+    subject: 硬编码外部机器绝对路径
+    should: 不硬编码路径；入口只经 argparse
+    actual: 至少 6 处指向 C:\Users\Windows\Desktop\...，含对外宣称的一键启动器
+    evidence:
+      - scripts/inspect_ckpt.py:5
+      - scripts/check_model_prediction.py:12-14
+      - deploy/export_baseline_assets.py:15
+      - run_all_training.bat:7
+      - run_all_training.ps1:3-4
+      - deploy/README.md:29
+    impact: 这些脚本与启动器在本机不可能运行；.ps1 是文档推荐入口，破坏性最大
+    status: open
+    verification: 仓库绝对路径模式扫描，断言命中数为 0
+
+  - id: ALN-007
+    class: implementation-drift
+    subject: 死接口 —— MATLAB 适配器期望的 checkpoint 格式无人写入
+    should: 接口的产出方与消费方存在且格式一致
+    actual: encoder_inference_matlab.py 期望 encoder_state_dict/history_length/input_dim/output_dim/norm_stats；checkpoint.py 实际写 model_state_dict/config/koopman_A/koopman_B/spectral_radius/timestamp/model_info/normalization，键集不相交
+    evidence:
+      - scripts/encoder_inference_matlab.py:39-45
+      - src/patchtst_koopman/utils/checkpoint.py:47-61
+    impact: MATLAB 侧调用链从未被打通
+    status: open
+    verification: 断言存在写入方，或删除/重写该适配器并补测试
+
+  - id: ALN-008
+    class: missing-test
+    subject: 没有可机器判定的回归信号
+    should: 主链路有可重复运行的测试套件
+    actual: 无 tests/、无 conftest.py、无 pytest 配置；所有 test_*.py 是手工 CLI harness
+    evidence:
+      - pyproject.toml（无 tool.pytest 段）
+      - scripts/test_patchtst.py:25-43（argparse + main）
+      - scripts/ablation/test_ablation.py:1-28（CLI 目录扫描器）
+      - scripts/smoke_test.py:14-78（唯一接近真实测试者，但文件名不被 pytest 默认收集且 docstring 要求手工运行）
+    impact: 重构无法用现有信号保证行为不变
+    status: open
+    verification: tests/ 存在 + 一条命令可跑 + 覆盖 S1-S5 关键节点
+
+  - id: ALN-009
+    class: traceability-gap
+    subject: 论文数字与产生它们的配置未绑定
+    should: 每个报告数字可追溯到配置 + checkpoint + commit
+    actual: 论文 Platform1 0.157 / Platform2 0.474 无配置绑定证据；且两平台损失不同（ALN-001）
+    evidence:
+      - 老 .project-log/business-logic/main.md Current Best Results 表
+    impact: 结论级 —— 无法证明论文数字与方法描述一致
+    status: open（DEC-004 已将重训推迟到阶段③）
+    verification: 阶段③ 重训后，为每个数字记录 config + checkpoint hash
+
+  - id: ALN-010
+    class: implementation-drift
+    subject: 重复实现导致多处可独立漂移
+    should: 单一实现
+    actual: subprocess pipeline 7 处；PositionalEncoding 3 处；EDMD 损失与求解在 edmd_trainer.py 与 mlp_koopman_trainer.py 各一份；rollout 循环存在 6 处以上（原先记为 3 处，复核证明低估）；部署侧整份模型栈副本
+    evidence:
+      - scripts/run_all.py
+      - scripts/train_transformer.py
+      - scripts/train_platform1.py
+      - scripts/train_platform2.py
+      - scripts/train_lstm_platforms.py
+      - scripts/run_ablation_pipeline.py
+      - scripts/run_experiment4_pipeline.py
+      - training/edmd_trainer.py:347-388
+      - training/mlp_koopman_trainer.py:157-164
+      - models/patchtst_encoder.py:15
+      - ablation/positional_encoding.py:12
+      - deploy/algorithms/tk_assets/transformer_koopman_model.py:16
+    numeric_divergence:
+      edmd_trainer_py: np.linalg.solve（较稳健）
+      mlp_koopman_trainer_py: np.linalg.inv（较脆弱）
+    impact: 修改一处不会传播，验证成本随份数增长
+    status: open
+    verification: 单一实现 + 单测；部署副本须有与训练侧数值一致性测试
+
+  - id: ALN-011
+    class: implementation-drift
+    subject: 配置对象被就地修改
+    should: 配置只读；派生值放独立对象
+    actual: _patch_config 改写 config["encoder"]["latent_dim"]；apply_gpu_training_defaults 就地改 dict
+    evidence:
+      - src/patchtst_koopman/models/mlp_koopman_model.py:29-31
+      - src/patchtst_koopman/models/lstm_koopman_model.py:29-31
+      - src/patchtst_koopman/training/performance.py:6-14
+    impact: 配置加载后与文件不再一致，实验不可解释
+    status: open
+    verification: 断言加载后 config 序列化结果与文件一致
+
+  - id: ALN-012
+    class: unknown
+    subject: 数据目录存在未使用的孤儿实验目录
+    should: 每个数据目录有明确用途或归档
+    actual: experiment_001..006 存在，仅 001(P1) 与 006(P2) 被引用；002/003/004/005 全仓无任何引用
+    evidence:
+      - configs/platform1.yaml:21
+      - configs/platform2.yaml:19
+      - scripts/ablation/ablation_platform1.yaml:25
+      - scripts/ablation/ablation_platform2.yaml:25
+    impact: 可能缺失或多余数据
+    status: open
+    verification: 逐目录确认用途并记录
+
+  - id: ALN-013
+    class: implementation-drift
+    subject: 消融变体注册与文档不一致
+    should: 注册表、可达集合、README 三者一致
+    actual: ablation/models.py 定义 readout_max/readout_last/pure_feature 等未暴露给 build_ablation_variants；README.md 宣称 PLATFORM_CONFIGS 在 ablation/ 下，实际在 figures/ablation/plot_ablation.py
+    evidence:
+      - src/patchtst_koopman/ablation/models.py:176-188
+      - scripts/ablation/train_ablation.py:34-88
+      - README.md:19
+      - figures/ablation/plot_ablation.py:72
+    impact: 读者与代码认知不一致
+    status: open
+    verification: 注册表 vs 可达集合一致性测试 + 文档代码一致性测试
+
+  - id: ALN-014
+    class: constraint-conflict
+    subject: 中文路径与文件名造成工具链隐患
+    should: 新项目路径、文件名、标识符全 ASCII
+    actual: 硬编码 平台2.pth；仓库根 论文3老版本/、论文草稿/、实验1结果记录.txt；源码中文标识符
+    evidence:
+      - scripts/test_platform2_pth.py:27
+    impact: 跨平台工具链、打包、CI 风险
+    status: 新项目已规避（目录 结果备份/论文/数据备份/训练代码/杂项，是否改 ASCII 见 OQ-001）
+    verification: 新项目非 ASCII 路径/标识符扫描，断言为 0
+
+  - id: ALN-015
+    class: constraint-conflict
+    subject: 稳定性不变量 INV1 的实际状态按平台与方法分叉，且 6 份产物日志出现 rho > 1
+    should: 谱半径 <= 1，以保证控制器稳定性（论文的稳定性前提）
+    actual_matrix:
+      platform1_edmd_M1: enforce_stability=false, svd_clipping=false -> 无保护
+      platform1_end_to_end_M5: svd_projection.enabled=true, frequency=1 -> 每 epoch 调用 ensure_stability()，有保护
+      platform2_edmd_M1: enforce_stability=false, svd_clipping=false -> 无保护
+      platform2_end_to_end_M5: svd_projection.enabled=false -> 无保护
+      baselines_MLP_LSTM_traditional: 无稳定性保证，代码仅打印谱半径
+    artifacts_with_rho_gt_1:
+      - results/logs/Platform_1_LSTM-Koopman_20260529_173639.log (rho=1.0842, line 791)
+      - results/logs/Platform_2_LSTM-Koopman_20260529_160545.log (rho=1.0033, line 41)
+      - results/logs/Platform_2_LSTM-Koopman_20260529_173345.log (rho=1.2351, line 1573)
+      - results/logs/p2_mlp_koopman.log (rho=1.0138, line 356)
+      - results/logs/p2_patchtst_koopman.log (line 58 = 1.0003; line 3022 = 1.0005)
+      - results/logs/p2_traditional_edmd.log (rho=1.0023, line 51)
+    note_main_method_breaches: p2_patchtst_koopman.log 表明主方法 PatchTST-Koopman 的产物也超过 1（1.0005），不限于基线
+    evidence:
+      - configs/platform1.yaml（enforce_stability、edmd.compute.svd_clipping、end_to_end.svd_projection）
+      - configs/platform2.yaml（同上三项）
+      - src/patchtst_koopman/training/edmd_trainer.py:174-176（end-to-end 路径每 epoch 调 ensure_stability）
+      - src/patchtst_koopman/training/edmd_trainer.py:446-447（只打印谱半径，无警告）
+      - 上列 6 份 results/logs/*.log
+    impact: 结论级 —— 对控制论文而言稳定性前提被削弱，且不触发任何警告
+    provenance_caveat: 这些日志来自外部树（论文4\code-projectv2 与 D:\Project\code-projectv2），属历史运行证据，非同树重跑
+    status: open
+    verification: 每次训练后断言 spectral_radius <= 1，或按平台与方法分叉显式记录并解释超限；阶段② 决定是否统一恢复稳定机制
+  - id: ALN-016
+    class: implementation-drift
+    subject: MLP/LSTM 基线的"一致性"项与论文 L_c 语义不同
+    should: 所有方法族应使用论文定义的重编码一致性损失
+    actual: EDMDTrainer 用 F.mse_loss(z_from_pred, z_true)（真重编码）；MLPKoopmanTrainer 用 F.mse_loss(z_pred.detach(), z_true)（目标为 detached 预测）
+    evidence:
+      - src/patchtst_koopman/training/edmd_trainer.py:356
+      - src/patchtst_koopman/training/mlp_koopman_trainer.py:159-160
+    impact: 基线的"一致性"项并非论文的 L_c，基线可比性受影响，属结论级
+    status: open
+    verification: 断言各方法族使用同一 L_c 实现；或论文显式说明基线差异
+
+  - id: ALN-017
+    class: constraint-conflict
+    subject: 论文谱系未收敛，方法权威存在多个版本
+    should: 存在单一权威论文文本，与代码一致
+    actual: 论文.txt 与 docs/paper_notes.txt 内容不同；论文草稿 43 份 tex 中仅 Main33.tex / Main34.tex 含多步损失，其余 41 份无；"lambda_multi_x 最大、lambda_c 取小"仅见于 paper_notes.txt
+    evidence:
+      - 论文.txt:501-523（5 项，未写数值）
+      - 论文草稿/Main33.tex
+      - 论文草稿/Main34.tex
+      - docs/paper_notes.txt:457
+    impact: 高 —— 本澄清把 论文.txt 定为 L2 权威，但 5 项损失与 L_c 权重定位的"权威性"实际取决于哪份是投稿版
+    status: open（需用户在阶段② 确认权威文本）
+    verification: 由用户指定唯一权威稿；随后所有引用统一到该稿
+
+  - id: ALN-018
+    class: implementation-drift
+    subject: 多步损失的归约方式与论文不符
+    should: 论文定义 L_multi 为 sum_{i=1..N_L}
+    actual: 代码用 F.mse_loss（先求和再取均值），缩放与论文不同
+    evidence:
+      - 论文.txt:470-477
+      - 论文.txt:489-496
+      - src/patchtst_koopman/training/edmd_trainer.py:377
+      - src/patchtst_koopman/training/edmd_trainer.py:385
+    impact: 中 —— 影响 lambda 的实际有效尺度，与阶段② 的 10x 讨论直接相关
+    status: open
+    verification: 明确采用 sum 还是 mean 并让论文与代码一致
+
+# ---------------------------------------------------------------------------
+# 四、推迟到后续阶段的议题
+# ---------------------------------------------------------------------------
+deferred_to_phase_2:
+  - 多步损失的 lambda 数值与 N_L 取值（multi_step_physical=10.0 来自用户决策 DEC-003，非产物证据；当前配置中该值为 1.0）
+  - 10x 权重的有界对比实验（lambda_multi_x in {1.0, 10.0}，platform2 小 epoch）
+  - 多步项若改为 sum 归约，10x 的有效量级会进一步放大，需与 ALN-018 一并定
+  - L_c 的权重定位（来源仅 docs/paper_notes.txt，需与 ALN-017 一并裁决）
+  - 论文权威文本的确认（ALN-017）
+
+deferred_to_phase_3:
+  - 双平台重训与结果更新
+  - 消融整体重跑（P1 19 + P2 18）
+  - 论文配图与结果表更新
+  - 部署资产重导
+  - 论文数字与配置的追溯绑定（ALN-009）
+  - 稳定性不变量 INV1 的重新建立与验证（ALN-015）
+
+# ---------------------------------------------------------------------------
+# 五、仍未知项
+# ---------------------------------------------------------------------------
+open_questions:
+  - id: OQ-001
+    question: 新项目目录命名是否要改为全 ASCII（当前 结果备份/论文/数据备份/训练代码/杂项）
+    impact: 中
+  - id: OQ-002
+    question: data/experiment_002..005 四个目录的用途（ALN-012）
+    impact: 中
+  - id: OQ-003
+    question: 论文中 Platform1 的 0.157 是否来自当前 platform1.yaml（5 项、N_L=3）
+    impact: 高（结论级，已由 DEC-004 推迟到阶段③）
+  - id: OQ-004
+    question: deploy/ 的 tk_assets 目录名排序依赖是否必须保留（C# 侧是否已依赖）
+    impact: 中
+  - id: OQ-005
+    question: End-to-End（M5）是否仍要在新项目中保留为一等公民
+    impact: 中
+  - id: OQ-006
+    question: threelink lifting（n_input=6, n_features=57）的真实用途 —— 两个平台配置都未引用它
+    impact: 中
+  - id: OQ-007
+    question: 是否恢复 svd_clipping / enforce_stability，或接受 rho>1 并在论文中说明（ALN-015）
+    impact: 高（结论级）
