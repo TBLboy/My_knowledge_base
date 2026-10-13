@@ -7,9 +7,9 @@
 - **正在做什么**：TASK-145 收尾（部署到已装控制层 → 实机验证 → 记录 → 独立复核 → 提交推送）。
 - **阻塞**：TASK-140 需要 `go` 级独立复核，而复核者读不到安装层 `opencode.json`（含明文 apiKey）；其两条 `done_when`（配置内容、运行中服务行为）在「复核者不得读密钥」前提下无法独立验证。
 - **需要用户决定**：① TASK-140 如何收口（推荐给受信入口加脱敏检视动作 / 或改口径 / 或先挂着）；② 三个 V1 时代插件（`opencode-background-agents`、`opencode-notify`、`@tarquinen/opencode-smart-title`）在 V2 下加载失败（ALIGN-FW-009），是否从用户 `opencode.json` 删除；③ `~/.config/opencode/opencode.json` 的明文 apiKey 建议改为 `{env:LLMCENTER_API_KEY}`。
-- **验证与复核**：TASK-144（goal 工具放行）受信验证 5 文件全绿 + `validate_package` 通过；TASK-145 全量逐文件聚合 **27/27 文件全绿**，`validate_package` 通过，已装控制层部署后 89/89 受管文件与包逐字节一致；实机 `GET /api/agent` 生效规则：vibe-main 的 catch-all 只剩 base policy 的 allow（deny 已去除）、verification-reviewer 仍为 allow+deny。独立复核进行中。10-12 两轮复核 REV-REFRESH-140 / 142 均 **conditional**（载荷逐字转录，写入层面独立性缺口见 DEC-076/077/078）。
+- **验证与复核**：TASK-144（goal 工具放行）受信验证 5 文件全绿 + `validate_package` 通过；TASK-145 全量逐文件聚合 **27/27 文件全绿**，`validate_package` 通过，已装控制层部署后 89/89 受管文件与包逐字节一致；实机 `GET /api/agent` 生效规则：vibe-main 的 catch-all 只剩 base policy 的 allow（deny 已去除）、verification-reviewer 仍为 allow+deny。独立复核 **REV-REFRESH-145 = conditional**：放行条件①（V2 权限语义）已由主 Agent 用一手文档 `https://opencode.ai/v2/docs/permissions`（base policy 与 `test_opencode_surface.py` 建模逐条一致、「最后匹配者生效 / agent 规则最后追加」）+ 运行时 `GET /api/agent` 解析后列表补齐；条件③（已装 `opencode.json`/安装状态的一致性）已在复核记录显式登记为主 Agent 验证的边界；**条件②未闭合**——插件/MCP 工具是否真的出现在会话里需重载会话确认，故 `done_when#1b` 记 partial。框架已拒绝 finish（high-risk 任务需要 go 级复核），gate = blocked。10-12 两轮复核 REV-REFRESH-140 / 142 均 **conditional**（载荷逐字转录，写入层面独立性缺口见 DEC-076/077/078）。
 - **交付**：`origin/main` = **3bab1fd**（已推送）；本地 `main` = **83be137**（TASK-145，8 文件）**未推送**（直连 reset、代理 10808 不通，待重试）。已装控制层已更新到 83be137（89/89 受管文件一致）。
-- **下一步**：① 全量验证转绿 → 部署 TASK-145 并实机验证（`/api/agent/vibe-main` 生效规则 + 重新加载会话确认插件/MCP 工具出现）；② 独立复核后 finish TASK-145、提交并推送；③ 等用户裁决 TASK-140 收口与三个 V1 插件的处理。
+- **下一步**：① **用户重载会话**，确认 goal 插件与 `opencode-agent-memory` 的工具（`get_goal`/`memory_set`）以及至少一个 MCP 工具（如 `wikipedia_*`）出现在主 Agent 会话中；② 据此让 `verification-reviewer` 复评并出 `go` → `review record` → `task finish TASK-145` → `gate`；③ 等用户裁决 TASK-140 收口与三个 V1 插件的处理；④ ALIGN-FW-010（uninstall 回退用户后续编辑）待排期。
 
 ## 2026-10-13 已安装插件/MCP 默认放行（ALIGN-FW-009，DEC-087，TASK-145，进行中）
 
