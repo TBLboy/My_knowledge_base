@@ -1,199 +1,91 @@
 # Current Session
 
-## 2026-08-16 归档 vibe-coding 并修复归档脚本
+## 当前状态（2026-10-13 覆盖更新）
 
-- 已按 a-project-log-archive 归档 vibe-coding 到 `My_knowledge_base/工程记录/vibe-coding/.project-log` 并推送知识库。
-- 归档时发现脚本使用 `git add -A`，把知识库根 `.project-log` 与未提交学习记录一并纳入提交；已恢复根 `.project-log` 位置，并推送修复提交 `b607e27`。
-- 已把归档脚本 `git add` 范围收窄到 `工程记录/<project-name>`，记录为 TASK-009。
-- 记录时间：2026-08-16T18:05:00+08:00。
+- **当前 Goal**：GOAL-008「框架修复吸收：goal.update 支持 implementer/owner + 消除 goal reducer 双实现」保持 **complete**；10-12/10-13 的框架修复属其后续续作，未新开 Goal。
+- **当前 Task**：TASK-145「已安装插件/MCP 默认放行：主 Agent 权限策略 + 框架随包工具带 + 安装器受管 MCP」——实现与定向验证完成，全量逐文件验证进行中，待部署与独立复核。TASK-140（控制层刷新到 d21a3e0 并验证生效）**handed-off**，门禁阻塞。
+- **正在做什么**：TASK-145 收尾（部署到已装控制层 → 实机验证 → 记录 → 独立复核 → 提交推送）。
+- **阻塞**：TASK-140 需要 `go` 级独立复核，而复核者读不到安装层 `opencode.json`（含明文 apiKey）；其两条 `done_when`（配置内容、运行中服务行为）在「复核者不得读密钥」前提下无法独立验证。
+- **需要用户决定**：① TASK-140 如何收口（推荐给受信入口加脱敏检视动作 / 或改口径 / 或先挂着）；② 三个 V1 时代插件（`opencode-background-agents`、`opencode-notify`、`@tarquinen/opencode-smart-title`）在 V2 下加载失败（ALIGN-FW-009），是否从用户 `opencode.json` 删除；③ `~/.config/opencode/opencode.json` 的明文 apiKey 建议改为 `{env:LLMCENTER_API_KEY}`。
+- **验证与复核**：TASK-144（goal 工具放行）受信验证 5 文件全绿 + `validate_package` 通过；TASK-145 全量逐文件聚合 **27/27 文件全绿**，`validate_package` 通过，已装控制层部署后 89/89 受管文件与包逐字节一致；实机 `GET /api/agent` 生效规则：vibe-main 的 catch-all 只剩 base policy 的 allow（deny 已去除）、verification-reviewer 仍为 allow+deny。独立复核进行中。10-12 两轮复核 REV-REFRESH-140 / 142 均 **conditional**（载荷逐字转录，写入层面独立性缺口见 DEC-076/077/078）。
+- **交付**：`origin/main` = **3bab1fd**（已推送）；本地 `main` = **83be137**（TASK-145，8 文件）**未推送**（直连 reset、代理 10808 不通，待重试）。已装控制层已更新到 83be137（89/89 受管文件一致）。
+- **下一步**：① 全量验证转绿 → 部署 TASK-145 并实机验证（`/api/agent/vibe-main` 生效规则 + 重新加载会话确认插件/MCP 工具出现）；② 独立复核后 finish TASK-145、提交并推送；③ 等用户裁决 TASK-140 收口与三个 V1 插件的处理。
 
+## 2026-10-13 已安装插件/MCP 默认放行（ALIGN-FW-009，DEC-087，TASK-145，进行中）
 
-## 2026-08-15 充实 docs/USAGE.md 用户使用指南（TASK-008）
+- 起因：用户「其他插件你也放行，然后再优化一下 vibe-coding 源码框架，凡是我安装的插件默认都放行。同时，把握现在安装的 MCP 和插件，都加入到 vibecoding 源码框架里面……你检查一下」。
+- 盘点（实测 `GET /api/plugin`、`GET /api/mcp`）：插件 5 个——`vibe-workflow`(local, active)、`opencode-agent-memory@0.3.0`(active)、goal-plugin@0.1.60(active)，以及 **3 个 failed**：`opencode-background-agents`、`opencode-notify`、`@tarquinen/opencode-smart-title`（错误 `Plugin must export a default definition with an id and an effect or setup function`；npm 最新版 0.1.1 / 0.3.1 / 0.1.7 仍无 V2 构建）→ 记为 **ALIGN-FW-009**，**不纳入框架**。MCP 8 个全部 connected：`context7`、`document-loader`、`gh_grep`、`github`、`playwright`、`sequential-thinking`、`web-search`、`wikipedia`。
+- 框架改动（7 文件）：① `vibe-main` 去掉 catch-all `* * deny`——V2 把解析为 deny 的动作从会话隐藏，这正是已安装插件/MCP 工具消失的机制；改为 OpenCode 文档化 base policy + 显式内置动作放行 + subagent 范围限制 + `execute` deny + 密钥 `read` deny（限制在后，最后匹配者生效）；② seed `runtime/opencode/opencode.json` 随包提供 plugin（goal 0.1.60 + opencode-agent-memory）与 8 个 MCP；③ 安装器新增**受管 MCP 合并**，与权限规则同一套归属契约（用户已有 / 改过 / 删过都不覆盖、不复活）；④ 测试：受管 MCP 归属测试、主 Agent 工具可见性断言（按 base policy 顺序解析）、补 `skip_unless_symlink` 守卫（该用例漏加守卫，本机 `os.symlink` 无特权）；⑤ 文档：`docs/USAGE.md` 两处 + `runtime/opencode/README.md` 同步（原文写「安装器不强制安装任何可选 MCP」，与用户要求相反，已按 DEC-087 改写）。
+- 边界：子 Agent 保留 deny 基线（只读边界不变），需要某个 MCP 时按角色显式放行；扩展点已写入文档。
+- 已知验证障碍：`verification_runner.py` 在**失败输出含非 ASCII 时崩溃**（`subprocess.run(text=True)` 未指定 encoding，GBK 解码失败、`output_bytes: 0`）——即 ALIGN-FW-004，本轮先用直连方式取失败清单。
+- 记录时间：2026-10-13。
 
-- 用户确认目标文件为 `docs/USAGE.md`，要求把简略文档写得更丰满。
-- 已将文档扩展为完整用户手册：增加全局/项目/对话三层模型、安装准备、项目初始化、端到端工作流、状态模型、失败重试、A/B/C 决策、多客户端、cc-switch/MCP、常用提示、排障、安全边界、恢复和完成标准。
-- 验证：包校验、项目日志校验、Loop 校验和 38 个 unittest（1 个跳过）通过；Markdown 代码围栏平衡，文档引用目标存在。
-- 记录时间：2026-08-15T12:05:00+08:00。
+## 2026-10-13 /goal 工具缺失：根因与修复（ALIGN-FW-008，DEC-086，TASK-144）
 
+- 现象：会话里没有 `get_goal` / `create_goal` / `update_goal*` 等工具，但系统提示里仍有 goal 插件注入的策略文字；`/goal` 无法启动自动续跑。
+- 根因（证据链）：插件加载成功（日志）且 `dist/server.js` 用 `context.tool.transform(draft => draft.add(tool))` 注册 14 个工具；V2 里**插件工具名即权限动作名**，而 `d21a3e0` 引入的 `* * deny` 基线之后只放行内置动作 → 插件动作没有任何 allow → 被隐藏。旁证：`opencode-agent-memory` 同症状（`memory_set` 报 No tool named memory_set is currently available）；命令不受权限过滤（`/api/command` 里 `goal`/`pause_goal`/`resume_goal` 都在）。
+- 修复：`vibe-main` 显式放行 `*goal*`（源模板 + 已装副本）+ 回归断言；受信验证 5 文件全绿 + `validate_package` 通过；提交 **3bab1fd**（已推送）。实测 `/api/agent/vibe-main` 生效规则已含该条（权限热加载生效），工具出现在会话需重新加载会话。
+- 后续：TASK-145 以「去 catch-all deny」取代该单点放行，一次性覆盖所有已安装插件/MCP（DEC-087）。
+- 记录时间：2026-10-13。
 
-## 2026-08-15 修复项目日志校验问题（TASK-007）
+## 2026-10-12 本机控制层修复：闪窗、模型 pin、复核者能力（TASK-140..143）
 
-- 用户要求修复快速检查发现的四个问题：DEC-003 缺少 `hypothesis/options`、verification/evidence.yaml 与 work-trace/trace.yaml 的反引号导致 YAML 解析失败、以及无目标无下一步的残留 active run。
-- 已补全 DEC-003 的假设与备选方案；移除导致 YAML 词法错误的 Markdown 反引号；将残留 run 标记为 `complete` 并写入 run-completed/handoff 事件。
-- 记录时间：2026-08-15T19:40:03+08:00。
-- 验证：validate_project、loopctl validate、validate_package、38 个 unittest（1 个跳过）和 SessionStart smoke 全部通过；恢复视图显示无 active task，Run status 为 complete。
+- 用户指令序列：撤销已装层模型 pin → 修模板闪窗 → 模板去 pin → 「适当拓宽复核者能力，测试没问题之后推送」。
+- 闪窗（DEC-084）：`plugins/vibe-workflow/index.ts` 两处 `spawn` 补 `windowsHide: true`，源模板加「spawn 调用数 == windowsHide 数」回归断言；提交 **3c3ca6a**；用户目视确认不再闪窗。
+- 模型 pin（DEC-083 已装层 / DEC-085 源模板）：删除 9 个 agent 的 `model:`，子 agent 继承会话模型；两条要求 pin 的断言反转；提交 **bf6f211**。
+- 复核者能力（ALIGN-FW-005 / 007）：`verification-reviewer`、`alignment-reviewer` 改为逐子目录放行 `external_directory` / `read` / `glob`（`~/.config/opencode/{agents,commands,plugins,skills,vibe-workflow}/*`）；移除 shell 的 `grep *` / `rg *` 放行（`grep` 的权限资源是模式而非路径）；deny `git diff --no-index*`；删除无效的字面文件条目并加「`external_directory` 必须以 `/*` 结尾」守卫断言。提交 **f6cc856 / d823225 / c23ed2a**。
+- 复核：REV-REFRESH-140 / 142 均 conditional；实测密钥经 read / glob / grep / shell 四条路径全部 DENIED；载荷逐字转录，写入层面独立性缺口见 DEC-076/077/078。
+- 推送：`d21a3e0..c23ed2a main -> main`（直连成功）；`3bab1fd` 随后亦已推送。
+- 未收口：TASK-140（控制层刷新到 d21a3e0 + 生效验证）因「复核者读不到含密钥的 `opencode.json`」门禁阻塞 → handed-off。
+- 记录时间：2026-10-12 / 13。
 
-## 2026-08-15 项目初始化 a-project-init skill
+## 2026-10-11 主线吸收框架修复：goal.update 归属 + 单一 goal reducer（GOAL-008，TASK-137..139）
 
-- User asked to optimize the framework and entered business clarification: project initialization should also establish/update root `AGENTS.md`, not just `.project-log`.
-- Confirmed decisions: keep the existing `init_project.py` chain untouched; new `a-project-init` skill wraps `.project-log` init + `AGENTS.md` creation; existing `AGENTS.md` content is preserved and general rules are injected once via `VIBE-PROJECT-GENERAL` markers (idempotent); general rules template lives inside the skill as the single source; project-specific rules are extracted from root README/docs or left blank with a hint.
-- Implemented: `skills/a-project-init/SKILL.md`, `templates/general-rules.md`, `scripts/init_project_agents.py`, `tests/test_project_init.py`; routing added to `prompts/vibe-global-agent.md`; atoms `BL-PROJECT-INIT-001..004`, clarification, requirements, decision `DEC-004`, task `TASK-006` recorded.
-- Verification: `test_project_init.py` 6 passed; `validate_package.py` passed; CLI smoke created `.project-log` (62 files) + `AGENTS.md` and second run was idempotent (both skipped); `validate_project.py` clean for new records, only 4 pre-existing issues remain (DEC-003 missing fields, evidence.yaml/trace.yaml YAML parse).
-- Status: implementation complete and verified in source repo; `TASK-006` done, `DEC-004` successful.
-- Next step: user decides whether to sync the skill to the installed runtime (`global_installer.py update`) and whether to commit/push.
-- Installation (user approved): `global_installer.py update --access-profile keep-existing --skip-doctor` succeeded; `verify` passed; `a-project-init` synced to `~/.codex/skills/a-project-init/` (SKILL.md, templates/general-rules.md, scripts/init_project_agents.py); global AGENTS.md routing includes `a-project-init`; installed-layout smoke passed (first run created `.project-log` + `AGENTS.md`, second run idempotent).
-- Remaining: commit and push the source changes when the user confirms.
+- 用户裁决（DEC-074）：不再处理 format 1 项目；要求把「主线吸收框架修复」**收口**（否则本机控制层补丁下次重装即回归、codex 侧部署仍是未打补丁版）。
+- main 线（`8a30f63`）：`goal.update` 支持 `--implementer/--owner`（空白/非字符串拒绝、`risk_level` 仍冻结），高风险 Goal 不再因无法登记实现者而永久卡门禁（DEC-070 根因）；`GOAL_UPDATE_EXTENSION_KEYS` + `merge_goal_update_extensions` 收敛为**单一实现**，`state_store` 实时迁移与 `state_replay` 账本重放调用同一函数（消除 DEC-071 的 reducer 双实现静默失效）；回归测试覆盖 gate 解锁、空白/None/risk_level 拒绝、replay 保留归属，并让 golden replay 账本携带 goal 归属以差分锁定两 reducer。
+- codex 分支（`19cac55`）：共享核心（3 个 runtime 脚本）与两处测试文件从 main 逐字节镜像，全量套件 302 tests / OK (skipped=3)。
+- 部署刷新：控制层先从 DEC-071 备份与父提交 blob 恢复到 install-state 记录的 pristine 哈希（逐一校验相等），再经官方 `opencode_installer.py update` 刷新（直接覆盖会造成永久「本地与包都变了」冲突，故必须走恢复→安装器路径），`preserved_local=[]`；实机 `~/.codex` 经 `global_installer.py update` 刷新。两处部署各 3 文件与其源分支逐字节一致（复核者直接哈希验证）。
+- 行为验证（两处部署各自复现 GOAL-007 场景）：高风险 Goal + 已通过 SC + 范围内 go 复核但未登记 implementer → `goal_gate: missing_implementer`；`goal update --implementer` 后 → complete；空白 → `invalid_input`；`--risk-level` 被 argparse 拒绝。
+- 复核：REV-FIX-137 首轮 conditional（指出整包未复现全绿）→ 补基线对照、逐文件聚合与 environment 归因后 **REV-FIX-137-FINAL / 138 / 139 全部 go**，载荷逐字转录（DEC-076/077/078）；复核者独立复算哈希、复跑两线套件、直接读安装后代码确认共享实现。
+- 框架缺陷/漂移登记（规则 8）：DEC-075 全量套件在本机**不是可靠绿信号**（Bun 崩溃/bundle 查找/OOM、WSL 路径转换；建议加能力探测守卫）；DEC-079 `goal.complete` 会关闭尚未 finish 的任务（含已 begin 的），执行顺序必须先 finish 再跑门禁。
+- 未验证项：整包运行的两个主机相关用例（隔离运行通过、按 environment 归因）；两处安装器的执行过程属实现者报告（复核者只验证终态）。
+- 记录时间：2026-10-11。
 
-## 2026-08-15 AI_INSTALL/AI_UPGRADE 文档与安装器一致性核对
+## 2026-10-11 实机 ~/.codex 更新到 0.6.0（用户授权，DEC-072 / REV-CODEXPORT-019）
 
-- User asked to verify AI-assisted install docs against `scripts/global_installer.py`.
-- Verified consistent: package version `0.4.1`; default `--access-profile keep-existing`; core-only default install with `--mcp`/`--without-mcp` and mutual-exclusion error; update preserves previously enabled optional MCPs; preflight runs by default (`--skip-preflight` opt-out, checks codex version/features/doctor); timestamped backup before write; upgrade conflicts abort before any write (`Upgrade conflicts detected before writing`); installation-state.json read/write with legacy migration; `.project-log` never part of global install/uninstall/rollback; three hooks (SessionStart/PostToolUse/PreCompact); install.sh/update.sh bootstrap vibe-python env; requirements.txt (PyYAML, jsonschema).
-- Noted: `managed_config_block()` still generates quoted `commandWindows` (Windows Codex 0.147+ hook startup issue), and `AI_INSTALL.md` documents this accurately with manual fix instructions; no doc/code contradiction found.
+- 用户裁决：把实机 `C:\Users\12187\.codex` 从 0.5.0 更新到 0.6.0（已知悉 format 1 项目不再被新核心读写）。
+- 执行：codex 分支（e75976e）的 `scripts/global_installer.py --skills-root ~/.codex/skills --mcp vibe-toolbelt update`，
+  update/verify 均 exit=0；`package_version` 0.5.0→0.6.0、`managed_files` 85、`doctor.blocking_failures=[]`。
+- 保留：用户自有 config（`model_provider=custom`/`model`/`model_catalog_json`/`[features] goals`/
+  `[model_providers.custom]`）与 `access_profile=keep-existing` 均未被改写；受管块唯一无重复。
+- 验证：三 hook 以真实 payload 实测 exit=0；`codex plugin list` 显示 `vibe-toolbelt@vibe-global-toolbox
+  installed, enabled 0.4.1`；复核者实测实机 `vibe-workflow` 的 24 个 hooks+scripts 文件与仓库逐字节一致。
+- format 1 影响面：机器上 10+ 个 format 1 项目（`workflow.yaml` 存在、无 `state-format.json`）在 0.6.0 下
+  不再被 vibe 命令读写；hook 对它们只读（抽查 my_lunwen / dexbot_ros2_ws-dex_vla / dex_app 三处均未新建
+  `.state/`）。迁移路径：旧文件移入 `.project-log/legacy/` 后重新 `vibe init`。
+- 已知残留（DEC-073）：`missing_implementer` 修复只在 OpenCode 控制层，codex 侧部署仍是未打补丁 `state_store.py`；
+  应由主线吸收（DEC-071 follow-up）。
+- 记录时间：2026-10-11。
 
-## 2026-08-15 README 补充代理与 cc-switch 使用说明
+## 2026-10-11 GOAL-007 收口：框架缺陷修复（DEC-071）
 
-- User asked to add two details to `README.md`: proxy requirement (default `127.0.0.1:10808`, adjustable via `HTTP_PROXY`/`HTTPS_PROXY`) and cc-switch common-config usage.
-- Added proxy bullet under `## 环境要求`; added `## cc-switch 通用配置` section describing regenerating via `scripts/generate_cc_switch_config.py`, overwriting the `VIBE-CODEX-GLOBAL:CONFIG` TOML segment in cc-switch common config, and not copying generated host-specific paths across machines.
-- User then asked to add the same two rules to `AI_INSTALL.md`: added `## 代理要求` (default `127.0.0.1:10808`, `HTTP_PROXY`/`HTTPS_PROXY` adjustment, `--without-mcp` fallback) and appended instruction 14 to the AI prompt block; added `## cc-switch 通用配置` section identical in content to README.
-- Check: does `AI_INSTALL.md` document the full "create vibe-coding env -> install with it -> configure env path -> run Vibe features in it" flow? Result: not fully. It only implicitly mentions the wrapper script reusing/creating the env (instruction 4); manual Windows/Linux steps install requirements into the default Python instead. Verified actual behavior in `bootstrap_vibe_python.py` (reuse `vibe-python`, else Conda create `vibe-coding` python=3.11, install PyYAML/jsonschema, write `CODEX_HOME/vibe-python`, run installer with it) and `global_installer.py configured_python()` (Hooks use that interpreter). Recommended adding a "## Vibe Python 环境与安装流程" section; awaiting user confirmation before editing.
-- User approved: added `## Vibe Python 环境与安装流程` to `AI_INSTALL.md` (create env -> activate -> install requirements -> wrapper install -> write `vibe-python` -> Hooks bound -> all Vibe features run in env; adapts to existing env / existing vibe-python / no Conda / `VIBE_PYTHON` / `VIBE_CONDA_ENV`). Corrected environment targeting in `AI_INSTALL.md` (recommended-instruction 3, Windows/Linux manual steps, temp-project acceptance) and `AI_UPGRADE.md` (instruction 4, Windows/Linux upgrade steps, `update.sh` env note); changed `python3` to `python` for `generate_cc_switch_config.py` in README and AI_INSTALL.
-- Full doc/code consistency check passed: version 0.4.1, proxy guidance, cc-switch flow, Windows Hook adapter description, upgrade guarantees (timestamp backup, installation-state.json, legacy tree->per-file migration, preserved local changes, pre-write conflict abort), conflict semantics, rollback (only vibe-workflow + skills), 8 subagent roles, three hooks only (no Stop Hook). No remaining doc/code contradictions found.
+- 用户裁决：GOAL-007 的 `missing_implementer` 阻塞按「修框架后关闭」处理。
+- 修复打在**已安装控制层**（`~/.config/opencode/vibe-workflow/scripts/`，非仓库分支）：`state_store.py` 的
+  `goal.update` 白名单与校验、`vibe.py` 的 `--implementer/--owner`、`state_replay.py` 的重放键元组；
+  备份在 `~/.config/opencode/backups/goal-implementer-20261011-195547/`。
+- 根因（比字段本身更广）：同一状态迁移被实现两遍——实时应用在 `state_store.py`、账本重放在 `state_replay.py`；
+  只改前者时投影表已有 implementer，而门禁读重放态仍报缺失（实测：直连投影 DB 检查无问题，CLI 仍拒绝）。
+- 验证：空 implementer 被拒（`invalid_input`）；写入后投影表可见；`goal complete --id GOAL-007` exit=0
+  （revision 1127），Goal=complete、SC-001..SC-007 全 passed、任务全部终态。
+- 未触碰 `main`/`opencode-main` 检出与已推送的 codex 分支（e75976e）；因此主线必须吸收该修复与回归测试，
+  否则下次安装会覆盖。
+- 记录时间：2026-10-11。
 
-## 2026-08-14 Stop-after-status-update root cause
+## 2026-10-11 codex 分支全量对齐 main（GOAL-007，TASK-128..136）
 
-- User sent "继续" in thread `019fa3c1-74a0-7693-97de-209b5b918788`; the model performed one Hook config/hash check, then returned only a status message and made no follow-up tool call.
-- Codex logged a normal `task_complete` immediately after that message. The turn had no ERROR, no Hook failure, and no context-limit trigger.
-- Evidence: `sessions\2026\07\27\rollout-2026-07-27T21-26-37-019fa3c1-74a0-7693-97de-209b5b918788.jsonl` records the assistant message at `22:11:18.549Z` and `task_complete` at `22:11:18.554Z`.
-- Log evidence: turn `01a0009c-a5be-7ac1-9e6a-676c86f3c15c` had `full_context_window_limit_reached=false`, `token_limit_reached=false`, and `model_needs_follow_up=false`.
-- Attribution: primarily model-side premature stop. Codex closes a turn when the model stops emitting tool calls; the Vibe Hooks did not fail during that turn.
-- Related context: two stale `Function call output is missing` warnings existed from an earlier aborted turn, but they did not directly cause this stop.
-- Status: root cause diagnosed; the original SessionStart Hook investigation remains unfinished.
-- Next step: continue that Hook investigation or add a framework guard against status-only completion while a Vibe run is active.
-
-## 2026-08-13 Loop recovery and new-run repair
-
-- User reported that a normal task could stop after a state-restoration response without completing the requested work.
-- Root causes fixed in source: SessionStart appended handoff events while rendering context; completed or empty runs were rendered as active work; a nested new directory could inherit an ancestor Project Log; no explicit new-run reset command existed.
-- Changes: SessionStart now renders read-only context; PreCompact persists handoff; `loopctl start-run` resets stale run state with a unique run ID; workspace roots take precedence and an ancestor `.project-log` is not adopted by a new directory; global agent protocol explicitly forbids restoration-only completion.
-- Verification: 31 unit tests passed (1 historical test skipped); package validation passed; `start-run` and installed Hook smoke tests passed; `global_installer.py verify` passed; installed runtime hashes match source.
-- Installation: `global_installer.py update --skip-doctor` synced the repair into `/home/tbl/.codex/vibe-workflow`.
-- Known unrelated limitation: `runtime/scripts/validate_project.py --root .` still reports pre-existing malformed historical records in `.project-log/verification/evidence.yaml`, `decisions/decision-log.yaml`, and `work-trace/trace.yaml`; no project-log records were altered as part of this code repair.
-- Next step: commit the source repair on `main`.
-
-## 2026-08-02 Push closeout
-
-- User paused the current MCP/Codex terminal investigation after the fixes and validations were completed.
-- Closeout scope: record progress, commit the current vibe-coding source changes, and push to origin/main through 127.0.0.1:10808 if required.
-- Push evidence: commit `cf2b80b` was pushed successfully to `origin/main` through `127.0.0.1:10808`; final worktree verification is pending.
-
-## 2026-08-05 Windows host config sync
-
-- User requested the cc-switch common config be regenerated for this Windows host and the installed hooks re-synced.
-- Regenerated `cc-switch-common-config-codex.txt` with `scripts/generate_cc_switch_config.py` using the configured Vibe Python (`D:\conda\envs\vibe-coding\python.exe`).
-- Patched the generator to emit the host header comment so the tracked template stays reproducible from the generator.
-- Re-ran `global_installer.py update --access-profile keep-existing --mcp codegraph --mcp vibe-toolbelt --skip-preflight`; verification passed.
-- Evidence: TOML parses; installed hook hashes match source; generator output equals the tracked file; hook tests `13 passed`; installer tests `10 passed, 1 skipped`.
-- Next step: user decides whether to commit and push the local config regeneration.
-
-## 2026-08-14 Pull, merge, and framework install
-
-- User asked to pull the updated remote code, review it, and install it into the local framework without committing yet.
-- Pulled `53d611d fix: prevent stale loop state from ending new tasks` (fast-forward from `b138bc0`).
-- Merged local hook resilience/UTF-8 changes with the remote update; resolved conflicts in `pre_compact.py` and `tests/test_loop_core.py`.
-- Installed the merged framework with `global_installer.py update`; installer verification passed.
-- Evidence: hook tests `21 passed, 4 subtests`; installer tests `10 passed, 1 skipped`; `loopctl validate` passed; installed runtime hashes match source.
-
-## 2026-08-05 SessionStart hook resilience fix
-
-- User still saw `SessionStart hook (failed): hook exited with code 1` after the hook protocol fix.
-- Reproduced with a non-ASCII UTF-8 payload: the hook crashed while initializing `.project-log` (PermissionError on Windows), forcing exit code 1.
-- Root cause: stdin/stdout decoding used the console codepage instead of UTF-8, and project-state initialization failures were uncaught.
-- Fix: hooks read/write UTF-8 streams; SessionStart and PreCompact catch project-state failures, return fallback context, and always exit 0 with valid JSON.
-- Validation: non-ASCII payload repro exits 0; hook tests `14 passed, 4 subtests`; installer tests `10 passed, 1 skipped`; `codex exec` smoke returns OK.
-- Next step: user restarts the terminal and opens a new session to confirm the hook error is gone.
-
-- Current phase: MCP/hooks/plugin ???????
-- Current goal: ?? cc-switch ????? `document-loader` MCP ?????????? Codex ???? Hook ????
-- Current task: ??????????????????????
-- Confirmed facts: `document-loader` ?? `vibe-toolbelt/.mcp.json`?`@latest` ???????? `1.0.17`??? MCP initialize ??? Codex exec ???
-- Changes: ?? `awslabs.document-loader-mcp-server@1.0.17`??? `HTTP_PROXY`/`HTTPS_PROXY=http://127.0.0.1:10808`??? `PostToolUse.async` ? `PreCompact.additionalContextLimit`
-- Validation: `pytest tests\test_installer.py -q` -> `10 passed, 1 skipped`?`codex exec --ephemeral --json` -> `OK`, exit `0`?`codex mcp list` ?? enabled
-- Blocking items: ?
-- Next step: ?????? Codex ??????? MCP ?????????????? commit/push ??
-
-## 2026-08-02 MCP 终端复核
-
-- 已确认安装器和插件缓存更新成功。
-- 根因证据：Codex 日志记录 `Failed to read MCP server stderr (uvx): stream did not contain valid UTF-8`；不是 MCP 包未安装。
-- 修复：`document-loader` 增加 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`，并保留固定版本 `1.0.17` 与 `127.0.0.1:10808` 代理。
-- 验证：直接 MCP initialize、普通 Codex exec、SessionStart Hook 均通过。
-- 环境差异：当前进程 `codex` 命中 Zed 注入的 `0.145.0`；用户级 npm 路径有 `0.146.0`。需重启终端后确认实际版本。
-
-## 2026-08-03 宿主机配置动态化
-
-- 用户指出 cc-switch 配置示例错误保留 Windows 路径；当前宿主机为 Ubuntu。
-- 已确认仓库残留点为 `cc-switch-common-config-codex.txt`；安装器 `managed_config_block()` 本身已从宿主 `CODEX_HOME` 和 `vibe-python` 动态生成 Hook 路径。
-- 新增 `scripts/generate_cc_switch_config.py`，将 cc-switch 配置生成职责从人工复制改为宿主机动态解析。
-- 当前生成结果：`/home/tbl/miniforge3/envs/vibe-coding/bin/python3.11`、`/home/tbl/.codex/vibe-workflow/hooks/*`、`/home/tbl/Project/vibe-coding`。
-- 验证通过：生成器与 canonical 文件一致、TOML 合法、无 Windows 硬编码、安装器测试 `10 passed, 1 skipped`、包校验通过。
-- 精确下一步：提交并推送本次配置动态化改动。
-
-## 2026-08-03 SessionStart Hook 协议修复
-
-- 用户反馈新对话仍提示 `SessionStart hook (failed): hook returned invalid session start JSON output`，但 MCP 正常。
-- 复现与代码检查确认：Hook 能正常退出并输出合法 JSON，但使用旧式顶层 `additionalContext`，未声明 `hookSpecificOutput.hookEventName`。
-- 已修复 `runtime/hooks/session_start.py` 和 `runtime/hooks/pre_compact.py`，分别返回 `SessionStart`、`PreCompact` 事件专用输出。
-- 已更新 `tests/test_loop_core.py`，验证输出结构、事件名和 additionalContext。
-- 已安装到 `/home/tbl/.codex/vibe-workflow/hooks/`；源码与已安装文件哈希一致。
-- 验证：13 个 Loop/Hook 测试通过；11 个安装器测试中 10 通过、1 跳过；包校验通过；Codex ephemeral 返回 `OK`。
-- 精确下一步：用户重新开启一个新对话确认实际 TUI 提示；当前修复尚未提交推送。
-
-
-## 2026-08-14 SessionStart Hook 根因修复（Codex 0.147.0 命令解析变更）
-
-- 现象：终端启动 Codex 时 `SessionStart hook (failed) / hook exited with code 1`；同一 Hook 脚本直连执行 exit 0。
-- 根因：Codex 0.147.0 不再通过 shell 解析 Hook 命令中的引号。原配置 `"D:/conda/.../python.exe" ".../session_start.py"` 的带引号命令行无法启动进程（进程从未运行，连模块加载日志都没有），被 Codex 报告为 exit 1。
-- 证据：将命令临时改为 `python.exe -c ...` 后 `hook: SessionStart Completed`；改回无引号路径形式同样 Completed，且 Hook 内部日志显示 Python 进程正常启动、import 与 main 全流程通过。
-- 修复：`C:\Users\12187\.codex\config.toml` 三个 Hook（SessionStart/PostToolUse/PreCompact）命令与 commandWindows 全部去掉引号（路径无空格），并清除旧 trusted_hash 以便重新信任。
-- 验证：`codex exec --dangerously-bypass-hook-trust` 输出 `hook: SessionStart Completed`；三个 Hook 直连均 exit 0 且输出合法 JSON；已安装 Hook 文件哈希与仓库源码一致；诊断残留文件已清理。
-- 注意：当前修复只改本地 config.toml，未改 `D:\Project\vibe-coding` 源码；若重新运行安装器覆盖 config，需再次应用无引号形式（建议后续在框架安装器模板中同步此变更）。
-
-
-## 2026-08-14 部署文档补充 Windows Hook 适配说明
-
-- 决策：框架运行时源码不动（Linux/macOS 部署不受影响），只在部署文档中写明 Windows 专属适配。
-- 改动：
-  - `AI_INSTALL.md`：新增 “Windows Hook 命令适配（Codex 0.147.0+）” 章节，说明根因、修改 `commandWindows` 去掉引号的步骤、trusted_hash 处理和验证方法。
-  - `AI_UPGRADE.md`：Windows 升级章节补充遇到 Hook 失败时的处理指引，指向 AI_INSTALL.md。
-  - `README.md`：Windows 安装命令后加一行指引。
-- 验证：`validate_package.py --root .` 输出 `Package validation passed.`。
-- 约束遵守：未修改 runtime 脚本/安装器模板/任何框架行为代码；Linux/macOS 安装路径不变。
-
-
-## 2026-08-15 “回复一句就停止”根因排查（只读诊断，未改代码）
-
-- 现象：dexbot/kitchen_robot_home 会话中，模型输出承诺句（“我先检查这两处来源…”“我再补一次项目日志…”）后回合结束，任务未继续；用户多次遇到。
-- 排查路径：`~/.codex/logs_2.sqlite` 会话日志 + `~/.codex/config.toml` + `cc-switch-model-catalog.json`。
-- 直接证据：最后一次纯文本完成 `response.completed`：`status=completed`、`model=deepseek-v4-flash`、output 仅 `[reasoning, message]`、无 `function_call`；同窗口无 ERROR/WARN、无 Hook 失败、无 `response.incomplete`。Codex 回合在模型响应无工具调用时正常结束。
-- 上下文证据：该线程 `input_tokens=229021`（300k 窗口约 76%），`cached_input_tokens=20`（几乎无缓存）；模型为 cc-switch 代理的 `deepseek-v4-flash`（`127.0.0.1:15721`，wire_api=responses）。
-- 结论：根因在模型侧（flash 模型在长上下文下倾向“总结+承诺”并以纯文本正常结束，而非继续调用工具），不是用户消息格式、Hook、Loop 或 Goal 机制问题；kitchen_robot_home 无 `.project-log`，可排除 loopctl 恢复状态导致的提前结束。
-- 候选缓解（未执行）：复杂 agentic 任务改用 `deepseek-v4-pro`；长会话及时 /compact 或开新会话；catalog 中该模型 `default_verbosity=low`，可在 instructions_template 中强化“必须调用工具继续直到验收”约束。
-
-## 2026-08-15 “回复一句就停止”缓解措施落地（框架侧）
-
-- 决策（B 级，DEC 记录于本条目）：针对根因（flash 模型以纯文本承诺句正常结束回合、无工具调用），在框架与模型提示两个层面加强约束，不改 Hook/Loop 机制。
-- 改动：
-  - `prompts/vibe-global-agent.md`：新增「回合执行纪律（防止半途停止）」——任务未完成前每次回复必须以工具调用继续或提出必须由用户决策的问题；禁止以“我将/我先/接下来……”承诺句结束；仅任务完成且有验证证据、明确阻塞或用户要求暂停时才允许纯文本收尾。
-  - 本机 `~/.codex/cc-switch-model-catalog.json`：`deepseek-v4-pro` 与 `deepseek-v4-flash` 的 `instructions_template` 追加英文版 `## Turn completion discipline` 同款约束（本机文件，不进仓库；cc-switch 切换 provider 时可能重新生成，届时需重新应用）。
-  - `~/.codex/AGENTS.md`：已按安装器逻辑重新同步受管区块，校验嵌入内容与 `prompts/vibe-global-agent.md` 完全一致。
-- 验证：`validate_package.py --root .` 输出 `Package validation passed.`；AGENTS.md 同步校验通过；catalog JSON 解析与规则写入校验通过（两个模型模板均含该规则）。
-- 剩余说明：该缓解依赖模型遵循提示词，仍可能偶发；长期更稳妥做法是复杂 agentic 任务使用 `deepseek-v4-pro`，长会话及时 /compact。
-
-## 2026-08-15 a-project-init 增加 Git 仓库类型询问与团队仓库 exclude 规则
-
-- 需求：初始化项目时先确认 Git 仓库状态与类型；AGENTS.md 通用规则增加团队协作仓库的排除跟踪询问。
-- 改动：
-  - `skills/a-project-init/SKILL.md`：Workflow 增加 Git 状态检查（`git rev-parse --is-inside-work-tree`）；无仓库时询问用户是否 `git init`（同意才执行）；有仓库时询问个人/团队协作类型；仓库类型作为项目级信息写入 AGENTS.md「项目级规则」区（新建经 `--project-rules` 传入，已存在时手动追加/更新）。
-  - `skills/a-project-init/templates/general-rules.md`：新增第 7 条规则——团队协作仓库中新增与主业务流程无关文件（测试、个人脚本、文档等）前，先询问用户是否加入 `.git/info/exclude` 不纳入跟踪。
-  - 同步到本机 `~/.codex/skills/a-project-init/`（SKILL.md、templates/general-rules.md）。
-- 验证：`validate_package.py --root .` 输出 `Package validation passed.`；临时目录真实初始化验证 AGENTS.md 含第 7 条规则与「仓库类型：团队协作仓库」项目级记录。
-- 未改动：`init_project_agents.py` 确定性链路保持原样；已有 AGENTS.md 的注入语义不变。
-
-## 2026-08-15 新增使用指南文档与四端适用说明
-
-- 需求：README 明确框架适用 Codex CLI、VS Code 插件、桌面端、ACP 外部协议连接端；docs 新增以真实任务为例的使用指南。
-- 改动：
-  - `README.md`：标题下定位改为面向四类 Codex 客户端的全局 Vibe Coding 工作流；新增「使用指南」章节，指向 `docs/USAGE.md`。
-  - `docs/USAGE.md`：新增完整使用指南。以团队协作机器人项目（ROS 2 主线仓库 + 独立执行器仓库、同一分支多人开发）新增「设备状态采集」为例，贯穿六个环节：初始化工程（生成 .project-log 与 AGENTS.md、Git 仓库检查与类型询问）→ 业务逻辑澄清（功能/技术/双向对齐）→ 技术选型（接口、架构、兼容约束）→ 代码落地（写代码-测试-收集证据-判断）→ 非线性回退（BUG 回到澄清）→ 归档工程（a-project-log-archive 推送至个人知识库）。并介绍 Skills a/b 分级与自动路由、内外双循环等框架特点。
-- 验证：`validate_package.py --root .` 输出 `Package validation passed.`。
-- 说明：示例场景为通用描述，未引用任何真实项目内部规则或代码内容。
+- 用户裁决（DEC-056，C 级）：codex 分支全量对齐 main 当前能力，同时保留并适配 codex 交付面；接受 main 的破坏性退役（format 1 / exchange / migrate / 纯工作目录布局）。
+- 交付内容：核心 runtime/scripts 取 main 版并退役 loop_state/loopctl/state_exchange/state_migrate（TASK-129）；模板树与初始化/校验面对齐（TASK-130）；45 个 skills 与 main 同名集合一致（逐字节相同 7 / 客户端差异 38 / 双方独有 0，TASK-131）；交付面（hooks/installer/MCP/cc-switch/插件）在新核心上重写适配（TASK-133）；文档与版本标识对齐（USAGE/RELEASE-NOTES 取 main 版并重贴 codex 客户端章节，新增 TERMINOLOGY/V3-PR-00-BASELINE/CI，版本 0.5.0→0.6.0，TASK-134）；测试树适配到 codex 面并首次全绿（TASK-136，承接取消的 TASK-132）；隔离 codex home 端到端验证与推送（TASK-135）。
+- 验证：全量套件 300 tests / OK (skipped=3)；`validate_package.py` 通过；隔离 codex home 的 install/verify/update/uninstall、三个 hook 实测、已安装 runtime 的 vibe init/status/validate/render、真实 codex CLI 的 `codex mcp list`/`codex plugin list` 共 14 步全 exit=0；marketplace 源指向仓库根、vibe-toolbelt 0.4.1 installed+enabled。
+- 复核：REV-CODEXPORT-128/129-FINAL/130/131-FINAL2/133/134-FINAL2/135-FINAL/136 全部 `go`；TASK-134 与 TASK-135 各经 conditional→go 两/三轮，复核者指出的问题（USAGE 的 OpenCode 漂移、AI_UPGRADE 不实表述、实机 sha256 非法 63 位、推送未执行）均已修复并复验。
+- 框架缺陷登记（规则 8，DEC-070）：`goal.update` 白名单缺 implementer/owner 致高风险 Goal 无法过完成门禁；invalidate 后无法同 id 重录证据；`uninstall` 残留 `__pycache__`；隔离 home 的 doctor `auth.credentials` 阻断（按设计，用 `--skip-doctor`）。
+- 记录时间：2026-10-11（会话内多轮委派与复核）。

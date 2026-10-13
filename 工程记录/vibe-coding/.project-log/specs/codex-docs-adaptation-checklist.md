@@ -1,0 +1,652 @@
+# codex 文档适配清单（TASK-134）
+
+对每个「与 main 不同」的文档，列出 **codex 独有行**（取 main 版后会丢失的行）。
+每条判定：`重贴`（仍是正确的 codex 客户端内容）/ `改写`（引用了退役接口）/ `弃用`。
+
+## `README.md` — 157 行 codex 独有（codex 235 行 / main 203 行）
+
+- `README.md:1`  # Vibe Coding - Codex Global Core 0.5.0
+- `README.md:3`  面向 Codex CLI、VS Code 插件、桌面端与 ACP 外部协议连接端等 Codex 客户端的用户级全局 Vibe Coding 工作流。
+- `README.md:7`  以真实开发任务讲解完整使用流程（初始化工程 → 业务逻辑澄清 → 技术选型 → 代码落地 → 归档留痕），见 [docs/USAGE.md](docs/USAGE.md)。
+- `README.md:9`  本版本的默认格式切换、format 1 只读兼容与退役关口见 [docs/RELEASE-NOTES.md](docs/RELEASE-NOTES.md)。
+- `README.md:13`  - 在用户级 `AGENTS.md` 中注入可增量更新的 Vibe 主 Agent 规则。
+- `README.md:14`  - 安装全部内置 Skills，包括双域业务澄清、Loop Control 和动态 Subagent 编排。
+- `README.md:15`  - 提供宿主无关的 `.project-log/`：业务事实、需求基线、技术研究、架构、任务、验证、对齐和长期恢复状态。
+- `README.md:16`  - 在 `business-clarification` 内分别维护功能业务逻辑、技术业务逻辑和双向对齐，不增加新的生命周期阶段。
+- `README.md:17`  - 使用 Codex 原生 `/goal` 作为唯一线程运行和 continuation 控制器。
+- `README.md:18`  - 使用 `loopctl` 管理 Project Goal、证据有效性、失败归因、Retry Contract、有限循环和 Handoff。
+- `README.md:19`  - 安装三个低风险 command Hooks：`SessionStart`、`PostToolUse`、`PreCompact`。
+- `README.md:21`  - 通过声明式 catalog 管理可选 MCP；新安装默认只安装核心，不强制安装任何 MCP。
+- `README.md:22`  
+- `README.md:23`  ## 工作流
+- `README.md:24`  
+- `README.md:25`  ```text
+- `README.md:26`  业务逻辑澄清
+- `README.md:27`  ├── 功能业务逻辑
+- `README.md:28`  ├── 技术业务逻辑
+- `README.md:29`  └── 双向对齐
+- `README.md:30`  → 技术选型
+- `README.md:31`  → 任务拆解
+- `README.md:32`  → 需求描述
+- `README.md:33`  → 验证落地
+- `README.md:34`  ```
+- `README.md:35`  
+- `README.md:36`  外层 Loop：
+- `README.md:37`  
+- `README.md:38`  ```text
+- `README.md:39`  恢复 → 有限工作单元 → 执行 → 证据 → 失败归因
+- `README.md:40`  → 继续 / 差异化返工 / 回退 / 完成 / Handoff
+- `README.md:41`  ```
+- `README.md:45`  - 安装时最新稳定版 Codex。
+- `README.md:47`  - Windows 使用 `py -3`，不要假设 `python` 指向 Python 3。
+- `README.md:48`  - 代理：部分功能（如拉取可选 MCP、GitHub 远端同步等）需要访问外网，本机需运行代理客户端，默认监听 `127.0.0.1:10808`；可通过 `HTTP_PROXY`/`HTTPS_PROXY` 环境变量调整。
+- `README.md:49`  - Python 依赖：
+- `README.md:50`  
+- `README.md:51`  ```powershell
+- `README.md:52`  py -3 -m pip install -r runtime\scripts\requirements.txt
+- `README.md:53`  ```
+- `README.md:57`  安装器会优先复用 `$CODEX_HOME/vibe-python`；如果不存在，会寻找 Conda/Miniforge/Miniconda，并自动创建名为 `vibe-coding` 的 Python 3.11 环境，安装 `runtime/scripts/requirements.txt`，然后将该环境写入全局配置。
+- `README.md:58`  
+- `README.md:59`  Linux/macOS 推荐直接运行（默认不安装可选 MCP）：
+- `README.md:60`  
+- `README.md:61`  ```bash
+- `README.md:62`  ./install.sh
+- `README.md:63`  ```
+- `README.md:64`  
+- `README.md:65`  如果机器没有 Conda/Miniforge/Miniconda，安装器不会静默下载大型发行版，而是给出明确错误；可以先安装 Miniforge，或显式设置 `VIBE_PYTHON`。也可以手动指定环境：
+- `README.md:66`  
+- `README.md:67`  ```bash
+- `README.md:68`  mkdir -p "${CODEX_HOME:-$HOME/.codex}"
+- `README.md:69`  printf '%s\n' '/absolute/path/to/miniforge3/envs/vibe-coding/bin/python' \
+- `README.md:70`  > "${CODEX_HOME:-$HOME/.codex}/vibe-python"
+- `README.md:71`  ```
+- `README.md:72`  
+- `README.md:73`  也可以临时用环境变量覆盖：
+- `README.md:74`  
+- `README.md:75`  ```bash
+- `README.md:76`  export VIBE_PYTHON='/absolute/path/to/miniforge3/envs/vibe-coding/bin/python'
+- `README.md:77`  ```
+- `README.md:78`  
+- `README.md:79`  配置文件优先用于跨项目和新 Codex 会话；环境变量优先级更高。该解释器必须是 Python 3.11+，并安装 `PyYAML` 和 `jsonschema`。
+- `README.md:80`  
+- `README.md:81`  Linux/macOS：
+- `README.md:82`  
+- `README.md:83`  ```bash
+- `README.md:84`  python3 -m pip install -r runtime/scripts/requirements.txt
+- `README.md:85`  ```
+- `README.md:89`  建议由 AI 按 [AI_INSTALL.md](AI_INSTALL.md) 执行。
+- `README.md:91`  Windows：
+- `README.md:92`  
+- `README.md:93`  ```powershell
+- `README.md:94`  .\install.ps1
+- `README.md:97`  Windows 部署完成后，如启动 Codex 报 Hook 失败，按 [AI_INSTALL.md](AI_INSTALL.md) 中“Windows Hook 命令适配（Codex 0.147.0+）”一节处理；Linux/macOS 无需适配。
+- `README.md:99`  Linux/macOS：
+- `README.md:100`  
+- `README.md:101`  ```bash
+- `README.md:102`  chmod +x install.sh update.sh uninstall.sh
+- `README.md:103`  ./install.sh
+- `README.md:104`  ```
+- `README.md:108`  - 保留现有 Codex 权限配置。
+- `README.md:109`  - 启用三个低风险 Hooks。
+- `README.md:110`  - 自动备份到 `<CODEX_HOME>/backups/`。
+- `README.md:111`  - 新安装默认不启用可选 MCP；用 `--mcp NAME` 显式选择。
+- `README.md:112`  - `--without-mcp` 保留为兼容参数，显式跳过所有可选 MCP，适合公司受限网络。
+- `README.md:113`  
+- `README.md:114`  可选访问配置：
+- `README.md:115`  
+- `README.md:116`  ```powershell
+- `README.md:117`  .\install.ps1 --access-profile workspace
+- `README.md:118`  .\install.ps1 --access-profile full
+- `README.md:119`  ```
+- `README.md:120`  
+- `README.md:121`  只有显式指定时才修改访问配置；若用户已有权限设置，安装器拒绝覆盖。
+- `README.md:122`  
+- `README.md:123`  ## cc-switch 通用配置
+- `README.md:124`  
+- `README.md:125`  使用 cc-switch 切换 Codex 供应商时，需要把本框架生成的 TOML 段覆盖到 cc-switch 的“通用配置”中：
+- `README.md:126`  
+- `README.md:127`  1. 按当前宿主机生成配置（生成结果含本机绝对路径，**不要跨机器复制**）：
+- `README.md:128`  
+- `README.md:129`  ```bash
+- `README.md:130`  python scripts/generate_cc_switch_config.py --output cc-switch-common-config-codex.txt
+- `README.md:131`  ```
+- `README.md:132`  
+- `README.md:133`  2. 打开 cc-switch 的通用配置，用生成文件的内容（`# VIBE-CODEX-GLOBAL:CONFIG:BEGIN` 到 `# VIBE-CODEX-GLOBAL:CONFIG:END` 之间的 TOML 段）覆盖原对应段。
+- `README.md:134`  3. 切换供应商后，重新启动 Codex 会话，使 Hooks、marketplace 与插件配置生效。
+- `README.md:135`  
+- `README.md:136`  生成内容包含：
+- `README.md:137`  
+- `README.md:138`  - `model_reasoning_effort` 与 `disable_response_storage`。
+- `README.md:139`  - 三个 Hooks：`SessionStart`、`PostToolUse`、`PreCompact`（路径按宿主机解析）。
+- `README.md:140`  - 本地 `vibe-global-toolbox` marketplace 与 `vibe-toolbelt` 插件启用配置。
+- `README.md:141`  
+- `README.md:142`  仓库内 `cc-switch-common-config-codex.txt` 仅为当前宿主机的生成结果快照，换机器后请重新生成。
+- `README.md:148`  Windows：
+- `README.md:149`  
+- `README.md:150`  ```powershell
+- `README.md:151`  .\update.ps1
+- `README.md:154`  Linux/macOS：
+- `README.md:155`  
+- `README.md:156`  ```bash
+- `README.md:157`  ./update.sh
+- `README.md:158`  ```
+- `README.md:159`  
+- `README.md:160`  0.3.0 旧安装状态会在整树 hash 未变化时自动迁移为逐文件状态。规则：
+- `README.md:169`  ```powershell
+- `README.md:170`  py -3 scripts\global_installer.py verify
+- `README.md:171`  py -3 runtime\scripts\validate_package.py --root .
+- `README.md:172`  py -3 -m unittest discover -s tests -v
+- `README.md:175`  项目初始化与验证：
+- `README.md:177`  ```powershell
+- `README.md:178`  py -3 "$env:CODEX_HOME\vibe-workflow\scripts\vibe.py" init --root C:\path\to\project
+- `README.md:179`  py -3 "$env:CODEX_HOME\vibe-workflow\scripts\vibe.py" --root C:\path\to\project validate
+- `README.md:195`  vibe migrate preview|apply|resume|rollback
+- `README.md:198`  `loopctl.py` 保留为底层兼容入口；日常操作与文档示例统一走 `vibe`。原生 `/goal` 显示完成后，仍需通过 `vibe goal complete` 的验收门禁才能完成 Project Goal。
+- `README.md:202`  ```powershell
+- `README.md:203`  .\uninstall.ps1
+- `README.md:206`  卸载仅移除包拥有且未被用户修改的文件、受管 `AGENTS.md` 块和 Hook 配置块。项目中的 `.project-log/` 永不删除。
+- `README.md:208`  ## 可选 MCP
+- `README.md:210`  可选 MCP 声明在 `runtime/mcp/optional-mcps.json`，安装器不会默认强制安装。当前 catalog 包含：
+- `README.md:212`  - `codegraph`：为工程建立代码图谱、符号关系和调用/影响分析；优先使用 PATH 中的 `codegraph`，否则回退到 `npx`。
+- `README.md:213`  - `vibe-toolbelt`：Vibe Coding 的文档、浏览器、文档处理和 Web 研究工具集。
+- `README.md:215`  按需选择一个或多个 MCP（`--mcp` 可重复）：
+- `README.md:218`  ./install.sh --mcp codegraph
+- `README.md:219`  ./update.sh --mcp codegraph --mcp vibe-toolbelt
+- `README.md:222`  Windows：
+- `README.md:224`  ```powershell
+- `README.md:225`  .\install.ps1 --mcp codegraph
+- `README.md:226`  ```
+- `README.md:228`  检查可选 MCP：
+- `README.md:230`  ```bash
+- `README.md:231`  codex mcp list
+- `README.md:232`  codex mcp get codegraph
+- `README.md:233`  ```
+- `README.md:235`  `--without-mcp` 只表示本次安装/升级不处理可选 MCP，不会阻塞核心安装。包不存储 API key 或 token。
+
+## `AI_INSTALL.md` — 141 行 codex 独有（codex 187 行 / main 139 行）
+
+- `AI_INSTALL.md:1`  # AI 安装指南
+- `AI_INSTALL.md:3`  本指南用于让 Codex 或其他本机 AI Agent 安装 Vibe Coding Codex Global Core 0.5.0。
+- `AI_INSTALL.md:9`  1. 检查最新稳定版 Codex、Python 3 和依赖。
+- `AI_INSTALL.md:10`  2. 阅读现有 `AGENTS.md` 与 `config.toml`，不得覆盖用户配置。
+- `AI_INSTALL.md:12`  4. 安装全局主 Agent、Skills、runtime 和三个低风险 Hooks。
+- `AI_INSTALL.md:20`  - 默认监听 `127.0.0.1:10808`。
+- `AI_INSTALL.md:21`  - 可通过 `HTTP_PROXY` / `HTTPS_PROXY` 环境变量调整；本仓库 `git fetch`/`git push` 失败时也使用该代理重试。
+- `AI_INSTALL.md:22`  - 代理不可用时，可选 MCP 拉取会失败；核心安装可使用 `--without-mcp` 完成，不要阻塞安装。
+- `AI_INSTALL.md:26`  Vibe Coding 的所有控制层（安装器、Hooks、`loopctl`、项目/包校验）默认运行在统一的 `vibe-coding` Python 3.11 虚拟环境中。完整流程如下：
+- `AI_INSTALL.md:28`  1. 创建虚拟环境（若还没有 Conda，先安装 Miniforge/Miniconda）：
+- `AI_INSTALL.md:30`  ```bash
+- `AI_INSTALL.md:31`  conda create -y -n vibe-coding python=3.11
+- `AI_INSTALL.md:32`  ```
+- `AI_INSTALL.md:34`  Windows PowerShell 相同。
+- `AI_INSTALL.md:36`  2. 激活环境并安装 Vibe 依赖：
+- `AI_INSTALL.md:38`  ```bash
+- `AI_INSTALL.md:39`  conda activate vibe-coding
+- `AI_INSTALL.md:40`  python -m pip install -r runtime/scripts/requirements.txt
+- `AI_INSTALL.md:41`  ```
+- `AI_INSTALL.md:42`  
+- `AI_INSTALL.md:43`  3. 在激活的环境中运行安装器。也可以直接运行包装脚本 `install.sh` / `install.ps1`——包装脚本会先解析或创建 `vibe-coding` 环境，并用该环境的 Python 执行安装器，无需手动激活。
+- `AI_INSTALL.md:44`  
+- `AI_INSTALL.md:45`  4. 安装器会把该解释器绝对路径写入 `CODEX_HOME/vibe-python`（默认 `~/.codex/vibe-python`），作为框架全局配置；生成的 Hook `command` / `commandWindows` 也绑定该解释器。
+- `AI_INSTALL.md:46`  
+- `AI_INSTALL.md:47`  5. 后续 Vibe 功能（Hooks、`loopctl`、`validate_project.py`、`validate_package.py` 等）都运行在该环境中，不要用系统 Python 运行它们。
+- `AI_INSTALL.md:48`  
+- `AI_INSTALL.md:49`  适配不同用户的场景：
+- `AI_INSTALL.md:50`  
+- `AI_INSTALL.md:51`  - 已存在可用的 `vibe-coding` 环境：安装器直接复用，跳过创建。
+- `AI_INSTALL.md:52`  - 已有 `CODEX_HOME/vibe-python` 配置：优先复用该解释器，仅在其不可用时才尝试 Conda 修复。
+- `AI_INSTALL.md:53`  - 没有 Conda/Miniforge/Miniconda：安装器不会静默下载发行版，会明确报错；先安装 Miniforge，或显式设置 `VIBE_PYTHON`。
+- `AI_INSTALL.md:54`  - 临时覆盖：`export VIBE_PYTHON=/absolute/path/to/python`（优先级最高）；`VIBE_CONDA_ENV` 可覆盖环境名（默认 `vibe-coding`）。
+- `AI_INSTALL.md:59`  请在当前安装包目录执行 Vibe Coding Codex Global Core 安装。
+- `AI_INSTALL.md:62`  1. 先阅读 README.md、AI_INSTALL.md 和 scripts/global_installer.py 的参数。
+- `AI_INSTALL.md:63`  2. 确认 Codex 是当前可升级到的最新稳定版；运行 codex --version、codex doctor 和 codex features list。
+- `AI_INSTALL.md:64`  3. 确认 Python 3.11+。Vibe 功能统一在 `vibe-coding` 环境中运行；Windows 检查系统解释器时可用 `py -3`，不要使用可能指向 Python 2 的 `python`。
+- `AI_INSTALL.md:65`  4. 运行安装包装脚本；它会优先复用 `${CODEX_HOME:-$HOME/.codex}/vibe-python`，否则使用 Conda/Miniforge/Miniconda 创建 `vibe-coding` Python 3.11 环境并安装 `runtime/scripts/requirements.txt`；也可用 `VIBE_PYTHON` 临时覆盖。
+- `AI_INSTALL.md:66`  5. 安装 runtime/scripts/requirements.txt。
+- `AI_INSTALL.md:67`  6. 默认使用 --access-profile keep-existing，不修改我现有权限配置。
+- `AI_INSTALL.md:68`  7. 默认不安装可选 MCP；如果用户明确选择，使用 `--mcp codegraph` 或其他 catalog 名称（可重复）。
+- `AI_INSTALL.md:69`  8. 如果公司网络或 MCP 前置工具不可用，使用 --without-mcp 完成核心安装，不要阻塞核心工作流。
+- `AI_INSTALL.md:70`  9. 不使用 --skip-preflight。
+- `AI_INSTALL.md:71`  10. 安装后运行 global_installer.py verify。
+- `AI_INSTALL.md:72`  11. 创建临时项目，运行已安装的 `vibe.py init`、`vibe.py validate` 和 `vibe.py status`。
+- `AI_INSTALL.md:73`  12. 不修改或删除任何真实项目的 .project-log。
+- `AI_INSTALL.md:74`  13. 最后报告版本、CODEX_HOME、Skill 路径、Hook 状态、已选 MCP、备份路径、验证结果和任何限制。
+- `AI_INSTALL.md:75`  14. 安装前确认本机代理可用（默认 127.0.0.1:10808，可用 HTTP_PROXY/HTTPS_PROXY 调整）；可选 MCP 拉取与远端同步依赖外网。
+- `AI_INSTALL.md:77`  
+- `AI_INSTALL.md:78`  ## Windows 执行步骤
+- `AI_INSTALL.md:79`  
+- `AI_INSTALL.md:80`  ```powershell
+- `AI_INSTALL.md:81`  conda activate vibe-coding
+- `AI_INSTALL.md:82`  python --version
+- `AI_INSTALL.md:83`  codex --version
+- `AI_INSTALL.md:84`  codex doctor
+- `AI_INSTALL.md:85`  codex features list
+- `AI_INSTALL.md:86`  python -m pip install -r runtime\scripts\requirements.txt
+- `AI_INSTALL.md:87`  python scripts\global_installer.py preflight
+- `AI_INSTALL.md:88`  .\install.ps1
+- `AI_INSTALL.md:89`  python scripts\global_installer.py verify
+- `AI_INSTALL.md:90`  ```
+- `AI_INSTALL.md:91`  
+- `AI_INSTALL.md:92`  如用户明确要启用 CodeGraph，可改为 `./install.sh --mcp codegraph`（Windows 使用 `--mcp codegraph`）；默认不启用可选 MCP。
+- `AI_INSTALL.md:93`  
+- `AI_INSTALL.md:94`  > 以上手动步骤假定已激活 `vibe-coding` 环境；也可以直接运行 `install.sh` / `install.ps1`，包装脚本会自动解析或创建环境并完成依赖安装。
+- `AI_INSTALL.md:95`  
+- `AI_INSTALL.md:96`  ## cc-switch 通用配置
+- `AI_INSTALL.md:97`  
+- `AI_INSTALL.md:98`  使用 cc-switch 切换 Codex 供应商时，需要把本框架生成的 TOML 段覆盖到 cc-switch 的“通用配置”中：
+- `AI_INSTALL.md:99`  
+- `AI_INSTALL.md:100`  1. 按当前宿主机生成配置（生成结果含本机绝对路径，**不要跨机器复制**）：
+- `AI_INSTALL.md:101`  
+- `AI_INSTALL.md:102`  ```bash
+- `AI_INSTALL.md:103`  python scripts/generate_cc_switch_config.py --output cc-switch-common-config-codex.txt
+- `AI_INSTALL.md:104`  ```
+- `AI_INSTALL.md:105`  
+- `AI_INSTALL.md:106`  2. 打开 cc-switch 的通用配置，用生成文件的内容（`# VIBE-CODEX-GLOBAL:CONFIG:BEGIN` 到 `# VIBE-CODEX-GLOBAL:CONFIG:END` 之间的 TOML 段）覆盖原对应段。
+- `AI_INSTALL.md:107`  3. 切换供应商后，重新启动 Codex 会话，使 Hooks、marketplace 与插件配置生效。
+- `AI_INSTALL.md:108`  
+- `AI_INSTALL.md:109`  生成内容包含：
+- `AI_INSTALL.md:110`  
+- `AI_INSTALL.md:111`  - `model_reasoning_effort` 与 `disable_response_storage`。
+- `AI_INSTALL.md:112`  - 三个 Hooks：`SessionStart`、`PostToolUse`、`PreCompact`（路径按宿主机解析）。
+- `AI_INSTALL.md:113`  - 本地 `vibe-global-toolbox` marketplace 与 `vibe-toolbelt` 插件启用配置。
+- `AI_INSTALL.md:114`  
+- `AI_INSTALL.md:115`  仓库内 `cc-switch-common-config-codex.txt` 仅为当前宿主机的生成结果快照，换机器后请重新生成。
+- `AI_INSTALL.md:116`  
+- `AI_INSTALL.md:117`  ## Windows Hook 命令适配（Codex 0.147.0+）
+- `AI_INSTALL.md:118`  
+- `AI_INSTALL.md:119`  在 Windows 上，Codex 0.147.0 及以上版本不再通过 shell 解析 Hook 命令中的引号。安装器默认生成的 `commandWindows` 形如：
+- `AI_INSTALL.md:120`  
+- `AI_INSTALL.md:121`  ```toml
+- `AI_INSTALL.md:122`  commandWindows = "\"D:\\conda\\envs\\vibe-coding\\python.exe\" \"...\\session_start.py\""
+- `AI_INSTALL.md:123`  ```
+- `AI_INSTALL.md:124`  
+- `AI_INSTALL.md:125`  这种带引号形式在 Windows 上会导致 Hook 进程无法启动，终端报 `SessionStart hook (failed) / hook exited with code 1`（Hook 脚本本身直连执行正常）。Linux/macOS 使用 `command` 字段，走 shell 解析，不受影响，无需任何修改。
+- `AI_INSTALL.md:126`  
+- `AI_INSTALL.md:127`  Windows 适配步骤（仅 Windows 需要）：
+- `AI_INSTALL.md:128`  
+- `AI_INSTALL.md:129`  1. 打开 `$env:CODEX_HOME\config.toml`（默认 `C:\Users\<用户>\.codex\config.toml`）。
+- `AI_INSTALL.md:130`  2. 将 `[[hooks.SessionStart]]`、`[[hooks.PostToolUse]]`、`[[hooks.PreCompact]]` 三个 Hook 的 `commandWindows` 改为不带引号的路径形式（本机路径无空格时）：
+- `AI_INSTALL.md:131`  
+- `AI_INSTALL.md:132`  ```toml
+- `AI_INSTALL.md:133`  commandWindows = "D:\\conda\\envs\\vibe-coding\\python.exe C:\\Users\\<用户>\\.codex\\vibe-workflow\\hooks\\session_start.py"
+- `AI_INSTALL.md:134`  ```
+- `AI_INSTALL.md:135`  
+- `AI_INSTALL.md:136`  3. 保持 `command` 字段不变（带引号形式，供 Linux/macOS 使用）。
+- `AI_INSTALL.md:137`  4. 删除 `[hooks.state]` 下对应的 `trusted_hash` 条目，或在下一次启动时重新信任 Hook。
+- `AI_INSTALL.md:138`  5. 验证：运行 `codex exec "say OK"`，终端输出 `hook: SessionStart Completed` 即适配成功。
+- `AI_INSTALL.md:139`  
+- `AI_INSTALL.md:140`  > 注意：`commandWindows` 路径若包含空格，则需要保留引号或用短路径/环境变量替代；当前 Vibe 默认路径不含空格。
+- `AI_INSTALL.md:145`  conda activate vibe-coding
+- `AI_INSTALL.md:146`  python --version
+- `AI_INSTALL.md:147`  codex --version
+- `AI_INSTALL.md:148`  codex doctor
+- `AI_INSTALL.md:149`  codex features list
+- `AI_INSTALL.md:150`  python -m pip install -r runtime/scripts/requirements.txt
+- `AI_INSTALL.md:151`  python scripts/global_installer.py preflight
+- `AI_INSTALL.md:152`  ./install.sh
+- `AI_INSTALL.md:153`  python scripts/global_installer.py verify
+- `AI_INSTALL.md:158`  Windows：
+- `AI_INSTALL.md:159`  
+- `AI_INSTALL.md:160`  ```powershell
+- `AI_INSTALL.md:161`  $TestProject = Join-Path $env:TEMP "vibe-codex-smoke"
+- `AI_INSTALL.md:162`  New-Item -ItemType Directory -Force -Path $TestProject | Out-Null
+- `AI_INSTALL.md:163`  python "$env:CODEX_HOME\vibe-workflow\scripts\vibe.py" init --root $TestProject
+- `AI_INSTALL.md:164`  python "$env:CODEX_HOME\vibe-workflow\scripts\vibe.py" --root $TestProject validate
+- `AI_INSTALL.md:165`  python "$env:CODEX_HOME\vibe-workflow\scripts\vibe.py" --root $TestProject status
+- `AI_INSTALL.md:168`  若未设置 `CODEX_HOME`，默认使用 `$HOME/.codex`。
+- `AI_INSTALL.md:172`  1. 打开真实项目。
+- `AI_INSTALL.md:173`  2. 输入：`vibe 开始：<需求>`。
+- `AI_INSTALL.md:174`  3. 完成功能业务逻辑、技术业务逻辑和双向对齐。
+- `AI_INSTALL.md:175`  4. 建立 Project Goal。
+- `AI_INSTALL.md:176`  5. 使用 Codex 原生 `/goal` 绑定 `loopctl goal-bind` 生成的 objective。
+- `AI_INSTALL.md:177`  6. 原生 Goal 完成后执行 Project Goal 验收。
+- `AI_INSTALL.md:179`  首次运行 Hooks 时 Codex 可能要求确认 Hook trust。只在确认安装目录和脚本内容正确后信任。
+- `AI_INSTALL.md:183`  - 不以 `--skip-preflight` 完成真实安装。
+- `AI_INSTALL.md:184`  - 不默认使用 full access。
+- `AI_INSTALL.md:185`  - 不用 Stop Hook 或外层脚本替代原生 `/goal`。
+- `AI_INSTALL.md:186`  - 不在多个 Skill 根目录重复复制同名 Skill。
+- `AI_INSTALL.md:187`  - 不覆盖安装器报告的本地修改或升级冲突。
+
+## `AI_UPGRADE.md` — 99 行 codex 独有（codex 121 行 / main 72 行）
+
+- `AI_UPGRADE.md:1`  # AI 升级指南
+- `AI_UPGRADE.md:3`  适用于已经安装旧版 Vibe Coding Codex Global Core，需要升级到 0.5.0 的电脑。
+- `AI_UPGRADE.md:5`  本版本把新项目默认格式切到 format 2，并把 format 1 的退役分为“停止写入 / 停止读取 /
+- `AI_UPGRADE.md:6`  停止支持”三个需要用户单独确认的关口。升级前先阅读 [docs/RELEASE-NOTES.md](docs/RELEASE-NOTES.md)。
+- `AI_UPGRADE.md:10`  - 安装前自动创建时间戳备份。
+- `AI_UPGRADE.md:11`  - 支持读取旧版 `vibe-workflow/installation-state.json`。
+- `AI_UPGRADE.md:12`  - 旧 runtime 和 Skill 整树未修改时，可自动迁移到逐文件升级状态。
+- `AI_UPGRADE.md:13`  - 用户本地修改不会被静默覆盖。
+- `AI_UPGRADE.md:14`  - 项目 `.project-log/` 不参与全局升级和卸载。
+- `AI_UPGRADE.md:15`  - format 1 项目升级后仍可读写，只读命令会给出 `migrate with vibe migrate` 指引；
+- `AI_UPGRADE.md:16`  迁移必须由项目自己显式授权，升级本身不迁移任何项目日志。
+- `AI_UPGRADE.md:21`  请把当前电脑上的旧版 Vibe Coding Codex Global Core 升级到这个安装包版本。
+- `AI_UPGRADE.md:24`  1. 阅读 README.md、AI_UPGRADE.md 和新的 v0.11 执行基线。
+- `AI_UPGRADE.md:25`  2. 检查 CODEX_HOME、现有 AGENTS.md、config.toml、vibe-workflow 和 Skill 根目录。
+- `AI_UPGRADE.md:26`  3. 运行 codex update（仅当公司策略允许），然后运行 codex --version、codex doctor、codex features list。
+- `AI_UPGRADE.md:27`  4. 复用或修复 `vibe-coding` Python 3.11 环境（见 `AI_INSTALL.md` 的“Vibe Python 环境与安装流程”），在该环境中安装 Python 依赖；Windows 不要使用可能指向 Python 2 的 `python`。
+- `AI_UPGRADE.md:28`  5. 先运行 global_installer.py preflight，再运行 update。
+- `AI_UPGRADE.md:29`  6. 默认 --access-profile keep-existing。
+- `AI_UPGRADE.md:30`  7. 默认保留此前已启用的可选 MCP；如需新增 CodeGraph，使用 `--mcp codegraph`；公司网络受限时使用 --without-mcp。
+- `AI_UPGRADE.md:31`  8. 如果安装器报告冲突，停止并逐文件比较：旧包基线、用户当前文件、新包文件。未经确认不得覆盖用户修改。
+- `AI_UPGRADE.md:32`  9. 升级后运行 verify、全部单元测试和临时项目 smoke test。
+- `AI_UPGRADE.md:33`  10. 报告备份路径、升级文件、保留文件、冲突、验证结果和回滚命令。
+- `AI_UPGRADE.md:36`  ## Windows 升级
+- `AI_UPGRADE.md:38`  在新安装包目录运行：
+- `AI_UPGRADE.md:39`  
+- `AI_UPGRADE.md:40`  ```powershell
+- `AI_UPGRADE.md:41`  conda activate vibe-coding
+- `AI_UPGRADE.md:42`  python -m pip install -r runtime\scripts\requirements.txt
+- `AI_UPGRADE.md:43`  python scripts\global_installer.py preflight
+- `AI_UPGRADE.md:44`  .\update.ps1
+- `AI_UPGRADE.md:45`  python scripts\global_installer.py verify
+- `AI_UPGRADE.md:48`  升级后若在 Windows 上启动 Codex 报 `SessionStart hook (failed) / hook exited with code 1`，原因是 Codex 0.147.0+ 在 Windows 上不再通过 shell 解析 Hook 命令中的引号。按 `AI_INSTALL.md` 中“Windows Hook 命令适配（Codex 0.147.0+）”一节，将 `config.toml` 
+- `AI_UPGRADE.md:50`  ## Linux/macOS 升级
+- `AI_UPGRADE.md:52`  ```bash
+- `AI_UPGRADE.md:53`  conda activate vibe-coding
+- `AI_UPGRADE.md:54`  python -m pip install -r runtime/scripts/requirements.txt
+- `AI_UPGRADE.md:55`  python scripts/global_installer.py preflight
+- `AI_UPGRADE.md:56`  ./update.sh
+- `AI_UPGRADE.md:57`  python scripts/global_installer.py verify
+- `AI_UPGRADE.md:60`  `update.sh` / `update.ps1` 会先通过 `bootstrap_vibe_python.py` 复用或修复 `vibe-coding` 环境，再用该环境的 Python 执行升级器；若已激活环境或已配置 `VIBE_PYTHON`，可跳过手动安装依赖步骤。
+- `AI_UPGRADE.md:62`  ## 冲突含义
+- `AI_UPGRADE.md:64`  ### 自动升级
+- `AI_UPGRADE.md:65`  
+- `AI_UPGRADE.md:66`  ```text
+- `AI_UPGRADE.md:67`  当前文件 = 上次安装版本
+- `AI_UPGRADE.md:68`  新包文件发生变化
+- `AI_UPGRADE.md:69`  ```
+- `AI_UPGRADE.md:70`  
+- `AI_UPGRADE.md:71`  安装器更新文件。
+- `AI_UPGRADE.md:72`  
+- `AI_UPGRADE.md:73`  ### 保留本地修改
+- `AI_UPGRADE.md:74`  
+- `AI_UPGRADE.md:75`  ```text
+- `AI_UPGRADE.md:76`  当前文件被用户修改
+- `AI_UPGRADE.md:77`  新包文件与上次版本相同
+- `AI_UPGRADE.md:78`  ```
+- `AI_UPGRADE.md:79`  
+- `AI_UPGRADE.md:80`  安装器保留当前文件，在验证输出中标记 `PRESERVED local modification`。
+- `AI_UPGRADE.md:81`  
+- `AI_UPGRADE.md:82`  ### 必须人工合并
+- `AI_UPGRADE.md:83`  
+- `AI_UPGRADE.md:84`  ```text
+- `AI_UPGRADE.md:85`  当前文件被用户修改
+- `AI_UPGRADE.md:86`  新包文件也发生变化
+- `AI_UPGRADE.md:87`  ```
+- `AI_UPGRADE.md:88`  
+- `AI_UPGRADE.md:89`  安装器在任何文件写入前停止，并报告 `Upgrade conflicts detected before writing`。
+- `AI_UPGRADE.md:90`  
+- `AI_UPGRADE.md:91`  AI 应：
+- `AI_UPGRADE.md:92`  
+- `AI_UPGRADE.md:93`  1. 找到安装器输出中的冲突文件。
+- `AI_UPGRADE.md:94`  2. 从备份或旧发布包取得旧基线。
+- `AI_UPGRADE.md:95`  3. 比较旧基线、用户当前文件和新包文件。
+- `AI_UPGRADE.md:96`  4. 保留用户有效修改，合并新规则。
+- `AI_UPGRADE.md:97`  5. 重新运行 update。
+- `AI_UPGRADE.md:98`  
+- `AI_UPGRADE.md:99`  ## 升级后检查
+- `AI_UPGRADE.md:100`  
+- `AI_UPGRADE.md:101`  确认：
+- `AI_UPGRADE.md:102`  
+- `AI_UPGRADE.md:103`  - 全局 `AGENTS.md` 中只有一个 Vibe managed block。
+- `AI_UPGRADE.md:104`  - `config.toml` 中只有一个 Vibe config block。
+- `AI_UPGRADE.md:105`  - `a-loop-control` 可发现。
+- `AI_UPGRADE.md:106`  - `roles.json` 的 8 个角色都能渲染。
+- `AI_UPGRADE.md:107`  - `.opencode` command/agent 校验已不存在。
+- `AI_UPGRADE.md:108`  - `loopctl validate` 通过。
+- `AI_UPGRADE.md:109`  - 原生 `/goal` 是唯一 continuation 控制器。
+- `AI_UPGRADE.md:110`  - Stop Hook 未安装。
+- `AI_UPGRADE.md:111`  
+- `AI_UPGRADE.md:112`  ## 回滚
+- `AI_UPGRADE.md:113`  
+- `AI_UPGRADE.md:114`  每次安装或升级都会输出备份目录。可选 MCP 配置也应先确认 `codex mcp list`，若升级后需要回到升级前状态，优先让 AI：
+- `AI_UPGRADE.md:115`  
+- `AI_UPGRADE.md:116`  1. 记录当前冲突和修改。
+- `AI_UPGRADE.md:117`  2. 运行卸载器移除当前版本受管资产。
+- `AI_UPGRADE.md:118`  3. 从升级命令输出的备份目录恢复旧 runtime、Skills、`AGENTS.md` 和 `config.toml`。
+- `AI_UPGRADE.md:119`  4. 运行旧版 verify。
+- `AI_UPGRADE.md:120`  
+- `AI_UPGRADE.md:121`  不要通过删除真实项目 `.project-log` 回滚全局安装。
+
+## `docs/RELEASE-NOTES.md` — 5 行 codex 独有（codex 134 行 / main 143 行）
+
+- `docs/RELEASE-NOTES.md:3`  ## 0.6.0 —— Format 3：Git 账本为唯一事实源
+- `docs/RELEASE-NOTES.md:29`  - `portability-status` 与生成视图的账本新鲜度按命令身份判定，不再只看 revision/事件数；
+- `docs/RELEASE-NOTES.md:30`  同 revision 的异源账本不会被报告为 portable。
+- `docs/RELEASE-NOTES.md:51`  - format 1 的只读兼容与分步退役窗口（`stop-writing`、`stop-reading`、`stop-support`）
+- `docs/RELEASE-NOTES.md:52`  保持不变，仍然每一步都需要用户确认，未获授权时不会改写任何项目的 `.project-log/`。
+
+## `docs/USAGE.md` — 229 行 codex 独有（codex 980 行 / main 928 行）
+
+- `docs/USAGE.md:3`  Vibe Coding 是一套面向 Codex CLI、VS Code 插件、桌面端和 ACP 外部协议连接端的**用户级全局工程工作流**。
+- `docs/USAGE.md:34`  全局安装层位于用户目录，负责让多个项目共享同一套 Agent 规则、Skills、Hooks 和 Loop 运行时，典型内容包括：
+- `docs/USAGE.md:37`  - `CODEX_HOME` 下的 Hooks、配置和备份。
+- `docs/USAGE.md:73`  - **单一事实源**：精确当前状态和下一步以 `loop/active-run.yaml`、`loop/handoff.md` 为权威状态源；两个 md 摘要不得与之矛盾。机器维护的 `loop/` 与 `verification/evidence.yaml` 文件不要手工重排。
+- `docs/USAGE.md:77`  当前 Codex 对话负责执行一个有限工作单元。它可以被压缩、暂停、切换或重启，因此不能把聊天上下文当作唯一状态。
+- `docs/USAGE.md:79`  SessionStart 和 PreCompact Hook 会从项目日志恢复紧凑上下文。恢复只是让 Agent 重新获得事实状态，不代表任务已经完成；有未完成任务时，Agent 应继续执行具体下一步。
+- `docs/USAGE.md:89`  - 当前可用的 Codex 客户端。
+- `docs/USAGE.md:105`  安装器、Hooks、`loopctl`、项目校验和包校验使用统一的用户级 Python。安装器会优先使用：
+- `docs/USAGE.md:108`  ${CODEX_HOME:-$HOME/.codex}/vibe-python
+- `docs/USAGE.md:127`  Linux/macOS：
+- `docs/USAGE.md:130`  chmod +x install.sh update.sh uninstall.sh
+- `docs/USAGE.md:131`  ./install.sh
+- `docs/USAGE.md:137`  .\install.ps1
+- `docs/USAGE.md:138`  ```
+- `docs/USAGE.md:139`  
+- `docs/USAGE.md:140`  默认安装行为：
+- `docs/USAGE.md:141`  
+- `docs/USAGE.md:142`  - 保留现有 Codex 权限配置。
+- `docs/USAGE.md:143`  - 安装主 Agent、Skills、runtime 和三个低风险 Hooks。
+- `docs/USAGE.md:144`  - 自动创建带时间戳的备份。
+- `docs/USAGE.md:145`  - 新安装默认不启用可选 MCP。
+- `docs/USAGE.md:146`  - 不静默删除用户已有配置。
+- `docs/USAGE.md:147`  
+- `docs/USAGE.md:148`  如需显式选择可选 MCP，可以重复指定 `--mcp`：
+- `docs/USAGE.md:149`  
+- `docs/USAGE.md:150`  ```bash
+- `docs/USAGE.md:151`  ./install.sh --mcp codegraph
+- `docs/USAGE.md:152`  ./install.sh --mcp codegraph --mcp vibe-toolbelt
+- `docs/USAGE.md:153`  ```
+- `docs/USAGE.md:154`  
+- `docs/USAGE.md:155`  受限网络下可以显式跳过可选 MCP：
+- `docs/USAGE.md:156`  
+- `docs/USAGE.md:157`  ```bash
+- `docs/USAGE.md:158`  ./install.sh --without-mcp
+- `docs/USAGE.md:159`  ```
+- `docs/USAGE.md:160`  
+- `docs/USAGE.md:161`  安装完成后建议验证：
+- `docs/USAGE.md:162`  
+- `docs/USAGE.md:163`  ```bash
+- `docs/USAGE.md:164`  ${CODEX_HOME:-$HOME/.codex}/vibe-workflow/scripts/loopctl.py --help
+- `docs/USAGE.md:165`  python scripts/global_installer.py verify
+- `docs/USAGE.md:166`  ```
+- `docs/USAGE.md:167`  
+- `docs/USAGE.md:168`  日常运行可使用平台原生入口，它会读取 `vibe-python`，不要求 PATH 中存在 `py` 或 `python3`。
+- `docs/USAGE.md:169`  
+- `docs/USAGE.md:170`  Windows PowerShell：
+- `docs/USAGE.md:171`  
+- `docs/USAGE.md:172`  ```powershell
+- `docs/USAGE.md:173`  $CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }
+- `docs/USAGE.md:174`  & (Join-Path $CodexHome 'vibe-workflow\vibe.ps1') --root (Get-Location).Path status
+- `docs/USAGE.md:180`  bash "${CODEX_HOME:-$HOME/.codex}/vibe-workflow/vibe.sh" --root "$PWD" status
+- `docs/USAGE.md:183`  入口也支持 `--codex-home <目录>` 或 `--codex-home=<目录>`。通过 `pwsh -File` 从外部程序启动时，请使用分开的 `--codex-home "D:\配置目录"`：已测试的 PowerShell 7.4.6 宿主会在脚本收到参数前拆开 `--codex-home=D:\配置目录` 中的盘符冒号。入口对这种歧义报错并提示分开传参，不猜测重组路径。直接在 PowerShell
+- `docs/USAGE.md:192`  PY="$(cat "${CODEX_HOME:-$HOME/.codex}/vibe-python")"
+- `docs/USAGE.md:195`  
+- `docs/USAGE.md:196`  > Windows 上如果 Codex 报告 Hook 启动失败，请参考 `AI_INSTALL.md` 的“Windows Hook 命令适配（Codex 0.147.0+）”。Linux/macOS 不需要该适配。
+- `docs/USAGE.md:202`  在项目根目录打开 Codex，然后直接告诉 Agent：
+- `docs/USAGE.md:245`  PY="$(cat "${CODEX_HOME:-$HOME/.codex}/vibe-python")"
+- `docs/USAGE.md:246`  "$PY" runtime/scripts/validate_project.py --root .
+- `docs/USAGE.md:247`  "$PY" "$HOME/.codex/vibe-workflow/scripts/loopctl.py" --root . --json restore
+- `docs/USAGE.md:248`  "$PY" "$HOME/.codex/vibe-workflow/scripts/loopctl.py" --root . validate
+- `docs/USAGE.md:251`  新项目的预期结果是：Project Log schema 通过，Loop 状态可读取，且没有错误的 active task。
+- `docs/USAGE.md:443`  没有 Project Goal 时，`loopctl evaluate goal` 会明确报告未定义，而不是假装完成。
+- `docs/USAGE.md:445`  ### 5.2 Codex 原生 Goal
+- `docs/USAGE.md:447`  Codex 原生 `/goal` 负责当前线程的运行、暂停、恢复、预算和 continuation。它是线程控制器，不应被项目日志中的临时措辞替代。
+- `docs/USAGE.md:450`  Native Goal = 当前 Codex 线程如何继续运行
+- `docs/USAGE.md:453`  Project Goal 和 Native Goal 可以绑定，但二者不能互相覆盖事实。
+- `docs/USAGE.md:468`  PY="$(cat "${CODEX_HOME:-$HOME/.codex}/vibe-python")"
+- `docs/USAGE.md:469`  LOOP="$HOME/.codex/vibe-workflow/scripts/loopctl.py"
+- `docs/USAGE.md:471`  "$PY" "$LOOP" --root . --json restore
+- `docs/USAGE.md:472`  "$PY" "$LOOP" --root . --json status
+- `docs/USAGE.md:473`  "$PY" "$LOOP" --root . validate
+- `docs/USAGE.md:474`  "$PY" "$LOOP" --root . handoff
+- `docs/USAGE.md:477`  通常用户不需要手工编辑 Loop YAML。遇到状态不一致时，优先让 Agent 读取事件、项目日志和当前任务，再决定是继续、handoff、回到上游阶段还是清理残留状态。
+- `docs/USAGE.md:537`  Vibe Coding 的规则和项目日志与接入端无关，以下客户端共享同一套生命周期：
+- `docs/USAGE.md:538`  
+- `docs/USAGE.md:539`  - Codex CLI。
+- `docs/USAGE.md:540`  - VS Code 插件。
+- `docs/USAGE.md:541`  - Codex 桌面端。
+- `docs/USAGE.md:542`  - ACP 外部协议连接端。
+- `docs/USAGE.md:548`  3. 保持全局 `CODEX_HOME` 和 `vibe-python` 指向一致。
+- `docs/USAGE.md:552`  多客户端并不意味着多个独立 Loop。项目日志是共享事实源，当前线程的 Native Goal 仍由各自 Codex 会话控制。
+- `docs/USAGE.md:556`  ## 8. cc-switch 与可选 MCP
+- `docs/USAGE.md:557`  
+- `docs/USAGE.md:558`  ### 8.1 cc-switch 通用配置
+- `docs/USAGE.md:559`  
+- `docs/USAGE.md:560`  如果使用 cc-switch 热切换 Codex 供应商，需要把当前宿主机生成的 Vibe TOML 段放入 cc-switch 的通用配置：
+- `docs/USAGE.md:561`  
+- `docs/USAGE.md:562`  ```bash
+- `docs/USAGE.md:563`  python scripts/generate_cc_switch_config.py --output cc-switch-common-config-codex.txt
+- `docs/USAGE.md:564`  ```
+- `docs/USAGE.md:565`  
+- `docs/USAGE.md:566`  然后用生成文件中以下标记之间的内容覆盖 cc-switch 通用配置中的对应段：
+- `docs/USAGE.md:567`  
+- `docs/USAGE.md:568`  ```text
+- `docs/USAGE.md:569`  # VIBE-CODEX-GLOBAL:CONFIG:BEGIN
+- `docs/USAGE.md:570`  ...
+- `docs/USAGE.md:571`  # VIBE-CODEX-GLOBAL:CONFIG:END
+- `docs/USAGE.md:572`  ```
+- `docs/USAGE.md:573`  
+- `docs/USAGE.md:574`  注意：
+- `docs/USAGE.md:575`  
+- `docs/USAGE.md:576`  - 生成结果包含绝对路径，**不能跨机器直接复制**。
+- `docs/USAGE.md:577`  - 更换宿主机后重新运行生成脚本。
+- `docs/USAGE.md:578`  - 热切换后建议重新启动 Codex 会话。
+- `docs/USAGE.md:579`  - 若安装器报告配置冲突，不要强行覆盖，先保留备份并比较三方配置。
+- `docs/USAGE.md:580`  
+- `docs/USAGE.md:581`  ### 8.2 可选 MCP
+- `docs/USAGE.md:585`  查看 catalog：
+- `docs/USAGE.md:587`  ```bash
+- `docs/USAGE.md:588`  cat runtime/mcp/optional-mcps.json
+- `docs/USAGE.md:589`  ```
+- `docs/USAGE.md:590`  
+- `docs/USAGE.md:591`  选择 MCP：
+- `docs/USAGE.md:592`  
+- `docs/USAGE.md:593`  ```bash
+- `docs/USAGE.md:594`  ./install.sh --mcp codegraph
+- `docs/USAGE.md:600`  codex mcp list
+- `docs/USAGE.md:601`  python scripts/global_installer.py verify
+- `docs/USAGE.md:604`  如果 MCP 安装失败，先确认：
+- `docs/USAGE.md:607`  - 外部命令是否存在。
+- `docs/USAGE.md:608`  - 当前 Codex 会话是否需要重启才能加载新配置。
+- `docs/USAGE.md:609`  - 核心 Hooks 和 Project Log 是否仍然正常。
+- `docs/USAGE.md:687`  ### 导出与校验 Format 3 账本
+- `docs/USAGE.md:690`  PY="$(cat "${CODEX_HOME:-$HOME/.codex}/vibe-python")"
+- `docs/USAGE.md:691`  VIBE="$HOME/.codex/vibe-workflow/scripts/vibe.py"
+- `docs/USAGE.md:713`  ### 检查日志是否可移植
+- `docs/USAGE.md:719`  `portable=false` 表示本机历史还没有安全落到 Git 账本里。输出区分几种情况：
+- `docs/USAGE.md:720`  `unexported_commands>0` 表示账本落后于 SQLite（正常情况下不会出现，写入是账本优先）；
+- `docs/USAGE.md:721`  `git.ledger_tracked=false` 表示账本还没被 Git 跟踪；`git.uncommitted_ledger_changes=true`
+- `docs/USAGE.md:722`  表示账本改动尚未提交；`git.unpushed_commits>0` 表示已提交但未推送。handoff 视图也会在
+- `docs/USAGE.md:723`  账本落后时显示 `NOT PORTABLE` 提示。
+- `docs/USAGE.md:737`  ### 10.2 SessionStart 显示了旧任务
+- `docs/USAGE.md:742`  PY="$(cat "${CODEX_HOME:-$HOME/.codex}/vibe-python")"
+- `docs/USAGE.md:743`  "$PY" "$HOME/.codex/vibe-workflow/scripts/loopctl.py" --root . --json restore
+- `docs/USAGE.md:744`  "$PY" "$HOME/.codex/vibe-workflow/scripts/loopctl.py" --root . validate
+- `docs/USAGE.md:747`  检查 `.project-log/loop/active-run.yaml`、`events.jsonl` 和 `handoff.md` 是否一致。不要直接删除事件；应保留清理或完成事件，使状态变化可追溯。
+- `docs/USAGE.md:753`  - YAML 解析失败：检查缩进、冒号、特殊字符和未引用的字符串。
+- `docs/USAGE.md:754`  - schema 失败：检查必填字段、枚举值和字段类型。
+- `docs/USAGE.md:756`  - Loop 失败：检查 active run 的最后事件、状态和计数器。
+- `docs/USAGE.md:761`  PY="$(cat "${CODEX_HOME:-$HOME/.codex}/vibe-python")"
+- `docs/USAGE.md:762`  "$PY" runtime/scripts/validate_project.py --root .
+- `docs/USAGE.md:763`  "$PY" "$HOME/.codex/vibe-workflow/scripts/loopctl.py" --root . validate
+- `docs/USAGE.md:766`  ### 10.4 Windows Hook 失败
+- `docs/USAGE.md:767`  
+- `docs/USAGE.md:768`  Codex 0.147.0 及更新版本在部分 Windows 环境下对 Hook 命令的引号解析方式发生变化。如果错误表现为 Hook 进程没有启动，而脚本直接运行正常，按 `AI_INSTALL.md` 中的 Windows 专用适配步骤检查 `commandWindows`；不要修改 Linux/macOS 的 `command`。
+- `docs/USAGE.md:769`  
+- `docs/USAGE.md:770`  ### 10.5 cc-switch 切换后 Hooks、插件或 marketplace 消失
+- `docs/USAGE.md:771`  
+- `docs/USAGE.md:772`  这通常意味着 cc-switch 整写了 `config.toml`。处理顺序：
+- `docs/USAGE.md:773`  
+- `docs/USAGE.md:774`  1. 保留当前配置和安装器备份。
+- `docs/USAGE.md:775`  2. 重新生成当前宿主机的 cc-switch 通用配置。
+- `docs/USAGE.md:776`  3. 确认 Vibe 标记块完整。
+- `docs/USAGE.md:777`  4. 运行安装器 update/verify。
+- `docs/USAGE.md:778`  5. 重启 Codex 会话。
+- `docs/USAGE.md:779`  
+- `docs/USAGE.md:780`  不要把另一台机器生成的配置直接复制过来。
+- `docs/USAGE.md:781`  
+- `docs/USAGE.md:782`  ### 10.6 测试失败但代码可能没有问题
+- `docs/USAGE.md:808`  vibe 恢复。请读取项目根目录的 AGENTS.md、.project-log/current-session.md、workflow、任务清单、需求基线、决策、验证证据和 Loop 状态，然后继续执行精确下一步。
+- `docs/USAGE.md:814`  2. `tasks/task-list.yaml`：任务状态和 `done_when`。
+- `docs/USAGE.md:815`  3. `loop/active-run.yaml`：当前阶段、任务、状态和计数器。
+- `docs/USAGE.md:816`  4. `loop/handoff.md`：压缩或暂停前的交接摘要。
+- `docs/USAGE.md:817`  5. `verification/evidence.yaml` 与 `loop/evidence-index.yaml`：证据是否仍然有效。
+- `docs/USAGE.md:818`  6. `business-logic/open-questions.yaml`：是否有未解决的 C 级问题。
+- `docs/USAGE.md:852`  format 2 是框架的默认格式：新建项目直接生成新格式，不再需要实验开关。任何已有 `.project-log` 都不会被覆盖——初始化报告 `skipped` 并保持原样。存量旧格式项目在迁移窗口内继续可用，迁移路径见本节末尾。生产契约的冻结原文在框架仓库迁移后保存于 `.project-log/legacy/specs/framework-landing-contract.md`。
+- `docs/USAGE.md:860`  --root <project> task begin|update|wait|resume|handoff|finish|cancel
+- `docs/USAGE.md:865`  --root <project> goal update|complete --id GOAL-001
+- `docs/USAGE.md:869`  --root <project> migrate preview|apply|resume|rollback
+- `docs/USAGE.md:870`  --root <project> exchange status|export|import|finish|abandon
+- `docs/USAGE.md:885`  每个新的业务操作使用新的 `command_id` 和最近观察到的 `revision`。网络或调用中断后，重试原始信封（包括原始 revision），返回原回执；不能修改同一 ID 的载荷或 revision。`goal.create` 显式创建目标；任务不自动继承历史目标。等待用户必须记录问题引用和恢复条件。
+- `docs/USAGE.md:895`  长文档正文只放在 `.project-log/docs/**`，结构化记录只保存 `doc_ref`（路径与内容哈希）。`task.finish` 要求至少一条 `valid` 且覆盖该任务的证据；这里的“覆盖”指证据的 `covers.tasks` 列出该任务 ID，只用 `--task-id` 归属不足以通过 `vibe gate`。高风险任务还要求独立 `go` 复核。`goal.complete` 会逐条检查
+- `docs/USAGE.md:897`  新格式标记为 `.project-log/state-format.json`。Git 项目数据库位于该 worktree 的 Git 管理目录下，按项目 ID 和分支上下文隔离；非 Git 测试项目位于 `.project-log/.state/`。不会把 SQLite 文件加入 Git。初次切换到没有本地状态的分支会明确失败，而不是沿用另一分支的状态。跨副本同步只在显式执行 `state-export`/`sta
+- `docs/USAGE.md:899`  自动摘要保存在数据库旁的 `generated` 目录。以 `CURRENT.json` 指向的同一版本为一组读取，校验项目、上下文、revision 和内容哈希；不逐文件猜测哪个版本更新。`current-session.md`、`progress.md` 和 `handoff.md` 是派生视图，不是另外三份事实源，也不覆盖项目中的同名用户笔记。投影失败时业务提交仍成立，返回 `projection: pendi
+- `docs/USAGE.md:901`  新格式下，启动 Hook 与会话恢复从状态库读回目标、任务、阻塞、证据有效性与精确下一步；`PostToolUse` 只按记录哈希精确失效证据，不创建旧 YAML。旧写命令明确拒绝，并提示使用正式 `vibe` 入口。初始化中断、缺失数据库、无法识别的标记或遗留投影锁均需保留现场并调查；不要删除标记、数据库或锁来让旧入口接管。
+- `docs/USAGE.md:903`  `.project-log/.state/` 是新格式保留的本机所有权目录，Git 项目也保留此目录用于防止格式标记丢失后回退到旧写入器。目录仍在而标记缺失时（包括切换到不含标记的旧分支），入口保守拒绝恢复，不自动补写旧 YAML；需要后续显式迁移/交换流程处理，不能通过删除目录绕过。Hook 从子目录启动时会识别上层新格式项目，路径别名也不能绕过旧写入保护。
+- `docs/USAGE.md:905`  ### 显式快照交换
+- `docs/USAGE.md:907`  跨副本同步只在显式执行时发生，日常任务命令永远不占用 Git index 锁。快照对象写入 `.project-log/exchange/`，随 Git 提交分发；它们按内容寻址、不可变，且标记为不转换行尾，因此在不同平台克隆之间字节稳定。
+- `docs/USAGE.md:909`  ```text
+- `docs/USAGE.md:910`  --root <test-project> state-attach                      # 新克隆：为当前 worktree 建立本机状态库
+- `docs/USAGE.md:911`  --root <test-project> state-export                      # 发布本机状态为不可变快照
+- `docs/USAGE.md:912`  --root <test-project> state-import                      # 校验并导入当前 worktree 已发布的快照
+- `docs/USAGE.md:913`  --root <test-project> state-exchange                    # 只读查看本机/已发布版本、共同基线与待恢复状态
+- `docs/USAGE.md:914`  --root <test-project> state-exchange-finish             # 崩溃后确认待发布快照就是已写入的指针
+- `docs/USAGE.md:915`  --root <test-project> state-exchange-abandon --reason "..."   # 确认未发布后放弃待发布意图
+- `docs/USAGE.md:916`  ```
+- `docs/USAGE.md:918`  典型流程：克隆 A 建立状态并 `state-export`，提交推送；克隆 B `state-attach` 后 `state-import` 取得 A 的状态；B 继续工作并 `state-export`；A 拉取后 `state-import` 取得 B 的新命令。两端各自的 `revision` 是本机提交序号，导入的历史命令保留原始分支上下文和原始 revision，因此本机序号与来源坐标不会互相污染。
+- `docs/USAGE.md:920`  导入只在下列条件全部成立时接受，否则明确拒绝且不改动任何状态：
+- `docs/USAGE.md:922`  - 快照摘要、指针与载荷哈希一致，且清单字段完整；
+- `docs/USAGE.md:923`  - 项目身份相同，快照确实从本机记录的共同基线派生（否则 `snapshot_diverged`）；
+- `docs/USAGE.md:924`  - 本机没有尚未发布的命令（否则 `unexported_changes`，两端版本都保留，不做覆盖式合并）；
+- `docs/USAGE.md:925`  - 双方共享命令的请求与回执字节完全一致（否则 `history_rewritten`）；
+- `docs/USAGE.md:926`  - 快照的实体表与其账本互相一致，不存在没有对应命令的实体行（否则 `invalid_snapshot`）；
+- `docs/USAGE.md:927`  - 快照新增命令的回执与请求、运行和实体语义一致（否则 `invalid_snapshot`）。
+- `docs/USAGE.md:929`  后两条在写入前重放整个账本，因此“能通过导入”与“能通过 `validate`”不会分离：被拒绝的快照不会改动本机任何字节，也不会把损坏状态再传播给下一个副本。
+- `docs/USAGE.md:931`  普通命令只做本机事务，不读写快照，也不改变交换记录。发布窗口只在写入指针前后短暂持有 Git index 锁：
+- `docs/USAGE.md:933`  - 锁被别人占用时报 `git_busy`，并保留对方的锁文件；
+- `docs/USAGE.md:934`  - 进程被强杀可能遗留 `index.lock`，同时保留 `pending_kind=export` 与已写入的指针；
+- `docs/USAGE.md:935`  - 恢复步骤是先确认没有其他 Git/Vibe 写入者，再处理遗留锁，然后用 `state-exchange-finish`（指针与待发布快照一致）或 `state-exchange-abandon`（确认未发布）结束待发布状态。Vibe 不会自动删除任何锁或自动清除待发布状态。
+- `docs/USAGE.md:937`  待发布期间仍可接受新的本机命令：`pending_revision` 记录的是发布意图指向的 revision，可以落后于当前 `local_revision`，`state-exchange` 的 `unexported_commands` 会如实显示这些尚未发布的新命令。此时 `validate` 仍然干净，不需要任何修复动作。
+- `docs/USAGE.md:939`  `state-export` 只有在快照真正发布并确认后才报告成功；如果交换已经完成、只是随后生成派生视图失败，命令返回 `projection_error`（而不是失败退出），指针与 `exported_local_revision` 已经更新，调用方不应据此重试导出。
+- `docs/USAGE.md:941`  ### 旧格式项目与显式迁移
+- `docs/USAGE.md:943`  `vibe init` 只用于**新建**项目：目标目录已有 `.project-log` 时报告 `skipped` 并保持原样，绝不原地改写现有记录。存量旧格式项目在迁移窗口内继续可用；要切到 format 2，必须显式执行迁移，不能通过删除标记或状态目录绕过。
+- `docs/USAGE.md:945`  先只读预演：
+- `docs/USAGE.md:947`  ```text
+- `docs/USAGE.md:948`  --root <project> migrate preview
+- `docs/USAGE.md:949`  ```
+- `docs/USAGE.md:951`  预演不读取文件修改时间，也不猜测业务事实。重复 ID、悬空引用、源摘要变化会阻止切换；未知任务字段、无法转换的旧证据、无法复现完成门禁的任务会进入 `.project-log/legacy/unmapped`，不中止迁移也不删除历史。
+- `docs/USAGE.md:953`  确认预演结果后执行：
+- `docs/USAGE.md:955`  ```text
+- `docs/USAGE.md:956`  --root <project> migrate apply --confirm <preview_hash>
+- `docs/USAGE.md:957`  --root <project> migrate resume
+- `docs/USAGE.md:958`  --root <project> migrate rollback [--destination <dir>]
+- `docs/USAGE.md:959`  ```
+- `docs/USAGE.md:960`  
+- `docs/USAGE.md:961`  `migrate apply` 先备份旧记录，再生成并校验新存储，最后原子切换标记、旧文件与状态库。迁移日志位于 `.project-log/.migration/journal.json`；中断后用 `migrate resume` 从日志继续。`migrate rollback` 恢复旧格式文件，并先把迁移后的新写入导出到 `.project-log/legacy/new-writes/bundle.json`，
+- `docs/USAGE.md:962`  
+- `docs/USAGE.md:963`  ### 版本与 format 1 退役关口
+- `docs/USAGE.md:964`  
+- `docs/USAGE.md:965`  查看框架版本、默认格式与退役阶段状态：
+- `docs/USAGE.md:972`  format 1 的退役分三步，**每一步都需要用户单独确认**，代理不得自行推进：
+- `docs/USAGE.md:973`  
+- `docs/USAGE.md:974`  | 阶段 | 支持范围变化 |
+- `docs/USAGE.md:975`  |---|---|
+- `docs/USAGE.md:976`  | `stop-writing` | `loopctl`/`vibe` 不再接受 format 1 写入；只读查询与迁移仍可用 |
+- `docs/USAGE.md:977`  | `stop-reading` | `status`/`validate`/`restore` 不再解析 format 1；迁移工具仍可离线运行 |
+- `docs/USAGE.md:978`  | `stop-support` | 移除迁移工具、旧模板与兼容代码 |
+- `docs/USAGE.md:979`  
+- `docs/USAGE.md:980`  在旧格式项目上，只读命令会输出 `legacy format: migrate with vibe migrate` 指引；旧格式写入在迁移窗口内仍然可用，但每次都会在 stderr 输出弃用提示。完整发布说明见 [RELEASE-NOTES.md](RELEASE-NOTES.md)。
+
+## `.github/workflows/tests.yml` — codex 缺失（需从 main 新增并适配）
