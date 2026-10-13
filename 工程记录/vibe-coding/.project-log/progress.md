@@ -3,12 +3,12 @@
 ## 当前状态（2026-10-13 覆盖更新）
 
 - **当前 Goal**：GOAL-008「框架修复吸收：goal.update 支持 implementer/owner + 消除 goal reducer 双实现」保持 **complete**；10-12/10-13 的框架修复属其后续续作，未新开 Goal。
-- **当前 Task**：TASK-145「已安装插件/MCP 默认放行：主 Agent 权限策略 + 框架随包工具带 + 安装器受管 MCP」——实现与定向验证完成，全量逐文件验证进行中，待部署与独立复核。TASK-140（控制层刷新到 d21a3e0 并验证生效）**handed-off**，门禁阻塞。
+- **当前 Task**：TASK-145「已安装插件/MCP 默认放行：主 Agent 权限策略 + 框架随包工具带 + 安装器受管 MCP」——框架仓库与已装控制层均为 83be137，安装器 update/verify 已通过；仍待重载会话确认工具实际出现并完成 go 级复核。TASK-140（控制层刷新到 d21a3e0 并验证生效）**handed-off**，门禁阻塞。
 - **正在做什么**：TASK-145 收尾（部署到已装控制层 → 实机验证 → 记录 → 独立复核 → 提交推送）。
 - **阻塞**：TASK-140 需要 `go` 级独立复核，而复核者读不到安装层 `opencode.json`（含明文 apiKey）；其两条 `done_when`（配置内容、运行中服务行为）在「复核者不得读密钥」前提下无法独立验证。
 - **需要用户决定**：① TASK-140 如何收口（推荐给受信入口加脱敏检视动作 / 或改口径 / 或先挂着）；② 三个 V1 时代插件（`opencode-background-agents`、`opencode-notify`、`@tarquinen/opencode-smart-title`）在 V2 下加载失败（ALIGN-FW-009），是否从用户 `opencode.json` 删除；③ `~/.config/opencode/opencode.json` 的明文 apiKey 建议改为 `{env:LLMCENTER_API_KEY}`。
-- **验证与复核**：TASK-144（goal 工具放行）受信验证 5 文件全绿 + `validate_package` 通过；TASK-145 全量逐文件聚合 **27/27 文件全绿**，`validate_package` 通过，已装控制层部署后 89/89 受管文件与包逐字节一致；实机 `GET /api/agent` 生效规则：vibe-main 的 catch-all 只剩 base policy 的 allow（deny 已去除）、verification-reviewer 仍为 allow+deny。独立复核 **REV-REFRESH-145 = conditional**：放行条件①（V2 权限语义）已由主 Agent 用一手文档 `https://opencode.ai/v2/docs/permissions`（base policy 与 `test_opencode_surface.py` 建模逐条一致、「最后匹配者生效 / agent 规则最后追加」）+ 运行时 `GET /api/agent` 解析后列表补齐；条件③（已装 `opencode.json`/安装状态的一致性）已在复核记录显式登记为主 Agent 验证的边界；**条件②未闭合**——插件/MCP 工具是否真的出现在会话里需重载会话确认，故 `done_when#1b` 记 partial。框架已拒绝 finish（high-risk 任务需要 go 级复核），gate = blocked。10-12 两轮复核 REV-REFRESH-140 / 142 均 **conditional**（载荷逐字转录，写入层面独立性缺口见 DEC-076/077/078）。
-- **交付**：`origin/main` = **3bab1fd**（已推送）；本地 `main` = **83be137**（TASK-145，8 文件）**未推送**（直连 reset、代理 10808 不通，待重试）。已装控制层已更新到 83be137（89/89 受管文件一致）。
+- **验证与复核**：TASK-144（goal 工具放行）受信验证 5 文件全绿 + `validate_package` 通过；TASK-145 全量逐文件聚合 **27/27 文件全绿**，`validate_package` 通过，已装控制层重新 update 后 verify 通过，89/89 受管文件与包一致；实机 `GET /api/agent` 生效规则：vibe-main 的 catch-all 只剩 base policy 的 allow（deny 已去除）、verification-reviewer 仍为 allow+deny。独立复核 **REV-REFRESH-145 = conditional**：放行条件①（V2 权限语义）已由主 Agent 用一手文档 `https://opencode.ai/v2/docs/permissions`（base policy 与 `test_opencode_surface.py` 建模逐条一致、「最后匹配者生效 / agent 规则最后追加」）+ 运行时 `GET /api/agent` 解析后列表补齐；条件③（已装 `opencode.json`/安装状态的一致性）已在复核记录显式登记为主 Agent 验证的边界；**条件②未闭合**——插件/MCP 工具是否真的出现在会话里需重载会话确认，故 `done_when#1b` 记 partial。框架已拒绝 finish（high-risk 任务需要 go 级复核），gate = blocked。10-12 两轮复核 REV-REFRESH-140 / 142 均 **conditional**（载荷逐字转录，写入层面独立性缺口见 DEC-076/077/078）。
+- **交付**：`origin/main` = **83be137**；本地 `main` 与远端无 ahead/behind。已装控制层已于 2026-10-13 重新 update/verify 到 0.6.0。
 - **下一步**：① **用户重载会话**，确认 goal 插件与 `opencode-agent-memory` 的工具（`get_goal`/`memory_set`）以及至少一个 MCP 工具（如 `wikipedia_*`）出现在主 Agent 会话中；② 据此让 `verification-reviewer` 复评并出 `go` → `review record` → `task finish TASK-145` → `gate`；③ 等用户裁决 TASK-140 收口与三个 V1 插件的处理；④ ALIGN-FW-010（uninstall 回退用户后续编辑）待排期。
 
 ## 2026-10-13 已安装插件/MCP 默认放行（ALIGN-FW-009，DEC-087，TASK-145，进行中）
