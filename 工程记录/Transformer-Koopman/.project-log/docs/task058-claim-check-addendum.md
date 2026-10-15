@@ -1,0 +1,8 @@
+# TASK-058 addendum: abstracts read after review 1 (2026-10-13)
+
+- han2024robust (IEEE TII 20(3):4675-4684, 2024): abstract read. LSTM-based deep recurrent Koopman operator (DRKO) for uncertain nonlinear systems with time delays, linear MPC on the learned model, closed-loop stability conditions. Intro uses it only as "recurrent layers in Koopman-based MPC" -> supported.
+- han2020deep (CDC 2020; arXiv 2010.07546): abstract read. DNN learns the basis functions of the linear lifting for a controlled system; MPC/iLQR on the learned model. Intro: "neural lifting, including for controlled systems" -> supported.
+- feizi2025deepkoopman (RA-L 10(3):2926-2933, 2025): abstract read. Deep Koopman model of tendon-driven continuum robots, autonomous part linear, input enters via a bilinear term, LQ control. Intro: "learned lifting for controlled systems" -> supported (no linear-input claim made).
+- li2025mamko: Intro now says "from recent data" (not "states and inputs").
+- Review-1 wording fixes applied: "cannot"->"are limited in"; exactness limited to invariant subspace; EDMD described as fitting a finite-dimensional predictor; "A single matrix pair is demanding..." opener; scheduling signals defined in the method paragraph; C_phi stated as feed-forward map; prediction and control split into two paragraphs; one-step residual sentence no longer contradicts the bound; frozen-vs-complete deviation stated precisely; off-topic stability sentence and diehl2005rtistability removed (bibliography 40 -> 39); advanced-step NMPC kept with a neutral description.
+- Known gap: no general MPC textbook reference; wu2026multistep carries the QP/real-time statement (its own Sec.1 states it). Not changed without user decision on adding a reference.

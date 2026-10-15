@@ -1,0 +1,16 @@
+{
+  "task": "TASK-057",
+  "title": "Verify authenticity and bibliographic accuracy of every reference",
+  "risk_class": "strict",
+  "signals": ["submission-format", "data"],
+  "scope": "Main.tex thebibliography entries only; do not touch prose, equations, figures or experiments",
+  "method": "Per-entry web evidence (publisher/DOI/arXiv/official record), record verdict and source URL; fix clear factual errors, escalate ambiguous ones to user",
+  "done_when": [
+    "Every entry has an evidence-backed verdict: verified / corrected / not-found / unresolved",
+    "Each verdict cites at least one authoritative source URL",
+    "Clear factual errors corrected in Main.tex; ambiguous cases listed for user decision",
+    "Bibliography still compiles with no new undefined citations",
+    "Report with per-entry table written to .project-log/docs"
+  ],
+  "limits": "Cannot access paywalled full text; venue/volume/page data checked against publisher metadata, DBLP, arXiv or journal ToC"
+}

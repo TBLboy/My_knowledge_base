@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    "TASK-049"
+  ],
+  "files": [
+    "Transformer-Koopman/论文/新版本/Main.tex",
+    ".project-log/docs/task032-paper-draft-static-validation.json",
+    ".project-log/docs/task032-paper-draft-review.md"
+  ],
+  "requirements": [
+    "Formal A1-A5 assumptions",
+    "Uniform full feasible-set quantifier",
+    "Prediction recurrence proof",
+    "Termwise epsilon_J cost-bound derivation"
+  ]
+}

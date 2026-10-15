@@ -1,0 +1,25 @@
+{
+  "file_hashes": {
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\Main.tex": "c01228118ed52baf8597a3cb1eb1211df3612535d6397c9a76644bd3a4c79985",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\IEEEtran.cls": "da751920a317ed318b7b5cd7fa585a6cc7d28502d457856382e9be24b10a3bd7",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\Main.pdf": "7d964aa23fe884d6715e7432da6c4b5726c881155de7e441fc8483884ffcc0fa",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\Main.log": "b4731cafa27622e74c29cfdf56e4165fa49b222ca1507e0499d1f79b7a2cd3cc",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\Main.aux": "a64a321d3f12d640ee23f5cb8d022c4b230cd2024f3faa783a6b42fd37ee5054",
+    ".project-log\\docs\\task052-spec.json": "c411f16ab79dfa42b38d3351ea4f2f5caf60c09491ee5f8240e80cfa16224b87",
+    ".project-log\\docs\\task052-before.tex": "638ba59d7bcb82bd18a1a5f01ceaed55eb51c6d8cd3a4e60a85b14d421b696a8",
+    ".project-log\\docs\\task052-validate.py": "ab89c269473304a0e3defd3fd0e65272a1614ed99f91001f3837ef1c69f674b4",
+    ".project-log\\docs\\task052-validation.json": "1ca305d5ae2afaa8d692920c8e97e900851ca58a4bfa3abb95ff37693dbf939b",
+    ".project-log\\docs\\task052-layout.diff": "01b34dc12ba4d9be1475b758f11f86e1b91d1cf5b793197dc0bf669857fa3e98",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-01.png": "ecbb83ffb725cc1dd387ea8b5cd80ecfd1b6de589527a8fe008ec0735af930b5",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-02.png": "3f8cab8e009fe847dba2c4bcf65c849b4875e2e16491c8a323f4fae01764ee78",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-03.png": "a45f7fb74a699230c252cfbe9443a50cb57726f10824bd22e3d5b752e74d9050",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-04.png": "e87a768d99989a6a6c492a0eb0d10542b451a7fdfd4a3e3b7e1223ecc4745121",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-05.png": "13d068516e43ebad79b2a9c661b34b700b072271d25fe57157b987a037c5f28c",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-06.png": "7d630baa760c26902918115e37932fa73dd0af4587ed8771248cbf4edf66e8f4",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-07.png": "a06f5d6372f29ad97e18baf03eb40ff209825872581c5d1a852f4bec677670df",
+    ".project-log/docs/task052-review.md": "930ada6838db1adf0b3032a857f69f9c65f3dd047369cf7389f3d6c129f7aedb",
+    ".project-log/docs/task052-review-scope.json": "08f8469f18e1302fe68ca24f29b8cfdc8c989c92e633e892f1e06504dee6a157",
+    ".project-log/docs/task052-compile-1.txt": "dd905761a6056e7d15ce6efc8367850bc642c0f543ef49388c9fcd9f5347b7fb",
+    ".project-log/docs/task052-compile-2.txt": "f4f5e24fc9574d83390ac1cc6e902998080d473042e1a941e851c8ab53f8d905"
+  }
+}

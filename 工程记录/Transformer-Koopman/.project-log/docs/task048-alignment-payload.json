@@ -1,0 +1,21 @@
+{
+  "task_id": "TASK-048",
+  "risk_route": "strict: conclusion-level mathematical audit; reversible docs only, no original theory or product code edited",
+  "artifact": "Transformer-Koopman/杂项/新版本/Theory_Package_Audit_and_Compact_Outline.md",
+  "source_review": "alignment-reviewer session ses_ecf788fcdffeh6f6fkGsJU7lS1: read-only audit 01–08, current control code and external feedback",
+  "confirmed": [
+    "Main predictor/freezing/suboptimality proof chains can be retained with their stated restrictions",
+    "Six-section narrative supported by structure-level reference SafEDMD, Automatica 185 (2026), 112732; no full PDF layout verification",
+    "Control cost conflicts: 06/08 use lifted-state tracking; current code and temporary experiment plan use measurement tracking",
+    "Uniform feasible-domain quantifiers and shared initial history must be explicit",
+    "Fixed-network tightness, softmax optimal-constant remark and full local-reference interpretation need correction"
+  ],
+  "actions": [
+    "Approved six chapters recorded as DEC-092",
+    "Compact outline uses 2–3 necessary subsections in core chapters, no per-theorem or third-level splitting",
+    "Source/report hashes and three bounded algebra checks recorded in task048-audit-validation.json"
+  ],
+  "user_decision_pending": "Recommend tracking measurement C_x z against x_ref in the control cost, while keeping training L_x+w_z L_z; no control/theory cost edit before confirmation",
+  "not_verified": ["Uniform device constants over all feasible inputs", "Exact numerical QP argmin certificate", "Complete paper layout", "Original-theory corrections not performed"],
+  "next_action": "Ask only for control-cost contract. After confirmation, locally reconcile 06/08 and prerequisites, run targeted checks, independently review; do not draft paper without authorization."
+}

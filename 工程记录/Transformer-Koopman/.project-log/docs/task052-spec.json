@@ -1,0 +1,14 @@
+{
+  "task": "TASK-052",
+  "risk": "strict",
+  "request": "Fix long equations and re-render first; defer all diagrams",
+  "scope": "Main.tex math layout only; preserve mathematical tokens, equation numbering/labels, prose, experiments and figures",
+  "method": "Use aligned, gathered or split inside existing equation environments; no resizebox or font reduction",
+  "done_when": [
+    "Eliminate all overfull boxes in the compiled paper",
+    "Preserve mathematical expressions and numbered equation/label sequence",
+    "Compile twice without undefined references/citations or errors",
+    "Render PDF pages and audit column boundaries",
+    "Record independent review and exact limitations"
+  ]
+}

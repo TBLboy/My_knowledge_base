@@ -1,0 +1,172 @@
+--- before/Main.tex
++++ after/Main.tex
+@@ -118,17 +118,21 @@
+ 
+ Let $P\ge2$. At time $k$, define the measurement and past-input windows
+ \begin{equation}
+-    \mX_k=\begin{bmatrix}\vx_{k-P+1}\\ \vdots\\ \vx_k\end{bmatrix}\in\R^{Pn},\qquad
++    \begin{gathered}
++    \mX_k=\begin{bmatrix}\vx_{k-P+1}\\ \vdots\\ \vx_k\end{bmatrix}\in\R^{Pn},\\
+     \mU_k^{\mathrm{in}}=\begin{bmatrix}\vu_{k-P+1}\\ \vdots\\ \vu_{k-1}\end{bmatrix}\in\R^{(P-1)m}.
++    \end{gathered}
+     \label{eq:history_windows}
+ \end{equation}
+ The current input $\vu_k$ is not part of the context window; it enters the one-step update separately. Given $(\mX_k,\mU_k^{\mathrm{in}})$ and a future input sequence $\vu_{k:k+H-1}$, the prediction task is to estimate $\vx_{k+1:k+H}$. The control task is to choose a finite sequence $U=(\vu_0,\ldots,\vu_{N-1})$ that tracks a measurement reference while respecting the input set.
+ 
+ The lifting is state-preserving in the measured coordinates:
+ \begin{equation}
++    \begin{gathered}
+     \vz_k=g_\theta(\mX_k)=\begin{bmatrix}\vx_k\\ \psi_\theta(\mX_k)\end{bmatrix}\in\R^d,
+-    \qquad d=n+n_\psi,
++    \\ d=n+n_\psi,
+     \qquad \vx_k=C_x\vz_k,
++    \end{gathered}
+     \label{eq:state_preserving_lifting}
+ \end{equation}
+ where $C_x=[I_n\;0]$. We distinguish $\vz_k^{\mathrm{enc}}=g_\theta(\mX_k)$, which uses measured data, from a recursively propagated $\vz_k^{\mathrm{prop}}$, whose measured coordinates are model outputs.
+@@ -165,9 +169,11 @@
+ \end{align}
+ Here $\mA_0\in\R^{d\times d}$, $\mB_0\in\R^{d\times m}$, $\mU_A,\mV_A\in\R^{d\times r_A}$, $\mU_B\in\R^{d\times r_B}$, and $\mV_B\in\R^{m\times r_B}$. The transition coefficients have the form
+ \begin{equation}
++    \begin{gathered}
+     \gamma_{A,j}(\vc)=g_A\pi_{A,j}(\vc)\tanh([W_A\vc+b_A]_j),
+-    \quad
++    \\
+     \pi_A(\vc)=\operatorname{softmax}(W_A^\pi\vc+b_A^\pi),
++    \end{gathered}
+     \label{eq:A_modulation}
+ \end{equation}
+ and analogously for $\gamma_B(\vchi)$, with $g_B$, $W_B$, and $W_B^\pi$. The columns of the four low-rank factors have norm at most one.
+@@ -191,16 +197,20 @@
+ 
+ The schedule maps are also Lipschitz under finite modulation-layer weights. Define
+ \begin{equation}
++    \begin{gathered}
+     L_A=g_A\left(\norm{W_A}_2+\frac{\sqrt{r_A}}{2}\norm{W_A^\pi}_2\right),
+-    \quad
++    \\
+     L_B=g_B\left(\norm{W_B}_2+\frac{\sqrt{r_B}}{2}\norm{W_B^\pi}_2\right).
++    \end{gathered}
+     \label{eq:Lipschitz_constants}
+ \end{equation}
+ Then
+ \begin{equation}
++    \begin{gathered}
+     \norm{\mA(\vc)-\mA(\vc')}_2\le L_A\norm{\vc-\vc'}_2,
+-    \quad
++    \\
+     \norm{\mB(\vchi)-\mB(\vchi')}_2\le L_B\norm{\vchi-\vchi'}_2.
++    \end{gathered}
+     \label{eq:schedule_lipschitz}
+ \end{equation}
+ The factor $1/2$ is the global Euclidean Lipschitz constant of softmax for $r\ge2$; the full constants in \eqref{eq:Lipschitz_constants} may still be conservative because they combine norm inequalities and triangle inequalities.
+@@ -264,8 +274,11 @@
+ \label{ass:a4}
+ When a family of trained models is considered, there are finite constants $M_{W_A}$, $M_{W_A^\pi}$, $M_{W_B}$, and $M_{W_B^\pi}$ such that
+ \begin{equation}
++\begin{gathered}
+ \norm{W_A}_2\le M_{W_A},\quad \norm{W_A^\pi}_2\le M_{W_A^\pi},\quad
++\\
+ \norm{W_B}_2\le M_{W_B},\quad \norm{W_B^\pi}_2\le M_{W_B^\pi}.
++\end{gathered}
+ \end{equation}
+ For a fixed trained model, A4 is only the finite-constant condition used in \eqref{eq:Lipschitz_constants}.
+ \end{assumption}
+@@ -279,9 +292,11 @@
+ \label{prop:prediction_recurrence}
+ For every $0\le i\le H-1$,
+ \begin{equation}
+-\norm{\ve_{i+1}}_2\le \delta+(M_A+L_BM_U)\norm{\ve_i}_2
+- +L_AL_\phi\sqrt{P}M_Z
+- \max_{i-P+1\le j\le i}\norm{\ve_j}_2,
++\begin{aligned}
++\norm{\ve_{i+1}}_2\le{}& \delta+(M_A+L_BM_U)\norm{\ve_i}_2\\
++ &+L_AL_\phi\sqrt{P}M_Z
++  \max_{i-P+1\le j\le i}\norm{\ve_j}_2,
++\end{aligned}
+ \label{eq:prediction_recurrence}
+ \end{equation}
+ where negative-index history errors are defined as zero because the initial measured history is shared.
+@@ -368,19 +383,23 @@
+ \end{equation}
+ where the block rows of $\mF$ and $\mG$ are denoted by $F_i$ and $G_{i,t}$, respectively:
+ \begin{equation}
++    \begin{gathered}
+     F_i=\bar\mA_{i-1}\cdots\bar\mA_0\vz_0,
+-    \qquad
++    \\
+     G_{i,t}=\begin{cases}
+     \bar\mA_{i-1}\cdots\bar\mA_{t+1}\bar\mB_t,&t<i,\\
+     0,&t\ge i.
+     \end{cases}
++    \end{gathered}
+     \label{eq:F_G_blocks}
+ \end{equation}
+ The products are time ordered; no commutativity of the matrices is assumed. Let $\bar C_x=I_N\otimes C_x$, $Y^{\mathrm{ref}}=[(\vx_1^{\mathrm{ref}})^\top,\ldots,(\vx_N^{\mathrm{ref}})^\top]^\top$, and $\bar Q_x=\operatorname{blkdiag}(Q_x,\ldots,Q_x,P_x)$. Define $\bar R$ and $\bar S$ as the corresponding block-diagonal input matrices, and let $\hat D$ satisfy $(\hat D\mU)_0=\vu_0$ and $(\hat D\mU)_i=\vu_i-\vu_{i-1}$ for $i\ge1$. With the input-offset vector $\hat{\mathbf c}=[-\vu_{-1}^\top,0,\ldots,0]^\top$, the frozen cost is
+ \begin{equation}
+-J_{\mathrm{fr}}(U;\bar U)=\norm{\bar C_x\mZ-Y^{\mathrm{ref}}}_{\bar Q_x}^2
+-+\norm{\mU-\mU^{\mathrm{ref}}}_{\bar R}^2
++\begin{aligned}
++J_{\mathrm{fr}}(U;\bar U)={}&\norm{\bar C_x\mZ-Y^{\mathrm{ref}}}_{\bar Q_x}^2\\
++&+\norm{\mU-\mU^{\mathrm{ref}}}_{\bar R}^2
+ +\norm{\hat D\mU+\hat{\mathbf c}}_{\bar S}^2.
++\end{aligned}
+ \label{eq:frozen_cost}
+ \end{equation}
+ Substitution of \eqref{eq:frozen_prediction_matrices} gives
+@@ -413,17 +432,23 @@
+ 
+ To make the bound uniform over the complete feasible set, define the fixed-nominal suprema
+ \begin{equation}
++\begin{gathered}
+ \bar\delta_u:=\sup_{U\in\mathcal U_{\mathrm{feas}}}\max_{0\le i<N}\norm{\vu_i-\bar\vu_i}_2,
+-\qquad
++\\
+ \bar\Delta_u:=\sup_{U\in\mathcal U_{\mathrm{feas}}}\max_{0\le i<N}\norm{U_i^{\mathrm{in}}-\bar U_i^{\mathrm{in}}}_2.
++\end{gathered}
+ \label{eq:uniform_input_deviation}
+ \end{equation}
+ Compactness of $\mathcal U_{\mathrm{feas}}$ makes these quantities finite, and $\bar\Delta_u\le\sqrt{P-1}\bar\delta_u$. Set
+ \begin{equation}
++\begin{gathered}
+ \bar G_N:=M_B\bar\delta_u\sum_{t=0}^{N-1}M_A^t,
+-\qquad
+-\bar\delta_{\mathrm{frz}}:=L_AL_\phi M_Z\bar\Delta_u
+- +\left(L_AL_\phi\sqrt{P}M_Z+L_BM_U\right)\bar G_N,
++\\
++\begin{aligned}
++\bar\delta_{\mathrm{frz}}:={}&L_AL_\phi M_Z\bar\Delta_u\\
++ &+\left(L_AL_\phi\sqrt{P}M_Z+L_BM_U\right)\bar G_N,
++\end{aligned}
++\end{gathered}
+ \label{eq:uniform_freezing_driver}
+ \end{equation}
+ and, for $0\le i\le N$,
+@@ -458,9 +483,12 @@
+ 
+ More explicitly, let $y_i^{\mathrm{full}}=C_x\vz_i^{\mathrm{full}}$, $y_i^{\mathrm{fr}}=C_x\vz_i^{\mathrm{fr}}$, and $d_i=y_i^{\mathrm{full}}-y_i^{\mathrm{fr}}$. The uniform freezing bound gives $\norm{d_i}_2\le\bar K_i^x$. With $M_Y=\norm{C_x}_2M_Z$ and $M_{\mathrm{ref}}=\max_{1\le i\le N}\norm{\vx_i^{\mathrm{ref}}}_2$, A1 gives $\norm{y_i^{\mathrm{full}}}_2\le M_Y$ and hence $\norm{y_i^{\mathrm{fr}}}_2\le M_Y+\bar K_i^x$. Therefore, for $i<N$,
+ \begin{equation}
++\begin{gathered}
+ \left|\norm{y_i^{\mathrm{full}}-\vx_i^{\mathrm{ref}}}_{Q_x}^2-
+ \norm{y_i^{\mathrm{fr}}-\vx_i^{\mathrm{ref}}}_{Q_x}^2\right|
++\\
+ \le\norm{Q_x}_2\bar K_i^x(2M_Y+\bar K_i^x+2M_{\mathrm{ref}}),
++\end{gathered}
+ \end{equation}
+ and the same identity with $P_x$ applies at $i=N$. Summing these bounds and using the common input terms yields \eqref{eq:epsilon_cost}. Because \eqref{eq:uniform_input_deviation} takes the supremum over the entire feasible set and A1/A3 use the same domain constants there, this calculation proves the uniform candidate bound required by (CA), subject to the stated work-domain assumptions.
+ 
+@@ -551,9 +579,13 @@
+ 
+ Let $\mG_x=\bar C_x\mG$ and $\mW=\bar C_x\mF-Y^{\mathrm{ref}}$. The output term expands as
+ \begin{equation}
++    \begin{gathered}
+     (\mW+\mG_x\mU)^\top\bar Q_x(\mW+\mG_x\mU)
++    \\
+     =\mU^\top\mG_x^\top\bar Q_x\mG_x\mU
+-    +2(\mG_x^\top\bar Q_x\mW)^\top\mU+\mathrm{const}.
++    \\
++    \quad+2(\mG_x^\top\bar Q_x\mW)^\top\mU+\mathrm{const}.
++    \end{gathered}
+ \end{equation}
+ The input and input-increment terms expand analogously. Their sum yields \eqref{eq:QP_coefficients}. Positive semidefiniteness follows because each quadratic coefficient has the form $T^\top MT$ with $M\succeq0$.
+ 

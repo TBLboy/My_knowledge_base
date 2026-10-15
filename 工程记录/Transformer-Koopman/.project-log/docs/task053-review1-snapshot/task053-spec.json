@@ -1,0 +1,15 @@
+{
+  "task": "TASK-053",
+  "risk": "strict",
+  "request": "Audit and fix equation grouping, numbering, alignment and excessive horizontal width throughout the paper",
+  "scope": "Main.tex mathematical layout and labels only; retain all mathematical terms and prose; defer figures/experiments",
+  "policy": "Independent paired definitions use aligned rows with distinct numbers; continuations of one expression use equation+aligned with a single centered number; no boxes, shrinking or hard-coded numeric references",
+  "done_when": [
+    "Old Eq.3 matrix windows have separate aligned numbers; old Eq.6 has no box",
+    "Old Eq.17 independent constants are vertically aligned; old Eq.18 fits with its number",
+    "Old Eq.21-22 and all analogous sum continuations carry one number",
+    "All displayed equations audited for grouping/alignment and no overfull boxes or isolated equation tags remain",
+    "Mathematical token content, prose and existing reference keys preserved; new numbering compiles consistently",
+    "Compile twice, render and visually inspect every page; record bound evidence and independent review with limitations"
+  ]
+}

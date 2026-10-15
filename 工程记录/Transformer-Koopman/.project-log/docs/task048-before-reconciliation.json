@@ -1,0 +1,17 @@
+{
+  "Transformer-Koopman/杂项/新版本/Theory_Package/00_assembly_scan.py": "8f022348d921b36788fc554b0c85c3b61e9ed738c146cab93fa8bb041bd570ea",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/00_assembly_scan.txt": "01f78e58df6050f08257fd25eea0e1162082774ec19676916bcd5d6cd0e47c70",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/00_Index.md": "ee07b4d7c34e46c9ef49c26f9acc5626d2ca883a05b2d0fc47f4160b7ab4ac1c",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/01_Model_Definition.md": "da6456a4173846fae5e6e2cf8f0347a7d6c8b0c0dd3d1851461d1cfef9297dc1",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/02_Assumptions.md": "920565ddf5d8021179af94545ebc543ba0c8e9cbed8bc7d96abf7a80e0fbf362",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/03_Low_rank_Boundedness.md": "bd99786ff274510f2313c61e9556d0812f9e9c3742c136732ecaffb64ccf8458",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/04_Scheduling_Lipschitz.md": "6f59b55aee8712a39b19c491582852179c5af765f003d15c40357446d341fb17",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/05_Prediction_Error_Bound.md": "af556ab4b888bfee4f1d74e0850cfc6a0985bb70c2b62c6c10c4f7513bafeb26",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/06_Frozen_LTV_QP_Proof.md": "739dc7f8f9f32e7468896312950fe6e39ae73465c999a7ab014d0cdae9dc4e35",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/07_Freezing_Error_Bound.md": "05c8dcaaea32363036c05888af18e13236f0ebde28c292d79b76695ac3ab5629",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/08_Conditional_Suboptimality.md": "aeb9f5f4d88b75d3c7af016a28b5c965bf3ddb62b8c81326016f3579613cbaaa",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/09_Reference_List.md": "90b7960e37449cbdcdee45aa75d6c20cd687913531c37b93f38adad7ec39ef57",
+  "Transformer-Koopman/杂项/新版本/Theory_Package/10_Reference_List_Supplement.md": "a29b39720060b7a5587bbfbad58533cc6a11ddb18a5c725723bccfd34bede6e0",
+  "Transformer-Koopman/杂项/新版本/Temporary_Experiments/controllers/ltv_mpc.py": "44c087c96f63d05c6bab722604b048b0b865b951de4ddd9b465bcec8ee749cd0",
+  "Transformer-Koopman/杂项/新版本/Temporary_Experiments/models/library.py": "8b1d9a065499bfb2a5be8e352363b0d5587041c8f5a90709f157db8679b7ccbb"
+}

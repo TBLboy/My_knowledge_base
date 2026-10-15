@@ -1,0 +1,17 @@
+{
+ "git_commit": "none (paper directory is untracked in the inner repository)",
+ "diff_hash": "21f01d4cc9af7ec188d3cea467e46f834465e0792a72b77795d879b13f66947f",
+ "file_hashes": {
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/Main.tex": "5a5f9edd6d4a7f379416526fff949b85edac10bdb6b5b6bc5d34d313a26368a1",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_font/Main.pdf": "5a2774b888566fef302c599e05a2ebc0242c7cd691d4ab0dfffa218b45b63d01",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_font/Main.log": "2ea156a338922910831cb9a9bd5172590c8fdf80c1e99cd931f786249e1924d7",
+  ".project-log/docs/task054-changes.diff": "21f01d4cc9af7ec188d3cea467e46f834465e0792a72b77795d879b13f66947f",
+  ".project-log/docs/task054-validation.json": "dbd4866e75317931cad986ff2813a6fc2b132fe5e24a9ee726de7b6055916097",
+  ".project-log/docs/task054-removed-material.json": "088cc55a8cfc4339304f727f2be78e49c7ba7410ece84b13db6a5f4b51ff6e3a",
+  ".project-log/docs/task057-reference-verification.md": "36e50ec834367046ea275489673f51748fb6dbe175566bd23253cd44050d5d4c",
+  ".project-log/docs/task054-before.tex": "02723f83b42fb3af5b68c4d47b1f5dda17983dd26ef3d675c75b1cc10e3bb59f",
+  ".project-log/docs/task054-font-note.md": "b1243c3718b98e6a7b79dbe1213d5b5818871703859ae95ef2d5e83d1f2d5453",
+  ".project-log/docs/task055-note.md": "56ab06b33c2ac6b88c008e324a9f75f56b972978cb1f4454aad9078ac98ebb89",
+  ".project-log/docs/task056-note.md": "9f5e3ae1ecba7f69fad40f79ae7e38a993d055f9679cb6ec4e4861b3664a5884"
+ }
+}

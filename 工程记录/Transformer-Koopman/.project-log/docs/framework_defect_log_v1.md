@@ -154,6 +154,35 @@ required evidence missing: <6 项>; high-risk goal lacks a valid independent rev
 
 ---
 
+## 8. 高风险任务在"无 shell 复核者"的会话里结构性不可收口
+
+**现象**（TASK-012，2026-10-09 实际阻塞点）：
+
+```
+task finish --task-id TASK-012
+  -> {"error": {"code": "task_gate",
+       "message": "Task completion rejected: high-risk task TASK-012 lacks a go review from an independent reviewer"}}
+gate --task TASK-012 -> decision: blocked
+```
+
+**根因**：
+
+- 任务门禁对 `extensions.risk ∈ {high, critical}` 的任务要求 `reviews` 表中存在 **`verdict = go`** 且 `reviewer ≠ implementer` 的复核记录。
+- 本会话中唯一可用的独立复核身份（`verification-reviewer`）**没有 shell 权限**：无法重算产物 sha256、无法执行 `git diff`、无法重新编译，因此只能对"内容主张"给 PASS、对"机械绑定"标注无法核验，最终只能 `verdict = conditional`。
+- 结果：**做对了全部可做的工作，仍无法收口**。要拿到 `go`，要么复核者做出它无法支持的断言（不可接受），要么由主 Agent 自签（`reviewer = implementer`，被门禁正确拒绝）。
+
+**与缺陷 3 的区别**：缺陷 3 是"目标层门禁读错表"（读 `evidence.kind="review"` 而非 `reviews` 表）；本缺陷是**任务层门禁的独立复核要求与复核者沙箱能力不匹配**。
+
+**影响**：任何高风险任务，只要本会话内不存在具备 shell 的独立复核者，就会永久停在 `blocked`。本轮处理：`task wait --kind environment` + 明确 `resume-when` 条件，不伪造 `go`。
+
+**建议**：
+
+1. 允许把"机械绑定"（哈希 / diff / 编译）与"内容复核"拆成两类证据，由不同身份分别签署，门禁按需组合；
+2. 或为复核角色提供最小只读 shell（`Get-FileHash`、`git diff --stat`、只读编译），使其能独立复现机械绑定；
+3. 或在文档中明确 `go` 的语义为"内容主张为真 **且** 机械绑定已由可信执行者复现"，并给出该执行者身份的登记方式。
+
+---
+
 ## 附 A：本轮实测命令与原始输出
 
 ```text

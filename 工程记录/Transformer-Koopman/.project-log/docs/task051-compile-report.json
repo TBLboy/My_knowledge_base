@@ -1,0 +1,73 @@
+{
+  "compiler": "Tectonic 0.17.0",
+  "compiler_path": "C:\\Users\\12187\\AppData\\Local\\Temp\\opencode\\tectonic\\tectonic.exe",
+  "cwd": "D:\\Project\\Transformer-Koopman\\Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c",
+  "command": [
+    "C:\\Users\\12187\\AppData\\Local\\Temp\\opencode\\tectonic\\tectonic.exe",
+    "--only-cached",
+    "--keep-logs",
+    "--keep-intermediates",
+    "--reruns",
+    "2",
+    "--outdir",
+    "D:\\Project\\Transformer-Koopman\\Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_current",
+    "Main.tex"
+  ],
+  "runs": [
+    {
+      "run": 1,
+      "returncode": 0,
+      "console": ".project-log\\docs\\task051-compile-pass1.txt"
+    },
+    {
+      "run": 2,
+      "returncode": 0,
+      "console": ".project-log\\docs\\task051-compile-pass2.txt"
+    }
+  ],
+  "source_before_sha256": "638ba59d7bcb82bd18a1a5f01ceaed55eb51c6d8cd3a4e60a85b14d421b696a8",
+  "source_after_sha256": "638ba59d7bcb82bd18a1a5f01ceaed55eb51c6d8cd3a4e60a85b14d421b696a8",
+  "source_unchanged": true,
+  "final_log_findings": {
+    "undefined_reference_or_citation": [],
+    "rerun": [],
+    "overfull": [
+      "Overfull \\hbox (6.33159pt too wide) detected at line 124",
+      "Overfull \\hbox (25.04346pt too wide) detected at line 133",
+      "Overfull \\hbox (51.23524pt too wide) detected at line 172",
+      "Overfull \\hbox (72.42706pt too wide) detected at line 198",
+      "Overfull \\hbox (57.64609pt too wide) detected at line 205",
+      "Overfull \\hbox (64.58069pt too wide) detected at line 269",
+      "Overfull \\hbox (35.41422pt too wide) detected at line 286",
+      "Overfull \\hbox (1.99773pt too wide) detected at line 378",
+      "Overfull \\hbox (2.53462pt too wide) detected at line 385",
+      "Overfull \\hbox (54.64087pt too wide) detected at line 420",
+      "Overfull \\hbox (92.11958pt too wide) detected at line 428",
+      "Overfull \\hbox (40.76334pt too wide) detected at line 464",
+      "Overfull \\hbox (59.65366pt too wide) detected at line 557"
+    ],
+    "underfull": [
+      "Underfull \\hbox (badness 4366) in paragraph at lines 192--193",
+      "Underfull \\hbox (badness 1400) in paragraph at lines 323--324",
+      "Underfull \\hbox (badness 6348) in paragraph at lines 338--339",
+      "Underfull \\hbox (badness 2181) in paragraph at lines 378--380",
+      "Underfull \\hbox (badness 1838) in paragraph at lines 506--507",
+      "Underfull \\hbox (badness 1616) in paragraph at lines 510--511",
+      "Underfull \\hbox (badness 2376) in paragraph at lines 532--533",
+      "Underfull \\hbox (badness 6110) in paragraph at lines 676--677",
+      "Underfull \\hbox (badness 3417) in paragraph at lines 676--677"
+    ],
+    "font_warning": [
+      "LaTeX Font Warning: Font shape `TU/ptm/m/n' undefined",
+      "LaTeX Font Warning: Font shape `TU/ptm/bx/n' undefined",
+      "LaTeX Font Warning: Font shape `TU/ptm/m/it' undefined",
+      "LaTeX Font Warning: Font shape `TU/ptm/bx/it' undefined",
+      "LaTeX Font Warning: Some font shapes were not available, defaults substituted."
+    ],
+    "latex_error": []
+  },
+  "limitations": [
+    "Compilation does not establish submission readiness or visual layout quality.",
+    "Experiments, figures, theoretical claims and source semantics were not modified."
+  ]
+}

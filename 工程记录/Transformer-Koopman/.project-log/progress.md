@@ -6,18 +6,28 @@
 > - **超限归档**：文件超过约 50-100 KB 时，把旧段落移动到 `.project-log/docs/archive/`，主文档只保留最近内容。
 > - **单一事实源**：本文件是快速摘要；精确当前状态与下一步以 Project Log format 2 状态库、Git 账本与生成的 `handoff.md` 为准。
 > - **机器文件不手工重排**：状态库、Git 账本与生成视图由运行时维护，不做手工重排或改写。
+> - 本文件由主 Agent 通过 `vibe memory sync --file <json>` 写入，不要手工编辑。
 
 ## 当前状态
 
 - 当前阶段：阶段③ 论文撰写（DEC-025：理论路线优先，真机暂缓）
-- 当前目标：GOAL-001 已按用户指令诚实收口（工具状态仍为 active；原因与缺陷见 DEC-045 / DEC-046）
-- 当前任务：无（9 个任务全部 cancelled，状态库 rev 660）
-- 当前状态：收口完成；论文修订清单已就绪但未开工
-- 最近验证：`EV-GIT-REMOTE-SYNC-001`（远端 main = 25e400d，valid）；`EV-PHASE2-REVIEW-D1D4-001`（Main.tex `82855BACF1C9` / build/Main.pdf `8DFFC77A29FD`，12 页、0 overfull，valid）；`EV-PHASE2-ABLATION-STAGE01-001`（12 runs 消融，valid）
+- 当前目标：GOAL-002（理论包与论文正文）；GOAL-001 已诚实收口（工具状态 active，原因见 DEC-045/DEC-046）
+- 当前任务：无进行中任务（TASK-059 完成）
+- 当前状态：论文正文打磨中；Introduction 已重写并过 go 复核
+- 最近验证：`EV-TASK058-INTRO-002` + `REV-TASK058-001`=go（Introduction 重写）；`EV-TASK059-PUSH-001/002`（paper 分支推送与远端一致性）
 - 下一步：
-  1. 论文修订按 `Transformer-Koopman/论文/新版本/GPT审查报告_独立核对与代码验证.md` §5 的 6 批 36 项执行，入口为批次 1（技术风险 T1/T2/T3/T5/T6/T7），不依赖任何实验。
-  2. 待用户裁定：§VII 在 .tex 中的处置方式、免责声明唯一落点、`r` 与 `H_R` 的报告位置。
-  3. 已登记框架缺陷 7 条（DEC-046 + `.project-log/docs/framework_defect_log_v1.md`）；在缺陷 1/2/3 修复前，本项目不再建立 evidence-gated 的 goal。
+  1. 继续正文打磨（其余章节、摘要/结论一致性）
+  2. 定稿后补做带联网的全量参考文献元数据复核（TASK-054 遗留）
+  3. 待用户裁定：是否新增通用 MPC 教材引用；旧议题（§VII、免责声明、`r`/`H_R`）在六章结构下重新确认
+  4. 图片与实验继续暂缓
+
+## 2026-10-11 ~ 10-15 阶段③ 论文正文打磨（TASK-048..059）
+
+- 状态：进行中（正文语言与结构）
+- 完成内容：摘要与全文防御性句清理、去掉 `state-preserving` 修饰、文献按首次引用顺序重排、三处图占位（含一个跨栏大图）、公式排版修复；40 条文献逐条网络核对（39 条一致，1 处 `data--driven`→`data-driven` 修正）；Introduction 完全重写为问题驱动故事线；`paper` 分支推送 `172463b` 到 `origin/paper`。
+- 关键事实：`Main.tex` 编译为 `build_font/Main.pdf`，8 页；Overfull 0、未定义引用 0、字体警告 0、Underfull 10；参考文献 39 条全部被引。
+- 验证与限制：复核方无 shell/联网，编译数字与外部文献元数据由主 Agent 自报；`han2024robust`、`han2020deep`、`feizi2025deepkoopman` 已读摘要。所有论文改动未提交。
+- 下一步：见上方“当前状态”。
 
 ## 2026-10-08 阶段③ 收口与框架缺陷登记
 

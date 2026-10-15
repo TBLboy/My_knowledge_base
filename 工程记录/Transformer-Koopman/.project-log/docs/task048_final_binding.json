@@ -1,0 +1,32 @@
+{
+  "git_commit": "75a7b92c52f2f7d8ddb6154c7460c0d35ace9364",
+  "file_hashes": {
+    "Transformer-Koopman/杂项/新版本/Theory_Package/01_Model_Definition.md": "d74084d40fc5061186cd4a4a181f4df0aa62ccab49b884dbf9c781bd33d79968",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/02_Assumptions.md": "a948c9328037676b443acb45ca36505f04b63ad03b2f90c39c4a932a0c9f9560",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/03_Low_rank_Boundedness.md": "d0b1740e485608b73723476a40b717353ea1f885aaa3b2131d67e5c8de087765",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/04_Scheduling_Lipschitz.md": "07d1e087dd500a4bea937bcbf1fd34a5105bf41105b5034025f587cbf65f9bf7",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/05_Prediction_Error_Bound.md": "b2f5421bd2c9b3156ab257d08f3b9ec7da26f44f44ad43a95ee4d0338a47b02f",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/06_Frozen_LTV_QP_Proof.md": "3032a763a94fc06c4bfcc203ef2cf28d483e1454937ff289f80dae7fe35a08c6",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/07_Freezing_Error_Bound.md": "fd0fe6d624738f6f73f13f8ee5ec374569f15676c01c189c10c13a603ce4aaaf",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/08_Conditional_Suboptimality.md": "7299985581479665d2ba4adefa4bce927d8c709227de096f574b85c93e8c8d92",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/09_Reference_List.md": "90b7960e37449cbdcdee45aa75d6c20cd687913531c37b93f38adad7ec39ef57",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/00_Index.md": "e5ef05b71264b1d217b070ab1e2ebc8631f3f2f53c84916318f9291dc7d8a669",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/00_assembly_scan.py": "8f022348d921b36788fc554b0c85c3b61e9ed738c146cab93fa8bb041bd570ea",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/00_assembly_scan.txt": "3306b691c74e9cc1413973fc45061b083aeff078e38376475dfe99b84f346f86",
+    "Transformer-Koopman/杂项/新版本/Theory_Package_Audit_and_Compact_Outline.md": "9a9ed9562e3a2df13c808bab08b549ff9acbbc4fc3d2e20b923edf6a504e525f",
+    "Transformer-Koopman/杂项/新版本/validation/validate_theory_reconciliation.py": "7393a8becdaa1805297da83d702806c380189f03376b2f973dfb149a2f91a840",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/controllers/ltv_mpc.py": "44c087c96f63d05c6bab722604b048b0b865b951de4ddd9b465bcec8ee749cd0",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/models/library.py": "8b1d9a065499bfb2a5be8e352363b0d5587041c8f5a90709f157db8679b7ccbb",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/tests/test_ltv_qp.py": "a19a4e58e2e96d0732bd05dfe9caac1b2f5e9f5eaff6133b45459e6f8131e8ac",
+    ".project-log/docs/task048-reconciliation-spec.md": "396fd05eca9e61fdab1757717a463da9c47feacc0d9dea9d15745554eff88aa4",
+    ".project-log/docs/task048-reconciliation-tests.json": "6503d8039a57f61b5c2579fc0808d8ad54dc84693a7778a593ca5a6e41588b76",
+    ".project-log/docs/task048-qp-baseline.txt": "b9e522abb45651d88f164b05aabf83c512c30ac02ac0a7a331e53331c5f68e46",
+    ".project-log/docs/task048-qp-outcomes.json": "71e053119c964a8eaef1f96746f68ad0b1544fefd3e36e50d7c342d9ab54455f",
+    ".project-log/docs/task048-run-qp.py": "f3e21ec68ac2a3b1f8430bb4ab3322e1ea902145529a305fe5a2dc87c7365943",
+    ".project-log/docs/task048-before-reconciliation.json": "2d6c96c4ca455e73d2bae0607d81f72cc3dad1f836ed32181929c8556cfef297",
+    ".project-log/docs/task048-finalize-evidence.py": "1fe7a95704fa1001b828f66ccbb3f97542eda41c865001f2ec46cc95b7ca2456",
+    ".project-log/docs/task048-qp-soft_platform.txt": "831b8dd6b0cb2c3ddf9590a073caa1802cec2ee4e94007d7f55868b4b1539e69",
+    ".project-log/docs/task048-qp-arm_3link.txt": "e5def4a7afcaa65622a21ba8e8ae03d71171a026c7207ea795e2620aa3349369",
+    ".project-log/docs/task048-final-validation.json": "05b687629cd8dae4ba828d826b203cddf5070247e484610b9a98b6510a5ecb55"
+  }
+}

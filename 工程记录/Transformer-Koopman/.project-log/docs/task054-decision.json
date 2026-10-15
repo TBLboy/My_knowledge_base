@@ -1,0 +1,6 @@
+{
+ "task": "TASK-054",
+ "decision": "Numbered the bibliography by first citation order; expanded intro citations from 25 to 40 entries and deleted 12 never-cited entries",
+ "authority": "B - user explicitly asked for ~40 cited references, sequential numbering and removal of surplus entries",
+ "evidence": ".project-log/docs/task055-reorder-report.json, .project-log/docs/task057-reference-verification.md"
+}

@@ -1,0 +1,270 @@
+{
+  "task": "TASK-048",
+  "passed": true,
+  "checks": [
+    {
+      "name": "n2_N1_prediction_F",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n2_N1_prediction_G",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n2_N1_M_f_const",
+      "value": 0.0,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "name": "n2_N1_direct_quad_current",
+      "value": 8.881784197001252e-16,
+      "limit": 4.401774448222331e-09,
+      "passed": true
+    },
+    {
+      "name": "n2_N1_Hessian_PSD",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n2_N1_effective_lifted_weight",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n2_N3_prediction_F",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n2_N3_prediction_G",
+      "value": 5.551115123125783e-17,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n2_N3_M_f_const",
+      "value": 1.7763568394002505e-15,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "name": "n2_N3_direct_quad_current",
+      "value": 0.0,
+      "limit": 3.8637010398190685e-08,
+      "passed": true
+    },
+    {
+      "name": "n2_N3_Hessian_PSD",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n2_N3_effective_lifted_weight",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n2_N6_prediction_F",
+      "value": 3.3306690738754696e-16,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n2_N6_prediction_G",
+      "value": 8.326672684688674e-17,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n2_N6_M_f_const",
+      "value": 7.105427357601002e-15,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "name": "n2_N6_direct_quad_current",
+      "value": 1.4210854715202004e-14,
+      "limit": 5.293675774192428e-08,
+      "passed": true
+    },
+    {
+      "name": "n2_N6_Hessian_PSD",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n2_N6_effective_lifted_weight",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n6_N1_prediction_F",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n6_N1_prediction_G",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n6_N1_M_f_const",
+      "value": 8.881784197001252e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "name": "n6_N1_direct_quad_current",
+      "value": 7.105427357601002e-15,
+      "limit": 6.244527581225705e-08,
+      "passed": true
+    },
+    {
+      "name": "n6_N1_Hessian_PSD",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n6_N1_effective_lifted_weight",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n6_N3_prediction_F",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n6_N3_prediction_G",
+      "value": 8.326672684688674e-17,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n6_N3_M_f_const",
+      "value": 3.552713678800501e-15,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "name": "n6_N3_direct_quad_current",
+      "value": 2.842170943040401e-14,
+      "limit": 2.3972642463823556e-07,
+      "passed": true
+    },
+    {
+      "name": "n6_N3_Hessian_PSD",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n6_N3_effective_lifted_weight",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n6_N6_prediction_F",
+      "value": 2.498001805406602e-16,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n6_N6_prediction_G",
+      "value": 1.1102230246251565e-16,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "n6_N6_M_f_const",
+      "value": 7.105427357601002e-15,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "name": "n6_N6_direct_quad_current",
+      "value": 2.2737367544323206e-13,
+      "limit": 5.735549743063111e-07,
+      "passed": true
+    },
+    {
+      "name": "n6_N6_Hessian_PSD",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "n6_N6_effective_lifted_weight",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "name": "same_input_zero_freezing_error",
+      "value": 0.0,
+      "limit": 1e-14,
+      "passed": true
+    },
+    {
+      "name": "toy_freezing_recurrence_and_bound_729_candidates",
+      "value": 0.0,
+      "limit": 0.0,
+      "passed": true
+    },
+    {
+      "name": "toy_measurement_uniform_cost_bound",
+      "value": 0.0503958761483696,
+      "limit": 1.0635483071767682,
+      "passed": true
+    },
+    {
+      "name": "toy_common_grid_2epsilon_suboptimality",
+      "value": 0.0,
+      "limit": 2.1270966143535364,
+      "passed": true
+    },
+    {
+      "name": "toy_prediction_zero_initial_uniform_residual_bound",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "name": "comparison_sequence_L_branches",
+      "value": 0.0,
+      "limit": 0.0,
+      "passed": true
+    }
+  ],
+  "toy_observations": {
+    "max_freezing_error": 0.020258042259240255,
+    "max_cost_diff": 0.0503958761483696,
+    "epsilon": 1.0635483071767682,
+    "common_grid_gap": 0.0
+  },
+  "limits": [
+    "synthetic cases only; not real-device uniform certification",
+    "729 finite candidates, not continuous full global optimizer",
+    "no solver exact-argmin certificate",
+    "no training or plant experiment"
+  ]
+}

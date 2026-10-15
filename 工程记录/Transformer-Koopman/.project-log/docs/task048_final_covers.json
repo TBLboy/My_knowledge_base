@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    "TASK-048"
+  ],
+  "files": [
+    "Transformer-Koopman/杂项/新版本/Theory_Package/01_Model_Definition.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/02_Assumptions.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/03_Low_rank_Boundedness.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/04_Scheduling_Lipschitz.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/05_Prediction_Error_Bound.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/06_Frozen_LTV_QP_Proof.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/07_Freezing_Error_Bound.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/08_Conditional_Suboptimality.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/09_Reference_List.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/00_Index.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/00_assembly_scan.py",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/00_assembly_scan.txt",
+    "Transformer-Koopman/杂项/新版本/Theory_Package_Audit_and_Compact_Outline.md",
+    "Transformer-Koopman/杂项/新版本/validation/validate_theory_reconciliation.py",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/controllers/ltv_mpc.py",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/models/library.py",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/tests/test_ltv_qp.py",
+    ".project-log/docs/task048-reconciliation-spec.md",
+    ".project-log/docs/task048-reconciliation-tests.json",
+    ".project-log/docs/task048-qp-baseline.txt",
+    ".project-log/docs/task048-qp-outcomes.json",
+    ".project-log/docs/task048-run-qp.py",
+    ".project-log/docs/task048-before-reconciliation.json",
+    ".project-log/docs/task048-finalize-evidence.py",
+    ".project-log/docs/task048-qp-soft_platform.txt",
+    ".project-log/docs/task048-qp-arm_3link.txt",
+    ".project-log/docs/task048-final-validation.json"
+  ],
+  "requirements": [
+    "Traceable recent paper structure reference",
+    "01-08 minimal-dependency audit independently reviewed",
+    "Compact six-chapter main/appendix outline",
+    "DEC-093 control-cost conflict reconciled with current measurement-space implementation"
+  ]
+}

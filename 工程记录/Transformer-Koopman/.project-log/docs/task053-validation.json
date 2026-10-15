@@ -1,0 +1,1269 @@
+{
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\12187\\AppData\\Local\\Temp\\opencode\\tectonic\\tectonic.exe",
+        "--only-cached",
+        "--keep-logs",
+        "--keep-intermediates",
+        "--reruns",
+        "2",
+        "--outdir",
+        "D:\\Project\\Transformer-Koopman\\Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_equations",
+        "Main.tex"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "C:\\Users\\12187\\AppData\\Local\\Temp\\opencode\\tectonic\\tectonic.exe",
+        "--only-cached",
+        "--keep-logs",
+        "--keep-intermediates",
+        "--reruns",
+        "2",
+        "--outdir",
+        "D:\\Project\\Transformer-Koopman\\Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_equations",
+        "Main.tex"
+      ],
+      "returncode": 0
+    }
+  ],
+  "layout_only_canonical_match": true,
+  "prose_unchanged": true,
+  "reference_and_citation_keys_unchanged": true,
+  "allowed_reference_complements": {
+    "\\eqref{eq:Lipschitz_constants}": "\\eqref{eq:transition_Lipschitz_constant} and \\eqref{eq:Lipschitz_constants}",
+    "\\eqref{eq:QP_coefficients}": "\\eqref{eq:QP_Hessian} and \\eqref{eq:QP_coefficients}"
+  },
+  "existing_label_keys_preserved": true,
+  "source_label_keys_unique": true,
+  "label_number_map": {
+    "eq:physical_system": {
+      "before": "1",
+      "after": "1"
+    },
+    "eq:koopman_operator": {
+      "before": "2",
+      "after": "2"
+    },
+    "eq:measurement_window": {
+      "before": null,
+      "after": "3"
+    },
+    "eq:history_windows": {
+      "before": "3",
+      "after": "4"
+    },
+    "eq:state_preserving_lifting": {
+      "before": "4",
+      "after": "5"
+    },
+    "eq:history_context": {
+      "before": null,
+      "after": "6"
+    },
+    "eq:scheduling_variables": {
+      "before": "5",
+      "after": "7"
+    },
+    "eq:scheduled_predictor": {
+      "before": "6",
+      "after": "8"
+    },
+    "eq:transition_schedule": {
+      "before": null,
+      "after": "9"
+    },
+    "eq:low_rank_schedules": {
+      "before": "8",
+      "after": "10"
+    },
+    "eq:A_modulation_coefficients": {
+      "before": null,
+      "after": "11"
+    },
+    "eq:A_modulation": {
+      "before": "9",
+      "after": "12"
+    },
+    "eq:modulation_bound": {
+      "before": "10",
+      "after": "13"
+    },
+    "eq:transition_Lipschitz_constant": {
+      "before": null,
+      "after": "14"
+    },
+    "eq:Lipschitz_constants": {
+      "before": "11",
+      "after": "15"
+    },
+    "eq:schedule_lipschitz": {
+      "before": "12",
+      "after": "16"
+    },
+    "eq:joint_training_loss": {
+      "before": "13",
+      "after": "17"
+    },
+    "eq:recursive_prediction": {
+      "before": "14",
+      "after": "18"
+    },
+    "eq:prediction_error": {
+      "before": "15",
+      "after": "19"
+    },
+    "eq:residual_definition": {
+      "before": "16",
+      "after": "20"
+    },
+    "eq:transition_norm_bound": {
+      "before": null,
+      "after": "21"
+    },
+    "eq:prediction_L": {
+      "before": "17",
+      "after": "22"
+    },
+    "eq:prediction_recurrence": {
+      "before": "20",
+      "after": "25"
+    },
+    "eq:prediction_bound": {
+      "before": "23",
+      "after": "27"
+    },
+    "eq:prediction_error_maximum": {
+      "before": null,
+      "after": "28"
+    },
+    "eq:complete_control_model": {
+      "before": "24",
+      "after": "29"
+    },
+    "eq:full_cost": {
+      "before": "26",
+      "after": "30"
+    },
+    "eq:nominal_rollout": {
+      "before": "27",
+      "after": "31"
+    },
+    "eq:frozen_transition_matrix": {
+      "before": null,
+      "after": "32"
+    },
+    "eq:frozen_matrices": {
+      "before": "28",
+      "after": "33"
+    },
+    "eq:frozen_model": {
+      "before": "29",
+      "after": "34"
+    },
+    "eq:stacked_frozen_states": {
+      "before": null,
+      "after": "35"
+    },
+    "eq:stacked_inputs": {
+      "before": null,
+      "after": "36"
+    },
+    "eq:frozen_prediction_matrices": {
+      "before": "31",
+      "after": "37"
+    },
+    "eq:F_blocks": {
+      "before": null,
+      "after": "38"
+    },
+    "eq:F_G_blocks": {
+      "before": "32",
+      "after": "39"
+    },
+    "eq:frozen_cost": {
+      "before": "33",
+      "after": "40"
+    },
+    "eq:quadratic_template": {
+      "before": "34",
+      "after": "41"
+    },
+    "eq:QP_Hessian": {
+      "before": null,
+      "after": "42"
+    },
+    "eq:QP_coefficients": {
+      "before": "36",
+      "after": "43"
+    },
+    "eq:input_deviation": {
+      "before": null,
+      "after": "44"
+    },
+    "eq:input_window_deviation": {
+      "before": null,
+      "after": "45"
+    },
+    "eq:nominal_drift": {
+      "before": "38",
+      "after": "46"
+    },
+    "eq:uniform_pointwise_input_deviation": {
+      "before": null,
+      "after": "47"
+    },
+    "eq:uniform_input_deviation": {
+      "before": "39",
+      "after": "48"
+    },
+    "eq:uniform_nominal_drift": {
+      "before": null,
+      "after": "49"
+    },
+    "eq:uniform_freezing_driver": {
+      "before": "40",
+      "after": "50"
+    },
+    "eq:uniform_freezing_bound": {
+      "before": "41",
+      "after": "51"
+    },
+    "eq:freezing_driver": {
+      "before": "42",
+      "after": "52"
+    },
+    "eq:freezing_bound": {
+      "before": "43",
+      "after": "53"
+    },
+    "eq:epsilon_cost": {
+      "before": "45",
+      "after": "54"
+    },
+    "eq:suboptimality_bound": {
+      "before": "48",
+      "after": "57"
+    }
+  },
+  "boxed_removed": true,
+  "source_sha256": "e6ff85d3993eb5d6381b6a681b783566188ef52eaa6848e236b7e36c42efdd40",
+  "source_unchanged_during_compile": true,
+  "warnings": {
+    "overfull": [],
+    "underfull": [
+      "Underfull \\hbox (badness 4366) in paragraph at lines 198--199",
+      "Underfull \\hbox (badness 1400) in paragraph at lines 341--342",
+      "Underfull \\hbox (badness 6348) in paragraph at lines 358--359",
+      "Underfull \\hbox (badness 2181) in paragraph at lines 402--404",
+      "Underfull \\hbox (badness 1838) in paragraph at lines 551--552",
+      "Underfull \\hbox (badness 1616) in paragraph at lines 555--556",
+      "Underfull \\hbox (badness 2376) in paragraph at lines 577--578",
+      "Underfull \\hbox (badness 6110) in paragraph at lines 725--726",
+      "Underfull \\hbox (badness 3417) in paragraph at lines 725--726"
+    ],
+    "references": [],
+    "errors": [],
+    "font": [
+      "LaTeX Font Warning: Font shape `TU/ptm/m/n' undefined",
+      "LaTeX Font Warning: Font shape `TU/ptm/bx/n' undefined",
+      "LaTeX Font Warning: Font shape `TU/ptm/m/it' undefined",
+      "LaTeX Font Warning: Font shape `TU/ptm/bx/it' undefined",
+      "Package inputenc Warning: inputenc package ignored with utf8 based engines.",
+      "LaTeX Font Warning: Some font shapes were not available, defaults substituted."
+    ]
+  },
+  "pdf_pages": 8,
+  "boundary_issues": [],
+  "boundary_tolerance_bp": 2,
+  "equation_tag_positions": [
+    {
+      "page": 2,
+      "bbox": [
+        289.07354736328125,
+        376.693115234375,
+        300.69000244140625,
+        386.65576171875
+      ],
+      "text": "(1)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        289.07354736328125,
+        444.6018981933594,
+        300.69000244140625,
+        454.5645446777344
+      ],
+      "text": "(2)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        289.07354736328125,
+        674.2377319335938,
+        300.69000244140625,
+        684.2003784179688
+      ],
+      "text": "(3)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        289.07354736328125,
+        719.6773071289062,
+        300.69000244140625,
+        729.6399536132812
+      ],
+      "text": "(4)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        552.0872802734375,
+        160.03848266601562,
+        563.7036743164062,
+        170.00111389160156
+      ],
+      "text": "(5)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        552.0872802734375,
+        556.1755981445312,
+        563.7036743164062,
+        566.1382446289062
+      ],
+      "text": "(6)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        552.0872802734375,
+        571.1195678710938,
+        563.7036743164062,
+        581.0822143554688
+      ],
+      "text": "(7)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        552.0872802734375,
+        609.2680053710938,
+        563.7036743164062,
+        619.2306518554688
+      ],
+      "text": "(8)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        552.0872802734375,
+        719.293701171875,
+        563.7036743164062,
+        729.25634765625
+      ],
+      "text": "(9)"
+    },
+    {
+      "page": 2,
+      "bbox": [
+        547.10595703125,
+        734.8255004882812,
+        563.7036743164062,
+        744.7881469726562
+      ],
+      "text": "(10)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09222412109375,
+        97.31157684326172,
+        300.69000244140625,
+        107.27421569824219
+      ],
+      "text": "(11)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09222412109375,
+        112.25553894042969,
+        300.69000244140625,
+        122.21817779541016
+      ],
+      "text": "(12)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09222412109375,
+        192.46551513671875,
+        300.69000244140625,
+        202.4281463623047
+      ],
+      "text": "(13)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09222412109375,
+        359.9995422363281,
+        300.69000244140625,
+        369.9621887207031
+      ],
+      "text": "(14)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09222412109375,
+        386.8988952636719,
+        300.69000244140625,
+        396.8615417480469
+      ],
+      "text": "(15)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.0923156738281,
+        423.636474609375,
+        300.6900939941406,
+        433.59912109375
+      ],
+      "text": "(16)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09228515625,
+        558.02685546875,
+        300.6900634765625,
+        567.989501953125
+      ],
+      "text": "(17)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        284.09222412109375,
+        698.0679931640625,
+        300.69000244140625,
+        708.0306396484375
+      ],
+      "text": "(18)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        547.10595703125,
+        126.74304962158203,
+        563.7036743164062,
+        136.7056884765625
+      ],
+      "text": "(19)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        547.1058959960938,
+        187.9186248779297,
+        563.7036743164062,
+        197.88125610351562
+      ],
+      "text": "(20)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        547.10595703125,
+        225.18385314941406,
+        563.7036743164062,
+        235.146484375
+      ],
+      "text": "(21)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        547.10595703125,
+        241.47760009765625,
+        563.7036743164062,
+        251.4402313232422
+      ],
+      "text": "(22)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        547.1058959960938,
+        530.8631591796875,
+        563.7036743164062,
+        540.8258056640625
+      ],
+      "text": "(23)"
+    },
+    {
+      "page": 3,
+      "bbox": [
+        547.1060791015625,
+        606.05810546875,
+        563.7039184570312,
+        616.020751953125
+      ],
+      "text": "(24)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        284.09228515625,
+        127.75322723388672,
+        300.6900634765625,
+        137.7158660888672
+      ],
+      "text": "(25)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        284.0922546386719,
+        230.5967559814453,
+        300.6900329589844,
+        240.55938720703125
+      ],
+      "text": "(26)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        284.09222412109375,
+        408.335205078125,
+        300.69000244140625,
+        418.2978515625
+      ],
+      "text": "(27)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        284.09222412109375,
+        432.3230285644531,
+        300.69000244140625,
+        442.2856750488281
+      ],
+      "text": "(28)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.1058959960938,
+        88.9929428100586,
+        563.7036743164062,
+        98.95558166503906
+      ],
+      "text": "(29)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.1060180664062,
+        204.8204803466797,
+        563.7037963867188,
+        214.78311157226562
+      ],
+      "text": "(30)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        404.1437072753906,
+        563.7037353515625,
+        414.1063537597656
+      ],
+      "text": "(31)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        444.28424072265625,
+        563.7036743164062,
+        454.24688720703125
+      ],
+      "text": "(32)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        459.22821044921875,
+        563.7036743164062,
+        469.19085693359375
+      ],
+      "text": "(33)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        511.32391357421875,
+        563.7037353515625,
+        521.2865600585938
+      ],
+      "text": "(34)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        682.73974609375,
+        563.7036743164062,
+        692.702392578125
+      ],
+      "text": "(35)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        698.2715454101562,
+        563.7036743164062,
+        708.2341918945312
+      ],
+      "text": "(36)"
+    },
+    {
+      "page": 4,
+      "bbox": [
+        547.10595703125,
+        738.4120483398438,
+        563.7037963867188,
+        748.3746948242188
+      ],
+      "text": "(37)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09222412109375,
+        89.80432891845703,
+        300.69000244140625,
+        99.7669677734375
+      ],
+      "text": "(38)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09222412109375,
+        113.8144760131836,
+        300.69000244140625,
+        123.77711486816406
+      ],
+      "text": "(39)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09228515625,
+        254.06752014160156,
+        300.6900634765625,
+        264.0301513671875
+      ],
+      "text": "(40)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.0922546386719,
+        320.37225341796875,
+        300.6900329589844,
+        330.33489990234375
+      ],
+      "text": "(41)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09222412109375,
+        369.3480224609375,
+        300.69000244140625,
+        379.3106689453125
+      ],
+      "text": "(42)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09222412109375,
+        401.5585632324219,
+        300.69000244140625,
+        411.5212097167969
+      ],
+      "text": "(43)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09222412109375,
+        630.8719482421875,
+        300.69000244140625,
+        640.8345947265625
+      ],
+      "text": "(44)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09222412109375,
+        651.3954467773438,
+        300.69000244140625,
+        661.3580932617188
+      ],
+      "text": "(45)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        284.09228515625,
+        731.7591552734375,
+        300.6900634765625,
+        741.7218017578125
+      ],
+      "text": "(46)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.10595703125,
+        87.11514282226562,
+        563.7036743164062,
+        97.0777816772461
+      ],
+      "text": "(47)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.10595703125,
+        109.32466888427734,
+        563.7036743164062,
+        119.28730773925781
+      ],
+      "text": "(48)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.10595703125,
+        172.1051483154297,
+        563.7036743164062,
+        182.06777954101562
+      ],
+      "text": "(49)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.10595703125,
+        206.65350341796875,
+        563.7036743164062,
+        216.6161346435547
+      ],
+      "text": "(50)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.1060180664062,
+        259.3874816894531,
+        563.7037963867188,
+        269.3501281738281
+      ],
+      "text": "(51)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.1058959960938,
+        335.5354919433594,
+        563.7036743164062,
+        345.4981384277344
+      ],
+      "text": "(52)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.10595703125,
+        388.9867248535156,
+        563.7037963867188,
+        398.9493713378906
+      ],
+      "text": "(53)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.106201171875,
+        530.6923828125,
+        563.7039794921875,
+        540.655029296875
+      ],
+      "text": "(54)"
+    },
+    {
+      "page": 5,
+      "bbox": [
+        547.1060791015625,
+        699.4638671875,
+        563.703857421875,
+        709.426513671875
+      ],
+      "text": "(55)"
+    },
+    {
+      "page": 6,
+      "bbox": [
+        284.0922546386719,
+        143.0735321044922,
+        300.6900329589844,
+        153.03616333007812
+      ],
+      "text": "(56)"
+    },
+    {
+      "page": 6,
+      "bbox": [
+        284.09222412109375,
+        224.62286376953125,
+        300.69000244140625,
+        234.5854949951172
+      ],
+      "text": "(57)"
+    },
+    {
+      "page": 6,
+      "bbox": [
+        547.10595703125,
+        654.1344604492188,
+        563.7037353515625,
+        664.0971069335938
+      ],
+      "text": "(58)"
+    },
+    {
+      "page": 6,
+      "bbox": [
+        547.10595703125,
+        738.4120483398438,
+        563.7037963867188,
+        748.3746948242188
+      ],
+      "text": "(59)"
+    },
+    {
+      "page": 7,
+      "bbox": [
+        284.09228515625,
+        168.72279357910156,
+        300.6900634765625,
+        178.6854248046875
+      ],
+      "text": "(60)"
+    }
+  ],
+  "visible_tags_contiguous_and_unique": true,
+  "visible_tag_count": 60,
+  "display_inventory": [
+    {
+      "line": 104,
+      "environment": "equation",
+      "labels": [
+        "eq:physical_system"
+      ],
+      "tex": "\\vs_{k+1}=f(\\vs_k,\\vu_k),\\qquad \\vx_k=h(\\vs_k),\n    \\label{eq:physical_system}"
+    },
+    {
+      "line": 109,
+      "environment": "equation",
+      "labels": [
+        "eq:koopman_operator"
+      ],
+      "tex": "(\\mathcal K_{\\vu}\\varphi)(\\vs)=\\varphi(f(\\vs,\\vu)).\n    \\label{eq:koopman_operator}"
+    },
+    {
+      "line": 120,
+      "environment": "align",
+      "labels": [
+        "eq:measurement_window",
+        "eq:history_windows"
+      ],
+      "tex": "\\mX_k&=\\begin{bmatrix}\\vx_{k-P+1}\\\\ \\vdots\\\\ \\vx_k\\end{bmatrix}\\in\\R^{Pn},\n    \\label{eq:measurement_window}\\\\\n    \\mU_k^{\\mathrm{in}}&=\\begin{bmatrix}\\vu_{k-P+1}\\\\ \\vdots\\\\ \\vu_{k-1}\\end{bmatrix}\\in\\R^{(P-1)m}.\n    \\label{eq:history_windows}"
+    },
+    {
+      "line": 129,
+      "environment": "equation",
+      "labels": [
+        "eq:state_preserving_lifting"
+      ],
+      "tex": "\\begin{aligned}\n    \\vz_k&=g_\\theta(\\mX_k)=\\begin{bmatrix}\\vx_k\\\\ \\psi_\\theta(\\mX_k)\\end{bmatrix}\\in\\R^d,\n    \\\\ d&=n+n_\\psi,\n    \\qquad \\vx_k=C_x\\vz_k,\n    \\end{aligned}\n    \\label{eq:state_preserving_lifting}"
+    },
+    {
+      "line": 151,
+      "environment": "align",
+      "labels": [
+        "eq:history_context",
+        "eq:scheduling_variables"
+      ],
+      "tex": "\\vc_k&=C_\\phi(\\mX_k,\\mU_k^{\\mathrm{in}})\\in\\R^{d_c},\n    \\label{eq:history_context}\\\\\n    \\vchi_k&=C_x\\vz_k\\in\\R^n.\n    \\label{eq:scheduling_variables}"
+    },
+    {
+      "line": 158,
+      "environment": "equation",
+      "labels": [
+        "eq:scheduled_predictor"
+      ],
+      "tex": "\\vz_{k+1}=\\mA(\\vc_k)\\vz_k+\\mB(\\vchi_k)\\vu_k.\n    \\label{eq:scheduled_predictor}"
+    },
+    {
+      "line": 165,
+      "environment": "align",
+      "labels": [
+        "eq:transition_schedule",
+        "eq:low_rank_schedules"
+      ],
+      "tex": "\\mA(\\vc)&=\\mA_0+\\mU_A\\operatorname{diag}(\\gamma_A(\\vc))\\mV_A^\\top,\n    \\label{eq:transition_schedule}\\\\\n    \\mB(\\vchi)&=\\mB_0+\\mU_B\\operatorname{diag}(\\gamma_B(\\vchi))\\mV_B^\\top.\n    \\label{eq:low_rank_schedules}"
+    },
+    {
+      "line": 172,
+      "environment": "align",
+      "labels": [
+        "eq:A_modulation_coefficients",
+        "eq:A_modulation"
+      ],
+      "tex": "\\gamma_{A,j}(\\vc)&=g_A\\pi_{A,j}(\\vc)\\tanh([W_A\\vc+b_A]_j),\n    \\label{eq:A_modulation_coefficients}\\\\\n    \\pi_A(\\vc)&=\\operatorname{softmax}(W_A^\\pi\\vc+b_A^\\pi),\n    \\label{eq:A_modulation}"
+    },
+    {
+      "line": 183,
+      "environment": "equation",
+      "labels": [
+        "eq:modulation_bound"
+      ],
+      "tex": "\\begin{aligned}\n    \\norm{\\mA(\\vc)-\\mA_0}_2&\\le g_A,\\\\\n    \\norm{\\mB(\\vchi)-\\mB_0}_2&\\le g_B.\n    \\end{aligned}\n    \\label{eq:modulation_bound}"
+    },
+    {
+      "line": 199,
+      "environment": "align",
+      "labels": [
+        "eq:transition_Lipschitz_constant",
+        "eq:Lipschitz_constants"
+      ],
+      "tex": "L_A&=g_A\\left(\\norm{W_A}_2+\\frac{\\sqrt{r_A}}{2}\\norm{W_A^\\pi}_2\\right),\n    \\label{eq:transition_Lipschitz_constant}\\\\\n    L_B&=g_B\\left(\\norm{W_B}_2+\\frac{\\sqrt{r_B}}{2}\\norm{W_B^\\pi}_2\\right).\n    \\label{eq:Lipschitz_constants}"
+    },
+    {
+      "line": 206,
+      "environment": "equation",
+      "labels": [
+        "eq:schedule_lipschitz"
+      ],
+      "tex": "\\begin{aligned}\n    \\norm{\\mA(\\vc)-\\mA(\\vc')}_2&\\le L_A\\norm{\\vc-\\vc'}_2,\\\\\n    \\norm{\\mB(\\vchi)-\\mB(\\vchi')}_2&\\le L_B\\norm{\\vchi-\\vchi'}_2.\n    \\end{aligned}\n    \\label{eq:schedule_lipschitz}"
+    },
+    {
+      "line": 218,
+      "environment": "equation",
+      "labels": [
+        "eq:joint_training_loss"
+      ],
+      "tex": "\\mathcal L=\\mathcal L_x+w_z\\mathcal L_z,\n    \\qquad w_z\\ge0,\n    \\label{eq:joint_training_loss}"
+    },
+    {
+      "line": 226,
+      "environment": "equation",
+      "labels": [
+        "eq:recursive_prediction"
+      ],
+      "tex": "\\vz_{i+1}=\\mA(\\vc_i^{\\mathrm{prop}})\\vz_i+\\mB(C_x\\vz_i)\\vu_i,\n    \\label{eq:recursive_prediction}"
+    },
+    {
+      "line": 235,
+      "environment": "equation",
+      "labels": [
+        "eq:prediction_error"
+      ],
+      "tex": "\\ve_i=\\vz_{k+i}^{\\mathrm{enc}}-\\hat\\vz_i,\n    \\qquad \\ve_0=0.\n    \\label{eq:prediction_error}"
+    },
+    {
+      "line": 241,
+      "environment": "equation",
+      "labels": [
+        "eq:residual_definition"
+      ],
+      "tex": "\\vr_{k}=\\vz_{k+1}^{\\mathrm{enc}}-\\mA(\\vc_k)\\vz_k^{\\mathrm{enc}}-\\mB(\\vchi_k)\\vu_k\n    \\label{eq:residual_definition}"
+    },
+    {
+      "line": 246,
+      "environment": "align",
+      "labels": [
+        "eq:transition_norm_bound",
+        "eq:prediction_L"
+      ],
+      "tex": "M_A&=\\norm{\\mA_0}_2+g_A,\n    \\label{eq:transition_norm_bound}\\\\\n    L&=M_A+L_BM_U+L_AL_\\phi\\sqrt{P}M_Z,\n    \\label{eq:prediction_L}"
+    },
+    {
+      "line": 266,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\begin{aligned}\n&\\norm{C_\\phi(W,V)-C_\\phi(W',V')}_2\\\\\n&\\quad\\le L_\\phi\\norm{(W,V)-(W',V')}_2.\n\\end{aligned}"
+    },
+    {
+      "line": 276,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\begin{aligned}\n\\norm{W_A}_2&\\le M_{W_A},\\quad &\\norm{W_A^\\pi}_2&\\le M_{W_A^\\pi},\\quad\\\\\n\\norm{W_B}_2&\\le M_{W_B},\\quad &\\norm{W_B^\\pi}_2&\\le M_{W_B^\\pi}.\n\\end{aligned}"
+    },
+    {
+      "line": 293,
+      "environment": "equation",
+      "labels": [
+        "eq:prediction_recurrence"
+      ],
+      "tex": "\\begin{aligned}\n\\norm{\\ve_{i+1}}_2\\le{}& \\delta+(M_A+L_BM_U)\\norm{\\ve_i}_2\\\\\n &+L_AL_\\phi\\sqrt{P}M_Z\n  \\max_{i-P+1\\le j\\le i}\\norm{\\ve_j}_2,\n\\end{aligned}\n\\label{eq:prediction_recurrence}"
+    },
+    {
+      "line": 306,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\begin{aligned}\n\\ve_{i+1}={}&\\vr_{k+i}\\\\\n&+\\left[\\mA(\\vc_{k+i}^{\\mathrm{enc}})\\vz_{k+i}^{\\mathrm{enc}}-\\mA(\\vc_i^{\\mathrm{prop}})\\hat\\vz_i\\right]\\\\\n&+\\left[\\mB(\\vchi_{k+i}^{\\mathrm{enc}})-\\mB(\\vchi_i^{\\mathrm{prop}})\\right]\\vu_{k+i}.\n\\end{aligned}"
+    },
+    {
+      "line": 319,
+      "environment": "align",
+      "labels": [
+        "eq:prediction_bound",
+        "eq:prediction_error_maximum"
+      ],
+      "tex": "\\norm{\\ve_i}_2&\\le W_i\\le \\delta\\sum_{t=0}^{i-1}L^{i-1-t},\n    \\label{eq:prediction_bound}\n    \\\\\n    W_i&=\\max_{0\\le j\\le i}\\norm{\\ve_j}_2.\n    \\label{eq:prediction_error_maximum}"
+    },
+    {
+      "line": 342,
+      "environment": "equation",
+      "labels": [
+        "eq:complete_control_model"
+      ],
+      "tex": "\\vz_{i+1}=\\mA(\\vc_i)\\vz_i+\\mB(C_x\\vz_i)\\vu_i,\n    \\label{eq:complete_control_model}"
+    },
+    {
+      "line": 347,
+      "environment": "equation",
+      "labels": [
+        "eq:full_cost"
+      ],
+      "tex": "\\begin{aligned}\nJ_{\\mathrm{full}}(U)= {}&\\sum_{i=1}^{N-1}\\norm{C_x\\vz_i-\\vx_i^{\\mathrm{ref}}}_{Q_x}^2\\\\\n &+\\norm{C_x\\vz_N-\\vx_N^{\\mathrm{ref}}}_{P_x}^2\\\\\n &+\\sum_{i=0}^{N-1}\\norm{\\vu_i-\\vu_i^{\\mathrm{ref}}}_{R}^2\\\\\n &+\\sum_{i=0}^{N-1}\\norm{\\vu_i-\\vu_{i-1}}_{S}^2.\n\\end{aligned}\n\\label{eq:full_cost}"
+    },
+    {
+      "line": 359,
+      "environment": "equation",
+      "labels": [
+        "eq:nominal_rollout"
+      ],
+      "tex": "\\bar\\vz_{i+1}=\\mA(\\bar\\vc_i)\\bar\\vz_i+\\mB(\\bar\\vchi_i)\\bar\\vu_i.\n    \\label{eq:nominal_rollout}"
+    },
+    {
+      "line": 364,
+      "environment": "align",
+      "labels": [
+        "eq:frozen_transition_matrix",
+        "eq:frozen_matrices"
+      ],
+      "tex": "\\bar\\mA_i&=\\mA(\\bar\\vc_i),\n    \\label{eq:frozen_transition_matrix}\\\\\n    \\bar\\mB_i&=\\mB(\\bar\\vchi_i),\n    \\label{eq:frozen_matrices}"
+    },
+    {
+      "line": 371,
+      "environment": "equation",
+      "labels": [
+        "eq:frozen_model"
+      ],
+      "tex": "\\vz_{i+1}^{\\mathrm{fr}}=\\bar\\mA_i\\vz_i^{\\mathrm{fr}}+\\bar\\mB_i\\vu_i.\n    \\label{eq:frozen_model}"
+    },
+    {
+      "line": 382,
+      "environment": "align",
+      "labels": [
+        "eq:stacked_frozen_states",
+        "eq:stacked_inputs"
+      ],
+      "tex": "\\mZ&=[(\\vz_1^{\\mathrm{fr}})^\\top,\\ldots,(\\vz_N^{\\mathrm{fr}})^\\top]^\\top,\n    \\label{eq:stacked_frozen_states}\\\\\n    \\mU&=[\\vu_0^\\top,\\ldots,\\vu_{N-1}^\\top]^\\top.\n    \\label{eq:stacked_inputs}"
+    },
+    {
+      "line": 389,
+      "environment": "equation",
+      "labels": [
+        "eq:frozen_prediction_matrices"
+      ],
+      "tex": "\\mZ=\\mF+\\mG\\mU,\n    \\label{eq:frozen_prediction_matrices}"
+    },
+    {
+      "line": 394,
+      "environment": "align",
+      "labels": [
+        "eq:F_blocks",
+        "eq:F_G_blocks"
+      ],
+      "tex": "F_i&=\\bar\\mA_{i-1}\\cdots\\bar\\mA_0\\vz_0,\n    \\label{eq:F_blocks}\\\\\n    G_{i,t}&=\\begin{cases}\n    \\bar\\mA_{i-1}\\cdots\\bar\\mA_{t+1}\\bar\\mB_t,&t<i,\\\\\n    0,&t\\ge i.\n    \\end{cases}\n    \\label{eq:F_G_blocks}"
+    },
+    {
+      "line": 404,
+      "environment": "equation",
+      "labels": [
+        "eq:frozen_cost"
+      ],
+      "tex": "\\begin{aligned}\nJ_{\\mathrm{fr}}(U;\\bar U)={}&\\norm{\\bar C_x\\mZ-Y^{\\mathrm{ref}}}_{\\bar Q_x}^2\\\\\n&+\\norm{\\mU-\\mU^{\\mathrm{ref}}}_{\\bar R}^2\\\\\n&+\\norm{\\hat D\\mU+\\hat{\\mathbf c}}_{\\bar S}^2.\n\\end{aligned}\n\\label{eq:frozen_cost}"
+    },
+    {
+      "line": 413,
+      "environment": "equation",
+      "labels": [
+        "eq:quadratic_template"
+      ],
+      "tex": "J_{\\mathrm{fr}}(U;\\bar U)=\\frac12\\mU^\\top H\\mU+2f^\\top\\mU+\\mathrm{const},\n    \\label{eq:quadratic_template}"
+    },
+    {
+      "line": 418,
+      "environment": "align",
+      "labels": [
+        "eq:QP_Hessian",
+        "eq:QP_coefficients"
+      ],
+      "tex": "H&=2\\left(\\begin{aligned}\n &\\mG^\\top\\bar C_x^\\top\\bar Q_x\\bar C_x\\mG\\\\\n &+\\bar R+\\hat D^\\top\\bar S\\hat D\n\\end{aligned}\\right),\n\\label{eq:QP_Hessian}\\\\\nf&=\\begin{aligned}\n &\\mG^\\top\\bar C_x^\\top\\bar Q_x(\\bar C_x\\mF-Y^{\\mathrm{ref}})\\\\\n &-\\bar R\\mU^{\\mathrm{ref}}+\\hat D^\\top\\bar S\\hat{\\mathbf c}.\n\\end{aligned}\n\\label{eq:QP_coefficients}"
+    },
+    {
+      "line": 435,
+      "environment": "align",
+      "labels": [
+        "eq:input_deviation",
+        "eq:input_window_deviation"
+      ],
+      "tex": "\\delta_u&=\\max_{0\\le i<N}\\norm{\\vu_i-\\bar\\vu_i}_2,\n    \\label{eq:input_deviation}\\\\\n    \\Delta_u&=\\max_{0\\le i<N}\\norm{U_i^{\\mathrm{in}}-\\bar U_i^{\\mathrm{in}}}_2.\n    \\label{eq:input_window_deviation}"
+    },
+    {
+      "line": 442,
+      "environment": "equation",
+      "labels": [
+        "eq:nominal_drift"
+      ],
+      "tex": "\\norm{\\vg_i}_2\\le G_i:=M_B\\delta_u\\sum_{t=0}^{i-1}M_A^{i-1-t}.\n    \\label{eq:nominal_drift}"
+    },
+    {
+      "line": 448,
+      "environment": "align",
+      "labels": [
+        "eq:uniform_pointwise_input_deviation",
+        "eq:uniform_input_deviation"
+      ],
+      "tex": "\\bar\\delta_u&:=\\sup_{U\\in\\mathcal U_{\\mathrm{feas}}}\\max_{0\\le i<N}\\norm{\\vu_i-\\bar\\vu_i}_2,\n\\label{eq:uniform_pointwise_input_deviation}\\\\\n\\bar\\Delta_u&:=\\sup_{U\\in\\mathcal U_{\\mathrm{feas}}}\\max_{0\\le i<N}\\norm{U_i^{\\mathrm{in}}-\\bar U_i^{\\mathrm{in}}}_2.\n\\label{eq:uniform_input_deviation}"
+    },
+    {
+      "line": 455,
+      "environment": "align",
+      "labels": [
+        "eq:uniform_nominal_drift",
+        "eq:uniform_freezing_driver"
+      ],
+      "tex": "\\bar G_N&:=M_B\\bar\\delta_u\\sum_{t=0}^{N-1}M_A^t,\n\\label{eq:uniform_nominal_drift}\\\\\n\\bar\\delta_{\\mathrm{frz}}&:=\\begin{aligned}\n &L_AL_\\phi M_Z\\bar\\Delta_u\\\\\n &+\\left(L_AL_\\phi\\sqrt{P}M_Z+L_BM_U\\right)\\bar G_N,\n\\end{aligned}\n\\label{eq:uniform_freezing_driver}"
+    },
+    {
+      "line": 465,
+      "environment": "equation",
+      "labels": [
+        "eq:uniform_freezing_bound"
+      ],
+      "tex": "\\bar K_i:=\\bar\\delta_{\\mathrm{frz}}\\sum_{t=0}^{i-1}L^{i-1-t}.\n\\label{eq:uniform_freezing_bound}"
+    },
+    {
+      "line": 472,
+      "environment": "equation",
+      "labels": [
+        "eq:freezing_driver"
+      ],
+      "tex": "\\begin{aligned}\n    \\delta_{\\mathrm{frz}}={}&L_AL_\\phi M_Z\\Delta_u\\\\\n    &+\\left(L_AL_\\phi\\sqrt{P}M_Z+L_BM_U\\right)G_N.\n    \\end{aligned}\n    \\label{eq:freezing_driver}"
+    },
+    {
+      "line": 480,
+      "environment": "equation",
+      "labels": [
+        "eq:freezing_bound"
+      ],
+      "tex": "\\norm{\\ve_i}_2\\le K_i:=\\delta_{\\mathrm{frz}}\n    \\sum_{t=0}^{i-1}L^{i-1-t},\\qquad 0\\le i\\le N.\n    \\label{eq:freezing_bound}"
+    },
+    {
+      "line": 488,
+      "environment": "equation",
+      "labels": [
+        "eq:epsilon_cost"
+      ],
+      "tex": "\\begin{aligned}\n\\varepsilon_J={}&2(M_Y+M_{\\mathrm{ref}})\n \\left[\\begin{aligned}\n &\\norm{Q_x}_2\\sum_{i=1}^{N-1}\\bar K_i^x\\\\\n &+\\norm{P_x}_2\\bar K_N^x\n \\end{aligned}\\right]\\\\\n&+\\norm{Q_x}_2\\sum_{i=1}^{N-1}(\\bar K_i^x)^2\\\\\n&+\\norm{P_x}_2(\\bar K_N^x)^2.\n\\end{aligned}\n\\label{eq:epsilon_cost}"
+    },
+    {
+      "line": 503,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\begin{aligned}\n&\\left|\\norm{y_i^{\\mathrm{full}}-\\vx_i^{\\mathrm{ref}}}_{Q_x}^2-\n\\norm{y_i^{\\mathrm{fr}}-\\vx_i^{\\mathrm{ref}}}_{Q_x}^2\\right|\\\\\n&\\quad\\le\\norm{Q_x}_2\\bar K_i^x(2M_Y+\\bar K_i^x+2M_{\\mathrm{ref}}),\n\\end{aligned}"
+    },
+    {
+      "line": 515,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\sup_{U\\in\\mathcal U_{\\mathrm{feas}}}\n    |J_{\\mathrm{full}}(U)-J_{\\mathrm{fr}}(U;\\bar U)|\\le\\varepsilon_J."
+    },
+    {
+      "line": 524,
+      "environment": "equation",
+      "labels": [
+        "eq:suboptimality_bound"
+      ],
+      "tex": "0\\le J_{\\mathrm{full}}(U^{\\mathrm{fr}})-J_{\\mathrm{full}}(U^\\star)\n    \\le2\\varepsilon_J.\n    \\label{eq:suboptimality_bound}"
+    },
+    {
+      "line": 532,
+      "environment": "align*",
+      "labels": [],
+      "tex": "J_{\\mathrm{full}}(U^{\\mathrm{fr}})\n&\\le J_{\\mathrm{fr}}(U^{\\mathrm{fr}};\\bar U)+\\varepsilon_J\\\\\n&\\le J_{\\mathrm{fr}}(U^\\star;\\bar U)+\\varepsilon_J\\\\\n&\\le J_{\\mathrm{full}}(U^\\star)+2\\varepsilon_J."
+    },
+    {
+      "line": 583,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\begin{aligned}\n\\ve_{i+1}={}&\\bar\\mA_i\\ve_i\\\\\n&+\\big(\\mA(\\vc_i^{\\mathrm{full}})-\\bar\\mA_i\\big)\\vz_i^{\\mathrm{full}}\\\\\n&+\\big(\\mB(\\vchi_i^{\\mathrm{full}})-\\bar\\mB_i\\big)\\vu_i.\n\\end{aligned}"
+    },
+    {
+      "line": 591,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\norm{\\ve_{i+1}}_2\\le\\delta_{\\mathrm{frz}}+LW_i."
+    },
+    {
+      "line": 600,
+      "environment": "equation",
+      "labels": [],
+      "tex": "\\begin{aligned}\n    &(\\mW+\\mG_x\\mU)^\\top\\bar Q_x(\\mW+\\mG_x\\mU)\\\\\n    &\\quad=\\mU^\\top\\mG_x^\\top\\bar Q_x\\mG_x\\mU\\\\\n    &\\qquad+2(\\mG_x^\\top\\bar Q_x\\mW)^\\top\\mU+\\mathrm{const}.\n    \\end{aligned}"
+    }
+  ],
+  "limitations": [
+    "Font substitution and underfull warnings remain; not submission-ready.",
+    "Layout/no-renumber errors are checked; no mathematical theory recertification.",
+    "Geometry is only supplementary to visual review."
+  ],
+  "expected_tag_count_from_source": 60,
+  "visible_tag_count_matches_source": true,
+  "aux_equation_numbers_within_visible_tags": true,
+  "failed_automated_checks": [],
+  "visual_review": "pending; tag ownership and grouping require independent artifact inspection"
+}

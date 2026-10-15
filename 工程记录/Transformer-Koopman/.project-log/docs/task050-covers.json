@@ -1,0 +1,15 @@
+{
+  "tasks": [
+    "TASK-050"
+  ],
+  "files": [
+    "Transformer-Koopman/论文/新版本/Main.tex",
+    ".project-log/docs/task032-paper-draft-static-validation.json",
+    ".project-log/docs/task032-paper-draft-review.md"
+  ],
+  "requirements": [
+    "全可行集bar-delta_u/bar-Delta_u上确界",
+    "统一bar-G_N/bar-delta_frz/bar-K_i/epsilon_J",
+    "A2 named domain、A5有限索引、矩阵谱范数定义"
+  ]
+}

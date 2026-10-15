@@ -1,0 +1,14 @@
+{
+ "placeholder_contexts": [
+  "he four low-rank factors have norm at most one. IEEE JOURNAL DRAFT 3 [Placeholder] Overall framework. Left to right: measurement window Xk a",
+  "story-conditioned scheduled predictor and the frozen-LTV controller. (Placeholder; figure to be drawn.) [Placeholder] Recursive window updat",
+  "or and the frozen-LTV controller. (Placeholder; figure to be drawn.) [Placeholder] Recursive window update. Sliding windows Xk, Uin k : meas",
+  "nd pre-horizon history, ¯z0 = z0, ¯X0 = Xk, and IEEE JOURNAL DRAFT 5 [Placeholder] Freezing construction. Three trajectories over the horizo",
+  "l, complete, and frozen trajectories in the frozen-LTV construction. (Placeholder; figure to be drawn.) ¯U in 0 = Uin k . At each step set ¯"
+ ],
+ "drawn_contexts": [
+  " the history-conditioned scheduled predictor and the frozen-LTV controller. (Placeholder; figure to be drawn.) [Placeholder] Recur",
+  " zprop i . Fig. 2. Common-history convention and recursive window update. (Place- holder; figure to be drawn.) Proposition 1 (Unif",
+  " Nominal, complete, and frozen trajectories in the frozen-LTV construction. (Placeholder; figure to be drawn.) ¯U in 0 = Uin k . A"
+ ]
+}

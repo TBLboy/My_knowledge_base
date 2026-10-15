@@ -1,0 +1,9 @@
+{
+  "decision": "控制状态跟踪采用测量空间，训练保持联合x+z",
+  "source": "用户回复：可以没问题；对应ALIGN-TASK048-001的明确确认",
+  "control_contract": "状态项跟踪C_x z_i-x_ref_i，Q_x及终端P_x为n维半正定权重；不定义潜坐标参考",
+  "training_contract": "DEC-091继续有效，联合L_x+w_z L_z，不增加z约束效果比较或理论",
+  "scope": "局部整理01–08审计问题，06/08成本与现有代码一致，保持三条核心定理限制版；不写论文正文、不启动实验、不改控制代码",
+  "implementation_detail": "full/frozen统一按i=1..N-1的预测状态项与i=N终端项计价，输入及增量从i=0计价，与cost_value一致；共同初值常数不再造成两侧成本差",
+  "verification": "测量代价直接求和/堆叠二次型/现有cost_value一致，Hessian半正定、冻结误差和统一成本界核查，独立复核及稳定哈希绑定"
+}

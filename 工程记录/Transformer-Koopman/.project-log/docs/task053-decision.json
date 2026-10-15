@@ -1,0 +1,9 @@
+{
+  "task": "TASK-053",
+  "authority": "B implementation choice within explicit user permission to re-number equations",
+  "context": "TASK-052 preserved bad grouping to preserve numbering; overfull-only success was not sufficient for layout quality",
+  "decision": "Number independent substantial definitions separately with relation-aligned rows; retain a single number for one expression continued over multiple lines; remove unexplained box and audit every display",
+  "constraints": "Preserve math, prose, citations, and existing reference label keys. Allow renumbering and unique new labels. No diagrams or experiments",
+  "verification": "Exact content comparison excluding an enumerated layout-only whitelist; references/labels verified by compiled aux, zero overfull/errors and full-page independent visual inspection",
+  "lesson_candidate": "A clean overfull log does not establish correct equation grouping, alignment or tag placement; do not promote as a global rule without repeated evidence"
+}

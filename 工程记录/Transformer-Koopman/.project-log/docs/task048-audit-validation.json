@@ -1,0 +1,62 @@
+{
+  "task": "TASK-048",
+  "checks": {
+    "fixed_network_supremum_counterexample": {
+      "passed": true,
+      "zero_modulation_norm": 0.0,
+      "g": 0.3
+    },
+    "softmax_optimal_constant_counterexample": {
+      "passed": true,
+      "jacobian_spectral_norm": 0.5
+    },
+    "feasible_reference_cost_gap": {
+      "passed": true,
+      "global_gap": 0.002500000000000009,
+      "max_reference_gap": 0.0025000000000000022,
+      "min_reference_gap": -0.41999999999999993,
+      "scope": "any feasible reference, not an end-to-end optimizer test"
+    },
+    "report_targeted_readback": {
+      "passed": true,
+      "theory_files_covered": 8
+    },
+    "frozen_scope": {
+      "passed": true,
+      "paper_status_empty": true,
+      "original_theory_diff_empty": true
+    }
+  },
+  "source_hashes": {
+    "Transformer-Koopman/杂项/新版本/Theory_Package/01_Model_Definition.md": "da6456a4173846fae5e6e2cf8f0347a7d6c8b0c0dd3d1851461d1cfef9297dc1",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/02_Assumptions.md": "920565ddf5d8021179af94545ebc543ba0c8e9cbed8bc7d96abf7a80e0fbf362",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/03_Low_rank_Boundedness.md": "bd99786ff274510f2313c61e9556d0812f9e9c3742c136732ecaffb64ccf8458",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/04_Scheduling_Lipschitz.md": "6f59b55aee8712a39b19c491582852179c5af765f003d15c40357446d341fb17",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/05_Prediction_Error_Bound.md": "af556ab4b888bfee4f1d74e0850cfc6a0985bb70c2b62c6c10c4f7513bafeb26",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/06_Frozen_LTV_QP_Proof.md": "739dc7f8f9f32e7468896312950fe6e39ae73465c999a7ab014d0cdae9dc4e35",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/07_Freezing_Error_Bound.md": "05c8dcaaea32363036c05888af18e13236f0ebde28c292d79b76695ac3ab5629",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/08_Conditional_Suboptimality.md": "aeb9f5f4d88b75d3c7af016a28b5c965bf3ddb62b8c81326016f3579613cbaaa",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/controllers/ltv_mpc.py": "44c087c96f63d05c6bab722604b048b0b865b951de4ddd9b465bcec8ee749cd0",
+    "Transformer-Koopman/杂项/新版本/Theory_Package_Audit_and_Compact_Outline.md": "0199b1a0b457b57930b173971d375f5ed5721fc17f32efd9ba405aae40dd89de",
+    ".project-log/docs/task048-algebra-check.py": "05b5942b470334dd321941ee6be2c1e9a3bed4b98ee073c7768d5651d1da4ef8"
+  },
+  "source_line_counts": {
+    "Transformer-Koopman/杂项/新版本/Theory_Package/01_Model_Definition.md": 167,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/02_Assumptions.md": 106,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/03_Low_rank_Boundedness.md": 99,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/04_Scheduling_Lipschitz.md": 150,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/05_Prediction_Error_Bound.md": 192,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/06_Frozen_LTV_QP_Proof.md": 222,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/07_Freezing_Error_Bound.md": 221,
+    "Transformer-Koopman/杂项/新版本/Theory_Package/08_Conditional_Suboptimality.md": 136,
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/controllers/ltv_mpc.py": 317,
+    "Transformer-Koopman/杂项/新版本/Theory_Package_Audit_and_Compact_Outline.md": 97,
+    ".project-log/docs/task048-algebra-check.py": 76
+  },
+  "limits": [
+    "No training or new device experiment",
+    "No full theorem numerical certification",
+    "No uniform real-device constants or exact numerical argmin certificate",
+    "PDF full-layout unavailable"
+  ]
+}

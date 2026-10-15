@@ -1,0 +1,18 @@
+{
+ "files": [
+  ".project-log/docs/task054-before.tex",
+  ".project-log/docs/task054-changes.diff",
+  ".project-log/docs/task054-font-note.md",
+  ".project-log/docs/task054-removed-material.json",
+  ".project-log/docs/task054-validation.json",
+  ".project-log/docs/task055-note.md",
+  ".project-log/docs/task056-note.md",
+  ".project-log/docs/task057-reference-verification.md",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/Main.tex",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_font/Main.log",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_font/Main.pdf"
+ ],
+ "tasks": [
+  "TASK-054"
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "git_commit": "none (paper directory untracked)",
+ "diff_hash": "07884ae40c2e12d5b5dced32e9a121ddaf6c54cd6ff92c850fca7d02cc814d9b",
+ "file_hashes": {
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/Main.tex": "204a883bd86c9083213115b2670aa9b620344b43118b93fd82b09fe4ccf61229",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_font/Main.pdf": "a51ac7e649246cc2d4f9510cbdcefc13acae3ccb1271363a413002ffb1adf6e5",
+  ".project-log/docs/task058-changes.diff": "07884ae40c2e12d5b5dced32e9a121ddaf6c54cd6ff92c850fca7d02cc814d9b",
+  ".project-log/docs/task058-validation.json": "0400544a2151bec03bd576277ac656c8801ec3257989fa9148098c28aa0127f5",
+  ".project-log/docs/task058-intro.tex.txt": "fbc009d0c091a57a514e9941258220df4104c2315c374c5086682978a89235ad"
+ }
+}

@@ -1,0 +1,450 @@
+--- before/Main.tex
++++ after/Main.tex
+@@ -117,22 +117,21 @@
+ \subsection{Finite histories and prediction/control tasks}
+ 
+ Let $P\ge2$. At time $k$, define the measurement and past-input windows
+-\begin{equation}
+-    \begin{gathered}
+-    \mX_k=\begin{bmatrix}\vx_{k-P+1}\\ \vdots\\ \vx_k\end{bmatrix}\in\R^{Pn},\\
+-    \mU_k^{\mathrm{in}}=\begin{bmatrix}\vu_{k-P+1}\\ \vdots\\ \vu_{k-1}\end{bmatrix}\in\R^{(P-1)m}.
+-    \end{gathered}
++\begin{align}
++    \mX_k&=\begin{bmatrix}\vx_{k-P+1}\\ \vdots\\ \vx_k\end{bmatrix}\in\R^{Pn},
++    \label{eq:measurement_window}\\
++    \mU_k^{\mathrm{in}}&=\begin{bmatrix}\vu_{k-P+1}\\ \vdots\\ \vu_{k-1}\end{bmatrix}\in\R^{(P-1)m}.
+     \label{eq:history_windows}
+-\end{equation}
++\end{align}
+ The current input $\vu_k$ is not part of the context window; it enters the one-step update separately. Given $(\mX_k,\mU_k^{\mathrm{in}})$ and a future input sequence $\vu_{k:k+H-1}$, the prediction task is to estimate $\vx_{k+1:k+H}$. The control task is to choose a finite sequence $U=(\vu_0,\ldots,\vu_{N-1})$ that tracks a measurement reference while respecting the input set.
+ 
+ The lifting is state-preserving in the measured coordinates:
+ \begin{equation}
+-    \begin{gathered}
+-    \vz_k=g_\theta(\mX_k)=\begin{bmatrix}\vx_k\\ \psi_\theta(\mX_k)\end{bmatrix}\in\R^d,
+-    \\ d=n+n_\psi,
++    \begin{aligned}
++    \vz_k&=g_\theta(\mX_k)=\begin{bmatrix}\vx_k\\ \psi_\theta(\mX_k)\end{bmatrix}\in\R^d,
++    \\ d&=n+n_\psi,
+     \qquad \vx_k=C_x\vz_k,
+-    \end{gathered}
++    \end{aligned}
+     \label{eq:state_preserving_lifting}
+ \end{equation}
+ where $C_x=[I_n\;0]$. We distinguish $\vz_k^{\mathrm{enc}}=g_\theta(\mX_k)$, which uses measured data, from a recursively propagated $\vz_k^{\mathrm{prop}}$, whose measured coordinates are model outputs.
+@@ -149,42 +148,43 @@
+ The intended architecture is a patch-based temporal Transformer encoder \cite{vaswani2017attention,nie2023time}. We impose the implementation constraint $p\mid P$: the history is partitioned into $P/p$ contiguous patches, each patch is linearly embedded, augmented with positional encoding, processed by a Transformer encoder, and pooled before projection to the hidden lifted coordinates. The current measurement is concatenated to this projection as in \eqref{eq:state_preserving_lifting}. Thus, the theoretical map $g_\theta$ abstracts the architecture while the state-preserving readout and the recursive propagation interface remain explicit. The context map $C_\phi$ is a separate feed-forward map of the flattened measurement and past-input windows. These architectural details specify the intended temporal map; the bounds below use only the stated Lipschitz and work-domain conditions.
+ 
+ The history context is
+-\begin{equation}
+-    \vc_k=C_\phi(\mX_k,\mU_k^{\mathrm{in}})\in\R^{d_c},
+-    \qquad \vchi_k=C_x\vz_k\in\R^n.
++\begin{align}
++    \vc_k&=C_\phi(\mX_k,\mU_k^{\mathrm{in}})\in\R^{d_c},
++    \label{eq:history_context}\\
++    \vchi_k&=C_x\vz_k\in\R^n.
+     \label{eq:scheduling_variables}
+-\end{equation}
++\end{align}
+ The scheduled predictor is
+ \begin{equation}
+-    \boxed{\vz_{k+1}=\mA(\vc_k)\vz_k+\mB(\vchi_k)\vu_k.}
++    \vz_{k+1}=\mA(\vc_k)\vz_k+\mB(\vchi_k)\vu_k.
+     \label{eq:scheduled_predictor}
+ \end{equation}
+ The map $\mA$ is scheduled by history, while $\mB$ is scheduled by the current measured component of the lifted state. This separation is a parameterization choice: it does not assert that the physical input effect is independent of history and does not, by itself, establish parameter identifiability.
+ 
+ We use bounded low-rank corrections around nominal matrices,
+ \begin{align}
+-    \mA(\vc)&=\mA_0+\mU_A\operatorname{diag}(\gamma_A(\vc))\mV_A^\top,\\
++    \mA(\vc)&=\mA_0+\mU_A\operatorname{diag}(\gamma_A(\vc))\mV_A^\top,
++    \label{eq:transition_schedule}\\
+     \mB(\vchi)&=\mB_0+\mU_B\operatorname{diag}(\gamma_B(\vchi))\mV_B^\top.
+     \label{eq:low_rank_schedules}
+ \end{align}
+ Here $\mA_0\in\R^{d\times d}$, $\mB_0\in\R^{d\times m}$, $\mU_A,\mV_A\in\R^{d\times r_A}$, $\mU_B\in\R^{d\times r_B}$, and $\mV_B\in\R^{m\times r_B}$. The transition coefficients have the form
+-\begin{equation}
+-    \begin{gathered}
+-    \gamma_{A,j}(\vc)=g_A\pi_{A,j}(\vc)\tanh([W_A\vc+b_A]_j),
+-    \\
+-    \pi_A(\vc)=\operatorname{softmax}(W_A^\pi\vc+b_A^\pi),
+-    \end{gathered}
++\begin{align}
++    \gamma_{A,j}(\vc)&=g_A\pi_{A,j}(\vc)\tanh([W_A\vc+b_A]_j),
++    \label{eq:A_modulation_coefficients}\\
++    \pi_A(\vc)&=\operatorname{softmax}(W_A^\pi\vc+b_A^\pi),
+     \label{eq:A_modulation}
+-\end{equation}
++\end{align}
+ and analogously for $\gamma_B(\vchi)$, with $g_B$, $W_B$, and $W_B^\pi$. The columns of the four low-rank factors have norm at most one.
+ 
+ \begin{proposition}[Uniform modulation bounds]
+ \label{prop:modulation_bound}
+ For every $\vc\in\R^{d_c}$ and $\vchi\in\R^n$,
+ \begin{equation}
+-    \norm{\mA(\vc)-\mA_0}_2\le g_A,
+-    \qquad
+-    \norm{\mB(\vchi)-\mB_0}_2\le g_B.
++    \begin{aligned}
++    \norm{\mA(\vc)-\mA_0}_2&\le g_A,\\
++    \norm{\mB(\vchi)-\mB_0}_2&\le g_B.
++    \end{aligned}
+     \label{eq:modulation_bound}
+ \end{equation}
+ \end{proposition}
+@@ -196,21 +196,18 @@
+ This is a boundedness result, not a stability result. In particular, it does not imply $\rho(\mA(\vc))<1$, contraction of time-varying matrix products, closed-loop stability, or recursive feasibility.
+ 
+ The schedule maps are also Lipschitz under finite modulation-layer weights. Define
+-\begin{equation}
+-    \begin{gathered}
+-    L_A=g_A\left(\norm{W_A}_2+\frac{\sqrt{r_A}}{2}\norm{W_A^\pi}_2\right),
+-    \\
+-    L_B=g_B\left(\norm{W_B}_2+\frac{\sqrt{r_B}}{2}\norm{W_B^\pi}_2\right).
+-    \end{gathered}
++\begin{align}
++    L_A&=g_A\left(\norm{W_A}_2+\frac{\sqrt{r_A}}{2}\norm{W_A^\pi}_2\right),
++    \label{eq:transition_Lipschitz_constant}\\
++    L_B&=g_B\left(\norm{W_B}_2+\frac{\sqrt{r_B}}{2}\norm{W_B^\pi}_2\right).
+     \label{eq:Lipschitz_constants}
+-\end{equation}
++\end{align}
+ Then
+ \begin{equation}
+-    \begin{gathered}
+-    \norm{\mA(\vc)-\mA(\vc')}_2\le L_A\norm{\vc-\vc'}_2,
+-    \\
+-    \norm{\mB(\vchi)-\mB(\vchi')}_2\le L_B\norm{\vchi-\vchi'}_2.
+-    \end{gathered}
++    \begin{aligned}
++    \norm{\mA(\vc)-\mA(\vc')}_2&\le L_A\norm{\vc-\vc'}_2,\\
++    \norm{\mB(\vchi)-\mB(\vchi')}_2&\le L_B\norm{\vchi-\vchi'}_2.
++    \end{aligned}
+     \label{eq:schedule_lipschitz}
+ \end{equation}
+ The factor $1/2$ is the global Euclidean Lipschitz constant of softmax for $r\ge2$; the full constants in \eqref{eq:Lipschitz_constants} may still be conservative because they combine norm inequalities and triangle inequalities.
+@@ -246,12 +243,12 @@
+     \label{eq:residual_definition}
+ \end{equation}
+ obeys $\norm{\vr_k}_2\le\delta$ on the considered domain and horizon. Let
+-\begin{equation}
+-    M_A=\norm{\mA_0}_2+g_A,
+-    \qquad
+-    L=M_A+L_BM_U+L_AL_\phi\sqrt{P}M_Z,
++\begin{align}
++    M_A&=\norm{\mA_0}_2+g_A,
++    \label{eq:transition_norm_bound}\\
++    L&=M_A+L_BM_U+L_AL_\phi\sqrt{P}M_Z,
+     \label{eq:prediction_L}
+-\end{equation}
++\end{align}
+ where $M_Z$ and $M_U$ are common state and input bounds.
+ 
+ For traceability, the assumptions used below are stated formally. They are local assumptions on a fixed finite horizon, not global dynamical guarantees.
+@@ -267,18 +264,20 @@
+ \label{ass:a3}
+ On the common window domain in A1, $C_\phi$ is Lipschitz with one constant $L_\phi$ for every pair of windows:
+ \begin{equation}
+-\norm{C_\phi(W,V)-C_\phi(W',V')}_2\le L_\phi\norm{(W,V)-(W',V')}_2.
++\begin{aligned}
++&\norm{C_\phi(W,V)-C_\phi(W',V')}_2\\
++&\quad\le L_\phi\norm{(W,V)-(W',V')}_2.
++\end{aligned}
+ \end{equation}
+ \end{assumption}
+ \begin{assumption}[A4: uniform modulation weights]
+ \label{ass:a4}
+ When a family of trained models is considered, there are finite constants $M_{W_A}$, $M_{W_A^\pi}$, $M_{W_B}$, and $M_{W_B^\pi}$ such that
+ \begin{equation}
+-\begin{gathered}
+-\norm{W_A}_2\le M_{W_A},\quad \norm{W_A^\pi}_2\le M_{W_A^\pi},\quad
+-\\
+-\norm{W_B}_2\le M_{W_B},\quad \norm{W_B^\pi}_2\le M_{W_B^\pi}.
+-\end{gathered}
++\begin{aligned}
++\norm{W_A}_2&\le M_{W_A},\quad &\norm{W_A^\pi}_2&\le M_{W_A^\pi},\quad\\
++\norm{W_B}_2&\le M_{W_B},\quad &\norm{W_B^\pi}_2&\le M_{W_B^\pi}.
++\end{aligned}
+ \end{equation}
+ For a fixed trained model, A4 is only the finite-constant condition used in \eqref{eq:Lipschitz_constants}.
+ \end{assumption}
+@@ -304,22 +303,26 @@
+ 
+ \begin{proof}
+ Subtract the propagated update from the encoder update and add and subtract the encoder-scheduled terms:
+-\begin{align}
+-\ve_{i+1}={}&\vr_{k+i}+
+-\left[\mA(\vc_{k+i}^{\mathrm{enc}})\vz_{k+i}^{\mathrm{enc}}-\mA(\vc_i^{\mathrm{prop}})\hat\vz_i\right]\\
++\begin{equation}
++\begin{aligned}
++\ve_{i+1}={}&\vr_{k+i}\\
++&+\left[\mA(\vc_{k+i}^{\mathrm{enc}})\vz_{k+i}^{\mathrm{enc}}-\mA(\vc_i^{\mathrm{prop}})\hat\vz_i\right]\\
+ &+\left[\mB(\vchi_{k+i}^{\mathrm{enc}})-\mB(\vchi_i^{\mathrm{prop}})\right]\vu_{k+i}.
+-\end{align}
++\end{aligned}
++\end{equation}
+ The first term is bounded by A5. Splitting the second term into state and schedule differences gives $M_A\norm{\ve_i}_2$ plus $L_A M_Z$ times the context difference. The input portions of the two windows are identical, while the measurement portions differ by at most $\sqrt P\max_{i-P+1\le j\le i}\norm{\ve_j}_2$; A3 therefore bounds the context difference by $L_\phi$ times this quantity. Finally, A3 is not needed for the input branch: \eqref{eq:schedule_lipschitz} and $\norm{\vu_{k+i}}_2\le M_U$ give $L_BM_U\norm{\ve_i}_2$. Combining the three bounds proves \eqref{eq:prediction_recurrence}.
+ \end{proof}
+ 
+ \begin{theorem}[Finite-horizon open-loop prediction bound]
+ \label{thm:prediction_bound}
+ Under the conditions above, for every $0\le i\le H$,
+-\begin{equation}
+-    \norm{\ve_i}_2\le W_i\le \delta\sum_{t=0}^{i-1}L^{i-1-t},
+-    \qquad W_i=\max_{0\le j\le i}\norm{\ve_j}_2.
++\begin{align}
++    \norm{\ve_i}_2&\le W_i\le \delta\sum_{t=0}^{i-1}L^{i-1-t},
+     \label{eq:prediction_bound}
+-\end{equation}
++    \\
++    W_i&=\max_{0\le j\le i}\norm{\ve_j}_2.
++    \label{eq:prediction_error_maximum}
++\end{align}
+ Thus, for $L\ne1$, $\norm{\ve_H}_2\le\delta(L^H-1)/(L-1)$, and for $L=1$, $\norm{\ve_H}_2\le H\delta$.
+ \end{theorem}
+ \begin{proof}
+@@ -341,13 +344,15 @@
+     \label{eq:complete_control_model}
+ \end{equation}
+ with history slots shifted according to Section~\ref{sec:prelim}. Given measurement references $\vx_i^{\mathrm{ref}}$, input references $\vu_i^{\mathrm{ref}}$, previous input $\vu_{-1}$, and positive semidefinite weights $Q_x,P_x,R,S$, define
+-\begin{align}
+-J_{\mathrm{full}}(U)= {}&\sum_{i=1}^{N-1}\norm{C_x\vz_i-\vx_i^{\mathrm{ref}}}_{Q_x}^2
+- +\norm{C_x\vz_N-\vx_N^{\mathrm{ref}}}_{P_x}^2\\
+-&+\sum_{i=0}^{N-1}\norm{\vu_i-\vu_i^{\mathrm{ref}}}_{R}^2
+- +\sum_{i=0}^{N-1}\norm{\vu_i-\vu_{i-1}}_{S}^2.
++\begin{equation}
++\begin{aligned}
++J_{\mathrm{full}}(U)= {}&\sum_{i=1}^{N-1}\norm{C_x\vz_i-\vx_i^{\mathrm{ref}}}_{Q_x}^2\\
++ &+\norm{C_x\vz_N-\vx_N^{\mathrm{ref}}}_{P_x}^2\\
++ &+\sum_{i=0}^{N-1}\norm{\vu_i-\vu_i^{\mathrm{ref}}}_{R}^2\\
++ &+\sum_{i=0}^{N-1}\norm{\vu_i-\vu_{i-1}}_{S}^2.
++\end{aligned}
+ \label{eq:full_cost}
+-\end{align}
++\end{equation}
+ The state tracking cost is deliberately expressed in measurement space. No reference is assigned to hidden lifted coordinates. The complete problem is generally nonlinear and nonconvex because the scheduling variables depend on the decision-dependent trajectory.
+ 
+ Choose a feasible nominal input sequence $\bar U=(\bar\vu_0,\ldots,\bar\vu_{N-1})$ and initialize the nominal rollout with the same state and pre-horizon history, $\bar\vz_0=\vz_0$, $\bar X_0=\mX_k$, and $\bar U^{\mathrm{in}}_0=\mU_k^{\mathrm{in}}$. At each step set $\bar\vchi_i=C_x\bar\vz_i$ and $\bar\vc_i=C_\phi(\bar X_i,\bar U_i^{\mathrm{in}})$, then roll out the complete model once:
+@@ -356,10 +361,12 @@
+     \label{eq:nominal_rollout}
+ \end{equation}
+ Set
+-\begin{equation}
+-    \bar\mA_i=\mA(\bar\vc_i),\qquad \bar\mB_i=\mB(\bar\vchi_i),
++\begin{align}
++    \bar\mA_i&=\mA(\bar\vc_i),
++    \label{eq:frozen_transition_matrix}\\
++    \bar\mB_i&=\mB(\bar\vchi_i),
+     \label{eq:frozen_matrices}
+-\end{equation}
++\end{align}
+ and keep these matrices fixed while optimizing the candidate sequence $U$. The frozen trajectory is therefore
+ \begin{equation}
+     \vz_{i+1}^{\mathrm{fr}}=\bar\mA_i\vz_i^{\mathrm{fr}}+\bar\mB_i\vu_i.
+@@ -372,33 +379,33 @@
+ \subsection{Prediction matrices and convex quadratic program}
+ 
+ Stack the frozen states and inputs as
+-\begin{equation}
+-    \mZ=[(\vz_1^{\mathrm{fr}})^\top,\ldots,(\vz_N^{\mathrm{fr}})^\top]^\top,\qquad
+-    \mU=[\vu_0^\top,\ldots,\vu_{N-1}^\top]^\top.
+-\end{equation}
++\begin{align}
++    \mZ&=[(\vz_1^{\mathrm{fr}})^\top,\ldots,(\vz_N^{\mathrm{fr}})^\top]^\top,
++    \label{eq:stacked_frozen_states}\\
++    \mU&=[\vu_0^\top,\ldots,\vu_{N-1}^\top]^\top.
++    \label{eq:stacked_inputs}
++\end{align}
+ The frozen model gives
+ \begin{equation}
+     \mZ=\mF+\mG\mU,
+     \label{eq:frozen_prediction_matrices}
+ \end{equation}
+ where the block rows of $\mF$ and $\mG$ are denoted by $F_i$ and $G_{i,t}$, respectively:
+-\begin{equation}
+-    \begin{gathered}
+-    F_i=\bar\mA_{i-1}\cdots\bar\mA_0\vz_0,
+-    \\
+-    G_{i,t}=\begin{cases}
++\begin{align}
++    F_i&=\bar\mA_{i-1}\cdots\bar\mA_0\vz_0,
++    \label{eq:F_blocks}\\
++    G_{i,t}&=\begin{cases}
+     \bar\mA_{i-1}\cdots\bar\mA_{t+1}\bar\mB_t,&t<i,\\
+     0,&t\ge i.
+     \end{cases}
+-    \end{gathered}
+     \label{eq:F_G_blocks}
+-\end{equation}
++\end{align}
+ The products are time ordered; no commutativity of the matrices is assumed. Let $\bar C_x=I_N\otimes C_x$, $Y^{\mathrm{ref}}=[(\vx_1^{\mathrm{ref}})^\top,\ldots,(\vx_N^{\mathrm{ref}})^\top]^\top$, and $\bar Q_x=\operatorname{blkdiag}(Q_x,\ldots,Q_x,P_x)$. Define $\bar R$ and $\bar S$ as the corresponding block-diagonal input matrices, and let $\hat D$ satisfy $(\hat D\mU)_0=\vu_0$ and $(\hat D\mU)_i=\vu_i-\vu_{i-1}$ for $i\ge1$. With the input-offset vector $\hat{\mathbf c}=[-\vu_{-1}^\top,0,\ldots,0]^\top$, the frozen cost is
+ \begin{equation}
+ \begin{aligned}
+ J_{\mathrm{fr}}(U;\bar U)={}&\norm{\bar C_x\mZ-Y^{\mathrm{ref}}}_{\bar Q_x}^2\\
+-&+\norm{\mU-\mU^{\mathrm{ref}}}_{\bar R}^2
+-+\norm{\hat D\mU+\hat{\mathbf c}}_{\bar S}^2.
++&+\norm{\mU-\mU^{\mathrm{ref}}}_{\bar R}^2\\
++&+\norm{\hat D\mU+\hat{\mathbf c}}_{\bar S}^2.
+ \end{aligned}
+ \label{eq:frozen_cost}
+ \end{equation}
+@@ -409,9 +416,15 @@
+ \end{equation}
+ where
+ \begin{align}
+-H&=2\left(\mG^\top\bar C_x^\top\bar Q_x\bar C_x\mG+\bar R+\hat D^\top\bar S\hat D\right),\\
+-f&=\mG^\top\bar C_x^\top\bar Q_x(\bar C_x\mF-Y^{\mathrm{ref}})
+- -\bar R\mU^{\mathrm{ref}}+\hat D^\top\bar S\hat{\mathbf c}.
++H&=2\left(\begin{aligned}
++ &\mG^\top\bar C_x^\top\bar Q_x\bar C_x\mG\\
++ &+\bar R+\hat D^\top\bar S\hat D
++\end{aligned}\right),
++\label{eq:QP_Hessian}\\
++f&=\begin{aligned}
++ &\mG^\top\bar C_x^\top\bar Q_x(\bar C_x\mF-Y^{\mathrm{ref}})\\
++ &-\bar R\mU^{\mathrm{ref}}+\hat D^\top\bar S\hat{\mathbf c}.
++\end{aligned}
+ \label{eq:QP_coefficients}
+ \end{align}
+ Every term in $H$ is positive semidefinite, so the objective is convex. With a box or other polyhedral input set, the frozen problem is a standard convex QP. Strict convexity and uniqueness require an additional positive-definiteness condition, for example $\bar R\succ0$. The use of a numerical QP solver does not, by itself, certify exact global optimality of its returned iterate.
+@@ -419,11 +432,12 @@
+ \subsection{Freezing error and conditional suboptimality}
+ 
+ Fix a candidate $U$ and nominal $\bar U$. Let $\vz_i^{\mathrm{full}}$ be the complete scheduled trajectory, $\vz_i^{\mathrm{fr}}$ the frozen trajectory, and $\bar\vz_i$ the nominal trajectory. For $i=0,\ldots,N-1$, let $U_i^{\mathrm{in}}$ and $\bar U_i^{\mathrm{in}}$ denote the length-$(P-1)$ past-input windows assembled from the common pre-horizon inputs and from $\vu_0,\ldots,\vu_{i-1}$ or $\bar\vu_0,\ldots,\bar\vu_{i-1}$, respectively. Define $\ve_i=\vz_i^{\mathrm{full}}-\vz_i^{\mathrm{fr}}$ and $\vg_i=\vz_i^{\mathrm{fr}}-\bar\vz_i$. Let
+-\begin{equation}
+-    \delta_u=\max_{0\le i<N}\norm{\vu_i-\bar\vu_i}_2,
+-    \qquad
+-    \Delta_u=\max_{0\le i<N}\norm{U_i^{\mathrm{in}}-\bar U_i^{\mathrm{in}}}_2.
+-\end{equation}
++\begin{align}
++    \delta_u&=\max_{0\le i<N}\norm{\vu_i-\bar\vu_i}_2,
++    \label{eq:input_deviation}\\
++    \Delta_u&=\max_{0\le i<N}\norm{U_i^{\mathrm{in}}-\bar U_i^{\mathrm{in}}}_2.
++    \label{eq:input_window_deviation}
++\end{align}
+ Then $\Delta_u\le\sqrt{P-1}\delta_u$ because the past input windows share their initial entries and differ only in shifted future inputs. With $M_B=\norm{\mB_0}_2+g_B$, the nominal drift satisfies
+ \begin{equation}
+     \norm{\vg_i}_2\le G_i:=M_B\delta_u\sum_{t=0}^{i-1}M_A^{i-1-t}.
+@@ -431,26 +445,22 @@
+ \end{equation}
+ 
+ To make the bound uniform over the complete feasible set, define the fixed-nominal suprema
+-\begin{equation}
+-\begin{gathered}
+-\bar\delta_u:=\sup_{U\in\mathcal U_{\mathrm{feas}}}\max_{0\le i<N}\norm{\vu_i-\bar\vu_i}_2,
+-\\
+-\bar\Delta_u:=\sup_{U\in\mathcal U_{\mathrm{feas}}}\max_{0\le i<N}\norm{U_i^{\mathrm{in}}-\bar U_i^{\mathrm{in}}}_2.
+-\end{gathered}
++\begin{align}
++\bar\delta_u&:=\sup_{U\in\mathcal U_{\mathrm{feas}}}\max_{0\le i<N}\norm{\vu_i-\bar\vu_i}_2,
++\label{eq:uniform_pointwise_input_deviation}\\
++\bar\Delta_u&:=\sup_{U\in\mathcal U_{\mathrm{feas}}}\max_{0\le i<N}\norm{U_i^{\mathrm{in}}-\bar U_i^{\mathrm{in}}}_2.
+ \label{eq:uniform_input_deviation}
+-\end{equation}
++\end{align}
+ Compactness of $\mathcal U_{\mathrm{feas}}$ makes these quantities finite, and $\bar\Delta_u\le\sqrt{P-1}\bar\delta_u$. Set
+-\begin{equation}
+-\begin{gathered}
+-\bar G_N:=M_B\bar\delta_u\sum_{t=0}^{N-1}M_A^t,
+-\\
+-\begin{aligned}
+-\bar\delta_{\mathrm{frz}}:={}&L_AL_\phi M_Z\bar\Delta_u\\
++\begin{align}
++\bar G_N&:=M_B\bar\delta_u\sum_{t=0}^{N-1}M_A^t,
++\label{eq:uniform_nominal_drift}\\
++\bar\delta_{\mathrm{frz}}&:=\begin{aligned}
++ &L_AL_\phi M_Z\bar\Delta_u\\
+  &+\left(L_AL_\phi\sqrt{P}M_Z+L_BM_U\right)\bar G_N,
+ \end{aligned}
+-\end{gathered}
+ \label{eq:uniform_freezing_driver}
+-\end{equation}
++\end{align}
+ and, for $0\le i\le N$,
+ \begin{equation}
+ \bar K_i:=\bar\delta_{\mathrm{frz}}\sum_{t=0}^{i-1}L^{i-1-t}.
+@@ -460,8 +470,10 @@
+ 
+ For a common work domain, define
+ \begin{equation}
+-    \delta_{\mathrm{frz}}=L_AL_\phi M_Z\Delta_u
+-    +\left(L_AL_\phi\sqrt{P}M_Z+L_BM_U\right)G_N.
++    \begin{aligned}
++    \delta_{\mathrm{frz}}={}&L_AL_\phi M_Z\Delta_u\\
++    &+\left(L_AL_\phi\sqrt{P}M_Z+L_BM_U\right)G_N.
++    \end{aligned}
+     \label{eq:freezing_driver}
+ \end{equation}
+ With $L$ from \eqref{eq:prediction_L}, the freezing error obeys
+@@ -473,22 +485,27 @@
+ This is a same-input, finite-horizon open-loop comparison. In particular, it is not a comparison of two optimization algorithms.
+ 
+ To express the cost difference uniformly, let $M_Y=\norm{C_x}_2M_Z$, $M_{\mathrm{ref}}=\max_{1\le i\le N}\norm{\vx_i^{\mathrm{ref}}}_2$, and $\bar K_i^x=\norm{C_x}_2\bar K_i$. A uniform sufficient bound is
+-\begin{align}
++\begin{equation}
++\begin{aligned}
+ \varepsilon_J={}&2(M_Y+M_{\mathrm{ref}})
+- \left[\norm{Q_x}_2\sum_{i=1}^{N-1}\bar K_i^x+\norm{P_x}_2\bar K_N^x\right]\\
+-&+\norm{Q_x}_2\sum_{i=1}^{N-1}(\bar K_i^x)^2+\norm{P_x}_2(\bar K_N^x)^2.
++ \left[\begin{aligned}
++ &\norm{Q_x}_2\sum_{i=1}^{N-1}\bar K_i^x\\
++ &+\norm{P_x}_2\bar K_N^x
++ \end{aligned}\right]\\
++&+\norm{Q_x}_2\sum_{i=1}^{N-1}(\bar K_i^x)^2\\
++&+\norm{P_x}_2(\bar K_N^x)^2.
++\end{aligned}
+ \label{eq:epsilon_cost}
+-\end{align}
++\end{equation}
+ It follows from the identity for the difference of two squared weighted norms and from the fact that the input and input-increment terms in \eqref{eq:full_cost} and \eqref{eq:frozen_cost} are identical.
+ 
+ More explicitly, let $y_i^{\mathrm{full}}=C_x\vz_i^{\mathrm{full}}$, $y_i^{\mathrm{fr}}=C_x\vz_i^{\mathrm{fr}}$, and $d_i=y_i^{\mathrm{full}}-y_i^{\mathrm{fr}}$. The uniform freezing bound gives $\norm{d_i}_2\le\bar K_i^x$. With $M_Y=\norm{C_x}_2M_Z$ and $M_{\mathrm{ref}}=\max_{1\le i\le N}\norm{\vx_i^{\mathrm{ref}}}_2$, A1 gives $\norm{y_i^{\mathrm{full}}}_2\le M_Y$ and hence $\norm{y_i^{\mathrm{fr}}}_2\le M_Y+\bar K_i^x$. Therefore, for $i<N$,
+ \begin{equation}
+-\begin{gathered}
+-\left|\norm{y_i^{\mathrm{full}}-\vx_i^{\mathrm{ref}}}_{Q_x}^2-
+-\norm{y_i^{\mathrm{fr}}-\vx_i^{\mathrm{ref}}}_{Q_x}^2\right|
+-\\
+-\le\norm{Q_x}_2\bar K_i^x(2M_Y+\bar K_i^x+2M_{\mathrm{ref}}),
+-\end{gathered}
++\begin{aligned}
++&\left|\norm{y_i^{\mathrm{full}}-\vx_i^{\mathrm{ref}}}_{Q_x}^2-
++\norm{y_i^{\mathrm{fr}}-\vx_i^{\mathrm{ref}}}_{Q_x}^2\right|\\
++&\quad\le\norm{Q_x}_2\bar K_i^x(2M_Y+\bar K_i^x+2M_{\mathrm{ref}}),
++\end{aligned}
+ \end{equation}
+ and the same identity with $P_x$ applies at $i=N$. Summing these bounds and using the common input terms yields \eqref{eq:epsilon_cost}. Because \eqref{eq:uniform_input_deviation} takes the supremum over the entire feasible set and A1/A3 use the same domain constants there, this calculation proves the uniform candidate bound required by (CA), subject to the stated work-domain assumptions.
+ 
+@@ -564,9 +581,11 @@
+ 
+ The three trajectories in Section~\ref{sec:control} satisfy
+ \begin{equation}
+-\ve_{i+1}=\bar\mA_i\ve_i+
+-\big(\mA(\vc_i^{\mathrm{full}})-\bar\mA_i\big)\vz_i^{\mathrm{full}}+
+-\big(\mB(\vchi_i^{\mathrm{full}})-\bar\mB_i\big)\vu_i.
++\begin{aligned}
++\ve_{i+1}={}&\bar\mA_i\ve_i\\
++&+\big(\mA(\vc_i^{\mathrm{full}})-\bar\mA_i\big)\vz_i^{\mathrm{full}}\\
++&+\big(\mB(\vchi_i^{\mathrm{full}})-\bar\mB_i\big)\vu_i.
++\end{aligned}
+ \end{equation}
+ The history-window difference in the first matrix term is bounded by $L_\phi(\sqrt P(W_i+G_N)+\Delta_u)$. The measurement difference in the second matrix term is bounded by $L_B(W_i+G_N)$. Using the common state and input bounds gives
+ \begin{equation}
+@@ -579,13 +598,11 @@
+ 
+ Let $\mG_x=\bar C_x\mG$ and $\mW=\bar C_x\mF-Y^{\mathrm{ref}}$. The output term expands as
+ \begin{equation}
+-    \begin{gathered}
+-    (\mW+\mG_x\mU)^\top\bar Q_x(\mW+\mG_x\mU)
+-    \\
+-    =\mU^\top\mG_x^\top\bar Q_x\mG_x\mU
+-    \\
+-    \quad+2(\mG_x^\top\bar Q_x\mW)^\top\mU+\mathrm{const}.
+-    \end{gathered}
++    \begin{aligned}
++    &(\mW+\mG_x\mU)^\top\bar Q_x(\mW+\mG_x\mU)\\
++    &\quad=\mU^\top\mG_x^\top\bar Q_x\mG_x\mU\\
++    &\qquad+2(\mG_x^\top\bar Q_x\mW)^\top\mU+\mathrm{const}.
++    \end{aligned}
+ \end{equation}
+ The input and input-increment terms expand analogously. Their sum yields \eqref{eq:QP_coefficients}. Positive semidefiniteness follows because each quadratic coefficient has the form $T^\top MT$ with $M\succeq0$.
+ 

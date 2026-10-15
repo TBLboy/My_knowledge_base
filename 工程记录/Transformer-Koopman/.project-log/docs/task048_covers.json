@@ -1,0 +1,25 @@
+{
+  "tasks": [
+    "TASK-048"
+  ],
+  "files": [
+    "Transformer-Koopman/杂项/新版本/Theory_Package/01_Model_Definition.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/02_Assumptions.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/03_Low_rank_Boundedness.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/04_Scheduling_Lipschitz.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/05_Prediction_Error_Bound.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/06_Frozen_LTV_QP_Proof.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/07_Freezing_Error_Bound.md",
+    "Transformer-Koopman/杂项/新版本/Theory_Package/08_Conditional_Suboptimality.md",
+    "Transformer-Koopman/杂项/新版本/Temporary_Experiments/controllers/ltv_mpc.py",
+    "Transformer-Koopman/杂项/新版本/Theory_Package_Audit_and_Compact_Outline.md",
+    ".project-log/docs/task048-algebra-check.py",
+    ".project-log/docs/task048-audit-validation.json"
+  ],
+  "requirements": [
+    "Traceable recent paper structure",
+    "Read-only theory audit 01-08",
+    "Compact six-section assembly",
+    "Control-cost conflict explicitly blocked for user decision"
+  ]
+}

@@ -1,0 +1,472 @@
+--- task054-before.tex
++++ Main.tex
+@@ -1,3 +1,17 @@
+-﻿\documentclass[journal]{IEEEtran}
++﻿% XeTeX/Tectonic has no TU/ptm definition; map IEEEtran's Times (ptm) to TeX Gyre Termes.
++% Must precede \documentclass because IEEEtran selects its font while loading.
++\ifdefined\XeTeXversion
++  \DeclareFontFamily{TU}{ptm}{}
++  \DeclareFontShape{TU}{ptm}{m}{n}{<->"[texgyretermes-regular.otf]:mapping=tex-text"}{}
++  \DeclareFontShape{TU}{ptm}{m}{it}{<->"[texgyretermes-italic.otf]:mapping=tex-text"}{}
++  \DeclareFontShape{TU}{ptm}{bx}{n}{<->"[texgyretermes-bold.otf]:mapping=tex-text"}{}
++  \DeclareFontShape{TU}{ptm}{bx}{it}{<->"[texgyretermes-bolditalic.otf]:mapping=tex-text"}{}
++  \DeclareFontShape{TU}{ptm}{b}{n}{<->ssub*ptm/bx/n}{}
++  \DeclareFontShape{TU}{ptm}{b}{it}{<->ssub*ptm/bx/it}{}
++  \DeclareFontShape{TU}{ptm}{m}{sl}{<->ssub*ptm/m/it}{}
++  \DeclareFontShape{TU}{ptm}{bx}{sl}{<->ssub*ptm/bx/it}{}
++  \DeclareFontShape{TU}{ptm}{m}{sc}{<->"[texgyretermes-regular.otf]:mapping=tex-text;+smcp"}{}
++\fi
++\documentclass[journal]{IEEEtran}
+ 
+ \usepackage{cite}
+@@ -8,6 +22,8 @@
+ \usepackage{booktabs}
+ \usepackage{multirow}
+-\usepackage[utf8]{inputenc}
+-\usepackage[T1]{fontenc}
++\ifdefined\XeTeXversion\else
++  \usepackage[utf8]{inputenc}
++  \usepackage[T1]{fontenc}
++\fi
+ \usepackage{microtype}
+ \usepackage{array}
+@@ -54,4 +70,6 @@
+ \newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+ \newcommand{\argmin}{\mathop{\mathrm{arg\,min}}}
++% Placeholder frame for a figure to be drawn later: \figph{width}{height}{description}
++\newcommand{\figph}[3]{\fbox{\parbox[c][#2][c]{\dimexpr#1-2\fboxsep-2\fboxrule\relax}{\centering\small #3}}}
+ 
+ \begin{document}
+@@ -63,5 +81,5 @@
+ 
+ \begin{abstract}
+-Koopman-inspired predictors provide a structured representation of nonlinear dynamics by evolving observables through finite-dimensional linear maps. A fixed lifted transition, however, can be restrictive when the measured state does not determine the relevant operating condition. This paper develops a history-conditioned scheduled predictor in which a state-preserving temporal lifting map is complemented by a context-dependent low-rank transition and a measurement-dependent input modulation. The transition and input matrices are bounded functions of a history context and the current lifted measurement, respectively. For fixed scheduling signals the predictor is linear in the lifted state and input, while recursive scheduling remains generally nonlinear. We analyze this distinction directly. Under common-history, work-domain, Lipschitz, and one-step residual conditions, we derive a finite-horizon open-loop prediction bound. For control, a nominal rollout supplies scheduling matrices that are frozen over the horizon, yielding an LTV prediction model and a convex quadratic program under polyhedral input constraints. We further derive a finite-horizon bound between the complete scheduled model and its frozen approximation, and state a conditional cost-suboptimality result relative to the global optimum of the complete problem. The results are deliberately limited to finite-horizon open-loop prediction and conditional optimization error; they do not assert closed-loop stability, recursive feasibility, real-time performance, or hardware-control guarantees.
++Koopman-inspired predictors provide a structured representation of nonlinear dynamics by evolving observables through finite-dimensional linear maps. A fixed lifted transition, however, can be restrictive when the measured state does not determine the relevant operating condition. This paper develops a history-conditioned scheduled predictor in which a temporal lifting map is complemented by a context-dependent low-rank transition and a measurement-dependent input modulation. The transition and input matrices are bounded functions of a history context and the current lifted measurement, respectively. For fixed scheduling signals the predictor is linear in the lifted state and input, while recursive scheduling remains generally nonlinear. Under common-history, work-domain, Lipschitz, and one-step residual conditions, we derive a finite-horizon open-loop prediction bound. For control, a nominal rollout supplies scheduling matrices that are frozen over the horizon, yielding an LTV prediction model and a convex quadratic program under polyhedral input constraints. We further derive a finite-horizon bound between the complete scheduled model and its frozen approximation, and state a conditional cost-suboptimality result relative to the global optimum of the complete problem.
+ \end{abstract}
+ 
+@@ -75,22 +93,33 @@
+ % =========================================================
+ 
+-Learning a predictive model for a nonlinear controlled system is useful in a control setting when the model can be evaluated recursively and incorporated into a control calculation. Classical system identification provides a broad collection of state-space and input--output tools \cite{ljung1999system,vanoverschee1994n4sid,nelles2020nonlinear}. Koopman methods offer a complementary viewpoint: nonlinear state evolution is represented through linear evolution of observables, and finite-dimensional approximations can be used for prediction and control \cite{koopman1931hamiltonian,mezic2005spectral,williams2015data,korda2018linear,brunton2022modern}. The finite-dimensional approximation, however, depends on the selected coordinates and on how operating-condition variation is represented.
+-
+-When an instantaneous measurement is not a sufficient description of the relevant dynamics, delay coordinates and recurrent representations can provide additional temporal information \cite{brunton2017chaos,kamb2020timedelay,arbabi2017ergodic,das2019delay,shenoy2025temporal,han2024robust}. A temporal lifting map can therefore encode a finite measurement history rather than a single sample. This addresses a representation problem but does not by itself solve a transition-model problem: all histories may still be propagated by one global lifted matrix. Context-dependent Koopman models and related temporal operator constructions instead allow the effective transition to vary with a recent trajectory or operating condition \cite{liu2023koopa,li2025mamko,forootani2025deepkoopformer}. The present work combines these two ideas while retaining a structured, bounded low-rank modulation around a shared nominal transition.
+-
+-Recursive prediction creates a second difficulty. The history used to train a one-step map is formed from measured samples, whereas deployment recursively updates the history with predicted measurements. The resulting context can differ from the context seen during one-step training. Thus, a small one-step residual does not by itself provide a multi-step guarantee. The analysis below makes the shared initial history and the recursive window update explicit, and treats the resulting delay coupling rather than replacing it with an instantaneous error recurrence.
+-
+-The same scheduling dependence creates a control trade-off. If the scheduling variables are recomputed from the decision-dependent predicted trajectory, the complete finite-horizon problem is generally nonlinear and nonconvex. Freezing the scheduling matrices along a nominal rollout produces an LTV approximation and a convex quadratic program for polyhedral input constraints. This is a modeling approximation, not an assertion that the complete scheduled problem is linear. The distinction is central to the control analysis.
+-
+-This construction is related to gain scheduling and quasi-linear parameter-varying control, where a linear model is indexed by an operating condition or scheduling signal \cite{rugh2000gain,leith1998velocity,cisneros2016qlmpc,cisneros2020qlpv}. It also differs from real-time iteration methods, which perform a single sequential-quadratic-programming update for a nonlinear optimal-control problem \cite{diehl2005realtime,gros2020rti}. Here the frozen matrices are generated from a history-aware nominal rollout and the result is analyzed as a finite-horizon LTV approximation. The paper therefore does not transfer the stability, convergence, or timing guarantees that may hold for particular gain-scheduled or RTI schemes.
++Model predictive control (MPC) chooses inputs by optimizing predicted behavior over a finite horizon subject to input constraints, so the prediction model determines both the quality and the computational cost of the controller. With a nonlinear model the optimization is a nonconvex program that must be solved at every sampling instant. With a linear model it is a convex quadratic program (QP), which admits fast solvers and predictable execution times \cite{wu2026multistep}. Linear identification methods \cite{ljung1999system,vanoverschee1994n4sid} supply such models but cannot follow nonlinear behavior over a wide operating range, whereas nonlinear black-box models \cite{nelles2020nonlinear,forgione2021dynonet} follow it at the price of a nonconvex control problem. A predictor that represents nonlinear dynamics and still propagates linearly would combine the two advantages.
++
++Koopman operator theory provides a route to such a predictor \cite{koopman1931hamiltonian,mezic2005spectral}. Instead of the state, it evolves observables, that is, scalar functions of the state, and the operator that advances them is linear even when the state dynamics are not. Lifting the state into a vector of observables therefore converts nonlinear evolution into linear evolution in a higher-dimensional space. Truncating this description to finitely many observables by extended dynamic mode decomposition (EDMD) \cite{williams2015data} gives a linear predictor, and dynamic mode decomposition with control and the controlled Koopman operator extend it to inputs \cite{proctor2016dmdc,proctor2018generalizing,korda2018linear}. Inside MPC, the lifted predictor yields a QP whose complexity is comparable to that of linear MPC \cite{korda2018linear}. Comprehensive accounts are given in \cite{brunton2022modern,otto2021koopman,duran2025control,strasser2026overview}.
++
++The accuracy of the predictor depends on how the state is lifted. Early formulations fixed a dictionary of observables in advance, such as polynomials or radial basis functions, and fitted the linear matrices by least squares \cite{williams2015data,korda2018linear}. This is simple, but the representation capacity is limited and the result is sensitive to the dictionary \cite{wu2026multistep}. Neural networks later replaced the hand-chosen dictionary: the lifting and the linear dynamics are learned jointly from data \cite{lusch2018deep,takeishi2017koopman,otto2019linearly}, including for controlled systems \cite{han2020deep,feizi2025deepkoopman}. Both choices share one structure. A single pair $(\mA,\mB)$ advances the lifted state over the entire operating range, so every difference between operating conditions must be encoded in the lifted coordinates.
++
++This requirement is demanding when the measurement does not reveal the operating condition, for example with unmeasured states or varying friction and payload. A common remedy places recent history in the lifting. Time-delay observables retain past measurements as additional coordinates \cite{brunton2017chaos,kamb2020timedelay,arbabi2017ergodic,das2019delay}, and learned variants employ temporal encoders: recurrent or convolutional layers in Koopman-based MPC \cite{shenoy2025temporal,han2024robust} and Transformers in Koopman-based forecasting \cite{forootani2025deepkoopformer,forootani2026spectral}. History then enriches the lifted state, but after lifting every history is still propagated by the same transition matrix. A second remedy lets the transition itself depend on history. MamKO generates the Koopman matrices from recent states and inputs and keeps the MPC problem convex \cite{li2025mamko}, and Koopa pairs a time-invariant with a time-variant Koopman predictor for non-stationary time series \cite{liu2023koopa}.
++
++This paper combines the two remedies. The lifted state keeps the current measurement and appends a Transformer encoding of a finite history. The transition is a shared nominal matrix plus a bounded low-rank correction generated from the history, and the input matrix is modulated by the current measurement. We call the result a scheduled predictor: for fixed scheduling signals it is linear in the lifted state and input, which is the property that makes Koopman predictors usable in MPC, while the scheduling signals let the effective dynamics follow the operating condition.
++
++Scheduling raises two questions that a fixed matrix pair does not. The first concerns prediction. In one-step training the history consists of measured samples, whereas in deployment it is rebuilt from predicted measurements, so the scheduling signals are evaluated on histories that may differ from those seen in training. A small one-step residual then does not bound the multi-step error; error accumulation under recursive evaluation is already known for fixed-matrix Koopman predictors \cite{wu2026multistep}. We therefore define the recursive window update explicitly and bound the open-loop prediction error over a finite horizon. The second question concerns control. When the scheduling is recomputed from the predicted trajectory, the matrices depend on the decision variables and the finite-horizon problem is in general nonconvex. Freezing the scheduling matrices along a nominal rollout gives a linear time-varying (LTV) model and a convex QP under polyhedral input constraints. This is related to gain scheduling and quasi-linear parameter-varying control, where a linear model is indexed by a scheduling signal \cite{rugh2000gain,leith1998velocity,cisneros2016qlmpc,cisneros2020qlpv}, and differs from real-time iteration, which performs a single sequential-quadratic-programming update on the nonlinear problem \cite{diehl2005realtime,gros2020rti}; stability results exist for real-time iteration and advanced-step NMPC \cite{diehl2005rtistability,zavala2009advancedstep}. Here the nominal rollout is itself history-aware, and we bound its deviation from the complete scheduled model.
+ 
+ The contributions are as follows.
+ \begin{enumerate}
+-    \item We formulate a state-preserving, history-conditioned scheduled predictor with a low-rank bounded modulation of a nominal transition and a separate measurement-dependent input modulation. The two scheduling variables are separated as a modeling choice; no parameter-identifiability claim is made.
++    \item We formulate a history-conditioned scheduled predictor with a low-rank bounded modulation of a nominal transition and a separate measurement-dependent input modulation.
+     \item We derive a finite-horizon prediction-error recurrence that includes both the current lifted-state error and the maximum error in the recent history window. Under a common initial history and a uniform one-step residual bound, this yields an explicit finite-horizon open-loop bound.
+     \item We formulate a frozen-LTV-MPC approximation using a nominal rollout, derive its prediction matrices and convex quadratic objective in measurement space, and bound the difference between complete and frozen trajectories for the same candidate input sequence. A conditional cost-suboptimality theorem follows when a uniform cost-approximation condition and common feasible set are available.
+ \end{enumerate}
+ 
+-The paper has six sections. Section~\ref{sec:prelim} introduces notation and the prediction/control tasks. Section~\ref{sec:model} defines the scheduled predictor, training objective, recursive rollout, and prediction analysis. Section~\ref{sec:control} develops the frozen-LTV controller and its error results. Section~\ref{sec:experiments} records the experimental protocol while intentionally leaving numerical results for a later, separately verified stage. Section~\ref{sec:conclusion} summarizes the established scope and limitations.
++The paper has six sections. Section~\ref{sec:prelim} introduces notation and the prediction/control tasks. Section~\ref{sec:model} defines the scheduled predictor, training objective, recursive rollout, and prediction analysis. Section~\ref{sec:control} develops the frozen-LTV controller and its error results. Section~\ref{sec:experiments} outlines the experimental protocol, and Section~\ref{sec:conclusion} concludes the paper. Fig.~\ref{fig:overview} summarizes the overall pipeline.
++
++\begin{figure*}[!t]
++\centering
++\figph{\textwidth}{5.6cm}{\textbf{[Placeholder] Overall framework.}\\[2pt]
++Left to right: measurement window $\mX_k$ and past-input window $\mU_k^{\mathrm{in}}$ $\rightarrow$ Transformer lifting $g_\theta$ and context map $C_\phi$ $\rightarrow$ lifted state $\vz_k$ and history context $\vc_k$ $\rightarrow$ scheduled matrices $\mA(\vc_k)$, $\mB(\vchi_k)$ with nominal $\mA_0$, $\mB_0$ and low-rank corrections $\rightarrow$ $\vz_{k+1}=\mA(\vc_k)\vz_k+\mB(\vchi_k)\vu_k$ and readout $\vx=C_x\vz$.\\[2pt]
++Lower branch: nominal rollout $\rightarrow$ frozen $\bar\mA_i$, $\bar\mB_i$ $\rightarrow$ convex QP in measurement space $\rightarrow$ input sequence $U$.}
++\caption{Overall framework of the history-conditioned scheduled predictor and the frozen-LTV controller. (Placeholder; figure to be drawn.)}
++\label{fig:overview}
++\end{figure*}
+ 
+ % =========================================================
+@@ -126,5 +155,5 @@
+ The current input $\vu_k$ is not part of the context window; it enters the one-step update separately. Given $(\mX_k,\mU_k^{\mathrm{in}})$ and a future input sequence $\vu_{k:k+H-1}$, the prediction task is to estimate $\vx_{k+1:k+H}$. The control task is to choose a finite sequence $U=(\vu_0,\ldots,\vu_{N-1})$ that tracks a measurement reference while respecting the input set.
+ 
+-The lifting is state-preserving in the measured coordinates:
++The lifted state is formed from the current measurement and a history encoding:
+ \begin{align}
+     \vz_k&=g_\theta(\mX_k)=\begin{bmatrix}\vx_k\\ \psi_\theta(\mX_k)\end{bmatrix}\in\R^d,
+@@ -135,5 +164,13 @@
+ where $C_x=[I_n\;0]$. We distinguish $\vz_k^{\mathrm{enc}}=g_\theta(\mX_k)$, which uses measured data, from a recursively propagated $\vz_k^{\mathrm{prop}}$, whose measured coordinates are model outputs.
+ 
+-The model and the control analysis use a common-history convention. All compared rollouts start from the same measured window and past-input window and from the same $\vz_0=g_\theta(\mX_k)$. For a predicted index $j<0$, a history slot reads the corresponding measured past sample rather than a fictitious negative-time latent state. After each step, the oldest measurement slot is replaced by $C_x\vz_{i+1}$ and the oldest input slot by $\vu_i$.
++The model and the control analysis use a common-history convention. All compared rollouts start from the same measured window and past-input window and from the same $\vz_0=g_\theta(\mX_k)$. For a predicted index $j<0$, a history slot reads the corresponding measured past sample rather than a fictitious negative-time latent state. After each step, the oldest measurement slot is replaced by $C_x\vz_{i+1}$ and the oldest input slot by $\vu_i$. Fig.~\ref{fig:rollout} illustrates this update.
++
++\begin{figure}[!t]
++\centering
++\figph{\columnwidth}{4.2cm}{\textbf{[Placeholder] Recursive window update.}\\[2pt]
++Sliding windows $\mX_k$, $\mU_k^{\mathrm{in}}$: measured past samples (known) and predicted samples $C_x\vz_{i+1}$ (model output) entering the window step by step; oldest slot dropped; $\vz_i^{\mathrm{enc}}$ vs.\ $\vz_i^{\mathrm{prop}}$.}
++\caption{Common-history convention and recursive window update. (Placeholder; figure to be drawn.)}
++\label{fig:rollout}
++\end{figure}
+ 
+ % =========================================================
+@@ -144,5 +181,5 @@
+ \subsection{Model construction}
+ 
+-The intended architecture is a patch-based temporal Transformer encoder \cite{vaswani2017attention,nie2023time}. We impose the implementation constraint $p\mid P$: the history is partitioned into $P/p$ contiguous patches, each patch is linearly embedded, augmented with positional encoding, processed by a Transformer encoder, and pooled before projection to the hidden lifted coordinates. The current measurement is concatenated to this projection as in \eqref{eq:state_preserving_lifting}. Thus, the theoretical map $g_\theta$ abstracts the architecture while the state-preserving readout and the recursive propagation interface remain explicit. The context map $C_\phi$ is a separate feed-forward map of the flattened measurement and past-input windows. These architectural details specify the intended temporal map; the bounds below use only the stated Lipschitz and work-domain conditions.
++The intended architecture is a patch-based temporal Transformer encoder \cite{vaswani2017attention,nie2023time}. We impose the implementation constraint $p\mid P$: the history is partitioned into $P/p$ contiguous patches, each patch is linearly embedded, augmented with positional encoding, processed by a Transformer encoder, and pooled before projection to the hidden lifted coordinates. The current measurement is concatenated to this projection as in \eqref{eq:state_preserving_lifting}. Thus, the theoretical map $g_\theta$ abstracts the architecture while the measurement readout and the recursive propagation interface remain explicit. The context map $C_\phi$ is a separate feed-forward map of the flattened measurement and past-input windows. The bounds below depend on this architecture only through the stated Lipschitz and work-domain conditions.
+ 
+ The history context is
+@@ -158,5 +195,5 @@
+     \label{eq:scheduled_predictor}
+ \end{equation}
+-The map $\mA$ is scheduled by history, while $\mB$ is scheduled by the current measured component of the lifted state. This separation is a parameterization choice: it does not assert that the physical input effect is independent of history and does not, by itself, establish parameter identifiability.
++The map $\mA$ is scheduled by history, while $\mB$ is scheduled by the current measured component of the lifted state. This separation is a parameterization choice.
+ 
+ We use bounded low-rank corrections around nominal matrices,
+@@ -192,6 +229,4 @@
+ \end{proof}
+ 
+-This is a boundedness result, not a stability result. In particular, it does not imply $\rho(\mA(\vc))<1$, contraction of time-varying matrix products, closed-loop stability, or recursive feasibility.
+-
+ The schedule maps are also Lipschitz under finite modulation-layer weights. Define
+ \begin{align}
+@@ -219,5 +254,5 @@
+     \label{eq:joint_training_loss}
+ \end{equation}
+-where $\mathcal L_x$ measures the measured prediction error and $\mathcal L_z$ measures the corresponding lifted-state error. The two terms serve different purposes: the first controls the observable output used by prediction and control, while the second regularizes the selected lifted coordinates. This paper does not treat adding the lifted-state term as an ablation or claim that it is empirically superior.
++where $\mathcal L_x$ measures the measured prediction error and $\mathcal L_z$ measures the corresponding lifted-state error. The two terms serve different purposes: the first controls the observable output used by prediction and control, while the second regularizes the selected lifted coordinates.
+ 
+ At deployment, the model is recursively propagated. Starting from $\vz_0=g_\theta(\mX_k)$, construct the predicted history from the model's own outputs and use
+@@ -230,5 +265,5 @@
+ \subsection{Finite-horizon prediction analysis}
+ 
+-We state the prediction result in a form that makes its scope explicit. Let $\vz_{k+i}^{\mathrm{enc}}$ be the encoder sequence formed from the true measurement windows and let $\hat\vz_i$ be the propagated sequence under the same input sequence. Define
++Let $\vz_{k+i}^{\mathrm{enc}}$ be the encoder sequence formed from the true measurement windows and let $\hat\vz_i$ be the propagated sequence under the same input sequence. Define
+ \begin{equation}
+     \ve_i=\vz_{k+i}^{\mathrm{enc}}-\hat\vz_i,
+@@ -250,5 +285,5 @@
+ where $M_Z$ and $M_U$ are common state and input bounds.
+ 
+-For traceability, the assumptions used below are stated formally. They are local assumptions on a fixed finite horizon, not global dynamical guarantees.
++The assumptions below are local to a fixed finite horizon.
+ \begin{assumption}[A1: common finite work domain]
+ \label{ass:a1}
+@@ -328,5 +363,5 @@
+ \end{proof}
+ 
+-The result is an open-loop, finite-horizon statement. It does not require $L<1$ and does not imply an infinite-horizon bound. The uniform residual and work-domain conditions are assumptions requiring separate certification; a finite sample maximum is not automatically a uniform bound over the work domain.
++The bound is open-loop and finite-horizon, and it does not require $L<1$. The residual bound $\delta$ and the work domain must be certified for a concrete system.
+ 
+ % =========================================================
+@@ -352,5 +387,5 @@
+ \label{eq:full_cost}
+ \end{equation}
+-The state tracking cost is deliberately expressed in measurement space. No reference is assigned to hidden lifted coordinates. The complete problem is generally nonlinear and nonconvex because the scheduling variables depend on the decision-dependent trajectory.
++The tracking cost is expressed in measurement space; no reference is assigned to the hidden lifted coordinates. The complete problem is generally nonlinear and nonconvex because the scheduling variables depend on the decision-dependent trajectory.
+ 
+ Choose a feasible nominal input sequence $\bar U=(\bar\vu_0,\ldots,\bar\vu_{N-1})$ and initialize the nominal rollout with the same state and pre-horizon history, $\bar\vz_0=\vz_0$, $\bar X_0=\mX_k$, and $\bar U^{\mathrm{in}}_0=\mU_k^{\mathrm{in}}$. At each step set $\bar\vchi_i=C_x\bar\vz_i$ and $\bar\vc_i=C_\phi(\bar X_i,\bar U_i^{\mathrm{in}})$, then roll out the complete model once:
+@@ -371,5 +406,13 @@
+     \label{eq:frozen_model}
+ \end{equation}
+-The nominal rollout, complete trajectory, and frozen trajectory are distinct objects: they use different input sequences and/or different scheduling rules.
++The nominal rollout, complete trajectory, and frozen trajectory are distinct objects: they use different input sequences and/or different scheduling rules. Fig.~\ref{fig:freezing} illustrates the construction.
++
++\begin{figure}[!t]
++\centering
++\figph{\columnwidth}{4.6cm}{\textbf{[Placeholder] Freezing construction.}\\[2pt]
++Three trajectories over the horizon: nominal $\bar\vz_i$ (input $\bar U$), complete $\vz_i^{\mathrm{full}}$ (scheduling recomputed along the trajectory), frozen $\vz_i^{\mathrm{fr}}$ (matrices $\bar\mA_i$, $\bar\mB_i$ fixed). Gaps $\vg_i$ (nominal drift) and $\ve_i$ (complete vs.\ frozen).}
++\caption{Nominal, complete, and frozen trajectories in the frozen-LTV construction. (Placeholder; figure to be drawn.)}
++\label{fig:freezing}
++\end{figure}
+ 
+ For the uniform freezing and cost statements below, fix $\bar U\in\mathcal U_{\mathrm{feas}}$ and require A1 and A3 to hold simultaneously for every candidate $U\in\mathcal U_{\mathrm{feas}}$, with the same $\mathcal Z$, $\mathcal C_\phi$ window domain, $M_Z$, $M_U$, and $L_\phi$. This is a hypothesis on the whole feasible input set, not an additional state constraint in the QP.
+@@ -426,5 +469,5 @@
+ \label{eq:QP_coefficients}
+ \end{align}
+-Every term in $H$ is positive semidefinite, so the objective is convex. With a box or other polyhedral input set, the frozen problem is a standard convex QP. Strict convexity and uniqueness require an additional positive-definiteness condition, for example $\bar R\succ0$. The use of a numerical QP solver does not, by itself, certify exact global optimality of its returned iterate.
++Every term in $H$ is positive semidefinite, so the objective is convex. With a box or other polyhedral input set, the frozen problem is a standard convex QP. Strict convexity and uniqueness require an additional positive-definiteness condition, for example $\bar R\succ0$.
+ 
+ \subsection{Freezing error and conditional suboptimality}
+@@ -481,5 +524,5 @@
+     \label{eq:freezing_bound}
+ \end{equation}
+-This is a same-input, finite-horizon open-loop comparison. In particular, it is not a comparison of two optimization algorithms.
++This is a same-input, finite-horizon open-loop comparison.
+ 
+ To express the cost difference uniformly, let $M_Y=\norm{C_x}_2M_Z$, $M_{\mathrm{ref}}=\max_{1\le i\le N}\norm{\vx_i^{\mathrm{ref}}}_2$, and $\bar K_i^x=\norm{C_x}_2\bar K_i$. A uniform sufficient bound is
+@@ -536,5 +579,5 @@
+ \end{proof}
+ 
+-The theorem is conditional. It does not certify Assumption~\ref{ass:cost_approximation} from finite samples, does not cover a numerically approximate QP solution without an additional solver-error certificate, and does not imply closed-loop stability, recursive feasibility, real-time performance, or hardware-control performance.
++The theorem applies to global minimizers under Assumption~\ref{ass:cost_approximation}; an approximate QP solution requires an additional solver-error bound.
+ 
+ % =========================================================
+@@ -562,9 +605,9 @@
+ % =========================================================
+ 
+-This paper formulated a history-conditioned scheduled predictor with a state-preserving temporal lifting, a bounded low-rank history-conditioned transition, and a measurement-dependent input modulation. The scheduled form preserves linear propagation when the scheduling signals are fixed, while its recursive use remains generally nonlinear. The finite-horizon prediction result makes the history-window coupling explicit and gives a conditional open-loop bound under common-history, work-domain, Lipschitz, and residual conditions.
++This paper formulated a history-conditioned scheduled predictor with a temporal lifting, a bounded low-rank history-conditioned transition, and a measurement-dependent input modulation. The scheduled form preserves linear propagation when the scheduling signals are fixed, while its recursive use remains generally nonlinear. The finite-horizon prediction result makes the history-window coupling explicit and gives a conditional open-loop bound under common-history, work-domain, Lipschitz, and residual conditions.
+ 
+ For control, freezing the scheduling matrices along a nominal rollout produces an LTV prediction model and a convex QP with measurement-space tracking costs. The freezing analysis separates nominal drift from the complete-versus-frozen trajectory error. Under a uniform cost approximation and a common feasible set, the frozen global optimizer satisfies a conditional $2\varepsilon_J$ cost bound relative to the global optimizer of the complete scheduled problem.
+ 
+-The scope is intentionally limited. The results do not establish stability, recursive feasibility, real-time deadlines, exact optimality of an approximate numerical solver, or physical hardware-control guarantees. The uniform work-domain and residual conditions require separate certification for any concrete system, and the experimental section remains to be completed from independently verified results.
++The results are finite-horizon and open-loop; the uniform work-domain and residual conditions require certification for a concrete system.
+ 
+ \appendices
+@@ -606,105 +649,117 @@
+ \begin{thebibliography}{99}
+ 
++\bibitem{wu2026multistep}
++L. Wu, W. G. Y. Tan, L. Zhou, R. D. Braatz, and J. Drgo\v{n}a, ``Least-squares multi-step Koopman operator learning for model predictive control,'' arXiv:2601.11901, 2026.
++
++\bibitem{ljung1999system}
++L. Ljung, \emph{System Identification: Theory for the User}, 2nd ed. Upper Saddle River, NJ, USA: Prentice Hall PTR, 1999.
++
++\bibitem{vanoverschee1994n4sid}
++P. Van Overschee and B. De Moor, ``N4SID: Subspace algorithms for the identification of combined deterministic-stochastic systems,'' \emph{Automatica}, vol. 30, no. 1, pp. 75--93, 1994.
++
++\bibitem{nelles2020nonlinear}
++O. Nelles, \emph{Nonlinear System Identification: From Classical Approaches to Neural Networks, Fuzzy Models, and Gaussian Processes}, 2nd ed. Cham, Switzerland: Springer, 2020.
++
++\bibitem{forgione2021dynonet}
++M. Forgione and D. Piga, ``dynoNet: A neural network architecture for learning dynamical systems,'' \emph{Int. J. Adapt. Control Signal Process.}, vol. 35, no. 4, pp. 612--626, 2021.
++
+ \bibitem{koopman1931hamiltonian}
+ B. O. Koopman, ``Hamiltonian systems and transformation in Hilbert space,'' \emph{Proc. Natl. Acad. Sci. USA}, vol. 17, no. 5, pp. 315--318, 1931.
+ 
+-\bibitem{koopman1932spectra}
+-B. O. Koopman and J. von Neumann, ``Dynamical systems of continuous spectra,'' \emph{Proc. Natl. Acad. Sci. USA}, vol. 18, no. 3, pp. 255--263, 1932.
+-
+ \bibitem{mezic2005spectral}
+ I. Mezi\'c, ``Spectral properties of dynamical systems, model reduction and decompositions,'' \emph{Nonlinear Dyn.}, vol. 41, no. 1--3, pp. 309--325, 2005.
+ 
+-\bibitem{ljung1999system}
+-L. Ljung, \emph{System Identification: Theory for the User}, 2nd ed. Upper Saddle River, NJ, USA: Prentice Hall PTR, 1999.
+-
+-\bibitem{vanoverschee1994n4sid}
+-P. Van Overschee and B. De Moor, ``N4SID: Subspace algorithms for the identification of combined deterministic-stochastic systems,'' \emph{Automatica}, vol. 30, no. 1, pp. 75--93, 1994.
+-
+-\bibitem{nelles2020nonlinear}
+-O. Nelles, \emph{Nonlinear System Identification: From Classical Approaches to Neural Networks, Fuzzy Models, and Gaussian Processes}, 2nd ed. Cham, Switzerland: Springer, 2020.
+-
+-\bibitem{rowley2009spectral}
+-C. W. Rowley, I. Mezi\'c, S. Bagheri, P. Schlatter, and D. S. Henningson, ``Spectral analysis of nonlinear flows,'' \emph{J. Fluid Mech.}, vol. 641, pp. 115--127, 2009.
+-
+ \bibitem{williams2015data}
+-M. O. Williams, I. G. Kevrekidis, and C. W. Rowley, ``A data--driven approximation of the Koopman operator: Extending dynamic mode decomposition,'' \emph{J. Nonlinear Sci.}, vol. 25, no. 6, pp. 1307--1346, 2015.
+-
+-\bibitem{williams2015kernel}
+-M. O. Williams, C. W. Rowley, and I. G. Kevrekidis, ``A kernel-based method for data-driven Koopman spectral analysis,'' \emph{J. Comput. Dyn.}, vol. 2, no. 2, pp. 247--265, 2015.
++M. O. Williams, I. G. Kevrekidis, and C. W. Rowley, ``A data-driven approximation of the Koopman operator: Extending dynamic mode decomposition,'' \emph{J. Nonlinear Sci.}, vol. 25, no. 6, pp. 1307--1346, 2015.
++
++\bibitem{proctor2016dmdc}
++J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Dynamic mode decomposition with control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 15, no. 1, pp. 142--161, 2016.
++
++\bibitem{proctor2018generalizing}
++J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Generalizing Koopman theory to allow for inputs and control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 17, no. 1, pp. 909--930, 2018.
++
++\bibitem{korda2018linear}
++M. Korda and I. Mezi\'c, ``Linear predictors for nonlinear dynamical systems: Koopman operator meets model predictive control,'' \emph{Automatica}, vol. 93, pp. 149--160, 2018.
++
++\bibitem{brunton2022modern}
++S. L. Brunton, M. Budi\v{s}i\'c, E. Kaiser, and J. N. Kutz, ``Modern Koopman theory for dynamical systems,'' \emph{SIAM Rev.}, vol. 64, no. 2, pp. 229--340, 2022.
++
++\bibitem{otto2021koopman}
++S. E. Otto and C. W. Rowley, ``Koopman operators for estimation and control of dynamical systems,'' \emph{Annu. Rev. Control Robot. Auton. Syst.}, vol. 4, no. 1, pp. 59--87, 2021.
++
++\bibitem{duran2025control}
++J. F. Dur\'an-Sig\"uenza, L. I. Minchala, L. E. Garza-Casta\~n\'on, and H. Zhang, ``Control based on the Koopman operator: A comprehensive review,'' \emph{J. Franklin Inst.}, vol. 362, no. 18, art. 108256, 2025.
++
++\bibitem{strasser2026overview}
++R. Str\"asser, K. Worthmann, I. Mezi\'c, J. Berberich, M. Schaller, and F. Allg\"ower, ``An overview of Koopman-based control: From error bounds to closed-loop guarantees,'' \emph{Annu. Rev. Control}, vol. 61, art. 101035, 2026.
++
++\bibitem{lusch2018deep}
++B. Lusch, J. N. Kutz, and S. L. Brunton, ``Deep learning for universal linear embeddings of nonlinear dynamics,'' \emph{Nat. Commun.}, vol. 9, no. 1, p. 4950, 2018.
++
++\bibitem{takeishi2017koopman}
++N. Takeishi, Y. Kawahara, and T. Yairi, ``Learning Koopman invariant subspaces for dynamic mode decomposition,'' in \emph{Proc. NeurIPS}, 2017, pp. 1130--1140.
++
++\bibitem{otto2019linearly}
++S. E. Otto and C. W. Rowley, ``Linearly-recurrent autoencoder networks for learning dynamics,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 18, no. 1, pp. 558--593, 2019.
++
++\bibitem{han2020deep}
++Y. Han, W. Hao, and U. Vaidya, ``Deep learning of Koopman representation for control,'' in \emph{Proc. IEEE Conf. Decision Control (CDC)}, 2020, pp. 1890--1895.
++
++\bibitem{feizi2025deepkoopman}
++N. Feizi, F. C. Pedrosa, J. Jayender, and R. V. Patel, ``Deep Koopman approach for nonlinear dynamics and control of tendon-driven continuum robots,'' \emph{IEEE Robot. Autom. Lett.}, vol. 10, no. 3, pp. 2926--2933, 2025.
++
++\bibitem{brunton2017chaos}
++S. L. Brunton, B. W. Brunton, J. L. Proctor, E. Kaiser, and J. N. Kutz, ``Chaos as an intermittently forced linear system,'' \emph{Nat. Commun.}, vol. 8, art. 19, 2017.
++
++\bibitem{kamb2020timedelay}
++M. Kamb, E. Kaiser, S. L. Brunton, and J. N. Kutz, ``Time-delay observables for Koopman: Theory and applications,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 19, no. 2, pp. 886--917, 2020.
+ 
+ \bibitem{arbabi2017ergodic}
+ H. Arbabi and I. Mezi\'c, ``Ergodic theory, dynamic mode decomposition, and computation of spectral properties of the Koopman operator,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 16, no. 4, pp. 2096--2126, 2017.
+ 
+-\bibitem{kamb2020timedelay}
+-M. Kamb, E. Kaiser, S. L. Brunton, and J. N. Kutz, ``Time-delay observables for Koopman: Theory and applications,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 19, no. 2, pp. 886--917, 2020.
+-
+-\bibitem{brunton2017chaos}
+-S. L. Brunton, B. W. Brunton, J. L. Proctor, E. Kaiser, and J. N. Kutz, ``Chaos as an intermittently forced linear system,'' \emph{Nat. Commun.}, vol. 8, art. 19, 2017.
+-
+ \bibitem{das2019delay}
+ S. Das and D. Giannakis, ``Delay-coordinate maps and the spectra of Koopman operators,'' \emph{J. Stat. Phys.}, vol. 175, no. 6, pp. 1107--1145, 2019.
+ 
++\bibitem{shenoy2025temporal}
++S. Shenoy, B. Sharan, and H. Werner, ``Temporal autoencoder for identification and predictive control of nonlinear dynamics based on Koopman operator theory,'' in \emph{Proc. American Control Conf. (ACC)}, 2025, pp. 1795--1800.
++
++\bibitem{han2024robust}
++M. Han, Z. Li, Xiang Yin, and Xunyuan Yin, ``Robust learning and control of time-delay nonlinear systems with deep recurrent Koopman operators,'' \emph{IEEE Trans. Ind. Informat.}, vol. 20, no. 3, pp. 4675--4684, Mar. 2024.
++
++\bibitem{forootani2025deepkoopformer}
++A. Forootani, M. Khosravi, and M. Barati, ``DeepKoopFormer: A Koopman enhanced Transformer based architecture for time series forecasting,'' arXiv:2508.02616, 2025.
++
++\bibitem{forootani2026spectral}
++A. Forootani and R. Iervolino, ``Learnable Koopman-enhanced Transformer-based time series forecasting with spectral control,'' arXiv:2602.02592, 2026.
++
++\bibitem{li2025mamko}
++Z. Li, M. Han, and X. Yin, ``MamKO: Mamba-based Koopman operator for modeling and predictive control,'' in \emph{Proc. ICLR}, 2025.
++
+ \bibitem{liu2023koopa}
+ Y. Liu, C. Li, J. Wang, and M. Long, ``Koopa: Learning non-stationary time series dynamics with Koopman predictors,'' in \emph{Proc. NeurIPS}, 2023.
+ 
+-\bibitem{li2025mamko}
+-Z. Li, M. Han, and X. Yin, ``MamKO: Mamba-based Koopman operator for modeling and predictive control,'' in \emph{Proc. ICLR}, 2025.
+-
+-\bibitem{brunton2022modern}
+-S. L. Brunton, M. Budi\v{s}i\'c, E. Kaiser, and J. N. Kutz, ``Modern Koopman theory for dynamical systems,'' \emph{SIAM Rev.}, vol. 64, no. 2, pp. 229--340, 2022.
+-
+-\bibitem{otto2021koopman}
+-S. E. Otto and C. W. Rowley, ``Koopman operators for estimation and control of dynamical systems,'' \emph{Annu. Rev. Control Robot. Auton. Syst.}, vol. 4, no. 1, pp. 59--87, 2021.
+-
+-\bibitem{takeishi2017koopman}
+-N. Takeishi, Y. Kawahara, and T. Yairi, ``Learning Koopman invariant subspaces for dynamic mode decomposition,'' in \emph{Proc. NeurIPS}, 2017, pp. 1130--1140.
+-
+-\bibitem{yeung2019learning}
+-E. Yeung, S. Kundu, and N. Hodas, ``Learning deep neural network representations for Koopman operators of nonlinear dynamical systems,'' in \emph{Proc. ACC}, 2019, pp. 4832--4839.
+-
+-\bibitem{lusch2018deep}
+-B. Lusch, J. N. Kutz, and S. L. Brunton, ``Deep learning for universal linear embeddings of nonlinear dynamics,'' \emph{Nat. Commun.}, vol. 9, no. 1, p. 4950, 2018.
+-
+-\bibitem{morton2019deep}
+-J. Morton, F. D. Witherden, and M. J. Kochenderfer, ``Deep variational Koopman models: Inferring Koopman observations for uncertainty-aware dynamics modeling and control,'' in \emph{Proc. IJCAI}, 2019, pp. 3173--3179.
+-
+-\bibitem{azencot2020forecasting}
+-O. Azencot, N. B. Erichson, V. Lin, and M. W. Mahoney, ``Forecasting sequential data using consistent Koopman autoencoders,'' in \emph{Proc. ICML}, 2020, pp. 475--485.
+-
+-\bibitem{wu2026multistep}
+-L. Wu, W. G. Y. Tan, L. Zhou, R. D. Braatz, and J. Drgo\v{n}a, ``Least-squares multi-step Koopman operator learning for model predictive control,'' arXiv:2601.11901, 2026.
+-
+-\bibitem{otto2019linearly}
+-S. E. Otto and C. W. Rowley, ``Linearly-recurrent autoencoder networks for learning dynamics,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 18, no. 1, pp. 558--593, 2019.
+-
+-\bibitem{forgione2021dynonet}
+-M. Forgione and D. Piga, ``dynoNet: A neural network architecture for learning dynamical systems,'' \emph{Int. J. Adapt. Control Signal Process.}, vol. 35, no. 4, pp. 612--626, 2021.
+-
+-\bibitem{proctor2016dmdc}
+-J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Dynamic mode decomposition with control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 15, no. 1, pp. 142--161, 2016.
+-
+-\bibitem{proctor2018generalizing}
+-J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Generalizing Koopman theory to allow for inputs and control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 17, no. 1, pp. 909--930, 2018.
+-
+-\bibitem{brunton2016invariant}
+-S. L. Brunton, B. W. Brunton, J. L. Proctor, and J. N. Kutz, ``Koopman invariant subspaces and finite linear representations of nonlinear dynamical systems for control,'' \emph{PLOS ONE}, vol. 11, no. 2, e0150171, 2016.
+-
+-\bibitem{korda2018linear}
+-M. Korda and I. Mezi\'c, ``Linear predictors for nonlinear dynamical systems: Koopman operator meets model predictive control,'' \emph{Automatica}, vol. 93, pp. 149--160, 2018.
+-
+-\bibitem{han2020deep}
+-Y. Han, W. Hao, and U. Vaidya, ``Deep learning of Koopman representation for control,'' in \emph{Proc. IEEE Conf. Decision Control (CDC)}, 2020, pp. 1890--1895.
+-
+-\bibitem{shi2022deep}
+-H. Shi and M. Q.-H. Meng, ``Deep Koopman operator with control for nonlinear systems,'' \emph{IEEE Robot. Autom. Lett.}, vol. 7, no. 3, pp. 7700--7707, 2022.
+-
+-\bibitem{strasser2026overview}
+-R. Str\"asser, K. Worthmann, I. Mezi\'c, J. Berberich, M. Schaller, and F. Allg\"ower, ``An overview of Koopman-based control: From error bounds to closed-loop guarantees,'' \emph{Annu. Rev. Control}, vol. 61, art. 101035, 2026.
+-
+-\bibitem{duran2025control}
+-J. F. Dur\'an-Sig\"uenza, L. I. Minchala, L. E. Garza-Casta\~n\'on, and H. Zhang, ``Control based on the Koopman operator: A comprehensive review,'' \emph{J. Franklin Inst.}, vol. 362, no. 18, art. 108256, 2025.
+-
+-\bibitem{klus2018data}
+-S. Klus, F. N\"uske, P. Koltai, H. Wu, I. Kevrekidis, C. Sch\"utte, and F. No\'e, ``Data-driven model reduction and transfer operator approximation,'' \emph{J. Nonlinear Sci.}, vol. 28, no. 3, pp. 985--1010, 2018.
++\bibitem{rugh2000gain}
++W. J. Rugh and J. S. Shamma, ``Research on gain scheduling,'' \emph{Automatica}, vol. 36, no. 10, pp. 1401--1425, 2000.
++
++\bibitem{leith1998velocity}
++D. J. Leith and W. E. Leithead, ``Gain-scheduled and nonlinear systems: Dynamic analysis by velocity-based linearization families,'' \emph{Int. J. Control}, vol. 70, no. 2, pp. 289--317, 1998.
++
++\bibitem{cisneros2016qlmpc}
++P. S. G. Cisneros, S. Voss, and H. Werner, ``Efficient nonlinear model predictive control via quasi-LPV representation,'' in \emph{Proc. 55th IEEE Conf. Decision Control (CDC)}, 2016, pp. 3216--3221.
++
++\bibitem{cisneros2020qlpv}
++P. S. G. Cisneros and H. Werner, ``Nonlinear model predictive control for models in quasi-linear parameter varying form,'' \emph{Int. J. Robust Nonlinear Control}, vol. 30, no. 10, pp. 3945--3959, 2020.
++
++\bibitem{diehl2005realtime}
++M. Diehl, H. G. Bock, and J. P. Schl\"oder, ``A real-time iteration scheme for nonlinear optimization in optimal feedback control,'' \emph{SIAM J. Control Optim.}, vol. 43, no. 5, pp. 1714--1736, 2005.
++
++\bibitem{gros2020rti}
++S. Gros, M. Zanon, R. Quirynen, A. Bemporad, and M. Diehl, ``From linear to nonlinear MPC: Bridging the gap via the real-time iteration,'' \emph{Int. J. Control}, vol. 93, no. 1, pp. 62--80, 2020.
++
++\bibitem{diehl2005rtistability}
++M. Diehl, R. Findeisen, F. Allg\"ower, H. G. Bock, and J. P. Schl\"oder, ``Nominal stability of real-time iteration scheme for nonlinear model predictive control,'' \emph{IEE Proc. Control Theory Appl.}, vol. 152, no. 3, pp. 296--308, 2005.
++
++\bibitem{zavala2009advancedstep}
++V. M. Zavala and L. T. Biegler, ``The advanced-step NMPC controller: Optimality, stability and robustness,'' \emph{Automatica}, vol. 45, no. 1, pp. 86--93, 2009.
+ 
+ \bibitem{vaswani2017attention}
+@@ -714,52 +769,4 @@
+ Y. Nie, N. H. Nguyen, P. Sinthong, and J. Kalagnanam, ``A time series is worth 64 words: Long-term forecasting with Transformers,'' in \emph{Proc. ICLR}, 2023.
+ 
+-\bibitem{forootani2025deepkoopformer}
+-A. Forootani, M. Khosravi, and M. Barati, ``DeepKoopFormer: A Koopman enhanced Transformer based architecture for time series forecasting,'' arXiv:2508.02616, 2025.
+-
+-\bibitem{forootani2026spectral}
+-A. Forootani and R. Iervolino, ``Learnable Koopman-enhanced Transformer-based time series forecasting with spectral control,'' arXiv:2602.02592, 2026.
+-
+-\bibitem{feizi2025deepkoopman}
+-N. Feizi, F. C. Pedrosa, J. Jayender, and R. V. Patel, ``Deep Koopman approach for nonlinear dynamics and control of tendon-driven continuum robots,'' \emph{IEEE Robot. Autom. Lett.}, vol. 10, no. 3, pp. 2926--2933, 2025.
+-
+-\bibitem{rota1960joint}
+-G.-C. Rota and G. Strang, ``A note on the joint spectral radius,'' \emph{Nederl. Akad. Wetensch. Proc. Ser. A}, vol. 63 (Indag. Math., vol. 22), pp. 379--381, 1960.
+-
+-\bibitem{daubechies1992sets}
+-I. Daubechies and J. C. Lagarias, ``Sets of matrices all infinite products of which converge,'' \emph{Linear Algebra Appl.}, vol. 161, pp. 227--263, 1992.
+-
+-\bibitem{jungers2009joint}
+-R. M. Jungers, \emph{The Joint Spectral Radius: Theory and Applications}, Lecture Notes in Control and Information Sciences, vol. 385. Berlin, Germany: Springer, 2009.
+-
+-\bibitem{diehl2005realtime}
+-M. Diehl, H. G. Bock, and J. P. Schl\"oder, ``A real-time iteration scheme for nonlinear optimization in optimal feedback control,'' \emph{SIAM J. Control Optim.}, vol. 43, no. 5, pp. 1714--1736, 2005.
+-
+-\bibitem{gros2020rti}
+-S. Gros, M. Zanon, R. Quirynen, A. Bemporad, and M. Diehl, ``From linear to nonlinear MPC: Bridging the gap via the real-time iteration,'' \emph{Int. J. Control}, vol. 93, no. 1, pp. 62--80, 2020.
+-
+-\bibitem{diehl2005rtistability}
+-M. Diehl, R. Findeisen, F. Allg\"ower, H. G. Bock, and J. P. Schl\"oder, ``Nominal stability of real-time iteration scheme for nonlinear model predictive control,'' \emph{IEE Proc. Control Theory Appl.}, vol. 152, no. 3, pp. 296--308, 2005.
+-
+-\bibitem{zavala2009advancedstep}
+-V. M. Zavala and L. T. Biegler, ``The advanced-step NMPC controller: Optimality, stability and robustness,'' \emph{Automatica}, vol. 45, no. 1, pp. 86--93, 2009.
+-
+-\bibitem{rugh2000gain}
+-W. J. Rugh and J. S. Shamma, ``Research on gain scheduling,'' \emph{Automatica}, vol. 36, no. 10, pp. 1401--1425, 2000.
+-
+-\bibitem{leith1998velocity}
+-D. J. Leith and W. E. Leithead, ``Gain-scheduled and nonlinear systems: Dynamic analysis by velocity-based linearization families,'' \emph{Int. J. Control}, vol. 70, no. 2, pp. 289--317, 1998.
+-
+-\bibitem{cisneros2016qlmpc}
+-P. S. G. Cisneros, S. Voss, and H. Werner, ``Efficient nonlinear model predictive control via quasi-LPV representation,'' in \emph{Proc. 55th IEEE Conf. Decision Control (CDC)}, 2016, pp. 3216--3221.
+-
+-\bibitem{cisneros2020qlpv}
+-P. S. G. Cisneros and H. Werner, ``Nonlinear model predictive control for models in quasi-linear parameter varying form,'' \emph{Int. J. Robust Nonlinear Control}, vol. 30, no. 10, pp. 3945--3959, 2020.
+-
+-\bibitem{han2024robust}
+-M. Han, Z. Li, Xiang Yin, and Xunyuan Yin, ``Robust learning and control of time-delay nonlinear systems with deep recurrent Koopman operators,'' \emph{IEEE Trans. Ind. Informat.}, vol. 20, no. 3, pp. 4675--4684, Mar. 2024.
+-
+-\bibitem{shenoy2025temporal}
+-S. Shenoy, B. Sharan, and H. Werner, ``Temporal autoencoder for identification and predictive control of nonlinear dynamics based on Koopman operator theory,'' in \emph{Proc. American Control Conf. (ACC)}, 2025, pp. 1795--1800.
+-
+ \end{thebibliography}
+ 

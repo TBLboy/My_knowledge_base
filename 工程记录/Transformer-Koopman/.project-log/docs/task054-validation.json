@@ -1,0 +1,81 @@
+{
+ "task": "TASK-054",
+ "files": {
+  "Main.tex": {
+   "sha256": "51b4e9c25f8253dd2bd0178b26089696984edaf1c1afba738ffe2c8452a72cca",
+   "bytes": 53682
+  },
+  "build_font/Main.pdf": {
+   "sha256": "c21f884c902b9cbc643feb79696e5933910cec517000a96b1c90ef6faa23736b",
+   "bytes": 142520
+  },
+  "task054-before.tex": {
+   "sha256": "02723f83b42fb3af5b68c4d47b1f5dda17983dd26ef3d675c75b1cc10e3bb59f",
+   "bytes": 52359
+  },
+  "task054-changes.diff": {
+   "sha256": "a95c06c1812a2b616c63fc6774da22aec320668ca600cefc95a57a6720027808"
+  }
+ },
+ "checks": {
+  "bibitem_count": 40,
+  "distinct_cited_keys": 40,
+  "total_cite_commands": 22,
+  "bibitem_order_equals_first_citation_order": true,
+  "uncited_bibitems": [],
+  "cites_without_bibitem": [],
+  "state_preserving_occurrences": 0,
+  "figph_macros": 4,
+  "figure_environments": 2,
+  "figure_star_environments": 1,
+  "placeholder_captions": 3,
+  "figure_labels": [
+   "fig:overview",
+   "fig:rollout",
+   "fig:freezing"
+  ],
+  "figrefs": [
+   "fig:overview",
+   "fig:rollout",
+   "fig:freezing"
+  ],
+  "residual_defensive_phrases": {
+   "we_do_not_claim": 0,
+   "not_necessarily": 0,
+   "does_not_imply": 0,
+   "it_is_not_our_intent": 0,
+   "we_emphasize_that": 0,
+   "no_claim_of": 0,
+   "should_not_be_read": 0,
+   "we_stress": 0
+  },
+  "appendix_sections": 0,
+  "sections": [
+   "Introduction",
+   "Preliminaries and Problem Formulation",
+   "Scheduled Koopman Modeling",
+   "Frozen-LTV Model Predictive Control",
+   "Experiments",
+   "Conclusion",
+   "Proof Details"
+  ],
+  "appendix_labels": [
+   "app:proofs"
+  ],
+  "diff_lines_added": 171,
+  "diff_lines_removed": 164,
+  "diff_hunks": 22,
+  "diff_sha256": "e47905bc830cd938d5b56b2f3c9a44b77362f40a4c9e6dd871358e3e9e023e4d",
+  "log_overfull": 0,
+  "log_underfull": 10,
+  "log_font_warning": 0,
+  "log_undefined": 0,
+  "log_pages": 8,
+  "pdf_pages": 8,
+  "pdf_placeholder_captions": 2,
+  "pdf_contains_state_preserving": false,
+  "pdf_has_data_driven_hyphen": true,
+  "pdf_has_data_endash": false,
+  "pdf_size_bytes": 142520
+ }
+}

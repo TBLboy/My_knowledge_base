@@ -1,0 +1,17 @@
+{
+  "files": [
+    "Transformer-Koopman/论文/新版本/Main.tex",
+    "Transformer-Koopman/论文/新版本/build_current/Main.pdf",
+    "Transformer-Koopman/论文/新版本/build_current/Main.log",
+    ".project-log/docs/task051-compile.py",
+    ".project-log/docs/task051-compile-report.json",
+    ".project-log/docs/task051-review.md"
+  ],
+  "tasks": ["TASK-051"],
+  "review_session": "ses_ecacf5ef5ffeCLJ8hyOXXhFlOV",
+  "review_method": "Independent read-only source/log/report inspection; no independent runtime replay or hash computation",
+  "verification_state": "partial",
+  "verification_capability_missing": "Reviewer shell preflight denied; no permitted Tectonic replay capability",
+  "finding": "Existing compiler found and main-agent compilation succeeded; 13 overfull, 9 underfull and font/config warnings remain; no submission/layout acceptance",
+  "binding_ref": ".project-log/docs/task051-binding.json"
+}

@@ -1,0 +1,16 @@
+{
+ "bibitem_count": 39,
+ "distinct_cited": 39,
+ "order_equals_first_citation": true,
+ "uncited": [],
+ "missing": [],
+ "state_preserving_in_intro": 0,
+ "defensive_in_intro": 0,
+ "intro_words_approx": 1054,
+ "intro_cite_keys": 42,
+ "log_overfull": 0,
+ "log_undefined": 0,
+ "log_font_warning": 0,
+ "intro_wu2026_cites": 3,
+ "intro_deepkoopformer_cites": 1
+}

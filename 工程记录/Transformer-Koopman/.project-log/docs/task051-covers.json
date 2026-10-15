@@ -1,0 +1,14 @@
+{
+  "files": [
+    "Transformer-Koopman/论文/新版本/Main.tex",
+    "Transformer-Koopman/论文/新版本/IEEEtran.cls",
+    "Transformer-Koopman/论文/新版本/build_current/Main.pdf",
+    "Transformer-Koopman/论文/新版本/build_current/Main.log",
+    ".project-log/docs/task051-compile.py",
+    ".project-log/docs/task051-compile-report.json",
+    ".project-log/docs/task051-pdf-inspection.json",
+    ".project-log/docs/task051-review.md"
+  ],
+  "tasks": ["TASK-051"],
+  "requirements": []
+}

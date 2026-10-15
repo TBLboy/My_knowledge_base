@@ -1,0 +1,36 @@
+{
+  "task": "TASK-032",
+  "artifact": "Transformer-Koopman/论文/新版本/Main.tex",
+  "bytes": 51287,
+  "sha256": "638ba59d7bcb82bd18a1a5f01ceaed55eb51c6d8cd3a4e60a85b14d421b696a8",
+  "lines": 722,
+  "checks": {
+    "backspace": 0,
+    "end_document": 1,
+    "bibliography_begin": 1,
+    "bibliography_end": 1,
+    "bmatrix": 3,
+    "vector_macros": true,
+    "recurrence_finite": true,
+    "theorem_finite": true,
+    "input_set_conditions": true,
+    "citation_keys_complete": true,
+    "experiments_results_omitted": true,
+    "formal_A1_A5": true,
+    "uniform_full_feasible_set_quantifier": true,
+    "prediction_recurrence_proof": true,
+    "epsilon_cost_derivation": true,
+    "formal_A4_matrix_bounds": true,
+    "uniform_delta_u_delta_Delta_u_suprema": true,
+    "explicit_uniform_epsilon_J": true,
+    "A2_named_domain": true,
+    "A5_explicit_index_range": true,
+    "matrix_spectral_norm_defined": true
+  },
+  "latex_engine_available": false,
+  "limitations": [
+    "pdflatex/xelatex/bibtex not available; PDF compilation not verified",
+    "experiments, figures and numerical results intentionally omitted",
+    "no stability, recursive-feasibility, real-time or hardware guarantee"
+  ]
+}

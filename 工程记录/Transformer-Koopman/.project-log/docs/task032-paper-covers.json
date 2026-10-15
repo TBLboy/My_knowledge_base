@@ -1,0 +1,16 @@
+{
+    "tasks":  [
+                  "TASK-032"
+              ],
+    "files":  [
+                  "Transformer-Koopman/论文/新版本/Main.tex",
+                  ".project-log/docs/task032-paper-draft-static-validation.json",
+                  ".project-log/docs/task032-paper-draft-review.md"
+              ],
+    "requirements":  [
+                         "六章正文结构并跳过实验结果",
+                         "理论、内容逻辑和语言独立复核",
+                         "A1-A5与有限时域理论链显式落地",
+                         "冻结LTV-QP与条件次优性保持测量空间控制成本"
+                     ]
+}

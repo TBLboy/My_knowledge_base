@@ -1,0 +1,38 @@
+note: using only cached resource files
+note: Running TeX ...
+Fontconfig error: Cannot load default config file: No such file: (null)
+warning: Main.tex:199: Underfull \hbox (badness 4366) in paragraph at lines 198--199
+warning: Main.tex:339: Underfull \hbox (badness 1400) in paragraph at lines 338--339
+warning: Main.tex:354: Underfull \hbox (badness 6348) in paragraph at lines 353--354
+warning: Main.tex:397: Underfull \hbox (badness 2181) in paragraph at lines 395--397
+warning: Main.tex:535: Underfull \hbox (badness 1838) in paragraph at lines 534--535
+warning: Main.tex:539: Underfull \hbox (badness 1616) in paragraph at lines 538--539
+warning: Main.tex:561: Underfull \hbox (badness 2376) in paragraph at lines 560--561
+warning: Main.tex:709: Underfull \hbox (badness 6110) in paragraph at lines 708--709
+warning: Main.tex:709: Underfull \hbox (badness 3417) in paragraph at lines 708--709
+note: Rerunning TeX because I was told to ...
+warning: Main.tex:199: Underfull \hbox (badness 4366) in paragraph at lines 198--199
+warning: Main.tex:339: Underfull \hbox (badness 1400) in paragraph at lines 338--339
+warning: Main.tex:354: Underfull \hbox (badness 6348) in paragraph at lines 353--354
+warning: Main.tex:397: Underfull \hbox (badness 2181) in paragraph at lines 395--397
+warning: Main.tex:535: Underfull \hbox (badness 1838) in paragraph at lines 534--535
+warning: Main.tex:539: Underfull \hbox (badness 1616) in paragraph at lines 538--539
+warning: Main.tex:561: Underfull \hbox (badness 2376) in paragraph at lines 560--561
+warning: Main.tex:709: Underfull \hbox (badness 6110) in paragraph at lines 708--709
+warning: Main.tex:709: Underfull \hbox (badness 3417) in paragraph at lines 708--709
+note: Rerunning TeX because I was told to ...
+warning: Main.tex:199: Underfull \hbox (badness 4366) in paragraph at lines 198--199
+warning: Main.tex:339: Underfull \hbox (badness 1400) in paragraph at lines 338--339
+warning: Main.tex:354: Underfull \hbox (badness 6348) in paragraph at lines 353--354
+warning: Main.tex:397: Underfull \hbox (badness 2181) in paragraph at lines 395--397
+warning: Main.tex:535: Underfull \hbox (badness 1838) in paragraph at lines 534--535
+warning: Main.tex:539: Underfull \hbox (badness 1616) in paragraph at lines 538--539
+warning: Main.tex:561: Underfull \hbox (badness 2376) in paragraph at lines 560--561
+warning: Main.tex:709: Underfull \hbox (badness 6110) in paragraph at lines 708--709
+warning: Main.tex:709: Underfull \hbox (badness 3417) in paragraph at lines 708--709
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `D:\Project\Transformer-Koopman\Transformer-Koopman\论文\新版本\build_layout\Main.out` (4.5673828125 KiB)
+note: Writing `D:\Project\Transformer-Koopman\Transformer-Koopman\论文\新版本\build_layout\Main.pdf` (116.693359375 KiB)
+note: Writing `D:\Project\Transformer-Koopman\Transformer-Koopman\论文\新版本\build_layout\Main.aux` (10.666015625 KiB)
+note: Writing `D:\Project\Transformer-Koopman\Transformer-Koopman\论文\新版本\build_layout\Main.log` (17.60546875 KiB)

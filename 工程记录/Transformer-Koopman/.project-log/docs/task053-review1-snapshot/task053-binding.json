@@ -1,0 +1,26 @@
+{
+  "file_hashes": {
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/Main.tex": "06a1d774632888ec6302f125b8e91809ef3a42ac1f1c1db570cce7150b510cd8",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/IEEEtran.cls": "da751920a317ed318b7b5cd7fa585a6cc7d28502d457856382e9be24b10a3bd7",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/Main.pdf": "59761b95515478a3864bb7ce9da2ea06290ba1c7310821e34e448d611fae2903",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/Main.log": "2ac533eefffafed45a5a04603ca978362c792162ebf0834c9ff4d08d74756c2b",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/Main.aux": "bbcb8081d9d8029e629bc6420074adf630aad278c171a9c4926d2420a0dce6c7",
+    ".project-log/docs/task053-validate.py": "4545f570ac29ba63d3a478227a81d61f38fc3bcd76240442d6bc084b1a561bc4",
+    ".project-log/docs/task053-validation.json": "5a87689aa5e9a1c01001a64a3220dcc76b708c8674c859892999ab96bcd91461",
+    ".project-log/docs/task053-equations.diff": "d9c3d1542ba824ef012d6501cb3a3afa3987e314733b1e483c63ce649e8adc16",
+    ".project-log/docs/task053-before.tex": "c01228118ed52baf8597a3cb1eb1211df3612535d6397c9a76644bd3a4c79985",
+    ".project-log/docs/task053-spec.json": "1008ad7072c7193fd03d8cf52c962ddc980a1f72a1fc055198a6eabf46c895b0",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-01.png": "aa5229071fa1772d37e73e199053f40aa3020dba58fdc54f90752d06409d14d7",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-02.png": "aefb4805e5d232273c45ffe548e09c6b66e46b006df5c99638e5e9607041cdeb",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-03.png": "2451bcdeb4080ec31b754701cabb72a1efde53407ce061e9c165c9f44ae6a72f",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-04.png": "d9fecafb49a3e196138e0fad8f10d061f5816f5ab7a68e7827e13f937a0edd80",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-05.png": "cc51b23dcd9eea80d79c27929f88c71fe47f94b6dbedbb4940799c3c76ebfa7c",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-06.png": "54339b103baffec526cc6cec73e706698efe4f35134346744d141de03b4fb69d",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-07.png": "fe768a17ebae83de5deb1e07d91e933b6b5d953b2f277cfa4f1816a4ead605ab",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-08.png": "0db0693df30d3a95c6ec43b2bcae4c69ae7bb80a722d071381065aabf46afb96",
+    ".project-log/docs/task053-compile-1.txt": "142ff9caa9a06702bac073950cf0c25b29d4c8ed270f416f597865998722948c",
+    ".project-log/docs/task053-compile-2.txt": "90445519e40089299f626e7a6baaecce27983114f36aa05a9f446dd7b31d07d2",
+    ".project-log/docs/task053-pass-1.log": "2ac533eefffafed45a5a04603ca978362c792162ebf0834c9ff4d08d74756c2b",
+    ".project-log/docs/task053-pass-2.log": "2ac533eefffafed45a5a04603ca978362c792162ebf0834c9ff4d08d74756c2b"
+  }
+}

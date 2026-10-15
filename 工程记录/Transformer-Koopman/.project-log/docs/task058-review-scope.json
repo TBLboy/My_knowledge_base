@@ -1,0 +1,12 @@
+{
+ "task": "TASK-058",
+ "risk_class": "strict",
+ "scope": "Introduction rewrite of Main.tex (v2 after conditional review 1); judged from files only, reviewer had no shell/web",
+ "deliberate_deviation": "references 40->39: diehl2005rtistability removed with the off-topic stability sentence; no uncited entry remains",
+ "not_independently_verified": [
+  "compile counts (main-agent self-report: 0 overfull, 0 undefined, 0 font warnings)",
+  "external reference metadata",
+  "exact gain-scheduling/QLPV titles"
+ ],
+ "known_gap": "no general MPC textbook reference"
+}

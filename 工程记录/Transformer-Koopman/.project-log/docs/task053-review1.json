@@ -1,0 +1,13 @@
+{
+  "reviewer": "verification-reviewer",
+  "session": "ses_ecab0e96bffeDL238a9hokrqLF",
+  "verdict": "no-go",
+  "artifact_sha256": "06a1d774632888ec6302f125b8e91809ef3a42ac1f1c1db570cce7150b510cd8",
+  "passed": "All eight pages visually checked; grouping, alignment, no overfull/stray tags, mathematical tokens, labels and 60 continuous numbers pass",
+  "required_fix": "Two prose references to paired Lipschitz constants cover only L_B after split; appendix sum reference covers only f instead of H/f",
+  "fix_contract": "Add transition_Lipschitz_constant to exactly two existing eqref calls, and QP_Hessian to the single appendix eqref. Preserve all original labels, mathematical statements and other prose",
+  "failure_origin": "implementation",
+  "retry_delta": "Only three exact reviewed reference complements, plus exact-reference whitelist validation; no changes to equations themselves",
+  "expected_evidence": "Compiled prose now cites (14)/(15) twice and (42)/(43) in appendix; all other acceptance checks still pass",
+  "limitations": "Independent read/visual inspection, no independent compilation replay or hash recomputation; not a submission-ready or theory certificate"
+}

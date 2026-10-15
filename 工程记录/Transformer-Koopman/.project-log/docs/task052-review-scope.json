@@ -1,0 +1,10 @@
+{
+  "tasks": ["TASK-052"],
+  "files": ["Transformer-Koopman/论文/新版本/Main.tex", "Transformer-Koopman/论文/新版本/build_layout/Main.pdf", ".project-log/docs/task052-validation.json"],
+  "review_session": "ses_ecac469f4ffeOSBcaNj6XU3QmR",
+  "method": "Independent source/diff/log/aux inspection and visual inspection of all seven rendered pages",
+  "result": "Layout artifact checks passed; no overfull, semantic drift, renumbering or visual clipping found",
+  "limitation": "No independent compilation replay, hash recomputation or VerificationRun ID; conditional strict certification",
+  "binding_ref": ".project-log/docs/task052-binding.json",
+  "verification_state": "partial"
+}

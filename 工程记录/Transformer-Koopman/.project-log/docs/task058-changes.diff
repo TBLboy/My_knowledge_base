@@ -1,0 +1,99 @@
+--- before
++++ after
+@@ -94,11 +94,15 @@
+ 
+-Learning a predictive model for a nonlinear controlled system is useful in a control setting when the model can be evaluated recursively and incorporated into a control calculation. Classical system identification provides a broad collection of state-space and input--output tools \cite{ljung1999system,vanoverschee1994n4sid,nelles2020nonlinear}. Koopman methods offer a complementary viewpoint: nonlinear state evolution is represented through linear evolution of observables, and finite-dimensional approximations can be used for prediction and control \cite{koopman1931hamiltonian,mezic2005spectral,williams2015data,korda2018linear,brunton2022modern}; reviews of Koopman-based estimation and control are given in \cite{otto2021koopman,duran2025control,strasser2026overview}. The lifting functions are often learned by neural networks \cite{lusch2018deep,takeishi2017koopman,otto2019linearly}, and inputs are incorporated through dynamic mode decomposition with control and Koopman formulations for controlled systems \cite{proctor2016dmdc,proctor2018generalizing}, with learned predictors used for control \cite{han2020deep,feizi2025deepkoopman,wu2026multistep}. The finite-dimensional approximation, however, depends on the selected coordinates and on how operating-condition variation is represented.
+-
+-When an instantaneous measurement is not a sufficient description of the relevant dynamics, delay coordinates and recurrent representations can provide additional temporal information \cite{brunton2017chaos,kamb2020timedelay,arbabi2017ergodic,das2019delay,forgione2021dynonet,shenoy2025temporal,han2024robust}. A temporal lifting map can therefore encode a finite measurement history rather than a single sample. This addresses a representation problem but does not by itself solve a transition-model problem: all histories may still be propagated by one global lifted matrix. Context-dependent Koopman models and related temporal operator constructions instead allow the effective transition to vary with a recent trajectory or operating condition \cite{liu2023koopa,li2025mamko,forootani2025deepkoopformer,forootani2026spectral}. The present work combines these two ideas while retaining a structured, bounded low-rank modulation around a shared nominal transition.
+-
+-Recursive prediction creates a second difficulty. The history used to train a one-step map is formed from measured samples, whereas deployment recursively updates the history with predicted measurements. The resulting context can differ from the context seen during one-step training. Thus, a small one-step residual does not by itself provide a multi-step guarantee; multi-step objectives have been used to reduce this mismatch in Koopman learning for MPC \cite{wu2026multistep}. The analysis below makes the shared initial history and the recursive window update explicit.
+-
+-The same scheduling dependence creates a control trade-off. If the scheduling variables are recomputed from the decision-dependent predicted trajectory, the complete finite-horizon problem is generally nonlinear and nonconvex. Freezing the scheduling matrices along a nominal rollout produces an LTV approximation and a convex quadratic program for polyhedral input constraints.
+-
+-This construction is related to gain scheduling and quasi-linear parameter-varying control, where a linear model is indexed by an operating condition or scheduling signal \cite{rugh2000gain,leith1998velocity,cisneros2016qlmpc,cisneros2020qlpv}. It also differs from real-time iteration methods, which perform a single sequential-quadratic-programming update for a nonlinear optimal-control problem \cite{diehl2005realtime,gros2020rti}, and from advanced-step NMPC; stability analyses are available for both schemes \cite{diehl2005rtistability,zavala2009advancedstep}. Here the frozen matrices are generated from a history-aware nominal rollout and the result is analyzed as a finite-horizon LTV approximation.
++Model predictive control (MPC) chooses inputs by optimizing predicted behavior over a finite horizon subject to input constraints, so the prediction model determines both the quality and the computational cost of the controller. With a nonlinear model the optimization is a nonconvex program that must be solved at every sampling instant. With a linear model it is a convex quadratic program (QP), which admits fast solvers and predictable execution times \cite{wu2026multistep}. Linear identification methods \cite{ljung1999system,vanoverschee1994n4sid} supply such models but are limited in following nonlinear behavior over a wide operating range, whereas nonlinear black-box models \cite{nelles2020nonlinear,forgione2021dynonet} follow it at the price of a nonconvex control problem. A predictor that represents nonlinear dynamics and still propagates linearly would combine the two advantages.
++
++Koopman operator theory provides a route to such a predictor \cite{koopman1931hamiltonian,mezic2005spectral}. Instead of the state, it evolves observables, that is, scalar functions of the state, and the operator that advances them is linear even when the state dynamics are not. Lifting the state into a vector of observables therefore represents nonlinear evolution as linear evolution in a higher-dimensional space; the representation is exact on a finite-dimensional invariant subspace and approximate otherwise. Extended dynamic mode decomposition (EDMD) fits such a finite-dimensional linear predictor from data \cite{williams2015data}, and dynamic mode decomposition with control and the controlled Koopman operator extend it to inputs \cite{proctor2016dmdc,proctor2018generalizing,korda2018linear}. Inside MPC, the lifted predictor yields a QP whose complexity is comparable to that of linear MPC \cite{korda2018linear}. Comprehensive accounts are given in \cite{brunton2022modern,otto2021koopman,duran2025control,strasser2026overview}.
++
++The accuracy of the predictor depends on how the state is lifted. Early formulations fixed a dictionary of observables in advance, such as polynomials or radial basis functions, and fitted the linear matrices by least squares \cite{williams2015data,korda2018linear}. This is simple, but the representation capacity is limited and the result is sensitive to the dictionary \cite{wu2026multistep}. Neural networks later replaced the hand-chosen dictionary: the lifting and the linear dynamics are learned jointly from data \cite{lusch2018deep,takeishi2017koopman,otto2019linearly}, including for controlled systems \cite{han2020deep,feizi2025deepkoopman}. Both choices share one structure. A single pair $(\mA,\mB)$ advances the lifted state over the entire operating range, so every difference between operating conditions must be encoded in the lifted coordinates.
++
++A single matrix pair is demanding when the measurement does not reveal the operating condition, for example with unmeasured states or varying friction and payload. A common remedy places recent history in the lifting. Time-delay observables retain past measurements as additional coordinates \cite{brunton2017chaos,kamb2020timedelay,arbabi2017ergodic,das2019delay}, and learned variants employ temporal encoders: recurrent or convolutional layers in Koopman-based MPC \cite{shenoy2025temporal,han2024robust} and Transformers in Koopman-based forecasting \cite{forootani2025deepkoopformer,forootani2026spectral}. History then enriches the lifted state, but after lifting every history is still propagated by the same transition matrix. A second remedy lets the transition itself depend on history. MamKO generates the Koopman matrices from recent data and keeps the MPC problem convex \cite{li2025mamko}, and Koopa pairs a time-invariant with a time-variant Koopman predictor for non-stationary time series \cite{liu2023koopa}.
++
++This paper combines the two remedies. The lifted state keeps the current measurement and appends a Transformer encoding of a finite history. The transition is a shared nominal matrix plus a bounded low-rank correction generated from a history context, a feed-forward map of the recent measurements and inputs, and the input matrix is modulated by the current measurement. The history context and the current measurement act as scheduling signals, and we call the result a scheduled predictor. For fixed scheduling signals it is linear in the lifted state and input, which is the property that makes Koopman predictors usable in MPC, while the scheduling signals let the effective dynamics follow the operating condition.
++
++Scheduling makes both prediction and control depend on history. For prediction, the history in one-step training consists of measured samples, whereas in deployment it is rebuilt from predicted measurements, so the scheduling signals are evaluated on histories that may differ from those seen in training. A one-step residual alone therefore does not determine the multi-step error: the recursion must also track the error in the history window. Error accumulation under recursive evaluation is already known for fixed-matrix Koopman predictors \cite{wu2026multistep}. We define the recursive window update explicitly and bound the open-loop prediction error over a finite horizon.
++
++For control, recomputing the scheduling from the predicted trajectory makes the matrices depend on the decision variables, so the finite-horizon problem is in general nonconvex. Freezing the scheduling matrices along a nominal rollout gives a linear time-varying (LTV) model and a convex QP under polyhedral input constraints. This is related to gain scheduling and quasi-linear parameter-varying control, where a linear model is indexed by a scheduling signal \cite{rugh2000gain,leith1998velocity,cisneros2016qlmpc,cisneros2020qlpv}. It differs from real-time iteration, which performs a single sequential-quadratic-programming update on the nonlinear problem \cite{diehl2005realtime,gros2020rti}, and from advanced-step NMPC, which corrects a precomputed nonlinear solution by sensitivity updates \cite{zavala2009advancedstep}. Here the nominal rollout is itself history-aware, and we bound the deviation of the frozen trajectory from the complete scheduled trajectory for the same input sequence.
+ 
+@@ -648,2 +652,5 @@
+ 
++\bibitem{wu2026multistep}
++L. Wu, W. G. Y. Tan, L. Zhou, R. D. Braatz, and J. Drgo\v{n}a, ``Least-squares multi-step Koopman operator learning for model predictive control,'' arXiv:2601.11901, 2026.
++
+ \bibitem{ljung1999system}
+@@ -657,2 +664,5 @@
+ 
++\bibitem{forgione2021dynonet}
++M. Forgione and D. Piga, ``dynoNet: A neural network architecture for learning dynamical systems,'' \emph{Int. J. Adapt. Control Signal Process.}, vol. 35, no. 4, pp. 612--626, 2021.
++
+ \bibitem{koopman1931hamiltonian}
+@@ -666,2 +676,8 @@
+ 
++\bibitem{proctor2016dmdc}
++J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Dynamic mode decomposition with control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 15, no. 1, pp. 142--161, 2016.
++
++\bibitem{proctor2018generalizing}
++J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Generalizing Koopman theory to allow for inputs and control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 17, no. 1, pp. 909--930, 2018.
++
+ \bibitem{korda2018linear}
+@@ -690,8 +706,2 @@
+ 
+-\bibitem{proctor2016dmdc}
+-J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Dynamic mode decomposition with control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 15, no. 1, pp. 142--161, 2016.
+-
+-\bibitem{proctor2018generalizing}
+-J. L. Proctor, S. L. Brunton, and J. N. Kutz, ``Generalizing Koopman theory to allow for inputs and control,'' \emph{SIAM J. Appl. Dyn. Syst.}, vol. 17, no. 1, pp. 909--930, 2018.
+-
+ \bibitem{han2020deep}
+@@ -702,5 +712,2 @@
+ 
+-\bibitem{wu2026multistep}
+-L. Wu, W. G. Y. Tan, L. Zhou, R. D. Braatz, and J. Drgo\v{n}a, ``Least-squares multi-step Koopman operator learning for model predictive control,'' arXiv:2601.11901, 2026.
+-
+ \bibitem{brunton2017chaos}
+@@ -717,5 +724,2 @@
+ 
+-\bibitem{forgione2021dynonet}
+-M. Forgione and D. Piga, ``dynoNet: A neural network architecture for learning dynamical systems,'' \emph{Int. J. Adapt. Control Signal Process.}, vol. 35, no. 4, pp. 612--626, 2021.
+-
+ \bibitem{shenoy2025temporal}
+@@ -726,2 +730,11 @@
+ 
++\bibitem{forootani2025deepkoopformer}
++A. Forootani, M. Khosravi, and M. Barati, ``DeepKoopFormer: A Koopman enhanced Transformer based architecture for time series forecasting,'' arXiv:2508.02616, 2025.
++
++\bibitem{forootani2026spectral}
++A. Forootani and R. Iervolino, ``Learnable Koopman-enhanced Transformer-based time series forecasting with spectral control,'' arXiv:2602.02592, 2026.
++
++\bibitem{li2025mamko}
++Z. Li, M. Han, and X. Yin, ``MamKO: Mamba-based Koopman operator for modeling and predictive control,'' in \emph{Proc. ICLR}, 2025.
++
+ \bibitem{liu2023koopa}
+@@ -729,11 +742,2 @@
+ 
+-\bibitem{li2025mamko}
+-Z. Li, M. Han, and X. Yin, ``MamKO: Mamba-based Koopman operator for modeling and predictive control,'' in \emph{Proc. ICLR}, 2025.
+-
+-\bibitem{forootani2025deepkoopformer}
+-A. Forootani, M. Khosravi, and M. Barati, ``DeepKoopFormer: A Koopman enhanced Transformer based architecture for time series forecasting,'' arXiv:2508.02616, 2025.
+-
+-\bibitem{forootani2026spectral}
+-A. Forootani and R. Iervolino, ``Learnable Koopman-enhanced Transformer-based time series forecasting with spectral control,'' arXiv:2602.02592, 2026.
+-
+ \bibitem{rugh2000gain}
+@@ -756,5 +760,2 @@
+ 
+-\bibitem{diehl2005rtistability}
+-M. Diehl, R. Findeisen, F. Allg\"ower, H. G. Bock, and J. P. Schl\"oder, ``Nominal stability of real-time iteration scheme for nonlinear model predictive control,'' \emph{IEE Proc. Control Theory Appl.}, vol. 152, no. 3, pp. 296--308, 2005.
+-
+ \bibitem{zavala2009advancedstep}

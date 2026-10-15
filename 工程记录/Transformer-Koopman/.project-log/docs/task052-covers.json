@@ -1,0 +1,29 @@
+{
+  "files": [
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\Main.tex",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\IEEEtran.cls",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\Main.pdf",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\Main.log",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\Main.aux",
+    ".project-log\\docs\\task052-spec.json",
+    ".project-log\\docs\\task052-before.tex",
+    ".project-log\\docs\\task052-validate.py",
+    ".project-log\\docs\\task052-validation.json",
+    ".project-log\\docs\\task052-layout.diff",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-01.png",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-02.png",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-03.png",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-04.png",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-05.png",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-06.png",
+    "Transformer-Koopman\\\u8bba\u6587\\\u65b0\u7248\u672c\\build_layout\\rendered\\page-07.png",
+    ".project-log/docs/task052-review.md",
+    ".project-log/docs/task052-review-scope.json",
+    ".project-log/docs/task052-compile-1.txt",
+    ".project-log/docs/task052-compile-2.txt"
+  ],
+  "tasks": [
+    "TASK-052"
+  ],
+  "requirements": []
+}

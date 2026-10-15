@@ -1,0 +1,12 @@
+[
+  {
+    "device": "soft_platform",
+    "rc": 0,
+    "log": ".project-log/docs/task048-qp-soft_platform.txt"
+  },
+  {
+    "device": "arm_3link",
+    "rc": 0,
+    "log": ".project-log/docs/task048-qp-arm_3link.txt"
+  }
+]

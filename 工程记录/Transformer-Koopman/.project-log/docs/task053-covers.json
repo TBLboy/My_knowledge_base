@@ -1,0 +1,33 @@
+{
+  "files": [
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/Main.tex",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/IEEEtran.cls",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/Main.pdf",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/Main.log",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/Main.aux",
+    ".project-log/docs/task053-validate.py",
+    ".project-log/docs/task053-validation.json",
+    ".project-log/docs/task053-equations.diff",
+    ".project-log/docs/task053-before.tex",
+    ".project-log/docs/task053-spec.json",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-01.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-02.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-03.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-04.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-05.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-06.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-07.png",
+    "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_equations/rendered/page-08.png",
+    ".project-log/docs/task053-compile-1.txt",
+    ".project-log/docs/task053-compile-2.txt",
+    ".project-log/docs/task053-pass-1.log",
+    ".project-log/docs/task053-pass-2.log",
+    ".project-log/docs/task053-review-final.json",
+    ".project-log/docs/task053-trace.md",
+    ".project-log/docs/task053-delivery-pending.json"
+  ],
+  "tasks": [
+    "TASK-053"
+  ],
+  "requirements": []
+}
