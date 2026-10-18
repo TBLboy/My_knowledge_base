@@ -1,0 +1,13 @@
+{
+ "git_commit": "8d14a4050c6343a58ab48e090192d0994ae2ec67",
+ "source_sha256": "5bcddd93ad5e43830434956232ddd60c4effb16a42e6db1e10695dedf11412e4",
+ "main_tex_sha256": "5bcddd93ad5e43830434956232ddd60c4effb16a42e6db1e10695dedf11412e4",
+ "pdf_sha256": "3625d4522ba1f1e204fd14bc94885963fb5686b9478a05dbfa7b1c5bfa8522ef",
+ "file_hashes": {
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/Main.tex": "5bcddd93ad5e43830434956232ddd60c4effb16a42e6db1e10695dedf11412e4",
+  "Transformer-Koopman/\u8bba\u6587/\u65b0\u7248\u672c/build_font/Main.pdf": "3625d4522ba1f1e204fd14bc94885963fb5686b9478a05dbfa7b1c5bfa8522ef",
+  ".project-log/docs/task060-validation.json": "c152d4f57284d78e0e4490f0e328abd0b5134839cab7665737638f9c36035580",
+  ".project-log/docs/task060-commit.diff": "1840607eaff14d0c5b74f58d1ba7360fc433f3ad0cd3654f42c1598f5eb67190"
+ },
+ "diff_hash": "1840607eaff14d0c5b74f58d1ba7360fc433f3ad0cd3654f42c1598f5eb67190"
+}

@@ -1,0 +1,14 @@
+{
+  "risk": "high",
+  "risk_class": "strict",
+  "implementer": "implementation-builder",
+  "owner": "vibe-main",
+  "scope": "Main.tex III-B losses, reference targets, Algorithm 1 only. No commit/push, code, figures, theory, or other chapter edits.",
+  "done_when": [
+    "Stage 0 and Stage 1 supervise x and complete z with positive lambda_0/lambda_R; existing labels and parameter sets retained",
+    "Measured future references use existing z^{enc}; shared current encoder recomputes each update and references held fixed during that update; predictive branch remains trainable",
+    "Prefix before III-B, suffix from its figure through III-C and remainder, rollout equations, all existing labels remain unchanged",
+    "Two successful LaTeX compilations, no overfull or undefined refs, independent review go, diff and source-bound evidence",
+    "No commit or push; limitations include unverified training-code alignment"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "scope": "Independent static acceptance of III-B losses, reference update rule and Algorithm1 against task062-approved-review.md; final source after I1 domain clarification",
+  "implementer": "implementation-builder; main-agent fixed reference domain wording",
+  "reviewer_session": "ses_ebb00c7bfffe6SZD0Npph5wR1D",
+  "verdict": "go",
+  "initial_verdict": "conditional: reference definition might restrict tail I1 samples to complete H_R segments",
+  "resolution": "Define enc references for all available measured windows; Stage0 t=k+1 k in I1, Stage1 t=k+i k in IR; independently reread and accepted",
+  "evidence": [
+    "task062-changes.diff",
+    "task062-validation.json",
+    "task062-binding.json",
+    "task062-build1.log",
+    "task062-build2.log",
+    "Main.tex:328-408"
+  ],
+  "limitations": [
+    "Reviewer has no shell: did not independently compile, hash or query Git",
+    "Main-agent two final builds and byte checks used for runtime evidence",
+    "Training-code alignment and gradient execution unverified",
+    "Underfull 19 and Fontconfig environmental notice remain; no submission visual certification"
+  ]
+}

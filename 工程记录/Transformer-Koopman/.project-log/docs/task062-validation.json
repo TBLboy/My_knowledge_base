@@ -1,0 +1,71 @@
+{
+  "checks": {
+    "prefix_unchanged_bytes": true,
+    "suffix_from_training_figure_unchanged_bytes": true,
+    "all_labels_order_unchanged": true,
+    "duplicate_labels": [],
+    "unresolved_source_refs": [],
+    "rollout_equations_unchanged": true,
+    "stage0_x_and_complete_z": true,
+    "stage1_x_and_complete_z": true,
+    "positive_weights": true,
+    "uniform_weights_retained": true,
+    "algorithm_loop_structure_unchanged": true,
+    "obsolete_output_rows_claim_removed": true,
+    "forbidden_implementation_words": []
+  },
+  "logs": {
+    "baseline": {
+      "overfull": 0,
+      "underfull": 17,
+      "undefined": 0,
+      "font_warning": 0,
+      "tex_errors": 0,
+      "pages": [
+        "9"
+      ]
+    },
+    "build1": {
+      "overfull": 0,
+      "underfull": 19,
+      "undefined": 0,
+      "font_warning": 0,
+      "tex_errors": 0,
+      "pages": [
+        "9"
+      ]
+    },
+    "build2": {
+      "overfull": 0,
+      "underfull": 19,
+      "undefined": 0,
+      "font_warning": 0,
+      "tex_errors": 0,
+      "pages": [
+        "9"
+      ]
+    }
+  },
+  "pdf_pages": 9,
+  "pdf_heading_locations": [
+    {
+      "page": 4,
+      "algorithm": true,
+      "training_heading": true,
+      "theory_heading": false
+    },
+    {
+      "page": 5,
+      "algorithm": false,
+      "training_heading": false,
+      "theory_heading": true
+    }
+  ],
+  "git_diff_stat": " .../\\346\\226\\260\\347\\211\\210\\346\\234\\254/Main.tex\" | 29 ++++++++++++++--------\n 1 file changed, 19 insertions(+), 10 deletions(-)\n",
+  "limitations": [
+    "No independent compiler execution by reviewer",
+    "No training-code alignment or gradient behavior tests",
+    "Tectonic used because pdflatex unavailable; Fontconfig environmental notice remains",
+    "Underfull boxes remain; no claim of visual submission readiness"
+  ]
+}

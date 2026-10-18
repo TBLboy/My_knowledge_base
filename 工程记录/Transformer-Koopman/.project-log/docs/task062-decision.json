@@ -1,0 +1,9 @@
+{
+  "source": "User starts writing with attached TASK061_TwoStage_LiftedLoss_Review_For_Agent_20261016.md",
+  "decision": "Shared encoder references recomputed at each update, held fixed during the update; prediction branch encoder remains trainable. Use z^{enc}, lambda_0>0 and lambda_R>0 with x coefficient 1.",
+  "scope": "Main.tex III-B losses, reference targets, Algorithm 1 only. No commit/push, code, figures, theory, or other chapter edits.",
+  "boundary": "Clarifies DEC-098: not permanent frozen targets, no teacher encoder. Keep A1-A3 and all theoretical results unchanged. No experiments or implementation edits.",
+  "evidence": ".project-log/docs/task062-approved-review.md",
+  "initial_source_sha256": "5bcddd93ad5e43830434956232ddd60c4effb16a42e6db1e10695dedf11412e4",
+  "verification": "pdflatex not available on PATH; use existing Tectonic for baseline and two final successful runs, plus independent static review."
+}

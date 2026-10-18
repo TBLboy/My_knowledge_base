@@ -1,0 +1,14 @@
+{
+ "source_path": "C:\\Users\\12187\\Downloads\\Main_Chapter4_OldStyle_Streamlined_20261015.tex",
+ "source_sha256": "5bcddd93ad5e43830434956232ddd60c4effb16a42e6db1e10695dedf11412e4",
+ "main_tex_sha256": "5bcddd93ad5e43830434956232ddd60c4effb16a42e6db1e10695dedf11412e4",
+ "equal": true,
+ "pdf_sha256": "3625d4522ba1f1e204fd14bc94885963fb5686b9478a05dbfa7b1c5bfa8522ef",
+ "pdf_pages": 9,
+ "compile_exit": 0,
+ "overfull": 0,
+ "undefined": 0,
+ "font_warning": 0,
+ "underfull": 17,
+ "fontconfig_notice": true
+}
