@@ -1,0 +1,547 @@
+{
+  "format": "vibe-v2-project-archive-1",
+  "created_at": "2026-10-21T07:50:57.642665+00:00",
+  "source": "/home/modelbest/Project/RLinf-Franka",
+  "files": [
+    {
+      "path": ".project-log-legacy-20261019-095558/.gitattributes",
+      "sha256": "3fed3fbdc286f0a90849700c79c7a7030b451e85bde067eaad0cfd7ecfd343ca"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/.gitignore",
+      "sha256": "298f44c0ef2808da229bb7253e7b213bc7b80b15ba530141bda45d41ff6433d9"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/current-session.md",
+      "sha256": "95d0e2ea89a0405518ebd432ed42ce62acb4901bdb07055edac8013600b1bcc5"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/README.md",
+      "sha256": "c039c93445a5d62e27857ebf8c8afafc74dfb6085433f48958b58209f9e28289"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/test1.0-rollback-20261018/ORIENTATION_FILTER_test1.0.md",
+      "sha256": "3032dc11b286ccac65b1899f65c8473048de83e50e1c5ffc64d0613b537efbb4"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/test1.0-rollback-20261018/integration.patch",
+      "sha256": "bc2d1af7b8306b577f7894209f67fbf12bbeefc33215f8979b148e233a267473"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/test1.0-rollback-20261018/replay_orientation_filter.py",
+      "sha256": "0dd3e3512d576b38823a7f95116f71317dadcc2a3923d44b9b2104057dd92f94"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/test1.0-rollback-20261018/rlinf_ext/orientation_filter.py",
+      "sha256": "0c03014028388379b396f11fb92ed628da60811f6a060aa8f98b34a660f35839"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/test1.0-rollback-20261018/test_orientation_filter.py",
+      "sha256": "1d65dda03fe5387fed4523b394a6e20df7181ac66b09eeefc1fa1de678bc4254"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/.gitattributes",
+      "sha256": "3fed3fbdc286f0a90849700c79c7a7030b451e85bde067eaad0cfd7ecfd343ca"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/.gitignore",
+      "sha256": "298f44c0ef2808da229bb7253e7b213bc7b80b15ba530141bda45d41ff6433d9"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/README.md",
+      "sha256": "03f5c3beb71e71ed8d682024f2e05ccf0ec2de7ac3bdef12f192e05040ca7497"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/current-session.md",
+      "sha256": "2f48fb94a00ba7be7d8f01085ff4ee45c9809b3558a0fc4d1de3dd56d79e577a"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/progress.md",
+      "sha256": "1a3a7d64949f39b3a6c1479a26125daa4cf1252fd3c2d66065d7ea1fb889f9d1"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/architecture-model.md",
+      "sha256": "bffbb61df0300fe34239f0ba31d79a4494184a87b5788c1919d3c3295e906264"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/archive/README.md",
+      "sha256": "c039c93445a5d62e27857ebf8c8afafc74dfb6085433f48958b58209f9e28289"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/framework-issues.md",
+      "sha256": "9fe9dc8791d2f20c36620e96f1fb63044ee173f115c3490fb50c321d2f48777f"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/license-audit.md",
+      "sha256": "3c176e53bd4503032f35bdac45087240d28841402842da698795a32934e6f903"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/modularization-strategy.md",
+      "sha256": "ed5d6bcea1d513f48314cb98297785fe46c9e1e884da67ca3f8d38bc4e6acea1"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/README.md",
+      "sha256": "a0f06b3fe2481e6e8f82512cef6df4f1b58c46a198c2033ef1e90844b319a210"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/dextelegym.md",
+      "sha256": "4585c984763044e960e457dd94fc3e0e23b786d1d3a0adac4864540721b619d1"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/franka-vr-teleop.md",
+      "sha256": "28edc093e133cdc7f2096cf15223c8cf09815ec068828bb1b5bb962c22b1b80b"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/isaac_ros_teleop-television.md",
+      "sha256": "c9edce884738f52cf01a24d2ccdc857d8fbee2d71f3faa5fe81d2fed3bcde1b6"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/isaacteleop.md",
+      "sha256": "a63db9397de44310003e0f3494a2f17ea92ed3a9ee6123e1b63117b39bf15553"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/lbx-Franka-Teach.md",
+      "sha256": "07dbb669676bf5aa94878c924abf3a8d579760d9273774f5262381b136a640d6"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/lerobot-plugins.md",
+      "sha256": "2f2af5fafcb730cc657f8541db3abfa65714c3ab478e1e205cc883182c5a8295"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/lerobot_ur_dual_vrteleop.md",
+      "sha256": "851e706e782bdb3100fd85ebaeeff27f117b16441d0bb1078abf0eb165822e95"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/piper.md",
+      "sha256": "89a32837b297152ac814397e0889e366bb2d65353e404041cd62051c51d5ac47"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/quest-input-line.md",
+      "sha256": "ae826f284607565f36bc019aeb61a3986a3af93263e80eff914b2eb1210ad2bb"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/televuer-xr-input.md",
+      "sha256": "04be20053ad82ad13e165c9f296124c606ea510ac205d1a2860d7bde5a293826"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/xr_teleoperate.md",
+      "sha256": "a30c4480085025b5907990e2f049c579a8d711e599c169c18c0d6cdc9c6c6184"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/research-docs/source-deepdive/xrobotoolkit.md",
+      "sha256": "134236ddee22f816af56076c42805e4f1d1049cbf292a6486c6d4c44d719dec3"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/source-ledger/v1/ledger.jsonl",
+      "sha256": "e20a3b7fae8a513977bd033d06d06d66ba6d409e5a76d189f9c702297169b061"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/source-state-export.json",
+      "sha256": "79fe97d62f393267b9c08f09bfc9d65bf09cea181d0b800ba3df3083810296a1"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/archive/vr-teleop-research-20261011/state-format.json",
+      "sha256": "4c6c277547f9f07e42e5f9ed9eaaa797f5b06e327a2eaa0bb4fcc694b5c88795"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/brief-overview-doc-structure-for-gpt.md",
+      "sha256": "103a641363438c8689e5e336a06e6b6b0a8d755ff1d13678edd9fb295dbeb705"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/cartesian-vibration-context-brief-20261018.md",
+      "sha256": "ea3e197dc75e712ede91aaf56ed1dc08c275d68f3135754f3c74f034389ea324"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franka-j7-reset-vibration-expert-brief-20261018.md",
+      "sha256": "93941e3638aede98f8d482e64daf118327c0a07b4ab71390dffb7cb3d27794d2"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/README.md",
+      "sha256": "ac023a889bc4159087d2c8347bbe4f9433259926dd1a1bc448f0155c88955684"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/binary-match.json",
+      "sha256": "68143701e3b12981cce7af89675d1187cb0518f159111c51e089055bcb8407d6"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/build_wheels.yml",
+      "sha256": "bb21aa5dbe41a04367b25e4b2fc8d23b6059e35e3ff09ff1be29d83ac0812680"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/cartesian_impedance_base.cpp",
+      "sha256": "c44bbbea81aa416ad8929e066d676ea1f72138efb3349d0e4e3b887f0b7596a3"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/cartesian_impedance_base.hpp",
+      "sha256": "dc400063701d6c84f241a330ef3217e97f6250db53a76915bef4ee19a49c558d"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/cartesian_impedance_tracking_motion.cpp",
+      "sha256": "758e5d1763cf8be4104a515e202b35804cf609cd9ca9af9a5cece037314e64f2"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/cartesian_impedance_tracking_motion.hpp",
+      "sha256": "a96b6904e67f1a057cbc67265d5ab687ea3e344049105bf38be2c462488c3c62"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/release.json",
+      "sha256": "6aa15334298a5ba6fbee8adc8c8b6e03ba637ee96897b3ca60f0c587f5f3e8f1"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/release_wheels.yml",
+      "sha256": "4a949d8d07d47a5e229daa80deb3b5bbc7bb6b9b24bf594f360a4171923f8044"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/runs.json",
+      "sha256": "44449b1b30148662ff766a48f53d9be589b3090b5f7080dfcdd25b149086748d"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/franky-release-audit/worker-arm.out",
+      "sha256": "9dff0306f04e262778ce6c79a8e66e7cbf26abd13d3abcae9cabe1f02c31602c"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/README.md",
+      "sha256": "a587eede917533bdeeb03b99c98eee1d90da3270473c30904adb6c526eb784a4"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/adapter_fixture.py",
+      "sha256": "f488dcf0ed3ed0831aff105f4bcdc5fc5dcefa3bacb88813939de07a93337f45"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/aligned/aligned/project_manifest.json",
+      "sha256": "bae6fbdae85fae18bed8bd52b7c8f2c1b8fba29153c9a45dc0ba1eec4d36671b"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/aligner_fixture.py",
+      "sha256": "4e648527e794f1bd47a04fb2fdb4e5e950a9c76aaf2913608f84b422aefea889"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/fixture-out/aligned/project_manifest.json",
+      "sha256": "c48fd24fc60c786fd03e1d4b9c0d2d2ac0debf5b2ef75f02f0806c4f0ba7f3b6"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/offline_export.py",
+      "sha256": "fea94a375e34f86222387007f35ed7c0844fb0bcdee0e09c873373c7ce9562ac"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/data/chunk-000/file-000.parquet",
+      "sha256": "08060160c2c3db4f128c185da0ef7f66a21b2773b874ba39fc194c9ba6ace0c4"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/meta/episodes/chunk-000/file-000.parquet",
+      "sha256": "d9e9271355812eb9ba8746bf61d6c8461ee60f8188ae22776a8141444f13b1b4"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/meta/info.json",
+      "sha256": "b547b5b9a9a9121858ba2150bbb595de275a1ec795920231508e44bb397a0008"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/meta/project_manifest.json",
+      "sha256": "c48fd24fc60c786fd03e1d4b9c0d2d2ac0debf5b2ef75f02f0806c4f0ba7f3b6"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/meta/stats.json",
+      "sha256": "c5ce828e709f652729f4bfcc44bb266187382ba48c037a0fa33cdade028b1d7c"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/meta/tasks.parquet",
+      "sha256": "a4f5153e374942801462c55cbde886e0936ed256eed5086be1796f022604b09c"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/videos/observation.images.cam_ext_0/chunk-000/file-000.mp4",
+      "sha256": "8f97e8c886c6e596c95d5629b9036aa6b8374259af8f1e43db011d863dde9e68"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/out-044/videos/observation.images.cam_wrist_right/chunk-000/file-000.mp4",
+      "sha256": "fafa5bc330cf98945dd884825897a9b07133c02f28bfc0ab8b8228eadd7f16a5"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/raw_schema_fixture.py",
+      "sha256": "b60c4ca8338c724f9257df6cf2a80c78abbc4b894dc4fcd541794344d5a2e3b4"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/run_spike.py",
+      "sha256": "dcdffe0ce206a972ce0ee0f316c756ae98297b3efe0c3edf472a7e7030105778"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/run_t025.py",
+      "sha256": "89ad85258301df4c453452af30671bd8a6c08e633b873b42376a0c90276e5443"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/data/chunk-000/file-000.parquet",
+      "sha256": "0109eaeacdf098d5adb8bd71d3440186c52456b349cb2adbed966d64c43eb4dc"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/meta/episodes/chunk-000/file-000.parquet",
+      "sha256": "805297ff2ba4799fed1e395cefad8eac2dd4e2ae45cbf9c7201925399b5f96ad"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/meta/info.json",
+      "sha256": "44b67fd48266ab44c426976c45928504c7f2f7c6fc3ebff6ec81ac4c0274f64d"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/meta/project_manifest.json",
+      "sha256": "bae6fbdae85fae18bed8bd52b7c8f2c1b8fba29153c9a45dc0ba1eec4d36671b"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/meta/stats.json",
+      "sha256": "3bbee3eb53d92642c8c41b6c96c652cabc7dc960d24be673bd99f4b2202f0304"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/meta/tasks.parquet",
+      "sha256": "141c94def3768e8af53e3d0e9f89f23d1cbe5ac8133b72dfe70a644bd6e39673"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/videos/observation.images.cam_ext_0/chunk-000/file-000.mp4",
+      "sha256": "9144c08072f2e591df1bf0665462a67db3980b7c9d1b7b36ae3c162d9f5fee09"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-out/videos/observation.images.cam_wrist_right/chunk-000/file-000.mp4",
+      "sha256": "cadaf962bf97736807e819ee12c0d2a63bd3b0d16abf448ea68ee0433ad50ae4"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/t025-raw.json",
+      "sha256": "729cd4435656683931ea719191f6786bbca51754bd7e573f413a655d71fdde49"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/test_adapter_fixture.py",
+      "sha256": "efa35712efb6bd5cc9c1f66b9cbdc7b42b67977381cddc2040d0a6213d275ef2"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/test_aligner_fixture.py",
+      "sha256": "37641fff9f75b6173de5a36d210c98b17689ef6ed8b6cdeb304ac42fb706e512"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/test_future_raw_writer.py",
+      "sha256": "3f20327b26a7627e95fe2459238c8eb17b3ba7870df9dc8e635eabe73d2b439c"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/test_offline_export.py",
+      "sha256": "30897ed276ee0b7918a6da77978b9a843cefa68bf926d051d4314a6881a19354"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/test_raw_schema_fixture.py",
+      "sha256": "6dc9820f751407c08ede47f6e91f66af79e6f17647b17d765a348d87010b4e19"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/test_writer_qc_fixture.py",
+      "sha256": "55ff6e88f79f0ef2e2df5f36ea01ff74bcb93eac3e44a5e18798a0aa9e529fea"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/video_qc.py",
+      "sha256": "ad3bdd96e67d67d3dd79e07178134779bffa3e6ba82ba0b1a92a2a56a5f7d577"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/lerobot-v3-spike-20261018/writer_qc_fixture.py",
+      "sha256": "6f7dadce8c625d760b2d8e326befdcf053099c4c88b7b401a6c74271641fa861"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/parameter-trials/official-compliance-20261018/before.yaml",
+      "sha256": "f25ce796d76ce70962addce33e5f8162c1a5575aca81106db7119294994d4072"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/parameter-trials/reset-smooth-baseline-20261018/source-before.tar.gz",
+      "sha256": "582023e92c4d98d5bce2c1d218d3541c7fb540fd3f3d592e02a04972551e6149"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/parameter-trials/restore-52cdf9a-20261018/before.yaml",
+      "sha256": "b800735adb3ea95e1c9ab6f595a225e8d07206ec69fe4f3d7c1cdd37891850c3"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/requirements/future-raw-v1-collector-integration-20261018.md",
+      "sha256": "7af667e2be37c469d648c8f5959a193564bbcc0f001f927d2ac62a618826ea1f"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/requirements/ik-joint-route-start-20261018.md",
+      "sha256": "aadc40a77aab295087e7cfd3410fbaface23c6b749ef2006485cdc6ada1f550c"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/requirements/lerobot-v3-semantic-format-v1.0.md",
+      "sha256": "ca388180b58a456306c8f71e569e5c14157cbba1f37cc83227d025330812387b"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/requirements/reset-lab-v1.md",
+      "sha256": "a94e81b14f480c1c0f37b21bc3319b093712a9166dd9c5d6218fde5266c5a9a2"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/retrospective-2026-10-14.md",
+      "sha256": "97b25e7909c3e8e7c228cce1cf1eaf78142b66c3e10d9bfd525b175905e2aa79"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/roll-timing-reaudit.py",
+      "sha256": "637561bceba03e422a234adb09cfff9dbc3b03e3f2ba482ef61534e750b655d7"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/docs/vibe-framework-bug-active-run-blocks-independent-task.md",
+      "sha256": "e135e393eefa5a273142fac05a2debbead2e2878d31ba3882f6617255aed1b93"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/ledger/v1/ledger.jsonl",
+      "sha256": "5687aa016fd4625c6c93ce99834d85567b3493f44c1fd635bf13a7787bbf9443"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/progress.md",
+      "sha256": "0242c8329dfa17c094555638f201e0bf946405e7a4f8d75864ed7aaca6bab52f"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/specs/T-021-v3-engineering-spec.md",
+      "sha256": "7cafef49d16f56098de6e15957c8efd4f6603515208c4ed830241179ac8a4110"
+    },
+    {
+      "path": ".project-log-legacy-20261019-095558/state-format.json",
+      "sha256": "9229f2ab12c1b91cdb9ca8b67eb59af1cf3a213e3769fb4dd5d74eb9dbf1d2f4"
+    },
+    {
+      "path": ".vibe/README.md",
+      "sha256": "e5bec85f641261924852dd40e3abc0540a711e7ebd343599b064a196f078c662"
+    },
+    {
+      "path": ".vibe/docs/ik-benchmark-analysis-20261019.md",
+      "sha256": "29909f9978157aedca6f86f3a48f4f09563b6e4bb636ebe749c68d1b188d9eee"
+    },
+    {
+      "path": ".vibe/docs/inhouse-hdf5-business-clarification.md",
+      "sha256": "4a5d6acaba0252d463dc64c849676b581c190c6c37807fa9b5cf2f42ee94ddb7"
+    },
+    {
+      "path": ".vibe/docs/inhouse-hdf5-v1-source.md",
+      "sha256": "1110112214965aa2b0b759a78457cb3063177a4213536aeb7c76308850c8e5a5"
+    },
+    {
+      "path": ".vibe/progress.md",
+      "sha256": "581d75b8c484dc004c671c7a665952cebe096645264412a3448a9c0c514c74e4"
+    },
+    {
+      "path": ".vibe/requirements.md",
+      "sha256": "87e79b4c34db4c9ec58fff2f455ea6c1b47b83b0e36c6bd85a3059cd037f713d"
+    },
+    {
+      "path": ".vibe/sessions/ses_ea38f9c28ffeMk5bIS7Xg7vgLf/current-session.md",
+      "sha256": "71c6b20060158eb262efbeb27d65ffa630b5c5fcec40bfa1664ace5701d830b1"
+    },
+    {
+      "path": ".vibe/sessions/ses_ea7b16e0bffdA55RxIgdSIsNke/current-session.md",
+      "sha256": "9396c0ef0564cb9562e7915a12963d2da8903b48dac7ab8af6a3601b809819f1"
+    },
+    {
+      "path": ".vibe/sessions/ses_ea7b99329ffdY2G37142yq7VVo/current-session.md",
+      "sha256": "78c71f271616539b8aae01d0076804909ff00de010cc2b9daeec2730f56ccd52"
+    },
+    {
+      "path": ".vibe/sessions/ses_eac231e9effd7dZxbKLA7uE38Q/current-session.md",
+      "sha256": "beeb29f8e7911c5cbde4aad0d121b26848c3b462cdfc10201a9d32145e81e672"
+    },
+    {
+      "path": ".vibe/sessions/ses_eae1bcdd7ffe1XUEpQIUjMJhMM/current-session.md",
+      "sha256": "f7d8e582bec25ab14a103e39aa1231734175d50ad09039fb2f5dbcb3117f8bbb"
+    },
+    {
+      "path": ".vibe/tasks/cartesian-rotational-damping-20261019.json",
+      "sha256": "02ccfea4e7b7bd176f9013f012cfac6bc80fdd507a52abec44ddc599129d3b63"
+    },
+    {
+      "path": ".vibe/tasks/data-upload-enable-20261021.json",
+      "sha256": "1e926a257a80da1a83ce97057eb7e1e49aeb9daaf045a45feee2ca31731f7e77"
+    },
+    {
+      "path": ".vibe/tasks/franka-robot-capture-integration-20261019.json",
+      "sha256": "e6ab6638ef19163f51bffc3241112d10ab0d800909b847c68d7926443126bb45"
+    },
+    {
+      "path": ".vibe/tasks/franka-workbench-polish-20261021.json",
+      "sha256": "723c61809dee709dfe8868c340623ffbeed340b3a76134a2437b4cc8ccdeaf21"
+    },
+    {
+      "path": ".vibe/tasks/ik-benchmark-20261019.json",
+      "sha256": "dfc5ac113373025324b71b5ec20d7c0c97b2b5ffe2b98c90615c812ba51b7e9a"
+    },
+    {
+      "path": ".vibe/tasks/pico-ui-controls-map-20261021.json",
+      "sha256": "b8a605ed7644722a8ec083b784b34d0619951af2e3aca477aa5a0fb46aadbab5"
+    },
+    {
+      "path": ".vibe/tasks/pinocchio-dispatch-replay-20261019.json",
+      "sha256": "7ee121c2c4663fa78e0f894a027f288c8a54ceb004cef8de9638ad8b1fb03652"
+    },
+    {
+      "path": ".vibe/tasks/pinocchio-joint-ik-formal-integration-20261019.json",
+      "sha256": "400e2f0e76813c79e24fc0f2683e3f1de4f1b74792373487dd8234731e2406ab"
+    },
+    {
+      "path": ".vibe/tasks/pinocchio-py311-isolated-runtime-20261019.json",
+      "sha256": "1ffef8d51544888b520710029c6630c06dbf8dff13174644fb0f0854a9df7de7"
+    },
+    {
+      "path": ".vibe/tasks/release-bootstrap-20261019.json",
+      "sha256": "cf0b6e0844b8b33065591f5ea95f09e3cb2048331c0f8652d41346c8657add49"
+    },
+    {
+      "path": ".vibe/tasks/release-camera-30hz-20261020.json",
+      "sha256": "88de5a035e9aea893d10a2ac9fd847dab5bba95dedbdb8d60264cac09b777983"
+    },
+    {
+      "path": ".vibe/tasks/release-cartesian-damping-controls-20261019.json",
+      "sha256": "09d9e75b4d02cabf9b5ee0fe02606a5cbb5fd70c0875000b9af13121c4327821"
+    },
+    {
+      "path": ".vibe/tasks/release-control-rate-30hz-20261020.json",
+      "sha256": "45ba47aff71d9a120cf609e29af0487c6051fda816f695e2a78b8238be59147d"
+    },
+    {
+      "path": ".vibe/tasks/release-environment-20261019.json",
+      "sha256": "65d808014aa42e25d753749efd0ac55df2499ffda718467848fd88c7f5a4cdac"
+    },
+    {
+      "path": ".vibe/tasks/release-franky-damping-20261019.json",
+      "sha256": "7c652ea3401543aab530aafad6257d97121e1562255672b292b1716c28b195c6"
+    },
+    {
+      "path": ".vibe/tasks/release-joint-state-collection-20261020.json",
+      "sha256": "f34efc0ec3540110c0f5c5b5371dd8e1647f6cace609b6ffc6b88adad7f513ce"
+    },
+    {
+      "path": ".vibe/tasks/release-pico-connectivity-20261019.json",
+      "sha256": "31f9b69bc21e0a8d036a463bd0dafb7bc6139e407c6f32ff557bf8a82ec55296"
+    },
+    {
+      "path": ".vibe/tasks/release-pico-sdk-reuse-20261019.json",
+      "sha256": "1fab7882be8008841ad67a19c36c58a491320589db7753762ccbfbe9ec0b7be6"
+    },
+    {
+      "path": ".vibe/tasks/release-push-history-repair-20261019.json",
+      "sha256": "3e98157b87b123bbbaf792f3a13ad3824c980d5e3f5cdbfc8ead8b781ded74f1"
+    },
+    {
+      "path": ".vibe/tasks/release-record-start-reliability-20261020.json",
+      "sha256": "3eb4c58865017fe721587a2f64ad3b99c13b6776550a99c39780e42de8fe1756"
+    },
+    {
+      "path": ".vibe/tasks/release-reset-gripper-signal-20261020.json",
+      "sha256": "07cc156b4ce00903b235251ce20fa48035a655f608e5cac6c427bcadf0202110"
+    },
+    {
+      "path": ".vibe/tasks/release-resource-archive-20261019.json",
+      "sha256": "15b8b661f609352d7710bb59fb1f80161c1b0eeac3285409c9c1175fba79268b"
+    },
+    {
+      "path": ".vibe/tasks/release-resources-inventory-20261019.json",
+      "sha256": "7b7f4ca164032ea3ba4265c66ab226f8ca12b24ff6fd54461ff956bd9398597e"
+    },
+    {
+      "path": ".vibe/tasks/release-timestamp-alignment-20261020.json",
+      "sha256": "f135e4ec8044612d5ecd85691abaf45354b97defd1dd3222e9fcc395968ed008"
+    },
+    {
+      "path": ".vibe/tasks/release-upstream-governance-20261019.json",
+      "sha256": "c0f7a513ef8c23ea7da5fae9979b2826199f59cde0a465938bbd211843afeca7"
+    },
+    {
+      "path": ".vibe/tasks/release-vr-controls-20261020.json",
+      "sha256": "fe71261b7fd3f15e15be2b711ecc5cf55dc052d9456515267247247a5a34da2e"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "a4d7ad981ffd402e02e79a5b3a887fdbc4a4f918e1b7273613174df55ee6e131"
+    }
+  ]
+}

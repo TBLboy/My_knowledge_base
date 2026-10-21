@@ -1,0 +1,191 @@
+{
+  "codebase_version": "v3.0",
+  "robot_type": "franka",
+  "total_episodes": 1,
+  "total_frames": 4,
+  "total_tasks": 1,
+  "chunks_size": 1000,
+  "data_files_size_in_mb": 100,
+  "video_files_size_in_mb": 200,
+  "fps": 30,
+  "splits": {
+    "train": "0:1"
+  },
+  "data_path": "data/chunk-{chunk_index:03d}/file-{file_index:03d}.parquet",
+  "video_path": "videos/{video_key}/chunk-{chunk_index:03d}/file-{file_index:03d}.mp4",
+  "features": {
+    "observation.state.joint_position": {
+      "dtype": "float32",
+      "shape": [
+        7
+      ],
+      "names": [
+        "joint_0",
+        "joint_1",
+        "joint_2",
+        "joint_3",
+        "joint_4",
+        "joint_5",
+        "joint_6"
+      ]
+    },
+    "observation.state.eef_pose": {
+      "dtype": "float32",
+      "shape": [
+        7
+      ],
+      "names": [
+        "x",
+        "y",
+        "z",
+        "qx",
+        "qy",
+        "qz",
+        "qw"
+      ]
+    },
+    "observation.state.gripper": {
+      "dtype": "float32",
+      "shape": [
+        1
+      ],
+      "names": [
+        "gripper"
+      ]
+    },
+    "action.eef_pose": {
+      "dtype": "float32",
+      "shape": [
+        7
+      ],
+      "names": [
+        "x",
+        "y",
+        "z",
+        "qx",
+        "qy",
+        "qz",
+        "qw"
+      ]
+    },
+    "action.gripper": {
+      "dtype": "float32",
+      "shape": [
+        1
+      ],
+      "names": [
+        "gripper"
+      ]
+    },
+    "observation.images.cam_ext_0": {
+      "dtype": "video",
+      "shape": [
+        3,
+        8,
+        8
+      ],
+      "names": [
+        "channel",
+        "height",
+        "width"
+      ],
+      "info": {
+        "video.height": 8,
+        "video.width": 8,
+        "video.codec": "h264",
+        "video.pix_fmt": "yuv420p",
+        "video.is_depth_map": false,
+        "video.fps": 30,
+        "video.channels": 3,
+        "has_audio": false
+      }
+    },
+    "observation.images.cam_wrist_right": {
+      "dtype": "video",
+      "shape": [
+        3,
+        8,
+        8
+      ],
+      "names": [
+        "channel",
+        "height",
+        "width"
+      ],
+      "info": {
+        "video.height": 8,
+        "video.width": 8,
+        "video.codec": "h264",
+        "video.pix_fmt": "yuv420p",
+        "video.is_depth_map": false,
+        "video.fps": 30,
+        "video.channels": 3,
+        "has_audio": false
+      }
+    },
+    "timestamp": {
+      "dtype": "float32",
+      "shape": [
+        1
+      ],
+      "names": null
+    },
+    "frame_index": {
+      "dtype": "int64",
+      "shape": [
+        1
+      ],
+      "names": null
+    },
+    "episode_index": {
+      "dtype": "int64",
+      "shape": [
+        1
+      ],
+      "names": null
+    },
+    "index": {
+      "dtype": "int64",
+      "shape": [
+        1
+      ],
+      "names": null
+    },
+    "task_index": {
+      "dtype": "int64",
+      "shape": [
+        1
+      ],
+      "names": null
+    }
+  },
+  "custom": {
+    "action_space": "eef_pose_absolute",
+    "camera_key_map": {
+      "fixed": "observation.images.cam_ext_0",
+      "wrist": "observation.images.cam_wrist_right"
+    },
+    "dataset_version": "lerobot-v3",
+    "episode_outcome": "success",
+    "episode_terminal_source": "operator_terminal_event",
+    "gripper": {
+      "open_direction": "increasing",
+      "range": [
+        0.0,
+        0.08
+      ],
+      "unit": "m"
+    },
+    "mp4_reference_policy": "metadata_episode_video_timestamps",
+    "outcome_policy": "success_or_failure_only;timeout_and_abort_raw_only",
+    "required_provenance": {
+      "action": "final_post_guard_eef_target_v1",
+      "state": "measured_state_v1"
+    },
+    "writer_pin": "lerobot==0.4.4",
+    "project_manifest": "meta/project_manifest.json",
+    "alignment_qc": "passed",
+    "raw_batch_sha256": "729cd4435656683931ea719191f6786bbca51754bd7e573f413a655d71fdde49",
+    "raw_batch_path": "/home/modelbest/Project/RLinf-Franka/.project-log/docs/lerobot-v3-spike-20261018/t025-raw.json"
+  }
+}

@@ -1,0 +1,9 @@
+:job_id:01000000
+:actor_name:FrankyArmWorker
+[INFO 16:27:36 FrankaArm-0-0-Rank-0][franky.py:197] FrankyArm connected to robot at 172.16.0.2
+:actor_name:FrankaArm-0-0(rank=0)
+[INFO 16:27:42 FrankaArm-0-0-Rank-0][franky.py:480] Cartesian impedance tracker started (K_t=1000 N/m, K_r=50.0 Nm/rad, K_ns=5.0 Nm/rad, trans_clip=[0.008 0.008 0.008], rot_clip=[0.04 0.04 0.04])
+[INFO 16:27:44 FrankaArm-0-0-Rank-0][franky.py:353] Compliance: K_t=1200 (cap 1200), K_r=80.0 (cap 80.0), K_ns=5.0, trans_clip=[0.02 0.02 0.02], rot_clip=[0.15 0.15 0.15]
+[INFO 16:27:44 FrankaArm-0-0-Rank-0][franky.py:480] Cartesian impedance tracker started (K_t=1200 N/m, K_r=80.0 Nm/rad, K_ns=5.0 Nm/rad, trans_clip=[0.02 0.02 0.02], rot_clip=[0.15 0.15 0.15])
+[INFO 16:28:29 FrankaArm-0-0-Rank-0][franky.py:353] Compliance: K_t=1200 (cap 1200), K_r=80.0 (cap 80.0), K_ns=5.0, trans_clip=[0.02 0.02 0.02], rot_clip=[0.15 0.15 0.15]
+[INFO 16:29:03 FrankaArm-0-0-Rank-0][franky.py:353] Compliance: K_t=1200 (cap 1200), K_r=80.0 (cap 80.0), K_ns=5.0, trans_clip=[0.02 0.02 0.02], rot_clip=[0.15 0.15 0.15]

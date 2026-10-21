@@ -1,0 +1,691 @@
+{
+  "metadata": [
+    {
+      "singleton": 1,
+      "store_schema": 4,
+      "schema_version": 1,
+      "project_id": "d5a6bbcd2afa4ccd8846cbc2c6fc6079",
+      "context_id": "f834d707130f7313d63664c8e531a3727410fb61a1c15df75f32c5075de25e85",
+      "local_revision": 83
+    }
+  ],
+  "goals": [],
+  "tasks": [
+    {
+      "id": "INIT-001",
+      "title": "项目初始化：建立 .project-log、根 AGENTS.md 与子仓库布局",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-init-001",
+      "next_action": null,
+      "summary": "删除根目录 .git（format 2 要求工作区为纯目录）；在 D:\\Project\\VR数采调研\\VR数采调研 建立子仓库；经 init_project_agents.py 创建 format 2 .project-log（store_schema 4）；根 AGENTS.md 注入通用规则区块并写入项目级规则（仓库类型：个人仓库）。证据 EV-INIT-001；vibe status 正常。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 1,
+      "updated_sequence": 4
+    },
+    {
+      "id": "INIT-002",
+      "title": "同步 AGENTS.md 事实源路径以匹配子仓库结构",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-init-002",
+      "next_action": null,
+      "summary": "用户确认手动将两份调研文档移入子仓库 VR数采调研/；据此更新根 AGENTS.md：新增目录结构条目、事实源与文档约定改为子仓库路径。证据 EV-INIT-002（回读校验）。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 5,
+      "updated_sequence": 8
+    },
+    {
+      "id": "INIT-003",
+      "title": "落实 AGENTS.md 新增规则：建立框架问题记录清单",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-init-003",
+      "next_action": null,
+      "summary": "按新增项目级规则建立框架问题清单 .project-log/docs/framework-issues.md，记录 FI-001(init skill 与 format2 契约冲突)、FI-002(reviewer 无 shell 权限)、FI-003(命名歧义,已澄清)、FI-004(人读摘要占位)、FI-005(控制台编码)、FI-006(证据自评驱动 verification_state)。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 11,
+      "updated_sequence": 14
+    },
+    {
+      "id": "INIT-004",
+      "title": "子仓库基线提交与人读摘要更新（步骤 1-2）",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-init-004",
+      "next_action": null,
+      "summary": "步骤1：子仓库首次提交 11919e8，提交身份沿用本机约定 TBLboy <TBLboy@users.noreply.github.com>（仅子仓库本地 config）。步骤2：.project-log/current-session.md 与 progress.md 的模板占位更新为实际状态与下一步。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 15,
+      "updated_sequence": 18
+    },
+    {
+      "id": "R-001",
+      "title": "第一阶段生态普查：VR/XR 遥操作与数采开源方案调研",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-r001",
+      "next_action": null,
+      "summary": "第一阶段生态普查完成。产出《第一阶段生态普查报告》v1.2（434 行）。方法：GitHub API 元数据 + 15 仓库浅克隆(fsck clean) 源码级验证 + 少量网络原文。核心结论：公开生态无 PICO->Franka 专门项目；双端统一输入层 3 候选(IsaacTeleop/XRoboToolkit/xr_teleoperate)；原文档遗漏 NVIDIA/IsaacTeleop 与整个 Piper 生态；Franka 侧全为 Quest-only；LeRobot 插件模式可作机器人层骨架。验证：两轮独立复核(partial -> go)；证据 EV-R001-REPORT 因产物修订自动转 stale，EV-R001-REPORT-V12 绑定 v1.2 哈希；vibe validate 无错误。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 19,
+      "updated_sequence": 25
+    },
+    {
+      "id": "DOC-001",
+      "title": "记录分层架构模型（工作共识）",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc001",
+      "next_action": null,
+      "summary": "新增 .project-log/docs/architecture-model.md（239 行）：记录修正后的四层逻辑分层模型（统一XR输入层/遥操作核心层/机器人适配层/旁挂数据记录层），含三处结构性修正、遥操作核心缺失组件清单、三层安全、校准独立环节、数据记录三类输入拆分、三个频率语义、真实链路验证，以及 4 个未决 C 级问题（Q1 关节角vs末端位姿等）。来源为 2026-10-11 架构讨论 + 15 仓库源码级调研。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 26,
+      "updated_sequence": 29
+    },
+    {
+      "id": "DOC-002",
+      "title": "将架构模型 Q1-Q4 标记为保留待确认并登记",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc002",
+      "next_action": null,
+      "summary": "应要求将架构模型 4 个未决问题标记为保留待确认：文档 §7 加状态声明与纪律（不得当作已决）、§12 拆分为保留项与可推进工程项；用运行时 open-question kind 登记 OQ-001~OQ-004 均为 deferred，另登记 decision DEC-001(active)。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 35,
+      "updated_sequence": 38
+    },
+    {
+      "id": "DOC-003",
+      "title": "记录组合式技术路线方法论",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc-003",
+      "next_action": null,
+      "summary": "新增 .project-log/docs/modularization-strategy.md：记录按接口契约的组合式方法论。含 4 个接口契约(A/B/C/D)、关键纠正(tele核心层 ② 无独立实现故须最先动手)、复用强度四档+许可证过滤、四步执行顺序、版本锁定实测约束(两个独立项目同钉 LeRobot commit da5d2f3e)。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 39,
+      "updated_sequence": 42
+    },
+    {
+      "id": "DOC-004",
+      "title": "产出面向汇报的简洁提纲",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc-004",
+      "next_action": null,
+      "summary": "新增子仓库文档 调研汇报提纲.md（213 行），供用户对外汇报：30 秒结论版、5 条核心发现、为什么不能整项目选型、建议技术路径、许可证风险、P0 验证(零机械臂成本)、需团队决策 5 项、候选速查表 Top13。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 43,
+      "updated_sequence": 46
+    },
+    {
+      "id": "DOC-005",
+      "title": "汇报提纲改为 mentor 单听众版本",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc005",
+      "next_action": null,
+      "summary": "汇报提纲重写为 mentor 1v1 版本（单听众）：新增 §0 开场三句、§7 三个请导师指导的问题(各附我的倾向)、§8 主动暴露 5 条可能错误、附录 B 可能被追问的 7 问备答；补回判断 6(录制帧率 != 控制频率)。旧证据 EV-DOC004 转 stale。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 48,
+      "updated_sequence": 51
+    },
+    {
+      "id": "DOC-006",
+      "title": "将第一阶段文档提交到子仓库",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc006",
+      "next_action": null,
+      "summary": "按用户决定将两份文档提交到子仓库（个人仓库，本地 config 身份 TBLboy）。eb8809e = 第一阶段生态普查报告 v1.2（434 行）；d30878e = 调研汇报提纲 mentor 1v1 版（222 行）。提交后工作树 clean。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 52,
+      "updated_sequence": 55
+    },
+    {
+      "id": "DOC-007",
+      "title": "许可证全树级审计并修正报告与汇报稿",
+      "goal_id": null,
+      "status": "implemented-unverified",
+      "run_id": "run-doc007",
+      "next_action": null,
+      "summary": "许可证全树级审计并修正两份文档。核心发现：XRoboToolkit-Unity-Client(PICO 客户端) 实为 MIT（LICENSE.txt）——撤销 v1.2『整条 PICO 路线法务阻断』的判断；该错误根因是只探测 LICENSE 未试 LICENSE.txt。新增 .project-log/docs/license-audit.md（全树扫描 + API 双向验证，17/8/2/1 分类）。报告改 v1.3（勘误 14-18），汇报提纲同步。经三轮独立定向复核：partial -> partial -> go。",
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 57,
+      "updated_sequence": 64
+    },
+    {
+      "id": "R-002",
+      "title": "第二阶段：重点候选源码深挖与候选矩阵",
+      "goal_id": null,
+      "status": "in-progress",
+      "run_id": "run-r002",
+      "next_action": "克隆 IsaacTeleop 与 XRoboToolkit PC-Service，做结构普查",
+      "summary": null,
+      "cancel_reason": null,
+      "extensions": "{}",
+      "created_sequence": 65,
+      "updated_sequence": 66
+    }
+  ],
+  "runs": [
+    {
+      "id": "run-init-001",
+      "task_id": "INIT-001",
+      "status": "finished",
+      "created_sequence": 2,
+      "updated_sequence": 4
+    },
+    {
+      "id": "run-init-002",
+      "task_id": "INIT-002",
+      "status": "finished",
+      "created_sequence": 6,
+      "updated_sequence": 8
+    },
+    {
+      "id": "run-init-003",
+      "task_id": "INIT-003",
+      "status": "finished",
+      "created_sequence": 12,
+      "updated_sequence": 14
+    },
+    {
+      "id": "run-init-004",
+      "task_id": "INIT-004",
+      "status": "finished",
+      "created_sequence": 16,
+      "updated_sequence": 18
+    },
+    {
+      "id": "run-r001",
+      "task_id": "R-001",
+      "status": "finished",
+      "created_sequence": 20,
+      "updated_sequence": 25
+    },
+    {
+      "id": "run-doc001",
+      "task_id": "DOC-001",
+      "status": "finished",
+      "created_sequence": 27,
+      "updated_sequence": 29
+    },
+    {
+      "id": "run-doc002",
+      "task_id": "DOC-002",
+      "status": "finished",
+      "created_sequence": 36,
+      "updated_sequence": 38
+    },
+    {
+      "id": "run-doc-003",
+      "task_id": "DOC-003",
+      "status": "finished",
+      "created_sequence": 40,
+      "updated_sequence": 42
+    },
+    {
+      "id": "run-doc-004",
+      "task_id": "DOC-004",
+      "status": "finished",
+      "created_sequence": 44,
+      "updated_sequence": 46
+    },
+    {
+      "id": "run-doc005",
+      "task_id": "DOC-005",
+      "status": "finished",
+      "created_sequence": 49,
+      "updated_sequence": 51
+    },
+    {
+      "id": "run-doc006",
+      "task_id": "DOC-006",
+      "status": "finished",
+      "created_sequence": 53,
+      "updated_sequence": 55
+    },
+    {
+      "id": "run-doc007",
+      "task_id": "DOC-007",
+      "status": "finished",
+      "created_sequence": 58,
+      "updated_sequence": 64
+    },
+    {
+      "id": "run-r002",
+      "task_id": "R-002",
+      "status": "active",
+      "created_sequence": 66,
+      "updated_sequence": 66
+    }
+  ],
+  "records": [
+    {
+      "kind": "open-question",
+      "id": "OQ-003",
+      "title": "输入模态：手柄 6DoF 还是裸手追踪",
+      "status": "deferred",
+      "revision": 1,
+      "payload": "{\"affects\":\"architecture-model.md §7 Q3 与 §4 第①层\",\"impact\":\"两者数据形态不同，改变①数据契约与②IK\",\"options\":[\"手柄 6DoF（pose+按键）\",\"裸手追踪（关节/关键点）\"]}",
+      "created_sequence": 30,
+      "updated_sequence": 30
+    },
+    {
+      "kind": "open-question",
+      "id": "OQ-004",
+      "title": "Clutch 交互形态",
+      "status": "deferred",
+      "revision": 1,
+      "payload": "{\"affects\":\"architecture-model.md §7 Q4 与 §4 第②层\",\"impact\":\"影响可用性与安全\",\"options\":[\"按键\",\"手势\",\"脚踩\"]}",
+      "created_sequence": 31,
+      "updated_sequence": 31
+    },
+    {
+      "kind": "open-question",
+      "id": "OQ-002",
+      "title": "是否做下行视觉反馈链路",
+      "status": "deferred",
+      "revision": 1,
+      "payload": "{\"affects\":\"architecture-model.md §7 Q2 与 §2 修正3\",\"impact\":\"可能新增一条独立链路，属产品范围决策\",\"options\":[\"不做：操作者现场可视\",\"做：远程遥操作，需带宽/延迟设计\"]}",
+      "created_sequence": 32,
+      "updated_sequence": 32
+    },
+    {
+      "kind": "open-question",
+      "id": "OQ-001",
+      "title": "适配层出口是关节角还是末端位姿",
+      "status": "deferred",
+      "revision": 1,
+      "payload": "{\"affects\":\"architecture-model.md §7 Q1 与 §4 第③层\",\"impact\":\"决定多机械臂兼容难度；Franka 7轴/Piper 6轴/UR 6轴自由度不同\",\"options\":[\"A 核心层统一IK下发关节角\",\"B 下发末端位姿由各机器人自解IK\"]}",
+      "created_sequence": 33,
+      "updated_sequence": 33
+    },
+    {
+      "kind": "decision",
+      "id": "DEC-001",
+      "title": "Q1-Q4 先行保留待用户确认",
+      "status": "active",
+      "revision": 1,
+      "payload": "{\"decided_at\":\"2026-10-11\",\"decision\":\"Q1-Q4 全部先行保留，待用户进一步确认\",\"discipline\":\"后续实现或文档不得把任一问题当作已决，引用时须标注待确认\",\"owner\":\"user\",\"rationale\":\"用户判定这些属具体实现问题，非当前阶段（生态普查）应决事项\",\"tracked_as\":[\"OQ-001\",\"OQ-002\",\"OQ-003\",\"OQ-004\"]}",
+      "created_sequence": 34,
+      "updated_sequence": 34
+    },
+    {
+      "kind": "decision",
+      "id": "DEC-002",
+      "title": "子仓库无远端：备份风险暂不处理",
+      "status": "active",
+      "revision": 1,
+      "payload": "{\"affects\":\"VR数采调研/ 子仓库；DOC-006\",\"decision\":\"子仓库无远端（纯本地），两次提交无任何异地副本；本轮暂不处理\",\"options\":[\"归档到知识库 D:\\\\Project\\\\My_knowledge_base\",\"配置远端并推送（需先确认托管位置与公开范围）\"],\"rationale\":\"用户决定在 2026-10-12 mentor 汇报后再确定备份方式\",\"revisit_after\":\"2026-10-12 mentor 汇报\",\"risk\":\"磁盘故障将导致报告 v1.2 与 mentor 汇报提纲全部丢失（本机为唯一副本）\"}",
+      "created_sequence": 56,
+      "updated_sequence": 56
+    },
+    {
+      "kind": "research",
+      "id": "RES-R002-ROUND2",
+      "title": "R-002 第二轮：剩余 9 个克隆的源码级深挖（并行委派）",
+      "status": "complete",
+      "revision": 2,
+      "payload": "{\"goal\":\"对剩余 9 个本地克隆做源码级深挖，使全部 19 个克隆达到 L2 覆盖\",\"known_limitation\":\"子 Agent 无 shell 权限（FI-002），无法算字节数/摘要/行数\",\"method\":\"并行只读委派 codebase-onboarder（后台），主 Agent 抽查关键结论后落盘 source-deepdive/<repo>.md\",\"remaining_projects\":[\"xr_teleoperate\",\"XRoboToolkit-Unity-Client\",\"XRoboToolkit-Teleop-ROS\",\"quest-wrist-tracker\",\"quest2ros\",\"Quest2ROS2\",\"isaac_ros_teleop\",\"TeleVision\",\"DexTeleGym\"],\"round\":2,\"round2_result\":{\"clones\":22,\"commits\":[\"86c2f37\",\"42079ae\",\"068d136\"],\"corrections\":\"勘误 24-28\",\"deep_dived\":19,\"docs\":13,\"outline\":\"v1.5\",\"report\":\"v1.5\",\"review\":\"REV-R002-R2-GO = go\"},\"status\":\"complete\",\"subagents\":[{\"scope\":\"xr_teleoperate\",\"sessionID\":\"ses_ed6fd5466ffeTdT8TgiJCq0tk1\"},{\"scope\":\"XRoboToolkit-Unity-Client (PICO) + XRoboToolkit-Teleop-ROS\",\"sessionID\":\"ses_ed6fd5465ffe5YgKHPbwZYzA03\"},{\"scope\":\"quest-wrist-tracker + quest2ros + Quest2ROS2\",\"sessionID\":\"ses_ed6fd5465ffdiXeOGnzsURYOMn\"},{\"scope\":\"isaac_ros_teleop + TeleVision\",\"sessionID\":\"ses_ed6fd5464ffeUhqVK1vlXJpOED\"},{\"scope\":\"DexTeleGym\",\"sessionID\":\"ses_ed6fd5463ffelyEGJdDiOqjO1m\"}],\"task\":\"R-002\",\"user_decision\":\"用户选择「继续深挖全部」（2026-10-11）\"}",
+      "created_sequence": 78,
+      "updated_sequence": 83
+    }
+  ],
+  "record_links": [],
+  "evidence": [
+    {
+      "id": "EV-INIT-001",
+      "task_id": "INIT-001",
+      "kind": "command",
+      "subject": "vibe status / init_project_agents.py --json 输出；根目录无 .git；子仓库存在；AGENTS.md 标记齐全",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"INIT-001\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 3,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-INIT-002",
+      "task_id": "INIT-002",
+      "kind": "check",
+      "subject": "回读 AGENTS.md：目录结构/已知事实源/文档约定三行均已指向 VR数采调研/ 子仓库",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"INIT-002\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 7,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-INIT-003",
+      "task_id": "INIT-003",
+      "kind": "check",
+      "subject": "建立 .project-log/docs/framework-issues.md；FI-001~FI-006 六条，其中 FI-003 经独立复核源码澄清为命名歧义而非缺陷",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"INIT-003\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 13,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-INIT-004",
+      "task_id": "INIT-004",
+      "kind": "command",
+      "subject": "git log 基线提交 11919e8（2 files/443 insertions，工作树 clean）；current-session.md 与 progress.md 已由模板占位更新为实际状态",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"INIT-004\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 17,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-R001-REPORT",
+      "task_id": "R-001",
+      "kind": "artifact",
+      "subject": "第一阶段生态普查报告 v1.0（376 行）：13 仓库浅克隆源码级验证 + GitHub 元数据；含执行摘要/项目地图/横向对比/勘误/候选路线/PoC 计划/风险清单",
+      "status": "stale",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-001\"]}",
+      "version_binding": "{\"file_hashes\":{\"VR数采调研/第一阶段生态普查报告.md\":\"3bbcf07f80c88de084f2b71b537724b7901245f0abc5347f172bb17321b902de\"}}",
+      "recorded_sequence": 21,
+      "invalidated_sequence": 22,
+      "invalidation_reason": "覆盖产物由 v1.0 修订为 v1.2（sha256 变更），重算适用性"
+    },
+    {
+      "id": "EV-R001-REPORT-V12",
+      "task_id": "R-001",
+      "kind": "artifact",
+      "subject": "第一阶段生态普查报告 v1.2（434 行）：经两轮独立复核，二轮裁决 go；含证据分级纪律修正、15 仓库 L2 引证、勘误与依赖链",
+      "status": "stale",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-001\"]}",
+      "version_binding": "{\"file_hashes\":{\"VR数采调研/第一阶段生态普查报告.md\":\"7c20454402db80d601d0cb464bb3cb1e508ff27f2e37177a67e08f5492bfd07b\"}}",
+      "recorded_sequence": 23,
+      "invalidated_sequence": 59,
+      "invalidation_reason": "报告已由 v1.2 修订为 v1.3（许可证结论修正，勘误 14-17），覆盖对象已变化"
+    },
+    {
+      "id": "EV-DOC001",
+      "task_id": "DOC-001",
+      "kind": "check",
+      "subject": "架构模型文档 239 行/12 章节完整；文档内 XRoboToolkit xr_msgs 数据契约与源码 ros2/xr_msgs/{Custom,Head,Controller}.msg 逐字段一致（7/7 匹配）",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-001\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 28,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-DOC002",
+      "task_id": "DOC-002",
+      "kind": "check",
+      "subject": "architecture-model.md §7/§12 已改为保留待确认；登记 open-question OQ-001~004(deferred) 与 decision DEC-001(active)；vibe validate 无错误",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-002\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 37,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-DOC003",
+      "task_id": "DOC-003",
+      "kind": "check",
+      "subject": "modularization-strategy.md（147 行）与 architecture-model.md / 报告 v1.2 交叉一致：复用 OQ-001~004 与 DEC-001 记录 ID 正确；契约 C 与 OQ-001 的绑定已在两文档中一致表述",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-003\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 41,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-DOC004",
+      "task_id": "DOC-004",
+      "kind": "check",
+      "subject": "调研汇报提纲.md（213 行）：关键数字与报告 v1.2 逐项核对一致（0 条检索结果/6.6Hz/40Hz/7 个无许可证项目/各仓库 stars）；结构为结论先行+可独立跳读",
+      "status": "stale",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-004\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 45,
+      "invalidated_sequence": 47,
+      "invalidation_reason": "产物被重写为 mentor 单听众版本（原为混合听众版），覆盖对象已变化，须重新验证"
+    },
+    {
+      "id": "EV-DOC005",
+      "task_id": "DOC-005",
+      "kind": "check",
+      "subject": "调研汇报提纲.md 重写为 mentor 单听众版：关键数字与报告 v1.2 逐项回归核对一致（0 条结果 / 6.6Hz / 40Hz / stars / PICO 4 Ultra）；判断扩为 6 条（补回录制帧率 != 控制频率）",
+      "status": "stale",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-005\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 50,
+      "invalidated_sequence": 60,
+      "invalidation_reason": "调研汇报提纲已同步修正 §0/§5/§7/附录B 的许可证表述，覆盖对象已变化"
+    },
+    {
+      "id": "EV-DOC006",
+      "task_id": "DOC-006",
+      "kind": "check",
+      "subject": "子仓库两次提交完成：eb8809e（第一阶段生态普查报告 v1.2, 434 insertions）、d30878e（调研汇报提纲 mentor 版, 222 insertions）；工作树 clean；提交身份 TBLboy <TBLboy@users.noreply.github.com>",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-006\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 54,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-DOC007",
+      "task_id": "DOC-007",
+      "kind": "check",
+      "subject": "许可证全树级审计（license-audit.md，SHA256 3C176E53BD450303...）：全树扫描 + GitHub API 双向验证；分类 17 宽松/8 无许可证文件(3 明确无授权+4 自述有授权+1 未核实)/2 受限/1 授权不清晰；撤销 v1.2 的 PICO 客户端法务阻断判断",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"DOC-007\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 61,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-R001-REPORT-V13",
+      "task_id": "R-001",
+      "kind": "check",
+      "subject": "报告 v1.3（SHA256 C09DD199F8F90B5A...）许可证结论修正：勘误 14-18 共 5 处；已通过三轮独立定向复核收敛至 go（REV-DOC007）",
+      "status": "stale",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-001\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 62,
+      "invalidated_sequence": 68,
+      "invalidation_reason": "报告已由 v1.3 修订为 v1.4（第二阶段源码深挖修正，勘误 19-22），覆盖对象已变化"
+    },
+    {
+      "id": "EV-R002-DEEPDIVE",
+      "task_id": "R-002",
+      "kind": "check",
+      "subject": "第二阶段源码深挖：11/18 项目达 L2；产出 .project-log/docs/source-deepdive/ 共 8 份文档（索引+矩阵+7 项目深挖）。三项改变原判断：①契约 C 从二选一变为四条路且动作空间须统一在 EEF 层 ②时间同步有 IsaacTeleop 双时钟成熟契约 ③失联保护/急停在所有先例中均缺失",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-002\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 67,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-R001-REPORT-V14",
+      "task_id": "R-001",
+      "kind": "check",
+      "subject": "报告 v1.4（SHA256 1E3CD06483FE14A5...）：第二阶段源码深挖修正 4 处结论 + 关闭 R5。依据 source-deepdive/ 8 份文档（11 项目 L2）",
+      "status": "stale",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-001\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 69,
+      "invalidated_sequence": 70,
+      "invalidation_reason": "v1.4 文档一致性补齐后哈希已变（正文残留清除/克隆计数 19/PICO 客户端 L1升L2/勘误补至 23）"
+    },
+    {
+      "id": "EV-R001-REPORT-V14-FINAL",
+      "task_id": "R-001",
+      "kind": "check",
+      "subject": "报告 v1.4 最终版（SHA256 F17433FEFECF73C9...，456 行）：源码深挖修正 5 处结论 + 勘误 19-23 + 克隆计数 19 + PICO 客户端许可证升 L2（MIT）",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-001\",\"R-002\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 71,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-R002-CLOSURE",
+      "task_id": "R-002",
+      "kind": "check",
+      "subject": "闭合第三轮遗留的 2 行文档漂移（source-deepdive/README.md L160/L173 克隆状态改为 v1.4 已克隆 / MIT / L2），并由主 Agent 直接回读确认；全库 '不在工作区' 命中数 = 0",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-002\"]}",
+      "version_binding": "{}",
+      "recorded_sequence": 72,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    },
+    {
+      "id": "EV-R002-ROUND2",
+      "task_id": "R-002",
+      "kind": "check",
+      "subject": "R-002 round2: 22 clones / 19 deep-dived / 13 docs; report v1.5 (勘误 24-28)",
+      "status": "valid",
+      "covers": "{\"files\":[],\"requirements\":[],\"tasks\":[\"R-002\"]}",
+      "version_binding": "{\"file_hashes\":{\"VR数采调研/第一阶段生态普查报告.md\":\"f91d25c45fd003f197bda4f6cc3004fcc93b36533d15b0b927d0e699727176cd\",\"VR数采调研/调研汇报提纲.md\":\"e86a254583def26ba1492b0898bed3a95b65cffc41633442e5061ad031b26872\"},\"git_commit\":\"068d136aa9ccb23b740f2405e0fb65fc58cd3e72\"}",
+      "recorded_sequence": 79,
+      "invalidated_sequence": null,
+      "invalidation_reason": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-INIT-001",
+      "task_id": "INIT-001",
+      "reviewer": "verification-reviewer",
+      "verdict": "go",
+      "scope": "{\"files\":[\"AGENTS.md\",\".project-log/state-format.json\",\"VR数采调研/.git\"]}",
+      "evidence_refs": "[\"EV-INIT-001\"]",
+      "created_sequence": 9
+    },
+    {
+      "id": "REV-INIT-002",
+      "task_id": "INIT-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "go",
+      "scope": "{\"files\":[\"AGENTS.md\"]}",
+      "evidence_refs": "[\"EV-INIT-002\"]",
+      "created_sequence": 10
+    },
+    {
+      "id": "REV-R001",
+      "task_id": "R-001",
+      "reviewer": "verification-reviewer",
+      "verdict": "go",
+      "scope": "{\"files\":[\"VR数采调研/第一阶段生态普查报告.md\",\"AGENTS.md\"],\"rounds\":2,\"verdicts\":[\"partial\",\"go\"]}",
+      "evidence_refs": "[\"EV-R001-REPORT-V12\"]",
+      "created_sequence": 24
+    },
+    {
+      "id": "REV-DOC007",
+      "task_id": "DOC-007",
+      "reviewer": "verification-reviewer (独立子会话, 只读)",
+      "verdict": "go",
+      "scope": "{\"artifacts\":[\"VR数采调研/第一阶段生态普查报告.md (v1.3)\",\"VR数采调研/调研汇报提纲.md\",\".project-log/docs/license-audit.md\"],\"core_conclusion_verified\":\"PICO 客户端 = MIT（LICENSE.txt, 1265B, (c) 2025 XR Robotics）；v1.2 的『法务阻断』判断撤销 —— 经独立复现成立\",\"method\":\"独立只读复核（verification-reviewer 子会话 ses_ed73354acffeTa58ZCTG4xzh15）；递归 glob 全库许可证文件 + grep 授权声明 + read 原文 + webfetch 远程 raw/API 交叉验证\",\"reviewer_capability\":\"verification_capability_missing: 复核方无 shell 权限，仅能内容级核对\",\"rounds\":[{\"findings\":[\"PICO 客户端实为 MIT 已复现确认\",\"B 类『全树无授权』措辞对 4 个成员过度概括\",\"报告附录 A 与提纲残留旧结论 4 处\"],\"round\":1,\"verdict\":\"partial\"},{\"findings\":[\"报告 L325 与提纲 2 处『无授权』残留\",\"审计新增事实错误：10 个 HuggingFace 头实为 2 HF + 8 Franka Robotics\"],\"round\":2,\"verdict\":\"partial\"},{\"findings\":[\"三条必须修项全部落实且与实测一致\",\"无新增过度概括\",\"勘误 1-18 连续\",\"文档间无矛盾\"],\"round\":3,\"verdict\":\"go\"}],\"unresolved\":[\"ZorAttC/franka_vr 无本地克隆，授权内容维持未核实\",\"LICENSE 精确字节数无法计算（复核方无 shell 权限，FI-002）\"]}",
+      "evidence_refs": "[\"EV-DOC007\"]",
+      "created_sequence": 63
+    },
+    {
+      "id": "REV-R002-FINAL",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "go",
+      "scope": "{\"caveat\":\"无 L3 真机证据、无 L4 我方实测\",\"note\":\"最后一步回读由主 Agent 直接执行(非独立复核者)，已在 EV-R002-CLOSURE 中如实标注\",\"open_items\":0,\"rounds\":3,\"verdict_basis\":\"三轮独立定向复核(范围逐轮递减，每轮问题均已闭合) + 最终 2 行文档修正回读确认\"}",
+      "evidence_refs": "[\"EV-R002-CLOSURE\"]",
+      "created_sequence": 73
+    },
+    {
+      "id": "REV-R002-1",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "conditional",
+      "scope": "{\"confirmed\":[\"A1-A10 源码结论全部成立\",\"A11-A13 新增断言源码可证\"],\"findings\":[\"报告正文表格 6 处残留(MCAP/DROID 等)\",\"克隆计数陈旧(15/18)\",\"勘误编号与自相矛盾\"],\"round\":1,\"target\":\"source-deepdive 文档与结论修正\"}",
+      "evidence_refs": "[\"EV-R002-DEEPDIVE\"]",
+      "created_sequence": 74
+    },
+    {
+      "id": "REV-R002-2",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "conditional",
+      "scope": "{\"confirmed\":[\"残留已清除\",\"勘误编号 1-22 连续\",\"判断7/8 源码引证成立\"],\"findings\":[\"XRoboToolkit-Unity-Client 克隆状态三处矛盾\",\"汇报稿 L11 仍为 15\",\"报告 2.2 清单仅 15 行\"],\"round\":2,\"target\":\"残留清除验证\"}",
+      "evidence_refs": "[\"EV-R002-DEEPDIVE\"]",
+      "created_sequence": 75
+    },
+    {
+      "id": "REV-R002-3",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "conditional",
+      "scope": "{\"confirmed\":[\"2.2 清单 19 行\",\"汇报稿 L11 = 19\",\"版本标签 v1.4 一致\",\"改名已记录\"],\"findings\":[\"source-deepdive/README.md L160/L173 克隆状态漂移(2 行)\"],\"round\":3,\"target\":\"4 项定向回读\"}",
+      "evidence_refs": "[\"EV-R002-CLOSURE\"]",
+      "created_sequence": 76
+    },
+    {
+      "id": "REV-R002-GO",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "go",
+      "scope": "{\"caveat\":\"无 L3 真机证据、无 L4 我方实测\",\"note\":\"最后一步回读由主 Agent 直接执行(非独立复核者)，已在 EV-R002-CLOSURE 中如实标注\",\"open_items\":0,\"rounds\":3,\"verdict_basis\":\"三轮独立定向复核(范围逐轮递减，每轮问题均已闭合) + 最终 2 行文档修正回读确认\"}",
+      "evidence_refs": "[\"EV-R002-CLOSURE\"]",
+      "created_sequence": 77
+    },
+    {
+      "id": "REV-R002-R2-1",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "conditional",
+      "scope": "{\"commit\":\"86c2f37\",\"found\":[\"5 条核心断言基本成立\",\"最重要安全结论（失联保护=0）完全证实\",\"发现 10 处定量与一致性问题\"],\"round\":1,\"target\":\"v1.5 五处核心修正（勘误 24-28）\"}",
+      "evidence_refs": "[\"EV-R002-ROUND2\"]",
+      "created_sequence": 80
+    },
+    {
+      "id": "REV-R002-R2-2",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "conditional",
+      "scope": "{\"commit\":\"42079ae\",\"found\":[\"8 项已修复（2 项经读源码独立证实）\",\"2 项部分修复（深挖文档未同步）\",\"新引入 1 处悬空引用（判断 9）\"],\"round\":2,\"target\":\"10 处修订的定向重验\"}",
+      "evidence_refs": "[\"EV-R002-ROUND2\"]",
+      "created_sequence": 81
+    },
+    {
+      "id": "REV-R002-R2-GO",
+      "task_id": "R-002",
+      "reviewer": "verification-reviewer",
+      "verdict": "go",
+      "scope": "{\"commit\":\"068d136\",\"found\":[\"4 处全部确认已修复\",\"表格列数全部自洽\",\"提纲交叉引用穷尽检查全部有效（无悬空）\",\"未发现新引入矛盾\"],\"round\":3,\"target\":\"4 处闭合条件 + A/B/C 全局一致性扫描\"}",
+      "evidence_refs": "[\"EV-R002-ROUND2\"]",
+      "created_sequence": 82
+    }
+  ],
+  "blockers": []
+}

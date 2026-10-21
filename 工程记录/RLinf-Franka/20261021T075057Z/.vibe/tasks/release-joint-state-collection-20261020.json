@@ -1,0 +1,33 @@
+{
+  "id": "release-joint-state-collection-20261020",
+  "title": "Collect Franka joint state data",
+  "goal": "Add Franka joint position, velocity, and torque to Release observations, raw collection pickles, and the supported LeRobot conversion without changing control behavior.",
+  "doneWhen": [
+    "Each 30 Hz observation includes 7-D joint position, velocity, and torque arrays from the Franka state.",
+    "The fields are retained in collected_data pickle observations and exported into LeRobot-compatible state data with a documented schema.",
+    "Focused no-hardware tests validate dimensions and conversion behavior."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Use measured joint position, velocity, and torque from the existing Franka driver state; do not derive or command joints.",
+    "Preserve the existing TCP/gripper state fields and append named joint fields through the standard observation wrapper rather than changing control actions.",
+    "The existing LeRobot state vector will gain 21 joint-state values, so downstream consumers must inspect the exported feature schema rather than assume the previous 19-D state width."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commit d31a695 records measured 7-D Franka q, dq, and tau_J in every observation and carries the expanded state vector through the existing pickle and LeRobot conversion paths.",
+    "checks": [
+      "Franky-focused unit tests: 44 passed",
+      "Franka observation joint-state test: 1 passed",
+      "Release compatibility tests: 7 passed",
+      "Synthetic LeRobot conversion preserved a 40-D state vector",
+      "Configuration parse, Python compilation, shell syntax, and Git diff whitespace checks passed"
+    ],
+    "limitations": [
+      "No hardware collection has run after adding measured joint torque.",
+      "New datasets have a 40-D exported state vector; downstream code must not assume the prior 19-D state width."
+    ]
+  }
+}

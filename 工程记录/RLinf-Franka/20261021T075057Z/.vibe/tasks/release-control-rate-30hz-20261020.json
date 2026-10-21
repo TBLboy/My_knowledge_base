@@ -1,0 +1,34 @@
+{
+  "id": "release-control-rate-30hz-20261020",
+  "title": "Evaluate 30 Hz Pico control loop",
+  "goal": "Prepare a bounded, operator-tested 30 Hz RLinf control-loop configuration for the single-arm Franka/Pico Release while retaining the 10 Hz baseline backup.",
+  "doneWhen": [
+    "The Release configuration requests a 30 Hz Franka environment step rate and 30 Hz collection metadata rate.",
+    "Documentation states that this is an unvalidated control-rate experiment and retains the required unloaded, small-range hardware test boundary.",
+    "Focused no-hardware configuration and compatibility checks pass.",
+    "The operator receives the exact test and rollback commands."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The 10 Hz Release state is protected by local tag backup/vr-controls-20261020 before this experiment.",
+    "Set the control loop and stored dataset metadata to 30 Hz together so exported timestamps do not claim 10 Hz while samples are produced at a different requested rate.",
+    "Do not change impedance, motion scales, step guards, Desk protections, or camera configuration as part of this isolated rate experiment.",
+    "Real-hardware validation is operator-only: unloaded, small range, emergency stop reachable; stop immediately on stale motion, vibration, force, Desk warning, or error."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commit 4f713d8 requests a 30 Hz environment cadence and aligned 30 Hz collection metadata without changing other control parameters. The operator reported stable 30 Hz arm control in a live test.",
+    "checks": [
+      "Release compatibility tests: 7 passed",
+      "Hydra YAML parse confirmed step_frequency=30.0 and data_collection.fps=30",
+      "Shell syntax and Git diff whitespace checks passed",
+      "Operator-reported live test: 30 Hz arm control was stable"
+    ],
+    "limitations": [
+      "The requested rate is a maximum; camera, robot, and Python work may make the achieved rate lower.",
+      "The operator report confirms stable control but does not yet quantify achieved cycle frequency, camera frame freshness, or collection-data quality at 30 Hz."
+    ]
+  }
+}

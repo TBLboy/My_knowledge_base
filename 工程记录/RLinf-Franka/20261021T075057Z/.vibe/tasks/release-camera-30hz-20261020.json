@@ -1,0 +1,31 @@
+{
+  "id": "release-camera-30hz-20261020",
+  "title": "Evaluate 30 Hz dual-camera capture",
+  "goal": "Prepare a bounded 30 Hz dual-ZED UVC camera configuration matched to the 30 Hz Release control/data cadence, then provide an operator test boundary.",
+  "doneWhen": [
+    "Both Release camera descriptors explicitly request 30 FPS.",
+    "Focused no-hardware checks prove the configured frame rate reaches the UVC backend configuration path.",
+    "Operator documentation states the USB/CPU stability and frame-freshness validation required before accepting 30 Hz camera data."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The data contract should request a new image for each 30 Hz control/data sample; leaving the cameras at the inherited 15 FPS would produce repeated adjacent frames.",
+    "Do not change camera resolution, image preprocessing, robot control, or safety parameters in this rate-only experiment.",
+    "The operator must validate both UVC cameras on direct USB 3.0 paths, frame freshness, and stable 30 Hz collection before using the resulting data."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commit 2315f25 requests 30 FPS from both UVC cameras and rejects a camera that reports a materially different rate. A 79-action operator trajectory had 80 unique adjacent camera frames from both views.",
+    "checks": [
+      "Focused configured-camera-FPS test passed",
+      "Release compatibility tests: 7 passed",
+      "Hydra YAML parse confirmed camera_fps=30, step_frequency=30.0, and data_collection.fps=30",
+      "Operator trajectory: both camera views had 80/80 frames and 79/79 adjacent frame changes"
+    ],
+    "limitations": [
+      "The collected pickle does not retain camera hardware timestamps, so achieved FPS has not been numerically measured from source timestamps."
+    ]
+  }
+}

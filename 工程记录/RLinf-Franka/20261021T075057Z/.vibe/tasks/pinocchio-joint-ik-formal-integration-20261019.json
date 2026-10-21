@@ -1,0 +1,35 @@
+{
+  "id": "pinocchio-joint-ik-formal-integration-20261019",
+  "title": "正式生命周期Pinocchio关节IK接入",
+  "goal": "在保留Cartesian默认模式的前提下，通过正式Pico/Ray采集生命周期验证Pinocchio单步微分IK到关节阻抗的opt-in路线。",
+  "doneWhen": [
+    "--teleop-control-mode joint_ik 在正式run_pico_session.sh生命周期中可启动",
+    "joint_ik使用FR3 URDF Pinocchio单步differential IK并将q目标交给JointImpedanceTracker",
+    "默认Cartesian模式保持不变",
+    "后续优化或产品采用须由用户重新明确授权"
+  ],
+  "policy": "balanced",
+  "status": "blocked",
+  "phase": "implement",
+  "decisions": [
+    "Pinocchio 4.1.0安装到RLinf/.venv，以复用正式Pico、Ray、相机、录制和Franky生命周期。",
+    "用户决定暂时停止joint_ik路线；不继续调整其手感、频率或控制参数。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Python编译、正式launcher dry-run、RLinf/PicoExpert/Pinocchio联合导入通过；用户报告正式joint_ik launcher当前可正常运行。",
+    "checks": [
+      "Pinocchio 4.1.0、torch、RLinf PicoExpert联合导入成功",
+      "FR3 URDF加载成功，nq=7、nv=7、link8 frame可用",
+      "joint_ik扩展及Pinocchio模块py_compile通过",
+      "run_pico_session.sh --dry-run --teleop-control-mode joint_ik通过",
+      "用户报告正式启动可正常运行"
+    ],
+    "limitations": [
+      "未完成可重复的真机手感、实时性和安全验收",
+      "joint_ik路线已由用户暂停，不应作为默认或生产控制路线"
+    ]
+  },
+  "blocker": "用户已暂停joint_ik路线，等待明确恢复指令。",
+  "nextAction": "仅在用户明确恢复后，基于正式运行日志和操作者观察继续评估。"
+}

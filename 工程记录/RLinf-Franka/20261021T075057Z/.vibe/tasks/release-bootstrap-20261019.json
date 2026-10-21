@@ -1,0 +1,42 @@
+{
+  "id": "release-bootstrap-20261019",
+  "title": "Build the stable Pico–Franka release repository",
+  "goal": "Create Release as a clean local Git repository containing only the validated single-arm Franka/Pico teleoperation and collection product, with vendored required source, reproducible environment metadata, stable tests, and operational documentation.",
+  "doneWhen": [
+    "Release is an independent local Git repository derived only from approved committed baselines.",
+    "Release contains the bounded Pico single-arm Franka collection product, including its stable launcher, preflight, collection, quality-check, and legacy LeRobot conversion paths.",
+    "Experimental, diagnostic, unrelated RLinf features, caches, build artifacts, and obsolete materials are excluded from Release.",
+    "The Pico source is vendored with its license retained, and external dependencies have an explicit reproducibility and licensing inventory.",
+    "Release has stable tests and documentation sufficient to install and operate the supported workflow, with automated verification appropriate to the migration."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Release is a new independent local Git repository under /home/modelbest/Project/RLinf-Franka/Release.",
+    "The supported product boundary is Pico teleoperation and human-demonstration collection for one Franka Research 3 arm only.",
+    "Source enters Release only from approved committed baselines; current uncommitted development changes are excluded.",
+    "Approved baselines are RLinf e7a9a2e and RLinf-Franks 803ba2a; Pico software is vendored from its committed source snapshot after inventory confirms the exact commit and licenses.",
+    "The legacy pickle-to-LeRobot converter is included; the unimplemented LeRobot v3 collection design is excluded.",
+    "Stable tests are included; temporary experiments, diagnostics, caches, build outputs, and unrelated framework features are excluded.",
+    "Python environments are managed with uv; distributable third-party source retains its license, while non-vendorable system/vendor dependencies are documented with version and installation instructions.",
+    "Approved business and technical boundaries are recorded in .vibe/requirements.md.",
+    "Release uses vendored core/rlinf, extensions/rig, pico_bridge, configs, scripts, tests, docs, and licenses; only the Pico single-arm workflow is exposed or supported."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release initial commit 77213e4 completed after repository structure, generated uv locks, focused integrity tests, Python compilation, shell syntax, and dependency-closure imports passed.",
+    "checks": [
+      "Release-focused pytest: 4 passed",
+      "Python compilation for Release scripts, rig extension, and Pico bridge passed",
+      "Shell syntax checks for stable launchers and adapted RLinf collector passed",
+      "uv.lock and pico_bridge/uv.lock resolved and passed uv lock --check",
+      "Release-owned whitespace check passed; nested Git metadata and ignored artifact checks passed",
+      "Approved baseline commit references and expected collector adaptation were verified",
+      "RLinf real-world collection and LeRobot writer imports resolved from the Release layout"
+    ],
+    "limitations": [
+      "No hardware, Franky/libfranka, vendor Pico SDK, camera, Robotiq, or end-to-end collection run was exercised."
+    ]
+  }
+}

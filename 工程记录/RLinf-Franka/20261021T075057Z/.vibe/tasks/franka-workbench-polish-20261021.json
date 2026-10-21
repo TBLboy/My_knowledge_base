@@ -1,0 +1,38 @@
+{
+  "id": "franka-workbench-polish-20261021",
+  "title": "Polish Franka workbench assets, upload and layout",
+  "goal": "Improve the merged Robot Capture Franka workbench without changing its existing single-arm capture behavior: replace the Piper visual model with a valid FR3 visual model, validate upload readiness, and migrate root configuration and launcher layout compatibly.",
+  "doneWhen": [
+    "The arm viewer loads a valid FR3 model with matching seven-joint telemetry mapping.",
+    "Upload behavior is verified against an operator-provided writable destination or its environment blocker is precisely documented.",
+    "Configuration, scripts, docs and tests use the canonical clean layout, and an explicit migration tool updates previously installed entry points.",
+    "Existing single-arm two-camera capture and teleoperation behavior remain unchanged."
+  ],
+  "policy": "balanced",
+  "status": "active",
+  "phase": "implement",
+  "decisions": [
+    "User deferred the third-camera UI change. The active single-arm configuration remains exactly two cameras.",
+    "Discovery found an FR3 URDF at RLinf-Franks/rlinf_ext/assets/fr3.urdf, but its franka_description visual meshes are absent from that repository.",
+    "Active upload is disabled and its configured local destination /mnt/nas/forge/franka/raw is absent and not creatable by the current user.",
+    "Bundled official franka_description 2.9.0 Apache-2.0 FR3 collision STL meshes and an existing generated FR3 URDF for display-only browser visualization; no control kinematics use these assets.",
+    "Canonical config and launchers now live exclusively under config/ and scripts/; root wrappers, root config links, and legacy Piper assets were removed from the root. scripts/migrate_layout.sh reinstalls old launcher/systemd entry points to their canonical paths.",
+    "Upload remains unchanged and disabled after probe: /mnt/nas/forge/franka/raw cannot be created by current user.",
+    "2026-10-21: User requested a workbench restart. It is running from the feature worktree via bash scripts/run.sh (PID 2539422, HTTP 200 on port 5000). Worker is not running at this snapshot."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "FR3 viewer assets and viewer wiring landed in 54de137; complete root cleanup and installed-entry-point migration landed in 80e2547. Upload static/runtime probe confirms an environment blocker, not a code change. The canonical launcher restart succeeded.",
+    "checks": [
+      "80 offline tests passed (2 scipy checks skipped in workbench venv)",
+      "bash -n canonical launchers passed",
+      "py_compile passed",
+      "FR3 URDF references verified against bundled assets",
+      "Pack/unpack smoke verified the portable archive has no root launcher and runs through scripts/run.sh",
+      "Restarted with bash scripts/run.sh; /record returned HTTP 200 on port 5000",
+      "Upload sink probe with enabled local config failed as expected: Permission denied creating /mnt/nas"
+    ],
+    "limitations": []
+  },
+  "nextAction": "Operator should visually validate the FR3 browser viewer on /record and playback using the running canonical launcher. Upload requires an operator-provided writable sink as a separate follow-up."
+}

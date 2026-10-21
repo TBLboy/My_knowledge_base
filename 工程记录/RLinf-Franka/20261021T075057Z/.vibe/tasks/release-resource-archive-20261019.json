@@ -1,0 +1,31 @@
+{
+  "id": "release-resource-archive-20261019",
+  "title": "Archive internal Pico deployment resources",
+  "goal": "Add the approved internal PC Service installer, Pico APK, and reproducible XRoboToolkit SDK source/build materials to Release/resources with integrity manifests and installation documentation.",
+  "doneWhen": [
+    "Release/resources contains the exact PC Service Debian installer and Pico APK with SHA-256 manifests and internal-use documentation.",
+    "Release/resources contains the MIT-licensed xrobotoolkit_sdk source snapshot, license, pinned source revision, and a build/install script that targets the installed PC Service SDK.",
+    "No active hardware process, service, or runtime configuration is changed.",
+    "Resource paths, checksums, and build-script syntax are verified."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Vendor PC Service and APK artifacts are internal-use resources and carry explicit do-not-externally-redistribute notices.",
+    "The Python SDK is archived as MIT-licensed source and built against the matching installed PC Service SDK rather than copied as a standalone binary module."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Internal PC Service and Pico APK resources were archived with checksums and installation notes; MIT SDK source and a validated build script were archived.",
+    "checks": [
+      "PC Service and APK SHA-256 manifests verified",
+      "SDK source spot-check matched the recorded source build tree",
+      "SDK build script syntax passed and built/imported xrobotoolkit_sdk in a disposable environment",
+      "No hardware process or runtime configuration was changed"
+    ],
+    "limitations": [
+      "Vendor binary redistribution terms remain unverified; artifacts carry internal-use-only notices."
+    ]
+  }
+}

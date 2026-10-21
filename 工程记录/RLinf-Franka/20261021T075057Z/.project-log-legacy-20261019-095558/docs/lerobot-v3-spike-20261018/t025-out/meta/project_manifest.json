@@ -1,0 +1,212 @@
+{
+  "alignment": {
+    "boundary_extrapolation": false,
+    "method": "symmetric_nearest_neighbor",
+    "streams": {
+      "action": {
+        "declared_rate_hz": 30.0,
+        "future_match_count": 4,
+        "matched": 4,
+        "matches": [
+          {
+            "abs_error_s": 0.012,
+            "raw_index": 0,
+            "raw_timestamp_s": 0.012,
+            "signed_offset_s": 0.012,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.0
+          },
+          {
+            "abs_error_s": 0.012666666666666666,
+            "raw_index": 1,
+            "raw_timestamp_s": 0.046,
+            "signed_offset_s": 0.012666666666666666,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.03333333333333333
+          },
+          {
+            "abs_error_s": 0.012333333333333335,
+            "raw_index": 2,
+            "raw_timestamp_s": 0.079,
+            "signed_offset_s": 0.012333333333333335,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.06666666666666667
+          },
+          {
+            "abs_error_s": 0.011999999999999997,
+            "raw_index": 3,
+            "raw_timestamp_s": 0.112,
+            "signed_offset_s": 0.011999999999999997,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.1
+          }
+        ],
+        "max_abs_error_s": 0.012666666666666666,
+        "reuse_count": 0,
+        "tolerance_s": 0.016666666666666666
+      },
+      "fixed": {
+        "declared_rate_hz": 30.0,
+        "future_match_count": 3,
+        "matched": 4,
+        "matches": [
+          {
+            "abs_error_s": 0.0,
+            "raw_index": 0,
+            "raw_timestamp_s": 0.0,
+            "signed_offset_s": 0.0,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.0
+          },
+          {
+            "abs_error_s": 0.0006666666666666696,
+            "raw_index": 1,
+            "raw_timestamp_s": 0.034,
+            "signed_offset_s": 0.0006666666666666696,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.03333333333333333
+          },
+          {
+            "abs_error_s": 0.00033333333333333826,
+            "raw_index": 2,
+            "raw_timestamp_s": 0.067,
+            "signed_offset_s": 0.00033333333333333826,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.06666666666666667
+          },
+          {
+            "abs_error_s": 0.0010000000000000009,
+            "raw_index": 3,
+            "raw_timestamp_s": 0.101,
+            "signed_offset_s": 0.0010000000000000009,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.1
+          }
+        ],
+        "max_abs_error_s": 0.0010000000000000009,
+        "reuse_count": 0,
+        "tolerance_s": 0.016666666666666666
+      },
+      "slow_state": {
+        "declared_rate_hz": 15.0,
+        "future_match_count": 0,
+        "matched": 4,
+        "matches": [
+          {
+            "abs_error_s": 0.0,
+            "raw_index": 0,
+            "raw_timestamp_s": 0.0,
+            "signed_offset_s": 0.0,
+            "tolerance_s": 0.03333333333333333,
+            "virtual_timestamp_s": 0.0
+          },
+          {
+            "abs_error_s": 0.03333333333333333,
+            "raw_index": 0,
+            "raw_timestamp_s": 0.0,
+            "signed_offset_s": -0.03333333333333333,
+            "tolerance_s": 0.03333333333333333,
+            "virtual_timestamp_s": 0.03333333333333333
+          },
+          {
+            "abs_error_s": 0.0,
+            "raw_index": 1,
+            "raw_timestamp_s": 0.06666666666666667,
+            "signed_offset_s": 0.0,
+            "tolerance_s": 0.03333333333333333,
+            "virtual_timestamp_s": 0.06666666666666667
+          },
+          {
+            "abs_error_s": 0.03333333333333334,
+            "raw_index": 1,
+            "raw_timestamp_s": 0.06666666666666667,
+            "signed_offset_s": -0.03333333333333334,
+            "tolerance_s": 0.03333333333333333,
+            "virtual_timestamp_s": 0.1
+          }
+        ],
+        "max_abs_error_s": 0.03333333333333334,
+        "reuse_count": 2,
+        "tolerance_s": 0.03333333333333333
+      },
+      "wrist": {
+        "declared_rate_hz": 30.0,
+        "future_match_count": 4,
+        "matched": 4,
+        "matches": [
+          {
+            "abs_error_s": 0.008,
+            "raw_index": 0,
+            "raw_timestamp_s": 0.008,
+            "signed_offset_s": 0.008,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.0
+          },
+          {
+            "abs_error_s": 0.007666666666666669,
+            "raw_index": 1,
+            "raw_timestamp_s": 0.041,
+            "signed_offset_s": 0.007666666666666669,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.03333333333333333
+          },
+          {
+            "abs_error_s": 0.007333333333333331,
+            "raw_index": 2,
+            "raw_timestamp_s": 0.074,
+            "signed_offset_s": 0.007333333333333331,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.06666666666666667
+          },
+          {
+            "abs_error_s": 0.007999999999999993,
+            "raw_index": 3,
+            "raw_timestamp_s": 0.108,
+            "signed_offset_s": 0.007999999999999993,
+            "tolerance_s": 0.016666666666666666,
+            "virtual_timestamp_s": 0.1
+          }
+        ],
+        "max_abs_error_s": 0.008,
+        "reuse_count": 0,
+        "tolerance_s": 0.016666666666666666
+      }
+    },
+    "tie_break": [
+      "earlier_timestamp",
+      "lower_raw_index"
+    ],
+    "virtual_fps": 30,
+    "virtual_timeline_count": 4
+  },
+  "custom": {
+    "action_space": "eef_pose_absolute",
+    "camera_key_map": {
+      "fixed": "observation.images.cam_ext_0",
+      "wrist": "observation.images.cam_wrist_right"
+    },
+    "dataset_version": "lerobot-v3",
+    "episode_outcome": "success",
+    "episode_terminal_source": "operator_terminal_event",
+    "gripper": {
+      "open_direction": "increasing",
+      "range": [
+        0.0,
+        0.08
+      ],
+      "unit": "m"
+    },
+    "mp4_reference_policy": "metadata_episode_video_timestamps",
+    "outcome_policy": "success_or_failure_only;timeout_and_abort_raw_only",
+    "required_provenance": {
+      "action": "final_post_guard_eef_target_v1",
+      "state": "measured_state_v1"
+    },
+    "writer_pin": "lerobot==0.4.4"
+  },
+  "reference_sensor": "fixed",
+  "schema_version": "project-v3-spike-1",
+  "source_batch": "synthetic-batch-001",
+  "timebase": "batch_relative_monotonic_seconds",
+  "virtual_fps": 30
+}

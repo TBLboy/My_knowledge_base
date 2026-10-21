@@ -1,0 +1,32 @@
+{
+  "id": "pico-ui-controls-map-20261021",
+  "title": "Implement Pico and workbench collection controls",
+  "goal": "Implement the approved shared Pico/browser recording controls, discard flow, configurable reset pose, and reset behavior in the Franka workbench.",
+  "doneWhen": [
+    "Pico and browser controls invoke shared workbench actions and synchronize browser state.",
+    "Active recordings can be discarded through the browser or Pico X without deleting another session.",
+    "Successful save or discard requests reset, and A+X discards then resets.",
+    "An operator can explicitly save a current TCP pose as reset pose and reset uses only that configured pose.",
+    "Focused offline tests pass; hardware validation is documented as operator-only."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The requirement baseline records the approved 2026-10-21 control contract. Pico inputs invoke shared workbench action paths rather than synthetic browser clicks or duplicated recording business logic.",
+    "No reset pose is copied from Release: an operator must explicitly save the current TCP pose before reset is available."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "All 75 offline tests pass; the implementation was syntax-compiled and no diff whitespace errors remain.",
+    "checks": [
+      "../robot_capture_franka-franka-feature/.venv/bin/python -m compileall -q app franka main.py tests: passed",
+      "../robot_capture_franka-franka-feature/.venv/bin/python -m unittest discover -s tests -v: 75 passed, 2 skipped",
+      "git diff --check: passed"
+    ],
+    "limitations": [
+      "No Pico or Franka hardware action was run. Reset and button mappings require operator-led unloaded, small-workspace validation with emergency stop reachable.",
+      "The two skipped tests require scipy in the worker environment."
+    ]
+  }
+}

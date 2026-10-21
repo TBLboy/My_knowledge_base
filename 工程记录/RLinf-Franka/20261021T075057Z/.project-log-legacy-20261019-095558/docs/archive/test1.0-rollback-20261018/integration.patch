@@ -1,0 +1,77 @@
+diff --git a/rlinf_ext/__init__.py b/rlinf_ext/__init__.py
+index 011b8dc..bca02df 100644
+--- a/rlinf_ext/__init__.py
++++ b/rlinf_ext/__init__.py
+@@ -23,3 +23,6 @@ def register() -> None:
+     register_keyboard_timeout_mode()
+     install_rich_pico_info()
+     install_passive_pico_telemetry()
++    from .orientation_filter import install_orientation_filter
++
++    install_orientation_filter()
+diff --git a/run_pico_session.sh b/run_pico_session.sh
+index 69821af..e286846 100755
+--- a/run_pico_session.sh
++++ b/run_pico_session.sh
+@@ -8,6 +8,7 @@
+ #   bash RLinf-Franks/run_pico_session.sh --dry-run    # 完整走一遍但只打印，不真启动任何东西
+ #   bash RLinf-Franks/run_pico_session.sh --passive-telemetry
+ #       # 诊断模式：记录额外只读遥测；采集仍会自动移动到 reset_ee_pose
++#   --orientation-filter [--orientation-tau 0.20]  # experimental test1.0, default OFF
+ #   bash RLinf-Franks/run_pico_session.sh [hydra 覆盖参数...]
+ #        例：bash RLinf-Franks/run_pico_session.sh env.eval.max_episode_steps=3000
+ #
+@@ -35,6 +36,9 @@ set -uo pipefail
+ DRY_RUN=0
+ CHECK_ONLY=0
+ PASSIVE_TELEMETRY=0
++ORIENTATION_FILTER=0
++ORIENTATION_TAU=0.20
++ORIENTATION_TAU_SET=0
+ HYDRA_ARGS=()
+ 
+ while [ $# -gt 0 ]; do
+@@ -42,6 +46,10 @@ while [ $# -gt 0 ]; do
+     --dry-run) DRY_RUN=1 ;;
+     --check)   CHECK_ONLY=1 ;;
+     --passive-telemetry) PASSIVE_TELEMETRY=1 ;;
++    --orientation-filter) ORIENTATION_FILTER=1 ;;
++    --orientation-tau)
++      [ $# -ge 2 ] || { echo "--orientation-tau requires seconds" >&2; exit 2; }
++      ORIENTATION_TAU="$2"; ORIENTATION_TAU_SET=1; shift ;;
+     -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
+     *)         HYDRA_ARGS+=("$1") ;;
+   esac
+@@ -50,6 +58,7 @@ done
+ 
+ # Diagnostic telemetry is opt-in per launcher invocation.
+ unset RLINF_PASSIVE_TELEMETRY
++unset RLINF_PICO_ORIENTATION_FILTER RLINF_PICO_ORIENTATION_TAU
+ 
+ # -----------------------------------------------------------------------------
+ # 路径
+@@ -60,6 +69,16 @@ WORK_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ RLINF_DIR="$WORK_ROOT/RLinf"
+ VENV="$RLINF_DIR/.venv"
+ PY="$VENV/bin/python"
++# Validate before logs, traps, preflight, services or hardware access.
++if [ "$ORIENTATION_TAU_SET" = 1 ] && [ "$ORIENTATION_FILTER" = 0 ]; then
++  echo "--orientation-tau requires --orientation-filter" >&2; exit 2
++fi
++if [ "$ORIENTATION_FILTER" = 1 ]; then
++  PYTHONPATH="$SCRIPT_DIR${PYTHONPATH:+:$PYTHONPATH}" "$PY" -c \
++    'import sys; from rlinf_ext.orientation_filter import validate_tau; validate_tau(sys.argv[1])' \
++    "$ORIENTATION_TAU" || exit 2
++  export RLINF_PICO_ORIENTATION_FILTER=1 RLINF_PICO_ORIENTATION_TAU="$ORIENTATION_TAU"
++fi
+ RAY="$VENV/bin/ray"
+ WRAPPER="$SCRIPT_DIR/run_collect_pico.sh"
+ SYNC_TOOL="$SCRIPT_DIR/sync_reset_pose.py"
+@@ -602,6 +621,7 @@ main() {
+   if [ "$DRY_RUN" = 1 ]; then warn "  模式：--dry-run（只打印，不真启动）"; fi
+   if [ "$CHECK_ONLY" = 1 ]; then warn "  模式：--check（只预检，不启动服务/不启动采集）"; fi
+   if [ "$PASSIVE_TELEMETRY" = 1 ]; then warn "  模式：--passive-telemetry（只读遥测；正常自动归位保持不变）"; fi
++  if [ "$ORIENTATION_FILTER" = 1 ]; then warn "  Experimental test1.0 orientation lowpass: tau=${ORIENTATION_TAU}s; lag accepted; release grip after reset/fault; NOT a J7 fix"; fi
+   hr
+ 
+   phase_preflight

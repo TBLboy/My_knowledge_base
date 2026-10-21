@@ -1,0 +1,47 @@
+name: Build wheels
+
+on:
+  workflow_call:
+    inputs:
+      libfranka-version:
+        required: true
+        type: string
+      manylinux-version:
+        required: true
+        type: string
+
+env:
+  PYBIN_SUPPORTED_VERSIONS: "cp3(7m|8|9|10|11|12|13|14)"
+
+jobs:
+  build_wheels:
+    runs-on: ubuntu-latest
+
+    container:
+      image: quay.io/pypa/${{ inputs.manylinux-version }}
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          yum -y install zip boost-devel urdfdom-devel fmt-devel gcc-c++ openssl-devel mysql-devel postgresql-devel tinyxml2-devel
+          LIBFRANKA_VERSION=${{ inputs.libfranka-version }} ./docker/common/install-dependencies
+
+      - name: Setting up pip
+        run: |
+          ./docker/common/manylinux-setup-pip
+
+      - name: Python package
+        run: |
+          LIBFRANKA_VERSION=${{ inputs.libfranka-version }} ./docker/common/manylinux-build-wheels
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels___${{ inputs.libfranka-version }}___${{ inputs.manylinux-version }}
+          path: output/libfranka_*_wheels.zip
+

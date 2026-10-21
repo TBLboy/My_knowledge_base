@@ -1,0 +1,12 @@
+[
+  {
+    "file": "franky/_franky.cpython-311-x86_64-linux-gnu.so",
+    "exists": true,
+    "match": true
+  },
+  {
+    "file": "franky/tracker.py",
+    "exists": true,
+    "match": true
+  }
+]
