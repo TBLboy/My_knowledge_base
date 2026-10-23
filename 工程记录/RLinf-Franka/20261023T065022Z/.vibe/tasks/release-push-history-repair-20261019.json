@@ -1,0 +1,29 @@
+{
+  "id": "release-push-history-repair-20261019",
+  "title": "Repair Release history for GitHub publication",
+  "goal": "Replace the incomplete grafted Release history with a self-contained root history that preserves the current Release tree and source provenance, then publish it to the approved empty origin repository.",
+  "doneWhen": [
+    "Release main has a self-contained Git history with no missing parent object.",
+    "The current Release tree and source provenance are preserved.",
+    "origin/main is force-updated successfully and matches local main."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The grafted RLinf base cannot be pushed because its parent object is absent; Release source provenance documents the upstream baseline, so a self-contained Release root commit is preferred over importing unrelated upstream history.",
+    "The approved origin is git@github.com:TBLboy/RLinf-Franka.git and may be force-updated because the user confirmed it is empty."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release was converted to self-contained root commit 52f3232 and force-pushed successfully to origin/main.",
+    "checks": [
+      "Source provenance for RLinf e7a9a2e remains in Release documentation",
+      "Git object integrity check completed before publication",
+      "origin/main resolved to 52f3232b36b3162a1f2eec2ffdd1d69b36ec7070 after push"
+    ],
+    "limitations": [
+      "GitHub accepted the 95.41 MB PC Service Debian artifact but warned that it exceeds the 50 MB recommended file size; consider Git LFS for future large resource revisions."
+    ]
+  }
+}

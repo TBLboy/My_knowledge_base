@@ -1,0 +1,11 @@
+{
+  "id": "playback-image-quality-20261022",
+  "title": "Fix two-camera playback and investigate image quality",
+  "goal": "Restore recorded Franka camera playback and remove identified avoidable image quality loss without changing hardware control.",
+  "doneWhen": ["Configured camera recordings resolve to playable media", "Image pipeline losses are identified and bounded improvements tested", "Existing recordings remain untouched"],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": ["User authorized playback and image-quality fixes; do not start hardware or overwrite recordings", "Preserve existing untracked start.sh"],
+  "verification": {"status": "passed", "summary": "Dynamic recorded-role playback verified against actual two-camera recording in an isolated browser UI; bounded capture/encoding improvements verified offline.", "checks": ["95 unittest cases: 92 pass, 3 SciPy skips; 16 backend tests pass separately in control environment", "Actual global/wrist MP4 browser decoding: readyState=4, 640x480, duration=14.733333s, advancing playback and nonblack frame pixels", "Synthetic JPEG80/default H264 versus JPEG95/CRF18: PSNR 24.92 to 26.26 dB; sample MP4 63790 to 80560 bytes", "Mock camera mode/JPEG quality and encoder argument regression tests", "git diff --check passed"], "limitations": ["Production workbench not restarted; changes take effect at next safe restart", "No live camera or robot test; requested stereo mode/fresh recording cadence and perceived sharpness need operator confirmation", "Isolated playback-only server omitted arm model/API routes; those 404s do not establish a production viewer failure", "Original recordings cannot recover detail lost during capture and were not modified"]}
+}

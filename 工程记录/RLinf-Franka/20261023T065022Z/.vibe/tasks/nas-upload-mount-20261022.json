@@ -1,0 +1,42 @@
+{
+  "id": "nas-upload-mount-20261022",
+  "title": "Mount project NAS and enable workbench HDF5 upload",
+  "goal": "Mount the project NAS NFS export at /mnt/nas on this workstation, then enable the existing Robot Capture HDF5 upload path to /mnt/nas/forge/franka/raw without changing capture, recording, or upload code semantics.",
+  "doneWhen": [
+    "nfs-common installed and /mnt/nas persistently mounts 192.168.10.35:/volume1/robo-data-warehouse",
+    "An absent NAS fails closed instead of being replaced by a local directory write",
+    "/mnt/nas/forge/franka/raw is writable by the workbench user and a probe file round-trips",
+    "config/workbench.yaml upload is enabled with transport=local, remote_raw_dir=/mnt/nas/forge/franka/raw, robot_name=franka-pico",
+    "Upload sink probe and offline upload tests pass; remaining unvalidated items are reported"
+  ],
+  "policy": "balanced",
+  "status": "blocked",
+  "phase": "implement",
+  "decisions": [
+    "Mount uses systemd automount + _netdev + nofail so boot never blocks and access to an absent NAS fails instead of writing into an empty local /mnt/nas",
+    "Soft NFS timeouts preferred over hard so the long-running workbench cannot wedge in uninterruptible IO; upload already verifies remote size after transfer and retries",
+    "Only workbench upload configuration changes; app/upload.py, sink_health.py, recorder and capture code stay untouched",
+    "Forge-side franka adapter support is out of scope for this task",
+    "NFS version order is vers=4.1 then 4 then 3; the NAS advertises NFS v4 only through rpcbind, so v4.2 was rejected as an incorrect mount option"
+  ],
+  "verification": {
+    "status": "blocked",
+    "summary": "Local preparation and fail-closed behaviour verified; the mount itself cannot succeed until the NAS export allow-list admits this client (192.168.10.158).",
+    "checks": [
+      "nfs-common 1:2.6.4-3ubuntu5.1 installed via setup_nas_mount.sh",
+      "192.168.10.35 reachable and serving NFS v3+v4 on tcp/2049; export /volume1/robo-data-warehouse allows only 192.168.10.33/.34/.36/.37",
+      "mount attempts vers=4.1 rejected (incorrect mount option), vers=4 and vers=3 fail with 'access denied by server'",
+      "/etc/fstab unchanged and /mnt/nas left empty so nothing can silently write to local disk",
+      "probe_sink with the new config fails closed: Permission denied on /mnt/nas/forge, upload refused",
+      "offline suite: 98 tests OK, 3 skipped"
+    ],
+    "limitations": [
+      "No real file has been transferred to the NAS yet; rsync/size-verification path unexercised on this rig",
+      "Workbench process was not restarted, so the running instance still has upload disabled",
+      "Robot Forge has no confirmed franka adapter; only raw HDF5 delivery is in scope here",
+      "This host takes 192.168.10.158 by DHCP, so an IP-based NAS allow-list entry is not stable across leases"
+    ]
+  },
+  "blocker": "NAS export /volume1/robo-data-warehouse on 192.168.10.35 only allows NFS clients 192.168.10.33/.34/.36/.37. This workstation is 192.168.10.158 (DHCP), so mount returns 'access denied by server'. A NAS administrator must add this client (or the 192.168.10.0/24 subnet) with read/write, then re-run scripts/setup_nas_mount.sh.",
+  "nextAction": "After NAS allow-list is updated: run `sudo bash scripts/setup_nas_mount.sh`, verify write access as embody, then restart the workbench to activate upload and check the UI upload status."
+}

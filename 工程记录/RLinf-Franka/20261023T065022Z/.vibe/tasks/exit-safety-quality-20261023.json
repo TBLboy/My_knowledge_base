@@ -1,0 +1,16 @@
+{
+  "id": "exit-safety-quality-20261023",
+  "title": "Investigate left arm sag on exit and test episode quality",
+  "goal": "Diagnose exit hazard without hardware operation; audit recorded test episodes and fix bounded control lifecycle defects.",
+  "doneWhen": ["Mode label fits", "Exit hazard traced with evidence and mitigation verified or blocker documented", "Actual episode checks reported"],
+  "policy": "balanced",
+  "status": "blocked",
+  "phase": "implement",
+  "decisions": ["Checkpoint f1ab23e committed prior UI fixes and operator reset poses", "Scope is control adaptation and necessary fixes only; capture/upload unchanged", "Operator reproduced left-only exit sag; dual stop order is not a necessary trigger", "Do not connect, recover, reproduce sag, change gains/limits or silently retain active controller", "Current bounded increment: per-IP shutdown phase logs, successful stop exits command server, lifecycle stop wait budget and surfaced stop errors; retain physical stopping algorithm"],
+  "verification": {
+    "status": "passed",
+    "summary": "124 app tests pass,3 skipped;19 control-env tests pass. Lifecycle/log fixes uncommitted after f1ab23e; deployed by operator-requested UI restart. Operator reproduced left-only sag:13:29:36.111–37.686 tracker stop,then recovery/disconnect/normal worker exit37.689;no logged fault. Operator reports sinking starts immediately on exit click. Root cause NOT resolved; user explicitly shelved investigation because Desk load information could not be found. Resume only on user request with left/right load/state comparison; no further unsafe repro.",
+    "checks": ["Dual episode125531:518 complete frames/side, all finite and HDF5 matches NPZ; telemetry repeats left2.9%,right9.1%", "Left episode131032:629 frames,left+global,left-only HDF5 matches NPZ; near-zero final recorded velocity before exit; no exit telemetry"],
+    "limitations": ["User paused investigation: cannot currently locate Desk end-effector mass/CoM/inertia settings", "Root cause unknown; zero stiffness does not disable internal gravity compensation; left/right difference unproven", "No synchronized exit pose telemetry or right-side matched stop logs; no proof lifecycle fixes prevent sag", "Control env lacks application dependencies; full suite uses .venv"]
+  }
+}

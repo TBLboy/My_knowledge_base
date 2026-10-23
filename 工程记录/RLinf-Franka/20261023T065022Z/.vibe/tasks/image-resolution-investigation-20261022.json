@@ -1,0 +1,13 @@
+{
+  "id": "image-resolution-investigation-20261022",
+  "title": "Investigate persistent blur after encoding improvements",
+  "goal": "Identify resolution and optical causes using actual recordings and official camera documentation before further capture changes.",
+  "doneWhen": ["Separate verified pipeline limitations from optical/exposure hypotheses", "Define a higher-resolution validation with camera negotiation and cadence checks"],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": ["Preserve previous uncommitted changes and recordings", "Do not start camera streams or restart production while operator hardware state is unknown"],
+  "verification": {"status": "passed", "summary": "Inspected actual post-change recording and official Stereolabs video-mode/exposure documentation; identified output resolution bottleneck.", "checks": ["Recording 111/20261022_125303 is 640x480 with about 358 active image rows and letterbox padding", "Current code requests VGA 1344x376 stereo at this output size, crops 672x376 eye and scales to roughly 640x358", "Official camera-controls table lists HD720 stereo 2560x720 at 30fps for ZED 2i and Mini", "Official exposure guidance states long automatic exposure increases motion blur"], "limitations": ["Actual negotiated camera modes were not measured; setter calls alone do not prove mode selection", "Optical focus, exposure and shared-USB bandwidth not measured", "Production services were not stopped or modified"]},
+  "blocker": "",
+  "nextAction": "HD720 implemented and verified: both cameras negotiate 2560x720 stereo at 30fps; warmed 12s concurrent JPEG95/CRF18 capture writes 360 frames per camera (~30.01/30.00fps). 97 tests: 94 passed/3 SciPy skips, all 16 backend tests passed separately in control env. UI restarted /record HTTP200. Operator new-recording sharpness and full control/capture acceptance remain; no exposure settings changed. Source: https://www.stereolabs.com/docs/video/camera-controls"
+}

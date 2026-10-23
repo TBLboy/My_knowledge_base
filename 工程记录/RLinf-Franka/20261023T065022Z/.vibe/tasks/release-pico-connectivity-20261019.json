@@ -1,0 +1,25 @@
+{
+  "id": "release-pico-connectivity-20261019",
+  "title": "Diagnose Release Pico app connectivity",
+  "goal": "Read-only diagnose why the Pico application cannot connect during a Release launcher session, without controlling robot hardware or changing network/service configuration.",
+  "doneWhen": [
+    "Relevant Release session, PC Service, and publisher process state and logs are inspected.",
+    "The PC Service listening state and the advertised hotspot-network address are checked.",
+    "The observed failure is reported with a safe next action or a clearly stated blocker."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "This diagnosis is read-only: do not restart services, change network configuration, or initiate any robot control."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Read-only inspection confirmed the PC Service listening on 63901, the correct host hotspot address as 192.168.50.84, and a prior successful SDK publisher connection; the user confirmed connectivity works.",
+    "checks": [
+      "Read-only process, socket, address, route, and launcher-log inspection completed",
+      "Pico connectivity was confirmed by the user after the diagnosis"
+    ],
+    "limitations": []
+  }
+}

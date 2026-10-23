@@ -1,0 +1,31 @@
+{
+  "id": "release-resources-inventory-20261019",
+  "title": "Inventory distributable Pico resources",
+  "goal": "Determine the installation source, version, license/distribution status, and suitable Release/resources packaging strategy for the XRoboToolkit PC Service, xrobotoolkit_sdk binding, and Pico APK without modifying their installation or starting hardware.",
+  "doneWhen": [
+    "Each of the three resources has a source/location and installation mechanism documented from local evidence or primary upstream documentation.",
+    "Each resource has a recommended Release/resources treatment that distinguishes redistributable files from external/vendor-installed components.",
+    "Any license, missing artifact, or provenance uncertainty is stated explicitly."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "This task is inventory and recommendation only; it will not copy binaries, APKs, SDKs, or modify active installations without later approval.",
+    "System and hardware dependencies are out of scope per the user; only PC Service, SDK binding, and Pico APK are assessed."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Local artifacts, installed binary identities, SDK build provenance, and primary-source installation references were inventoried without modifying any vendor installation.",
+    "checks": [
+      "PC Service Debian metadata and content layout inspected",
+      "Pico APK and PC Service SHA-256 values recorded",
+      "Installed xrobotoolkit_sdk version, binary dependency, and Pybind source commit inspected",
+      "Existing setup scripts and primary repository search results checked"
+    ],
+    "limitations": [
+      "No license or redistribution notice was found inside the local PC Service Debian package or APK.",
+      "The downloaded vendor binary artifacts must not be redistributed externally until their vendor terms are confirmed."
+    ]
+  }
+}

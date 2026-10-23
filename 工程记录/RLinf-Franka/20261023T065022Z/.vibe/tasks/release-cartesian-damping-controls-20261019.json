@@ -1,0 +1,33 @@
+{
+  "id": "release-cartesian-damping-controls-20261019",
+  "title": "Expose independent Cartesian damping controls",
+  "goal": "Make Release Franky Cartesian translational and rotational damping explicit, independently configurable, passed to the Franky 2.x tracker, documented, and covered by focused no-hardware tests.",
+  "doneWhen": [
+    "Cartesian compliance accepts optional translational_damping and rotational_damping values with clear backward-compatible behavior.",
+    "Franky passes an explicit six-axis damping vector whenever either damping value is configured, using critical damping only for omitted axes.",
+    "The Release Franka/Pico configuration declares all four Cartesian impedance fields: translational stiffness/damping and rotational stiffness/damping.",
+    "Focused tests prove damping-vector construction and configuration parsing; no hardware is started."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "A missing damping value retains critical damping for that axis rather than silently becoming zero.",
+    "The Release configuration explicitly provides both translational and rotational damping so all four requested parameters are visible and effective.",
+    "This changes controller behavior and requires a new operator-led unloaded, small-range hardware validation before any stability claim."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commit 0990ae9 makes both Cartesian damping components independently configurable and declares all four Cartesian impedance fields in the Release configuration.",
+    "checks": [
+      "Focused Franky damping/compliance tests: 15 passed",
+      "Release compatibility tests: 5 passed",
+      "Configuration parse verified translational stiffness/damping and rotational stiffness/damping",
+      "Python compilation and shell syntax checks passed"
+    ],
+    "limitations": [
+      "No hardware was exercised after changing the explicit translational damping path.",
+      "The configured translational damping retains the prior critical value (2*sqrt(1200)); changing it later is a new safety-sensitive control experiment requiring operator authorization and revalidation."
+    ]
+  }
+}

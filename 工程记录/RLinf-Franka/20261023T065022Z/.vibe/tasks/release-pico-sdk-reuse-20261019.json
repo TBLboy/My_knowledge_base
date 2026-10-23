@@ -1,0 +1,33 @@
+{
+  "id": "release-pico-sdk-reuse-20261019",
+  "title": "Restore the verified Pico SDK environment in Release",
+  "goal": "Replace the erroneous empty Release Pico bridge environment with the already verified vendor SDK environment used by the pre-Release collection workflow, without starting hardware.",
+  "doneWhen": [
+    "Release launcher resolves its Pico Python interpreter to the existing verified vendor SDK environment.",
+    "The selected interpreter imports xrobotoolkit_sdk and the Release Pico bridge module.",
+    "Release documentation describes the verified external SDK environment accurately and does not claim that a new generic uv environment contains the vendor SDK.",
+    "No hardware, PC Service, Pico publisher, Ray cluster, camera, gripper, or robot session is started."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The previous task's separate pico_bridge/.venv was an incorrect environment boundary because it lacked the existing verified vendor SDK.",
+    "Release will reuse the verified Pico SDK environment until the vendor SDK has a reproducible, licensed installation artifact that can be managed directly by Release."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release now defaults to the pre-Release verified XRoboToolkit SDK environment and imported the Release Pico bridge successfully without starting hardware.",
+    "checks": [
+      "Verified existing XRoboToolkit environment imports xrobotoolkit_sdk, zmq, numpy, and yaml",
+      "Verified vendor SDK interpreter imports the Release vr_data_publisher module",
+      "Release compatibility tests: 5 passed",
+      "Launcher shell syntax and verified SDK default path checks passed",
+      "No publisher, PC Service, Ray cluster, camera, gripper, or robot process was started"
+    ],
+    "limitations": [
+      "The vendor SDK environment remains external at ../pico_software/XRoboToolkit-Teleop-Sample-Python/.venv; use RLINF_PICO_SDK_VENV to select a verified compatible replacement on another host.",
+      "No hardware or end-to-end collection run was exercised."
+    ]
+  }
+}

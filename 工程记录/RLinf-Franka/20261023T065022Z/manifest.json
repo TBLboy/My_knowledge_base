@@ -1,0 +1,199 @@
+{
+  "format": "vibe-v2-project-archive-1",
+  "created_at": "2026-10-23T06:50:22.196764+00:00",
+  "source": "/home/embody/Project/robot_capture_franka",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "e83ce801afc584004b95a6caf5036c501f556b8b5330c1e6402a6ae0c1320db1"
+    },
+    {
+      "path": ".vibe/README.md",
+      "sha256": "e5bec85f641261924852dd40e3abc0540a711e7ebd343599b064a196f078c662"
+    },
+    {
+      "path": ".vibe/docs/franka-ubuntu24-env-setup.md",
+      "sha256": "c74156f8488c8482c33c0f5558ae84690b1fbdcae19900f9b38416696c2a59e1"
+    },
+    {
+      "path": ".vibe/docs/ik-benchmark-analysis-20261019.md",
+      "sha256": "29909f9978157aedca6f86f3a48f4f09563b6e4bb636ebe749c68d1b188d9eee"
+    },
+    {
+      "path": ".vibe/docs/inhouse-hdf5-business-clarification.md",
+      "sha256": "4a5d6acaba0252d463dc64c849676b581c190c6c37807fa9b5cf2f42ee94ddb7"
+    },
+    {
+      "path": ".vibe/docs/inhouse-hdf5-v1-source.md",
+      "sha256": "1110112214965aa2b0b759a78457cb3063177a4213536aeb7c76308850c8e5a5"
+    },
+    {
+      "path": ".vibe/progress.md",
+      "sha256": "9cd101da1126dbfc111f62c1d0ab22c5717cea1c8a1f6c9feeb20a85b5510a4b"
+    },
+    {
+      "path": ".vibe/requirements.md",
+      "sha256": "ae5b16154c9d7c0274fee7d7aa8945986c3ed229e412484101cc5b98a2eac2cf"
+    },
+    {
+      "path": ".vibe/sessions/ses_e9db92430ffdULnvHUDqUmN7qO/current-session.md",
+      "sha256": "63d1c4ab170a07fe0173d5d3b543b7d0129c2f37c5ce4b3603951d47a2cc4288"
+    },
+    {
+      "path": ".vibe/sessions/ses_e9ec2a6a0ffeWdQ3WV5PerjkQr/current-session.md",
+      "sha256": "06539324805792b53c0595eb8e7afbd38e13dbe9505a5feaf62ed08bfe00e268"
+    },
+    {
+      "path": ".vibe/sessions/ses_ea38f9c28ffeMk5bIS7Xg7vgLf/current-session.md",
+      "sha256": "71c6b20060158eb262efbeb27d65ffa630b5c5fcec40bfa1664ace5701d830b1"
+    },
+    {
+      "path": ".vibe/sessions/ses_ea7b16e0bffdA55RxIgdSIsNke/current-session.md",
+      "sha256": "9396c0ef0564cb9562e7915a12963d2da8903b48dac7ab8af6a3601b809819f1"
+    },
+    {
+      "path": ".vibe/sessions/ses_ea7b99329ffdY2G37142yq7VVo/current-session.md",
+      "sha256": "78c71f271616539b8aae01d0076804909ff00de010cc2b9daeec2730f56ccd52"
+    },
+    {
+      "path": ".vibe/sessions/ses_eac231e9effd7dZxbKLA7uE38Q/current-session.md",
+      "sha256": "beeb29f8e7911c5cbde4aad0d121b26848c3b462cdfc10201a9d32145e81e672"
+    },
+    {
+      "path": ".vibe/sessions/ses_eae1bcdd7ffe1XUEpQIUjMJhMM/current-session.md",
+      "sha256": "f7d8e582bec25ab14a103e39aa1231734175d50ad09039fb2f5dbcb3117f8bbb"
+    },
+    {
+      "path": ".vibe/tasks/cartesian-rotational-damping-20261019.json",
+      "sha256": "02ccfea4e7b7bd176f9013f012cfac6bc80fdd507a52abec44ddc599129d3b63"
+    },
+    {
+      "path": ".vibe/tasks/dagger-feature-comparison-20261023.json",
+      "sha256": "8005479cd41647389f2255f97b102474f9beb1f47995e69b70db14c19b5d30e3"
+    },
+    {
+      "path": ".vibe/tasks/data-upload-enable-20261021.json",
+      "sha256": "1e926a257a80da1a83ce97057eb7e1e49aeb9daaf045a45feee2ca31731f7e77"
+    },
+    {
+      "path": ".vibe/tasks/dual-arm-workbench-20261023.json",
+      "sha256": "4bef96c79c30d4df5d7af5ecc1a26aa7ff78669ee95637d7d433bc2f9e90333e"
+    },
+    {
+      "path": ".vibe/tasks/exit-safety-quality-20261023.json",
+      "sha256": "0d631781960bb744687772c3f38195a53dfa983fd179cbb2aa050c08c7adca38"
+    },
+    {
+      "path": ".vibe/tasks/fixed-arm-viewports-20261023.json",
+      "sha256": "428906caea0b8677d24388eb082c71449d329fbdbac545a1e2f37d3f578e3c43"
+    },
+    {
+      "path": ".vibe/tasks/franka-robot-capture-integration-20261019.json",
+      "sha256": "e6ab6638ef19163f51bffc3241112d10ab0d800909b847c68d7926443126bb45"
+    },
+    {
+      "path": ".vibe/tasks/franka-workbench-polish-20261021.json",
+      "sha256": "723c61809dee709dfe8868c340623ffbeed340b3a76134a2437b4cc8ccdeaf21"
+    },
+    {
+      "path": ".vibe/tasks/ik-benchmark-20261019.json",
+      "sha256": "dfc5ac113373025324b71b5ec20d7c0c97b2b5ffe2b98c90615c812ba51b7e9a"
+    },
+    {
+      "path": ".vibe/tasks/image-resolution-investigation-20261022.json",
+      "sha256": "af48e826a44baf866e3795ef8a58f4a45257c8dea24a1a3aca96aca871bd3cbf"
+    },
+    {
+      "path": ".vibe/tasks/nas-upload-mount-20261022.json",
+      "sha256": "c5c55a6946e21d37f8c79244db515f4658c690a0a92942a8ec79fba3266a63fd"
+    },
+    {
+      "path": ".vibe/tasks/pico-ui-controls-map-20261021.json",
+      "sha256": "b8a605ed7644722a8ec083b784b34d0619951af2e3aca477aa5a0fb46aadbab5"
+    },
+    {
+      "path": ".vibe/tasks/pinocchio-dispatch-replay-20261019.json",
+      "sha256": "7ee121c2c4663fa78e0f894a027f288c8a54ceb004cef8de9638ad8b1fb03652"
+    },
+    {
+      "path": ".vibe/tasks/pinocchio-joint-ik-formal-integration-20261019.json",
+      "sha256": "400e2f0e76813c79e24fc0f2683e3f1de4f1b74792373487dd8234731e2406ab"
+    },
+    {
+      "path": ".vibe/tasks/pinocchio-py311-isolated-runtime-20261019.json",
+      "sha256": "1ffef8d51544888b520710029c6630c06dbf8dff13174644fb0f0854a9df7de7"
+    },
+    {
+      "path": ".vibe/tasks/playback-image-quality-20261022.json",
+      "sha256": "aa705a5d8375d116ab802c501fa210dc93d3978150cba603cb7bbdc9983f87de"
+    },
+    {
+      "path": ".vibe/tasks/release-bootstrap-20261019.json",
+      "sha256": "cf0b6e0844b8b33065591f5ea95f09e3cb2048331c0f8652d41346c8657add49"
+    },
+    {
+      "path": ".vibe/tasks/release-camera-30hz-20261020.json",
+      "sha256": "88de5a035e9aea893d10a2ac9fd847dab5bba95dedbdb8d60264cac09b777983"
+    },
+    {
+      "path": ".vibe/tasks/release-cartesian-damping-controls-20261019.json",
+      "sha256": "09d9e75b4d02cabf9b5ee0fe02606a5cbb5fd70c0875000b9af13121c4327821"
+    },
+    {
+      "path": ".vibe/tasks/release-control-rate-30hz-20261020.json",
+      "sha256": "45ba47aff71d9a120cf609e29af0487c6051fda816f695e2a78b8238be59147d"
+    },
+    {
+      "path": ".vibe/tasks/release-environment-20261019.json",
+      "sha256": "65d808014aa42e25d753749efd0ac55df2499ffda718467848fd88c7f5a4cdac"
+    },
+    {
+      "path": ".vibe/tasks/release-franky-damping-20261019.json",
+      "sha256": "7c652ea3401543aab530aafad6257d97121e1562255672b292b1716c28b195c6"
+    },
+    {
+      "path": ".vibe/tasks/release-joint-state-collection-20261020.json",
+      "sha256": "f34efc0ec3540110c0f5c5b5371dd8e1647f6cace609b6ffc6b88adad7f513ce"
+    },
+    {
+      "path": ".vibe/tasks/release-pico-connectivity-20261019.json",
+      "sha256": "31f9b69bc21e0a8d036a463bd0dafb7bc6139e407c6f32ff557bf8a82ec55296"
+    },
+    {
+      "path": ".vibe/tasks/release-pico-sdk-reuse-20261019.json",
+      "sha256": "1fab7882be8008841ad67a19c36c58a491320589db7753762ccbfbe9ec0b7be6"
+    },
+    {
+      "path": ".vibe/tasks/release-push-history-repair-20261019.json",
+      "sha256": "3e98157b87b123bbbaf792f3a13ad3824c980d5e3f5cdbfc8ead8b781ded74f1"
+    },
+    {
+      "path": ".vibe/tasks/release-record-start-reliability-20261020.json",
+      "sha256": "3eb4c58865017fe721587a2f64ad3b99c13b6776550a99c39780e42de8fe1756"
+    },
+    {
+      "path": ".vibe/tasks/release-reset-gripper-signal-20261020.json",
+      "sha256": "07cc156b4ce00903b235251ce20fa48035a655f608e5cac6c427bcadf0202110"
+    },
+    {
+      "path": ".vibe/tasks/release-resource-archive-20261019.json",
+      "sha256": "15b8b661f609352d7710bb59fb1f80161c1b0eeac3285409c9c1175fba79268b"
+    },
+    {
+      "path": ".vibe/tasks/release-resources-inventory-20261019.json",
+      "sha256": "7b7f4ca164032ea3ba4265c66ab226f8ca12b24ff6fd54461ff956bd9398597e"
+    },
+    {
+      "path": ".vibe/tasks/release-timestamp-alignment-20261020.json",
+      "sha256": "f135e4ec8044612d5ecd85691abaf45354b97defd1dd3222e9fcc395968ed008"
+    },
+    {
+      "path": ".vibe/tasks/release-upstream-governance-20261019.json",
+      "sha256": "c0f7a513ef8c23ea7da5fae9979b2826199f59cde0a465938bbd211843afeca7"
+    },
+    {
+      "path": ".vibe/tasks/release-vr-controls-20261020.json",
+      "sha256": "fe71261b7fd3f15e15be2b711ecc5cf55dc052d9456515267247247a5a34da2e"
+    }
+  ]
+}

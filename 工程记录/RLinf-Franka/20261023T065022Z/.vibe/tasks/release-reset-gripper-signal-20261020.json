@@ -1,0 +1,34 @@
+{
+  "id": "release-reset-gripper-signal-20261020",
+  "title": "Signal reset completion with Robotiq",
+  "goal": "For every single-arm Release reset, close the Robotiq before arm reset and open it afterward, using the completed open action as the operator-visible reset-complete signal.",
+  "doneWhen": [
+    "All Release reset paths invoked by Y and A+X use close → reset_ee_pose → open.",
+    "The close/open commands use the existing Robotiq interface and wait for each commanded state before advancing.",
+    "Focused no-hardware tests cover the command order.",
+    "Operator documentation states that reset releases any held object."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Every reset, including successful Y completion and A+X discard/reset, closes the gripper before arm motion and opens it after arm motion.",
+    "Opening completion is the operator-visible signal that reset is complete and new inputs may be issued.",
+    "The reset sequence intentionally releases any held object; it is only appropriate when the workspace permits release."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commits 53f57d4 and cfe858d add the configured close → one arm reset trajectory → open sequence, excluding initial startup positioning and removing convergence/open-width waits.",
+    "checks": [
+      "Focused Franka/Pico tests: 4 passed",
+      "Release compatibility tests: 7 passed",
+      "Hydra YAML parse confirmed reset_gripper_signal=true without a reset open-timeout gate",
+      "Python compilation and Git diff whitespace checks passed"
+    ],
+    "limitations": [
+      "No post-change hardware test has run.",
+      "Every post-startup reset deliberately releases any held object.",
+      "No hardware validation has run for the faster reset sequence or immediate record-start edge."
+    ]
+  }
+}

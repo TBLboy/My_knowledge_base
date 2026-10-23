@@ -1,0 +1,41 @@
+{
+  "id": "release-vr-controls-20261020",
+  "title": "Align single-arm VR collection controls",
+  "goal": "Implement the approved single-arm Pico VR enable, recording, result, and reset controls in the tracked Release repository without hardware operation.",
+  "doneWhen": [
+    "The implementation begins from the existing tracked Release baseline, with no replacement baseline commit required.",
+    "The approved VR control-state and button rules are persisted in the Release documentation.",
+    "VR controls implement right-menu enable/pause, left-stick recording start, Y success, X discard, and A+X reset with the approved timing and safety semantics.",
+    "Focused no-hardware tests cover the control-state transitions and existing tests remain applicable."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Use right_menu_button: release after a hold of at least 1.0 second enables VR; a shorter release pauses and locks it.",
+    "Use left_axis_click to start one recording while VR is enabled and no recording or reset is active.",
+    "Use Y to save a recording and X to discard it; neither has an effect when no recording is active.",
+    "Recognize A+X within a 100–200 ms window after 30–50 ms edge debounce. It discards an active recording and starts the configured reset without requiring VR pause.",
+    "During reset, VR movement and recording inputs are ignored; afterward VR remains enabled but grip must be released and pressed again before movement.",
+    "A/B remain inert placeholders for future DAgger; right trigger remains continuous Robotiq control and right stick click remains manual calibration."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commits 7f77c14, b7d066f, 9ae54cf, and e2f7d82 implement the approved Pico VR controls, camera preflight, short-edge latching, and reset-time edge clearing.",
+    "checks": [
+      "Pico transport-focused unit tests: 8 passed after edge latching",
+      "Pico collection boundary unit test: 1 passed",
+      "Release compatibility tests: 6 passed",
+      "Hydra YAML parse asserted the Pico control mode and right-menu timing",
+      "Python compilation, shell syntax, and Git diff whitespace checks passed",
+      "Operator launch reached Franky and Robotiq connection, then failed opening the missing configured ZED-M UVC node; cleanup completed",
+      "Updated --check preflight detected the missing ZED-M node and stopped before starting any service or connecting Franka",
+      "Operator subsequently verified basic default-enabled Pico teleoperation and saved two successful test trajectories"
+    ],
+    "limitations": [
+      "The menu-button input path remains unverified because the observed Pico stream did not report controller button/grip state during its diagnostic probe; start_enabled is a temporary diagnostic bypass.",
+      "The edge-latching behavior requires operator verification in the next live session."
+    ]
+  },
+  "nextAction": "Completed; local tag backup/vr-controls-20261020 preserves the tested state before the separate control-rate experiment."
+}
