@@ -1,0 +1,45 @@
+{
+  "id": "franka-data-to-cluster-20261026",
+  "title": "Deliver franka recordings to the Cybertron training cluster",
+  "goal": "Establish a workable path from local Franka recordings (HDF5 in recordings/) to a Cybertron cluster filesystem in the LeRobot format the training side consumes, and document the upstream/downstream steps for post-training.",
+  "doneWhen": [
+    "The ingress mechanism (how a normal machine writes into a cluster filesystem) is confirmed by the platform owner, not guessed",
+    "Target cluster, filesystem, path, and LeRobot format version/fields are confirmed",
+    "A converted LeRobot dataset from real Franka recordings exists and is visible in the cluster path",
+    "A training job can read that dataset path (job submitted or dataset accepted by training owner)"
+  ],
+  "policy": "balanced",
+  "status": "blocked",
+  "phase": "prepare",
+  "decisions": [
+    "cctl v0.0.22 installed at ~/.local/bin and logged in as taobailin (token expiry 2026-11-25) for read-only cluster inspection",
+    "Robot Forge is reachable at http://192.168.10.33:7000 (robo-data-forge 0.1.0) and serves its console without login on the LAN; it is the real middle stage of the documented pipeline",
+    "Forge's own franka device expects MCAP layout (episode_0000/metadata.json + rosbag/rosbag_0.mcap), not our HDF5, so the recorded data cannot be ingested as a franka dataset as-is",
+    "Forge exposes a lerobot_v3 device type that ingests an existing LeRobot v3 directory without conversion; converting locally and registering as lerobot_v3 is the viable route",
+    "Do not guess the Mac-relay mechanism; current evidence indicates manual transfer is a workaround for two broken automated stages, not a designed path",
+    "Upload target path should follow the observed convention <filesystem>/user/<user>/datasets/<name>"
+  ],
+  "verification": {
+    "status": "blocked",
+    "summary": "Forge pipeline and both of its exits were verified read-only: OBS upload is rejected by a disabled access key, and the training-cluster stage fails because cctl is missing on the Forge host. Franka data is not scanned by Forge at all.",
+    "checks": [
+      "cctl login via browser session succeeded; token verified",
+      "Forge openapi (82 endpoints) read: pipeline run, exports, uploads, clusters/{cluster}/sync, file-task status, lerobot dataset APIs, devices, imports",
+      "Forge /devices: 10 device types; franka exists with 0 datasets; a lerobot_v3 directory device type also exists",
+      "Forge /datasets: 44 datasets, robots piper1/piper2/piper3/arx5 only; no franka dataset",
+      "Forge /overview/task-matrix robots list excludes franka, so /mnt/nas/forge/franka/raw is not scanned",
+      "Forge /uploads: 31 upload jobs, 19 huawei_obs succeeded earlier, 12 failed with 'HTTP 403 InvalidAccessKeyId The user holding this access key has been disabled'",
+      "Forge /uploads training_cluster stage: 1 attempt only, failed with \"No such file or directory: 'cctl'\"",
+      "Forge /cloud page states the OBS credential is unconfigured or expired",
+      "Cybertron web console offers no file upload; frontend file-system API is GET plus download only"
+    ],
+    "limitations": [
+      "Mac-relay mechanism still unconfirmed; the user's Mac has no transfer client, credential, mount, or relevant shell history",
+      "Training framework and required LeRobot version/fields (v3.0 vs v21) unconfirmed; both appear in platform usage",
+      "Forge requires a LeRobot v3 dataset or an MCAP capture; neither exists for franka yet",
+      "paratera_train reports 110% usage; quota on the target filesystem must be confirmed before a large transfer"
+    ]
+  },
+  "blocker": "Both automated exits from Robot Forge are currently broken: OBS upload is rejected because the access key is disabled (403 InvalidAccessKeyId), and the training_cluster stage fails because cctl is not installed on the Forge host (192.168.10.33). In addition Forge does not scan the franka raw directory, so the recorded HDF5 data is invisible to the pipeline until it is converted to LeRobot v3 (lerobot_v3 device) or to the MCAP layout the franka device expects.",
+  "nextAction": "Decide between (a) asking the Forge owner to restore the OBS access key and install cctl so the existing pipeline works again, and (b) converting the local HDF5 to LeRobot v3 and registering it through the lerobot_v3 device. Ask the training owner for the required LeRobot version and fields."
+}

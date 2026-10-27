@@ -1,0 +1,29 @@
+{
+  "id": "data-upload-enable-20261021",
+  "title": "Enable Franka workbench HDF5 upload",
+  "goal": "Safely enable the upload capability for the data_uplload worktree after confirming a valid writable upload destination.",
+  "doneWhen": [
+    "The active configuration enables uploads without allowing writes to an unintended local fallback directory.",
+    "The configured upload destination has been verified reachable and writable using the application's sink probe."
+  ],
+  "policy": "balanced",
+  "status": "blocked",
+  "phase": "prepare",
+  "decisions": [
+    "Do not set upload.enabled=true while /mnt/nas is absent: the local transport probe and uploader create the configured path, which could silently write to the host filesystem instead of NAS storage."
+  ],
+  "verification": {
+    "status": "blocked",
+    "summary": "Upload code and active configuration were inspected; the configured local NAS destination is not mounted or present.",
+    "checks": [
+      "config.yaml: upload.enabled is false; destination is /mnt/nas/forge/franka/raw with local transport",
+      "mountpoint -q /mnt/nas: failed",
+      "find /mnt/nas/forge/franka/raw: path does not exist"
+    ],
+    "limitations": [
+      "NAS mount or an approved SSH upload endpoint has not been provided."
+    ]
+  },
+  "blocker": "No verified writable upload sink is available at the configured destination.",
+  "nextAction": "Provide or mount the intended NAS destination, or provide SSH host/key/path details; then enable upload and run the application sink probe."
+}

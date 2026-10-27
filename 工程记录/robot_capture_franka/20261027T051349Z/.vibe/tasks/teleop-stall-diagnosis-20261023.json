@@ -1,0 +1,55 @@
+{
+  "id": "teleop-stall-diagnosis-20261023",
+  "title": "Diagnose delayed teleoperation catch-up",
+  "goal": "Trace input/control/Franky timing without hardware operations; add bounded passive diagnostics, not control tuning.",
+  "doneWhen": [
+    "Stall and stale-command paths inspected",
+    "Bounded diagnostics tested offline",
+    "Findings and deployment limits reported"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "User stopped teleoperation but worker/publisher still running; do not disconnect or restart",
+    "Keep left sag investigation paused",
+    "No changes to gains, stop/recovery algorithm or movement limits",
+    "Preserve uncommitted recording/shutdown changes and rig config",
+    "Bounded128-row timing ring in backend; coordinator logs newly observed >=100ms loop/gap records outside control thread",
+    "2026-10-26 read-only archived-data audit (no robot/service action): 115 target-freeze events in 81 of 237 episodes; composed TCP target bit-identical for 3-8 control ticks (p50 167ms,p90 233ms,max 269ms) then a single-tick jump of 1-7.6cm; arm peak speed after jump median 3.2x pre-stall (max 0.77m/s)",
+    "114/115 freezes had camera frame_time still advancing at 33ms and no worker sample gap >90ms inside the freeze, so host/recorder/camera/control loop were healthy; the frozen data is the Pico reading, upstream of the worker and libfranka",
+    "Dual-arm episode 20261024_112629: both hands' targets froze on the same ticks while both were moving, indicating a shared upstream stage rather than per-controller tracking loss",
+    "Frequency by recorded episode: 2026-10-22 2/103, 10-23 10/32, 10-25 69/101 (all 30Hz); 1-2 freezes/min while recording on 10-25",
+    "Pico is on Wi-Fi 192.168.7.135/22 (5GHz Wi-Fi6, RSSI -43dBm, 286Mbps); PC has no wireless NIC; 30Hz ping to Pico measured 1.9% loss, RTT p50 12ms/p90 47ms/p95 59ms/max 424ms",
+    "Stage not yet attributed among Wi-Fi/PC Service, SDK+publisher loop, or ZMQ/worker. Existing timing log only fires when loop/work>=100ms, so these input freezes were never logged",
+    "Prepared passive probe /tmp/opencode/pico_probe.py (sdk and subscribe modes) for a no-robot staged measurement; requires operator approval before starting PC Service/publisher or touching the headset app",
+    "2026-10-26 zero-robot live bisection (Pico+PC Service+SDK only, no worker/publisher/robot): 120s SDK probe at 80Hz had period p99 12.6ms and call max 1.09ms; nevertheless 15-18 whole-frame freezes >=120ms occurred (125/150/213/225/238/250/263/275/287/288/300/325/337/338/488ms), with left controller, right controller and headset pose all bit-identical during each freeze",
+    "Pico sender TCP counters over a separate 120s window: RetransSegs +463 / OutSegs +10194 (4.5%), TCPTimeouts +19, TCPFastRetrans +442, TCPSackRecovery +372, TCPLostRetransmit +39; PC-side socket rcv_ooopack +965 over +10094 segments (9.6%) with rto:229ms and rtt 28.7ms",
+    "The 19 TCP RTOs per 120s and the 15-18 frame stalls per 120s match at the same rate (~9/min); 229ms RTO and the observed 225-250ms/488ms stall modes are consistent with TCP head-of-line blocking during loss/reordering recovery",
+    "30Hz ping showed 1.9-9% loss and RTT p90 47-59ms/max 127-424ms, but per-stall ping loss was not above the random-window baseline, so ICMP loss is a weak predictor; the TCP retransmission/RTO evidence is the reliable signal",
+    "Pico Wi-Fi: 5GHz Wi-Fi6, RSSI -38..-43dBm, 286Mbps, single BSSID, no roaming observed; PC has no wireless NIC and Pico (192.168.7.135/22) is on a different subnet from PC (192.168.10.38/24), so the stream is routed through the gateway",
+    "Root cause (transport side): Pico->PC Service stream loses/reorders 5-10% of TCP segments, causing ~19 RTO/HOL stalls per 2 minutes; each stall freezes the whole pose frame, the worker keeps issuing the last target (freshness uses host arrival time), then jumps up to 7.6cm and the arm catches up at up to 3x normal speed",
+    "Mitigation not implemented/verified: no gain, max_step, stop-policy or network changes made; operator/environment fix or a software discontinuity guard requires separate approval",
+    "2026-10-26 operator confirmed in real teleoperation after switching the headset client to 127.0.0.1 over adb reverse: stutter disappeared and teleoperation is now smooth; this matches the A/B probe (USB 79.5-79.6 vendor updates/s with 1 startup-only freeze vs Wi-Fi 60.9/s with 18 freezes >=120ms per 120s)"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Diagnosis completed and fix validated by operator in live teleoperation: stall was Pico->PC Service TCP loss/reordering causing RTO head-of-line blocking; routing the stream over adb reverse/USB removed it. No product code changed.",
+    "checks": [
+      "SDK probe 80Hz/120s: loop healthy, 15-18 whole-frame freezes >=120ms, all poses+timestamp frozen together",
+      "Pico /proc/net/snmp + /proc/net/netstat deltas over 120s: RetransSegs +463, OutSegs +10194, TCPTimeouts +19, TCPFastRetrans +442",
+      "PC socket ss -ti: rto 229ms, rtt 28.7/14.3ms, rcv_ooopack +965/10094 segments",
+      "Camera frame_time continued at 33ms through 114/115 archived freezes; worker sample gaps <=45ms in 105/115",
+      "Recorded target freezes: 115 events, p50 167ms, jump p50 1.6cm/max 7.6cm, post-jump speed median 3.2x",
+      "Operator live confirmation: ADB/127.0.0.1 teleoperation smooth; Wi-Fi path stuttered"
+    ],
+    "limitations": [
+      "No packet capture (tcpdump needs privileges); loss vs pure reordering on the Wi-Fi/routed path is not separated",
+      "Pico counters are system-wide, though the pose stream dominates its TCP traffic",
+      "The 19 RTOs and 18 stalls were measured in separate 120s windows, so per-event 1:1 correlation is not proven, only matching rates",
+      "Network/environment fix and any software discontinuity guard remain unimplemented and unverified; no robot motion validation performed",
+      "PC Service started manually for the test and left running at end of session",
+      "ADB transport is not yet integrated into workbench startup; adb reverse is volatile, there is no Wi-Fi fallback, and input-discontinuity protection is still unimplemented"
+    ]
+  }
+}

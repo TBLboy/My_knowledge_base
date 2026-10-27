@@ -1,0 +1,37 @@
+{
+  "id": "pinocchio-dispatch-replay-20261019",
+  "title": "离线接入Pinocchio单步IK回放",
+  "goal": "将Pinocchio单步differential IK接入隔离TeleopDispatch接口，验证连续目标回放和关节参考生成，不连接硬件。",
+  "doneWhen": [
+    "Pinocchio solver实现与现有ContinuousIK兼容的solve/snapshot/reset语义",
+    "隔离TeleopDispatch测试覆盖连续回放、有限解、关节速度和失败不重发",
+    "使用FR3 URDF和A-E目标完成离线回放并记录耗时与残差",
+    "不修改官方RLinf、不安装官方环境依赖、不执行硬件"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Pinocchio只做单步differential IK，不追求每帧完整位姿收敛。",
+    "隔离solver输出有限q候选即可发布；残差保留为telemetry。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Pinocchio单步solver已接入隔离TeleopDispatch并完成单元、回归及A-E连续回放。",
+    "checks": [
+      "Pinocchio solver与FR3 URDF link8/TCP工具变换加载成功",
+      "solver单步q输出有限且单步变化不超过0.08rad",
+      "TeleopDispatch joint发送、grip保留、reset语义测试通过",
+      "现有isolated teleop相关16项测试通过",
+      "A-E循环600个目标全部accepted",
+      "A-E回放延迟mean/p95/p99 = 0.146/0.202/0.316 ms",
+      "A-E回放最大dq step = 0.020 rad",
+      "A-E回放脚本和solver py_compile通过"
+    ],
+    "limitations": [
+      "未连接硬件、Ray、Pico、相机或官方RLinf运行时",
+      "单步differential IK保留约19.3mm P95位置残差和0.0146rad P95姿态残差；这是连续性/速度优先策略，不是精确收敛证明",
+      "未验证RPC端到端周期，也未验证真机跟踪手感"
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "release-timestamp-alignment-20261020",
+  "title": "Add raw sensor timestamps and strict LeRobot alignment",
+  "goal": "Persist complete raw Pico/robot/camera/action timing in PKL and align only during PKL-to-LeRobot conversion on a strict 30 Hz grid for post-training data.",
+  "doneWhen": [
+    "The approved timestamp and conversion rules are documented in Release requirements and operations documentation.",
+    "Raw PKL observations retain sensor data and independent timestamps without destructive alignment.",
+    "The converter builds a 30 Hz virtual grid and uses nearest samples with per-stream half-period tolerance.",
+    "Any missing required stream at any grid point fails conversion with an explicit diagnostic and leaves PKL untouched.",
+    "LeRobot output contains only training fields, not Pico controls or diagnostic timestamps.",
+    "Focused no-hardware tests cover timestamp capture, strict matching, failure, and training-only output."
+  ],
+  "policy": "balanced",
+  "status": "active",
+  "phase": "implement",
+  "decisions": [
+    "Alignment exists only in PKL-to-LeRobot conversion; collection preserves raw samples and timestamps.",
+    "All stream timestamps use a shared host monotonic clock where the source can provide it. Pico retains both vendor timestamp and host receive timestamp.",
+    "The converter uses a 30 Hz grid and per-stream half-period tolerance; future or past nearest samples are allowed offline.",
+    "Required streams are both cameras, robot state, and actual action. Any unmatched grid point fails the whole conversion; no zero, last-frame, or extrapolated filling.",
+    "LeRobot contains training fields only. Pico controls, Pico timestamps, raw events, and diagnostics remain in PKL."
+  ],
+  "verification": {
+    "status": "not_run",
+    "summary": "Business implementation updated with frame separation, source periods, bounded asynchronous queue, atomic PKL and transactional sequential export. User requested deferring broad test expansion to operator acceptance. Full real-chain integration and peak RSS remain unverified.",
+    "checks": [
+      "Franka and raw collector focused tests: 34 passed",
+      "Alignment and collector focused selection: 5 passed",
+      "Real env suite: 243 passed, 1 skipped before latest incremental changes",
+      "Robotics plus Release compatibility: 323 passed",
+      "Actual short PKL to LeRobot write and read: 1 passed",
+      "Latest modified Python syntax, collection YAML parse, launcher bash syntax and git diff --check passed"
+    ],
+    "limitations": [
+      "Raw UVC archival and offline image transformation are implemented; a synthetic transform test passes, but full capture-to-PKL integration remains unverified.",
+      "Action post-guard semantics, episode boundaries, actual Gym packaging and stream periods require end-to-end verification. Do not run this partial working tree on hardware."
+    ]
+  },
+  "nextAction": "Complete all six acceptance areas: real wrapper/vector/collector integration, raw versus training coordinate semantics, independent periods and failure boundaries, bounded memory/atomic writes, actual LeRobot write/read with transactional output, final regression and operator instructions. User explicitly authorized public-code changes; no hardware control, commit or push authorized."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "ik-benchmark-20261019",
+  "title": "离线比较Pinocchio单步IK与当前IK",
+  "goal": "在不连接硬件、不改变正式控制路径的前提下，验证Pinocchio单步微分IK是否比当前native-model迭代IK更适合连续Pico目标跟踪。",
+  "doneWhen": [
+    "现有FR3离线目标轨迹可被两种求解路径顺序回放",
+    "记录两种路径的平均、p95、p99耗时、关节连续性、TCP残差和失败计数",
+    "确认工具坐标和FR3 URDF模型约定没有静默漂移",
+    "输出带限制条件的替换建议；不修改正式控制路径、不安装依赖到官方环境、不执行硬件"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "优先测试Pinocchio + 单步differential IK；Pink作为后续约束需求候选。",
+    "benchmark仅离线运行，不能把求解速度结果等同于端到端RPC或真机体验。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "离线600点A-E循环回放完成；Pinocchio单步与当前native迭代IK均完成统一模型/工具坐标检查。",
+    "checks": [
+      "FR3 URDF Pinocchio加载成功，nq=7、nv=7、link8 frame可用",
+      "两份FR3 URDF SHA256一致",
+      "native FK与Pinocchio FK在记录快照上对齐",
+      "native benchmark latency mean/p95/p99 = 0.772/0.898/0.985 ms",
+      "Pinocchio single-step latency mean/p95/p99 = 0.149/0.183/0.229 ms",
+      "两种路径完成600个连续目标样本回放",
+      "benchmark脚本py_compile通过"
+    ],
+    "limitations": [
+      "Pinocchio路径是单步differential IK，不是完整位姿收敛，因此TCP残差不能与native完整迭代结果直接等价比较",
+      "未测RPC、Ray、Pico、相机或真机端到端延迟",
+      "未将Pinocchio依赖安装到RLinf官方环境，未修改正式控制路径"
+    ]
+  }
+}

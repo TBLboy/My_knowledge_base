@@ -1,0 +1,36 @@
+{
+  "id": "pinocchio-py311-isolated-runtime-20261019",
+  "title": "Python311隔离Pinocchio runtime验证",
+  "goal": "在不修改RLinf官方环境和正式控制路径的前提下，为Pinocchio单步IK建立Python 3.11隔离runtime并完成离线回放验证。",
+  "doneWhen": [
+    "Python 3.11隔离环境可加载Pinocchio并解析现有FR3 URDF",
+    "隔离runtime运行Pinocchio solver单元测试和A-E连续回放",
+    "记录延迟、连续性和残差；残差只作telemetry，不设精度门禁",
+    "未修改RLinf/.venv、RLinf官方代码、正式Cartesian路径或硬件"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "实时性和稳定性优先；Pinocchio单步候选只要有限且连续即可发布，残差不作为阻塞门禁。",
+    "Python 3.11验证使用隔离环境，不复制ROS Python 3.10包到官方环境。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Python 3.11隔离环境已安装Pinocchio 4.1.0并完成FR3 URDF、solver单测及A-E回放。",
+    "checks": [
+      "隔离环境Python 3.11.14可导入Pinocchio 4.1.0",
+      "FR3 URDF加载成功，nq=7、nv=7、link8 frame可用",
+      "隔离Pinocchio/teleop相关16项测试通过",
+      "A-E连续回放600/600 accepted",
+      "A-E回放延迟mean/p95/p99 = 0.311/0.369/0.545 ms",
+      "A-E回放最大dq step = 0.020 rad",
+      "官方RLinf/.venv和正式控制路径未修改"
+    ],
+    "limitations": [
+      "仍未测Ray/RPC端到端延迟",
+      "仍未连接或操作真机",
+      "Pinocchio依赖只安装在/tmp/opencode/pinocchio-py311隔离环境"
+    ]
+  }
+}

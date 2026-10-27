@@ -1,0 +1,39 @@
+{
+  "id": "nas-upload-mount-20261022",
+  "title": "Mount project NAS and enable workbench HDF5 upload",
+  "goal": "Mount the project NAS NFS export at /mnt/nas on this workstation, then enable the existing Robot Capture HDF5 upload path to /mnt/nas/forge/franka/raw without changing capture, recording, or upload code semantics.",
+  "doneWhen": [
+    "nfs-common installed and /mnt/nas persistently mounts 192.168.10.35:/volume1/robo-data-warehouse",
+    "An absent NAS fails closed instead of being replaced by a local directory write",
+    "/mnt/nas/forge/franka/raw is writable by the workbench user and a probe file round-trips",
+    "config/workbench.yaml upload is enabled with transport=local, remote_raw_dir=/mnt/nas/forge/franka/raw, robot_name=franka-pico",
+    "Upload sink probe and offline upload tests pass; remaining unvalidated items are reported"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Mount uses systemd automount + _netdev + nofail so boot never blocks and access to an absent NAS fails instead of writing into an empty local /mnt/nas",
+    "Soft NFS timeouts preferred over hard so the long-running workbench cannot wedge in uninterruptible IO; upload already verifies remote size after transfer and retries",
+    "Only workbench upload configuration changes; app/upload.py, sink_health.py, recorder and capture code stay untouched",
+    "Forge-side franka adapter support is out of scope for this task"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "NAS is mounted persistently and the workbench uploads real recordings to /mnt/nas/forge/franka/raw.",
+    "checks": [
+      "nfs-common 1:2.6.4-3ubuntu5.1 installed",
+      "/mnt/nas mounted from 192.168.10.35:/volume1/robo-data-warehouse, persisted in /etc/fstab (vers=3, hard, _netdev, nofail); this host is now 192.168.10.38 and is present in the NAS export allow-list",
+      "write probe as embody under /mnt/nas/forge/franka/raw passed",
+      "probe_sink with the active config returns ok",
+      "201 of 238 local sessions reported upload_status=uploaded; NAS holds 18G across left_arm_pick_cube (101) and pick_green_cube (100)",
+      "offline suite: 98 tests OK, 3 skipped"
+    ],
+    "limitations": [
+      "Operator installed the mount with hard NFS timeouts, not the soft variant in scripts/setup_nas_mount.sh; a NAS outage during a transfer can wedge the writing process",
+      "37 local sessions remain unuploaded (dual_arm_pick_cube 32, 111 3, test 2)",
+      "Robot Forge has no confirmed franka adapter; converted LeRobot output for these recordings does not exist yet",
+      "The workbench was not running at completion time"
+    ]
+  }
+}

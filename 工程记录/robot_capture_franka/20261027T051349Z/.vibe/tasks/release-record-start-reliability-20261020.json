@@ -1,0 +1,32 @@
+{
+  "id": "release-record-start-reliability-20261020",
+  "title": "Make Pico recording start reliable",
+  "goal": "Ensure left-stick record-start events captured while a reset finishes are preserved for the next ready environment step, while stale movement and terminal events remain discarded.",
+  "doneWhen": [
+    "Pico reset synchronization clears stale events before reset begins rather than erasing a queued record-start after reset finishes.",
+    "A left-stick start pressed during reset completion is consumed after reset, while non-start events are discarded.",
+    "Focused no-hardware tests cover the event-retention contract."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The control queue is sampled at Pico packet rate; pickle files intentionally omit record_start because CollectEpisode clears and reseeds the buffer on that event.",
+    "The existing post-reset queue clear can erase a left-stick event pressed during the long synchronous reset. Move stale-event clearing to reset entry and retain only record_start events captured during reset.",
+    "Movement remains blocked by the synchronous robot reset; retaining record_start schedules recording only after reset returns."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commits 990b273 and 8441320 improve record-start handling, add event diagnostics, align X discard with reset, and exclude the initial environment reset from the gripper reset signal.",
+    "checks": [
+      "Pico/VR transport-focused tests: 10 passed",
+      "Teleop reset synchronization test: 1 passed",
+      "Release compatibility tests: 7 passed",
+      "Python compilation and Git diff whitespace checks passed",
+      "Focused first-reset, reset-signal, and Pico episode tests: 3 passed"
+    ],
+    "limitations": [
+      "The raw Pico stream must still publish left_axis_click; this code cannot recover an input event absent from XRoboToolkit messages."
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "release-franky-damping-20261019",
+  "title": "Adopt the validated Franky damping route in Release",
+  "goal": "Replace Release's old Franky/libfranka Cartesian control route with the verified 9931a64 damping route, including its compatible install requirement, configuration, focused tests, and operator documentation.",
+  "doneWhen": [
+    "Release contains the 9931a64 Cartesian damping implementation and validated Franka/Pico configuration without joint-IK or the superseded old Cartesian tracker route.",
+    "Release installation requirements install the verified Franky 2.0.0 and libfranka 0.21.2 compatibility route from its public package source, without archiving its wheel.",
+    "Focused no-hardware tests and import/config checks pass, and the required operator-only true-hardware revalidation is documented.",
+    "No Desk safety limit, collision behavior, or control parameter is increased beyond the validated configuration."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Release adopts the verified route from RLinf commit 9931a64, whose damping control relies on Franky 2.x and libfranka 0.21.2.",
+    "The supported package version is installed from its public package source; no Franky/libfranka wheel is added to Release/resources.",
+    "The validated coupled configuration is rotational_stiffness=40.0, rotational_damping=4.0, and rotational clips=0.15; no joint-IK route is included."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release commit e1eb68a adopts the 9931a64 Franky 2.0 Cartesian damping route and the continuous Pico trigger gripper route.",
+    "checks": [
+      "Installed Release Franky upgraded to franky-control 2.0.0+libfranka.0.21.2 from the public libfranka-0.21.2 wheel index",
+      "Focused Franky robotics tests: 15 passed",
+      "Focused continuous gripper real-environment test: 1 passed",
+      "Release compatibility tests: 5 passed",
+      "Release configuration parse verified damping and continuous-gripper fields",
+      "Python compilation and shell syntax checks passed"
+    ],
+    "limitations": [
+      "No robot, Desk, Pico, camera, or Robotiq hardware was exercised after the Release migration.",
+      "The migrated Release must receive an operator-led unloaded, small-range hardware revalidation before it is described as verified on this Release worktree."
+    ]
+  }
+}

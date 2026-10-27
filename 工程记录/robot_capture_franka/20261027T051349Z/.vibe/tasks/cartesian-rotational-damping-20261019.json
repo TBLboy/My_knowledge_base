@@ -1,0 +1,35 @@
+{
+  "id": "cartesian-rotational-damping-20261019",
+  "title": "迁入已验证Cartesian旋转阻尼路线",
+  "goal": "将已验证工作区的Franky 2.x显式Cartesian旋转阻尼路线迁入当前FR3/Pico工程，采用K_r=40、D_r=4、clip=0.15，同时保持既有平移与安全限制。",
+  "doneWhen": [
+    "当前RLinf环境使用支持显式Cartesian damping的验证版Franky 2.x wheel",
+    "CartesianCompliance和FrankyArm将rotational_damping以完整六轴向量传入tracker",
+    "平移阻尼仍为2√K_t，旋转三轴为D_r，零空间目标语义保持",
+    "Pico配置解析为K_r=40、D_r=4、旋转clip=0.15，其他规定安全参数不变",
+    "静态/聚焦测试、导入和dry-run通过；真机仅由操作者按安全流程验证"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "采用外部验证工作区已实测的K_r=40/D_r=4耦合组合；不将结果表述为阻尼单变量因果证明。",
+    "Franky 2.x API迁移仅服务于显式Cartesian damping和等价PostureTask零空间保持。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "已迁入Franky 2.x显式Cartesian damping适配和K_r=40/D_r=4 Pico配置；无硬件检查通过。",
+    "checks": [
+      "当前RLinf/.venv加载franky-control 2.0.0+libfranka.0.21.2",
+      "CartesianImpedanceTracker公开damping和posture_task API",
+      "43项非Ray-placement Franky聚焦测试通过，包括显式旋转damping断言",
+      "Python编译与git diff --check通过",
+      "run_pico_session.sh --dry-run通过，相机和启动参数预检正常"
+    ],
+    "limitations": [
+      "完整44项Franky测试中的1项Ray placement测试失败：worker无法导入test_robotics，不是damping或Franky API断言失败",
+      "当前工作区尚未由本轮操作者重新做真机验证；外部总结中所述真机改善是该验证工作区的证据，不自动等同于当前环境实测",
+      "安装脚本仍指向历史Franky 1.1.3 wheel；当前环境已升级，但后续重装前必须显式保留/指定Franky 2.0.0+libfranka.0.21.2 wheel"
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "release-upstream-governance-20261019",
+  "title": "Convert Release to an RLinf-tracking adaptation repository",
+  "goal": "Rework Release from a trimmed framework snapshot into a traceable RLinf-based Franka/Pico adaptation repository with explicit upstream governance, maintained adaptation boundaries, repeatable compatibility checks, and unchanged hardware safety constraints.",
+  "doneWhen": [
+    "Release history is based on the approved RLinf upstream commit and has an upstream remote configured for RLinf/RLinf.",
+    "Release-owned Franka/Pico adaptations, configuration, tools, documentation, and focused checks have clear paths and ownership.",
+    "The repository documents origin versus upstream responsibilities, supported scope versus merely present upstream code, approved baseline provenance, and a repeatable upstream synchronization procedure.",
+    "Compatibility checks cover Release layout, launch/config linkage, imports, locks, and no-hardware validation; hardware limitations are explicitly stated.",
+    "No change weakens existing control or hardware safety rules."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "The prior trimmed-framework Release design is superseded by the user's Release business-logic change dated 2026-10-19.",
+    "RLinf is the upstream framework subject; Release is the project's Franka/Pico adaptation distribution.",
+    "RLinf-Franks remains a source/reference for stable adaptation code, not a second whole-project upstream.",
+    "Upstream code may exist without becoming a Release support commitment.",
+    "The approved current RLinf baseline remains e7a9a2e until an explicitly verified upstream update is accepted."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release now has the approved RLinf commit as its grafted base, an explicit RLinf upstream remote, a maintained Franka/Pico adaptation layer, and repeatable no-hardware compatibility checks.",
+    "checks": [
+      "Release-focused pytest: 4 passed",
+      "Python compilation for scripts, rig extension, and Pico bridge passed",
+      "Shell syntax for supported launchers and adapted RLinf collector passed",
+      "RLinf real-world collection and LeRobot writer imports resolved with the Release adaptation paths",
+      "Release adaptation diff check passed"
+    ],
+    "limitations": [
+      "No origin distribution remote is configured because its URL was not provided.",
+      "No hardware, Franky/libfranka, vendor Pico SDK, camera, Robotiq, or end-to-end collection run was exercised.",
+      "The RLinf ancestry is shallow at the approved baseline until upstream history is fetched."
+    ]
+  }
+}

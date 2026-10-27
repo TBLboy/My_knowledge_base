@@ -1,0 +1,34 @@
+{
+  "id": "release-environment-20261019",
+  "title": "Prepare the Release runtime environments",
+  "goal": "Create reproducible Release root and Pico bridge uv environments for the supported Franka/Pico collection workflow without starting or controlling hardware.",
+  "doneWhen": [
+    "Release root .venv is created from the approved RLinf environment definition and can import the Release framework and adaptation layer.",
+    "Pico bridge .venv is created from pico_bridge/pyproject.toml and can import its non-vendor dependencies.",
+    "Required external bindings are checked and any unavailable vendor package is reported without substitution.",
+    "No robot, camera, gripper, Pico service, Ray cluster, or live launcher is started."
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "Environment preparation is offline installation and import validation only; it is not authorization for a live hardware session.",
+    "Franky/libfranka and xrobotoolkit_sdk are vendor/external bindings and must not be replaced by guessed packages."
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Release root and Pico bridge uv environments were created; root Franka dependencies and focused no-hardware checks passed.",
+    "checks": [
+      "requirements/install.sh embodied --env franka --venv .venv --no-root --no-flash-attn --install-rlinf completed",
+      "pico_bridge uv sync completed",
+      "Root environment imports franky, ray, evdev, zmq, cv2, lerobot, RLinf Franka environment, LeRobot writer, and rig extension",
+      "Release-focused pytest: 4 passed; launcher shell syntax and Python compilation passed",
+      "No Release Ray cluster was started"
+    ],
+    "limitations": [
+      "xrobotoolkit_sdk is absent from pico_bridge/.venv and must be installed from the vendor-compatible SDK package before Pico publishing can run.",
+      "A Ray status query encountered authentication failure against an existing external Ray endpoint; no Ray process was started, stopped, or modified.",
+      "No hardware, Pico PC Service, camera, gripper, or end-to-end collection run was exercised."
+    ]
+  }
+}
