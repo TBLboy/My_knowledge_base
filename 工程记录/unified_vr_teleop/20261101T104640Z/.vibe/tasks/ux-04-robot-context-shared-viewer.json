@@ -1,0 +1,33 @@
+{
+  "id": "ux-04-robot-context-shared-viewer",
+  "title": "全局机型上下文与共享机械臂显示对象",
+  "goal": "后端提供机型上下文（机型/选中臂/URDF/关节数/传输），前端单一 viewer 模块按上下文选模型；采集页跟随当前机型与臂数，回放页跟随录制元数据。",
+  "doneWhen": [
+    "选 Franka 后采集页首帧即 fr3 模型，单臂只一个 pane",
+    "回放 Piper 历史数据显示 Piper 模型",
+    "viewer 代码只有一处模型选择逻辑"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "业务规则：teleop-startup-shutdown v1.0 §F1,F2,F3,F4,I7",
+    "不改控制算法/增益/限位/安全参数；不改 HDF5/上传",
+    "真实运动验收由用户显式操作",
+    "viewer 模型选择收敛到 resolveModel + MODEL_REGISTRY；回放携带录制机型 model/arms"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "机型上下文与单一模型选择落地；API 返回 model/arms；viewer 无 JS 错误",
+    "checks": [
+      "pytest 全套 325 passed / 14 skipped / 1 failed（既有速度测试）",
+      "/api/arms/state 返回 model 描述与 arms；viewer 按 resolveModel 单一选模型",
+      "提交 9526cc4 已推送 origin/feat/franka"
+    ],
+    "limitations": [
+      "Franka 真机 fr3 模型首帧、单臂单 pane、回放 Piper 显示由用户真机验收"
+    ]
+  },
+  "blocker": "",
+  "nextAction": ""
+}

@@ -1,0 +1,195 @@
+{
+  "format": "vibe-v2-project-archive-1",
+  "created_at": "2026-11-01T10:46:40.783268+00:00",
+  "source": "/Users/tbl/Project/unified_vr_teleop",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "46ee5ca52c5238d21bfb9250bcc629510c733794bc87b85a9085ba494afca665"
+    },
+    {
+      "path": ".vibe/dagger-inference-evaluation-cleanup.md",
+      "sha256": "2a96ed4f25bcf2f010a01dabb59999aec48a37609659bcfef7fc2601c563b174"
+    },
+    {
+      "path": ".vibe/docs/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".vibe/docs/数据采集链路业务待澄清清单.md",
+      "sha256": "75e95a511b17a680543439409518d102e810efc433ecc2772268fa9737ff866d"
+    },
+    {
+      "path": ".vibe/docs/数据采集链路数据流拓扑.md",
+      "sha256": "16ca9da14aca1278e70f7f79a62c79ccbf365c3422c207659af466133f66bf03"
+    },
+    {
+      "path": ".vibe/docs/自采数据 HDF5 落盘规范.md",
+      "sha256": "53ed0b97a609e44e0f7a976c0575214329997961dcd600747c0b840c6b5121fc"
+    },
+    {
+      "path": ".vibe/franka-adaptation-alignment.md",
+      "sha256": "954af840bf4970a5fe6226c467751b349b3095a9316cbf4c01200b666fef43de"
+    },
+    {
+      "path": ".vibe/franka-adaptation-comparison.md",
+      "sha256": "c9b98e2fe7ad48d51e0c788ae337645344f1c8e60327ad4f434d0d733fd03f9d"
+    },
+    {
+      "path": ".vibe/franka-control-semantic-audit.md",
+      "sha256": "f60225ec901cad51b0bb1a18ea2848fb5e9c051d47e20c715f3f5a2129409e79"
+    },
+    {
+      "path": ".vibe/platform-onboarding.md",
+      "sha256": "ed4c4cac7b5a917a8d8fc1729e25296b743690758a24af72376b004aa5e6e063"
+    },
+    {
+      "path": ".vibe/platform-operator-redesign-analysis.md",
+      "sha256": "bc44bedd74e3bdadc760aa1047f0c92951e0586875615fa4817791f32271e0e6"
+    },
+    {
+      "path": ".vibe/progress.md",
+      "sha256": "d8d57927e35146fb51afb8914e2a70b4b1ec90d52e12c71bddc9306ba8387a29"
+    },
+    {
+      "path": ".vibe/requirements/README.md",
+      "sha256": "474c763de7bc891ac1ec3f885a53eac27a1e4368407f7b3372ce3ecebf2131b3"
+    },
+    {
+      "path": ".vibe/requirements/hdf5-recording-format.md",
+      "sha256": "435ae760e19b03488c9fd08d6e145ab76e65253a88d3496e3c6d5ed979e322c5"
+    },
+    {
+      "path": ".vibe/requirements/robot-adapter-abc-contract.md",
+      "sha256": "da1138df07a3c3d8463ab95a8002bcd78bb8fedb2fd80ec0f9f074000175c00e"
+    },
+    {
+      "path": ".vibe/requirements/teleop-startup-shutdown.md",
+      "sha256": "b930666d87558f59167d20e7732107696d68d340eb632f340a63f7c054f4097a"
+    },
+    {
+      "path": ".vibe/requirements/unified-platform-integration-boundary.md",
+      "sha256": "8e78c0905511812a4f7e44bf201f78531de36bbe5c478da95abf5181ca267809"
+    },
+    {
+      "path": ".vibe/sessions/ses_e73c116adffeuqSUKHT1G8LkYU/current-session.md",
+      "sha256": "e111946259b6f68b5218d135c1f45c748e026e844ee156d54b1f87e93eda64fe"
+    },
+    {
+      "path": ".vibe/sessions/ses_e7a336458ffeFmvLX6tBgDZK0w/current-session.md",
+      "sha256": "519131882ed69181ba7f54354f225fc9c8689b5a07c7382cd2f2d9610cb76d92"
+    },
+    {
+      "path": ".vibe/tasks/camera-capability-parity.json",
+      "sha256": "eb07a18b90bcf7b670c0d16b20aa133c6eb737a95c128d1cff783572a191984f"
+    },
+    {
+      "path": ".vibe/tasks/camera-driver-contract.json",
+      "sha256": "e3d0cf13382c41aa0674112055ad3b3302561c3fc270241e73c27fdbcef02adb"
+    },
+    {
+      "path": ".vibe/tasks/data-collection-business-clarification.json",
+      "sha256": "79b96fd91b39860b5b4f5eaa9c597e1e6c69f367311257036239fcd74bdd5690"
+    },
+    {
+      "path": ".vibe/tasks/franka-adaptation-comparison.json",
+      "sha256": "b1564453cb4970d84794efee65fcd171de8323dc7ba77101be5b0a47c7e97deb"
+    },
+    {
+      "path": ".vibe/tasks/franka-adaptation.json",
+      "sha256": "8b666098c9a0aaa1f6ca6e139ec02e3d16709103bbebeaa72689eb12d7fa3f43"
+    },
+    {
+      "path": ".vibe/tasks/franka-control-architecture-normalization.json",
+      "sha256": "13fbf516a85cb5e43f0f5fbeefa38b7ca6b2df090257e7ede41f820445b990e1"
+    },
+    {
+      "path": ".vibe/tasks/franka-control-semantic-alignment.json",
+      "sha256": "746556dc1a70561d7bb9899fcb1b06827e6cbe2d961398f659dc2d08a9d8edb1"
+    },
+    {
+      "path": ".vibe/tasks/franka-only-branch-cleanup.json",
+      "sha256": "de86ac965efd8062e4363da079622810c952a9c9521c86722d183dfca72aeb00"
+    },
+    {
+      "path": ".vibe/tasks/franka-remote-uv-environment.json",
+      "sha256": "48e9f1d5c79e752431a2273789ff41f2ffd424d6f99c913c5fbfcc3f3127df47"
+    },
+    {
+      "path": ".vibe/tasks/franka-runtime-ui-fixes.json",
+      "sha256": "d01c15e740ea13596690d2a0f8aba863ea296158131f8b43dec778994ea60869"
+    },
+    {
+      "path": ".vibe/tasks/franka-single-environment.json",
+      "sha256": "212e0c41e1209f6a28e8ea17ea62ad65173a88342f8fef55b3eaed4747e56c39"
+    },
+    {
+      "path": ".vibe/tasks/franka-teleop-startup-diagnosis.json",
+      "sha256": "ae5efe5766fcd2bcdcb028be4a00650ad2ca025235a86a617f77c80303e6d09e"
+    },
+    {
+      "path": ".vibe/tasks/hdf5-requirement-baseline-v1-1.json",
+      "sha256": "672950047355eca67a7f049630b8d39554f0c086de0f9da05d4a0d35beab1dd1"
+    },
+    {
+      "path": ".vibe/tasks/hdf5-requirement-baseline.json",
+      "sha256": "f2d467b3cbb239896ab9d47eec8bb3e867694a4e63616dd738a586addc750cc5"
+    },
+    {
+      "path": ".vibe/tasks/legacy-residue-sweep.json",
+      "sha256": "d0519981a9df256fcd65d8d932e363665e27cbe8366f268d6266df3b13ececfa"
+    },
+    {
+      "path": ".vibe/tasks/p1-operator-experience-closure.json",
+      "sha256": "f8d7fca3c79535ba4b4ffe180e10729692c6e432677876b842d34adbce6ec428"
+    },
+    {
+      "path": ".vibe/tasks/platform-onboarding.json",
+      "sha256": "4e0896230efcce2affeeb3e546393a27487ee6013eedcf7afb005cc5f5da33f1"
+    },
+    {
+      "path": ".vibe/tasks/platform-operator-experience-redesign.json",
+      "sha256": "76f579ed73a746e5a63e97752f4c586a6a0875d8ac8b1248a316f8020b351637"
+    },
+    {
+      "path": ".vibe/tasks/remove-unused-dagger-inference-evaluation.json",
+      "sha256": "52c4b9f9346356385ef1a19e78c2db988fe435e559366814a6117fe0039980e1"
+    },
+    {
+      "path": ".vibe/tasks/robot-adapter-abc-contract.json",
+      "sha256": "4f64f249bd45981ad0f3e94bb5c8ca0560404c6d1a14f486f35f834745558c71"
+    },
+    {
+      "path": ".vibe/tasks/robot-adapter-integration-guide.json",
+      "sha256": "23fa3a90f3a7715bcff3f322729d9aafe48e24865c21c43e54b1a15d9773b942"
+    },
+    {
+      "path": ".vibe/tasks/unified-platform-integration-boundary.json",
+      "sha256": "7bc98b04861d1bbf692254bdea0a4dd273b40f48f6759ddff8b2a944d5e120f3"
+    },
+    {
+      "path": ".vibe/tasks/ux-01-branch-hygiene.json",
+      "sha256": "db6e493222d5e050eaf65fde32dd0a8b7c04fa4f286324cca42ea00200b1af2e"
+    },
+    {
+      "path": ".vibe/tasks/ux-02-franka-reset-gripper-freshness.json",
+      "sha256": "e2b5cf79290094d4460213ade41f58e2e086ef66c2791d3065d591766e3fa3df"
+    },
+    {
+      "path": ".vibe/tasks/ux-03-flow-runner-and-franka-flows.json",
+      "sha256": "e82a2e4a763e012ca752412a4fe51d2e68914f3428b16a5dc3108c326da15f63"
+    },
+    {
+      "path": ".vibe/tasks/ux-04-robot-context-shared-viewer.json",
+      "sha256": "51beb519d603004307a0669be0ae3d665683e98c630bc874ad5dbac9ece034cf"
+    },
+    {
+      "path": ".vibe/tasks/ux-05-single-settings-page.json",
+      "sha256": "45edf793f59cbec8d073ca0ebe8ec79f9cc5341f87bbdc78f21fe1845e7d02c9"
+    },
+    {
+      "path": ".vibe/tasks/ux-06-piper-arx-flow-registration.json",
+      "sha256": "91fd4a404d55b4cb77a2ef856f94fceda38ed032fdb64fd684288ed25f40c3ba"
+    }
+  ]
+}

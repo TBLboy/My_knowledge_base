@@ -1,0 +1,79 @@
+{
+  "format": "vibe-v2-project-archive-1",
+  "created_at": "2026-10-29T12:24:28.562653+00:00",
+  "source": "/Users/tbl/Project/unified_vr_teleop",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "3eb3b326f373faa47d9a95604436e6d190afeff8ba7f7eb2d754b7c897bf5a87"
+    },
+    {
+      "path": ".vibe/dagger-inference-evaluation-cleanup.md",
+      "sha256": "2a96ed4f25bcf2f010a01dabb59999aec48a37609659bcfef7fc2601c563b174"
+    },
+    {
+      "path": ".vibe/docs/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".vibe/franka-adaptation-alignment.md",
+      "sha256": "954af840bf4970a5fe6226c467751b349b3095a9316cbf4c01200b666fef43de"
+    },
+    {
+      "path": ".vibe/franka-adaptation-comparison.md",
+      "sha256": "c9b98e2fe7ad48d51e0c788ae337645344f1c8e60327ad4f434d0d733fd03f9d"
+    },
+    {
+      "path": ".vibe/platform-onboarding.md",
+      "sha256": "ed4c4cac7b5a917a8d8fc1729e25296b743690758a24af72376b004aa5e6e063"
+    },
+    {
+      "path": ".vibe/progress.md",
+      "sha256": "3157cd44eb26725c73c7ac190ce309271ca403963a44454360134c5668cf5d9e"
+    },
+    {
+      "path": ".vibe/requirements/README.md",
+      "sha256": "3d5fa35508f1f622b81327925c25a8dc740c6d109aeca336854ffa7dc3ecf712"
+    },
+    {
+      "path": ".vibe/requirements/hdf5-recording-format.md",
+      "sha256": "9990139749a4fd48d3c6de1bf6b4499b102e463a754fcd36f34cbf6bd1179670"
+    },
+    {
+      "path": ".vibe/requirements/unified-platform-integration-boundary.md",
+      "sha256": "92e04ea4a4bb34435dbc807634e33b1c6929ebee6b14c0df619c3fe5c4b68670"
+    },
+    {
+      "path": ".vibe/sessions/ses_e7a336458ffeFmvLX6tBgDZK0w/current-session.md",
+      "sha256": "8102a2a87eb1708d66f04df9ee9ab478c1ddcd06d820232bb3916e863cc87317"
+    },
+    {
+      "path": ".vibe/tasks/franka-adaptation-comparison.json",
+      "sha256": "b1564453cb4970d84794efee65fcd171de8323dc7ba77101be5b0a47c7e97deb"
+    },
+    {
+      "path": ".vibe/tasks/franka-adaptation.json",
+      "sha256": "58a37358ef4f5fbebb9a40080e5ced0bcfa570b2e6ec972ac9765ddf6a108911"
+    },
+    {
+      "path": ".vibe/tasks/hdf5-requirement-baseline-v1-1.json",
+      "sha256": "672950047355eca67a7f049630b8d39554f0c086de0f9da05d4a0d35beab1dd1"
+    },
+    {
+      "path": ".vibe/tasks/hdf5-requirement-baseline.json",
+      "sha256": "f2d467b3cbb239896ab9d47eec8bb3e867694a4e63616dd738a586addc750cc5"
+    },
+    {
+      "path": ".vibe/tasks/platform-onboarding.json",
+      "sha256": "4e0896230efcce2affeeb3e546393a27487ee6013eedcf7afb005cc5f5da33f1"
+    },
+    {
+      "path": ".vibe/tasks/remove-unused-dagger-inference-evaluation.json",
+      "sha256": "3bca689de274f56277b7f2f8e01c7bc5878218cf4d028da282d5296ce7a462c4"
+    },
+    {
+      "path": ".vibe/tasks/unified-platform-integration-boundary.json",
+      "sha256": "7bc98b04861d1bbf692254bdea0a4dd273b40f48f6759ddff8b2a944d5e120f3"
+    }
+  ]
+}

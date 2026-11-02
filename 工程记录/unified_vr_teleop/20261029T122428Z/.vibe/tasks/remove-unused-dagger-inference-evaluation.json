@@ -1,0 +1,12 @@
+{
+  "id": "remove-unused-dagger-inference-evaluation",
+  "title": "清理废弃 DAgger 推理与评测功能",
+  "goal": "只读盘点统一平台中 DAgger、推理和评测相关代码，区分必须删除、必须保留和需要确认的边界，为后续安全删除提供清单。",
+  "doneWhen": ["形成按文件和引用关系划分的删除/保留/待确认清单", "确认普通 VR 数据采集链路不被误删", "识别 DAgger/策略与回放质检的边界", "本轮不修改业务代码"],
+  "policy": "balanced",
+  "status": "active",
+  "phase": "prepare",
+  "decisions": ["当前只做只读审计，不删除代码", "保留普通 VR 遥操作和数据采集", "区分采集数据回放质检与策略执行回放"],
+  "verification": {"status": "not_run", "summary": "", "checks": [], "limitations": []},
+  "nextAction": "扫描入口、模块、配置、脚本、依赖和测试引用。"
+}

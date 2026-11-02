@@ -1,0 +1,41 @@
+{
+  "id": "franka-control-semantic-alignment",
+  "title": "对齐稳定参考版 Franka 控制语义",
+  "goal": "以本地 robot_capture_franka 当前稳定实现为参考，逐段核对统一平台 PICO 到 Franka 控制链路，确认行为差异后对齐。",
+  "doneWhen": [
+    "输入、坐标、Grip、使能、按键、夹爪、目标下发、复位、故障和退出均有源码对应与差异结论",
+    "安全及操作语义差异经用户确认后才修改",
+    "已批准修复通过离线验证，未验证的真机行为明确列出"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "参考 robot_capture_franka 当前本地文件，包含其已有未提交改动；只读且不覆盖",
+    "第一阶段不做架构规范化，不修改录制/HDF5/上传",
+    "不启动设备、不运行真实运动",
+    "以源码及离线证据区分数学一致与操作语义一致",
+    "用户批准：按键、复位流程、退出行为与 robot_capture_franka 对齐；复位姿态数值为可调参数不对齐，保留保存当前姿态入口",
+    "复位等机械臂专属运动逻辑归属该构型 adapter；公共层只负责请求/进度/结果",
+    "保留目标版新增的目标时效、租约、反馈新鲜度保护，不机械回退",
+    "Franka 退出策略：hold 后直接退出，不自动复位；由 robot/franka 实现，公共退出流程不改",
+    "控制进程按键事件经 runtime/data/control-events.jsonl 传递给 RecordingSession；语义统一为 record_start/record_success/record_discard/robot_reset（A+X 录制中=丢弃，否则复位）；Piper 公共 runtime 同样接入并放弃先复位再停的旧语义"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "按键/复位/退出语义离线对齐参考版并回归通过",
+    "checks": [
+      "ReleaseButtons vs reference PicoExpert._update_vr_controls (random 80000 steps) → 0 mismatches, all 7 event kinds exercised",
+      "compileall app robot main.py tools/tests → ok",
+      "pytest tools/tests/test_franka.py → 24 passed (reset order close→move→open, cancel holds w/o device error, set_reset_pose persists YAML+memory, finish holds w/o reset, reset-cancel no restart)",
+      "pytest tools/tests/test_capture_integration.py new tests → record_success saves/exports, record_discard & active robot_reset delete, idle robot_reset submits reset; stale/foreign identity ignored; control-events.jsonl tail drives real session",
+      "full suite env -u PYTHONPATH pytest tools/tests → 309 passed, 14 skipped, 3 failed (pre-existing: FakePiper MotionCtrl_2, upload path, human speed 4.472) — accepted by user"
+    ],
+    "limitations": [
+      "未做真机验证：Franka 复位/夹爪/标定/退出行为需现场授权验收",
+      "左臂复位姿态数值未对齐参考 rig（可调参数，按用户决定）",
+      "app/teleop/integration.py 仍保留既有 robot.franka.config.sides / demo 导入（预存，非本轮范围）"
+    ]
+  },
+  "nextAction": ""
+}

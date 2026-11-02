@@ -1,0 +1,11 @@
+{
+  "id": "franka-adaptation-comparison",
+  "title": "Franka 原实现与统一适配三方比较",
+  "goal": "只读比较原 Franka 工程、master 与同事 feature 实现，区分复用、行为变化、遗漏及待确认规则。",
+  "doneWhen": ["核对驱动、映射、安全生命周期和数据契约", "形成有代码依据的差异及待确认清单"],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": ["不合并 feature，不修改业务代码，不操作硬件", "同事可能参考原 Franka 工程；来源、采用计划与真机状态待用户沟通确认"],
+  "verification": {"status": "passed", "summary": "完成只读差异核对，结论见根 .vibe/franka-adaptation-comparison.md。", "checks": ["17个驱动文件归一化import后AST比较", "10个feature Franka模块语法解析", "输入、复位、遥测、HDF5及相机配置交叉阅读", "Franka worktree干净"], "limitations": ["原工程为含未提交修改的当前快照，不能证明同事历史来源", "无依赖环境，未运行行为测试", "未操作或验证硬件", "差异取舍待用户及同事确认"]}
+}

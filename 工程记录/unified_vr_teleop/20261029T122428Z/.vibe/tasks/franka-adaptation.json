@@ -1,0 +1,12 @@
+{
+  "id": "franka-adaptation",
+  "title": "完成统一平台 Franka 构型适配",
+  "goal": "在当前统一平台 master 基线上，使 Franka 的配置、连接、遥测、Pico VR 遥操作、控制、夹爪、复位、故障恢复和基础页面流程可用。",
+  "doneWhen": ["Franka 适配链路完成静态审计并补齐必要代码", "离线模拟测试覆盖关键控制与生命周期", "不修改 recording 链路和 HDF5 格式", "在具备工控机和真实硬件后完成分阶段现场验证"],
+  "policy": "balanced",
+  "status": "active",
+  "phase": "verify",
+  "decisions": ["当前只处理 Franka 构型适配，recording/HDF5 单独作为后续工作", "复用统一设备发现、VR 一键启动和公共 VR 控制逻辑", "Franka 连接、控制、遥测、夹爪、运动学、复位和故障恢复属于 Franka 适配层", "公共 runtime/worker 代码使用现有 app/teleop 目录，不创建 Dagger_web/runtime 代码目录", "Franka 构型控制参数集中在 config/robots/franka.yaml", "不修改 Franka 控制算法、增益、限位和安全策略", "任何真实运动操作须先获得用户确认"],
+  "verification": {"status": "partial", "summary": "DAgger/推理/策略执行清理已完成静态引用审计；编译与清理相关离线测试通过。完整套件仍有3个与本次清理无关的既有失败。", "checks": ["python -m compileall app robot main.py tools/tests: passed", "cleanup-focused pytest selection: 67 passed, 9 subtests passed", "pytest collection: 324 tests collected"], "limitations": ["test_capture_integration.py::test_can_connections_never_initialize_or_send_motion: fake Piper lacks MotionCtrl_2 while telemetry startup requests CAN/MOVE J", "test_deployment.py::test_upload_preserves_station_config_and_runtime: existing upload destination expectation differs from script", "test_reset_progress.py::test_source_velocity_limit_reaches_requested_speed[human-4.0]: existing velocity expectation mismatch"]},
+  "nextAction": "向用户报告清理结果和上述既有限制；用户确认后再开始 Franka adapter/runtime 架构实现。"
+}

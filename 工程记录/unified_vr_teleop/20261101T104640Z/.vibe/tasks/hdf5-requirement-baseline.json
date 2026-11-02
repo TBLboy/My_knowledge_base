@@ -1,0 +1,11 @@
+{
+  "id": "hdf5-requirement-baseline",
+  "title": "固化新 HDF5 落盘业务基线 v1",
+  "goal": "将已确认的新采集 HDF5 落盘业务规则、范围和未决项固化为版本化基线。",
+  "doneWhen": ["requirements.md 包含已确认业务规则及验收条件", "明确排除项和暂不解决的 action 间歇问题", "基线与附件规范的已确认冲突有记录"],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": ["只固化业务逻辑，不实现代码", "历史 HDF5 不迁移", "cam_dup 废弃", "真实全零值允许，伪造零值禁止", "action 间歇缺失暂不解决"],
+  "verification": {"status": "passed", "summary": "已将用户确认的 HDF5 新采集业务规则固化为 .vibe/requirements.md v1.0，并明确 action 间歇缺失暂不解决。", "checks": ["已读取项目规则与共享进度", "已读取附件 HDF5 规范", "基线包含范围、排除项、验收条件、未决项和变更控制", "Franka worktree 修改前状态干净"], "limitations": ["未修改业务代码", "未冻结具体 HDF5 spec_version", "action 间歇缺失和质检封口规则仍未解决"]}
+}

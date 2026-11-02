@@ -1,0 +1,37 @@
+{
+  "id": "robot-adapter-integration-guide",
+  "title": "编写机器人构型接入与适配器开发指南",
+  "goal": "结合 feat/franka 当前代码和 active 业务基线，为后续 feat 分支开发者提供系统架构、代码职责、新增机械臂构型的具体改动清单、验证方法和实施边界。",
+  "doneWhen": [
+    "文档位于团队仓库现有文档目录，说明系统架构与各层设计边界",
+    "准确映射公共 runtime/worker、registry、adapter、配置、UI、采集和 HDF5 代码职责",
+    "给出新增构型需要新增和修改的文件、每一步原因及最小接入顺序",
+    "区分已提交实现、工作区进行中的流程架构和尚未完成的目标能力",
+    "包含控制安全、标准状态/action、测试、真机验收和提交前检查清单",
+    "复读文档并核对其中的关键代码路径和接口"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "文档名采用《机器人构型接入与适配器开发指南》，不是单决策 ADR",
+    "只编写开发文档，不修改业务代码或 active 业务基线",
+    "真实机械臂运动验收必须由用户明确授权"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "开发指南与文档索引已完成；关键接口按 feat/franka@26d3055 源码核对，Markdown 差异检查通过。",
+    "checks": [
+      "复读 robot-adapter-integration-guide.md 全文 553 行，包含架构、代码职责、接口、改动清单、测试和完成定义",
+      "核对 eef_runtime.teleop_target、DeviceWorker 的 adapter 调用、FrankaAdapter、profile/registry、flows、telemetry、recorder 和 viewer 实际路径",
+      "git diff --check 对新增指南和 tools/docs/README.md 通过",
+      "明确区分公共 EEF 目标架构、Piper/ARX control_runtime 现状和 HDF5 过渡分支"
+    ],
+    "limitations": [
+      "本次仅修改文档，未运行代码测试或真机验证",
+      "文档未提交；后续代码结构变化时需同步更新"
+    ]
+  },
+  "blocker": "",
+  "nextAction": ""
+}
