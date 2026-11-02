@@ -1,0 +1,38 @@
+{
+  "id": "recording-contract-and-middleware",
+  "title": "实现采集中间层与封闭字段契约",
+  "goal": "按 hdf5-recording-final-baseline v1.0 实现采集中间层抽象基类、封闭字段白名单、适配器能力声明与标准数据上报接口，使 recorder 不直接调用 RobotAdapter。",
+  "doneWhen": [
+    "中间层基类集中注册 action/observation 白名单及字段形状、单位校验",
+    "FrankaAdapter 按白名单声明并上报当前可用字段",
+    "越界字段在启动期失败，采集层不存在机型判断或适配器直连",
+    "契约测试覆盖字段声明、越界失败、数据形状/单位和未声明字段不落盘入口",
+    "不改变现有机器人控制算法和安全参数"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "依赖 hdf5-recording-final-baseline v1.0",
+    "依赖 robot-adapter-abc-contract v1.0 已完成",
+    "不新增 HDF5 字段，不在本任务实现完整新 HDF5 导出",
+    "白名单放 robot/core/recording_contract.py；记录视图放 robot/core/recording_layer.py，均不含机型分支",
+    "RobotAdapter 新增抽象方法 recording_fields()，不完整实现实例化即 TypeError"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "字段契约、中间层、Franka 声明与上报已实现；完整离线套件通过",
+    "checks": [
+      "新增 tools/tests/test_recording_contract.py：13 passed",
+      "RobotAdapter 契约测试加入 recording_fields，缺失即 TypeError",
+      "完整 pytest tools/tests：353 passed / 46 subtests",
+      "compileall robot app main.py 通过"
+    ],
+    "limitations": [
+      "recorder 尚未切换到 recording_view；新 HDF5 导出属后续任务",
+      "未做真机验证"
+    ]
+  },
+  "blocker": "",
+  "nextAction": "进入 robot-config-template-and-settings"
+}

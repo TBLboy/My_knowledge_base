@@ -1,0 +1,42 @@
+{
+  "id": "franka-control-architecture-normalization",
+  "title": "规范化 Franka 公共控制链路",
+  "goal": "在控制语义对齐后，迁移到公共 runtime → TeleopTarget → 通用 worker → FrankaAdapter，同时保留已确认行为。",
+  "doneWhen": [
+    "前置语义对齐任务完成",
+    "公共 runtime/worker 不含 Franka 专属控制算法，Franka 实现位于 robot/franka",
+    "构型配置与诊断经统一入口选择",
+    "离线回归证明已确认控制语义不变，真机验收需单独授权"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "依赖 franka-control-semantic-alignment 完成后开始",
+    "公共代码保留 app/teleop，不新建 runtime 代码目录",
+    "不改控制算法、增益、限位、安全参数及 recording/HDF5",
+    "目标架构依据 unified-platform-integration-boundary",
+    "Franka 控制进程=app.teleop.eef_runtime（公共）→ app.teleop.adapter_worker（公共）→ robot/franka/adapter.py FrankaAdapter；robot/franka/runtime.py、worker.py 仅为兼容再导出",
+    "registry 提供 control_entry/create_adapter/create_device_client/create_clutch/diagnostics_for；supervisor 与 discovery 按配置选择，不再硬编码 franka 判断",
+    "robot/core/adapter.py 定义 RobotAdapter Protocol（connect/feedback/apply_targets/hold/start_reset/reset_running/reset_outcome/set_reset_pose/close）"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "公共 runtime/worker 无 Franka/厂商导入；配置驱动选择；离线回归通过",
+    "checks": [
+      "grep franka|franky|robotiq|scipy in app/teleop/eef_runtime.py adapter_worker.py control_events.py recording_session.py → 仅 docstring 提及参考工作台，无导入",
+      "registry 选择链路 → supervisor 经 control_entry 启动；client 启动 app.teleop.adapter_worker；discovery 经 diagnostics_for",
+      "compileall app robot main.py tools/tests → ok",
+      "pytest tools/tests/test_franka.py → 24 passed (reset order close→move→open, cancel holds w/o device error, set_reset_pose persists YAML+memory, finish holds w/o reset, reset-cancel no restart)",
+      "pytest tools/tests/test_capture_integration.py new tests → record_success saves/exports, record_discard & active robot_reset delete, idle robot_reset submits reset; stale/foreign identity ignored; control-events.jsonl tail drives real session",
+      "full suite env -u PYTHONPATH pytest tools/tests → 309 passed, 14 skipped, 3 failed (pre-existing: FakePiper MotionCtrl_2, upload path, human speed 4.472) — accepted by user"
+    ],
+    "limitations": [
+      "未做真机验证：Franka 复位/夹爪/标定/退出行为需现场授权验收",
+      "左臂复位姿态数值未对齐参考 rig（可调参数，按用户决定）",
+      "app/teleop/integration.py 仍保留既有 robot.franka.config.sides / demo 导入（预存，非本轮范围）"
+    ]
+  },
+  "blocker": "",
+  "nextAction": ""
+}
