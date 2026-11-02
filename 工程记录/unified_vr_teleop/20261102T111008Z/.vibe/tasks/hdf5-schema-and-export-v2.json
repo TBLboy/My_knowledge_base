@@ -1,0 +1,41 @@
+{
+  "id": "hdf5-schema-and-export-v2",
+  "title": "实现统一 HDF5 v2 导出",
+  "goal": "按最终业务基线将标准中间层数据导出为 inhouse-hdf5-v2 键树、attrs、任务/机器人快照和 action/observation 可选字段。",
+  "doneWhen": [
+    "根 attrs 来源完整且与任务 YAML、机器人 YAML、采集配置和 episode 结果一致",
+    "主时间轴由相机同步帧驱动，输出 observation/state、images 和已声明 action",
+    "eef_pose 为 (T,7) 且四元数 xyzw；未声明字段不创建；不写 cam_dup、内外参或零值占位",
+    "manifest 字段符合最终基线，不写 success/discarded/n_discarded",
+    "导出测试覆盖单臂/双臂、eef/joint action 组合和机器人可选观测字段"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "依赖 recording-pipeline-architecture / recording-contract-and-middleware / robot-config-template-and-settings / task-config-lifecycle",
+    "新导出器 app/storage/hdf5_v2.py 只消费 recording_frames.json 中的声明字段；旧 schema v3 导出保留给历史会话",
+    "导出前校验时间轴严格递增、帧数一致、每路 MP4 帧数等于 T；不满足即失败并保留原始会话",
+    "部分帧缺字段时拒绝导出，不补零也不复制上一帧（不完整帧策略仍待澄清）",
+    "批次编号与 manifest 由 app/storage/batch.py 负责；本次不写 _SUCCESS（封口判据未定）"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "统一 HDF5 v2 导出、批次编号与 manifest 已实现，离线回归与演示模式通过",
+    "checks": [
+      "新增 tools/tests/test_hdf5_v2.py：12 passed（键树、未声明字段、无 action、attrs、单臂 main、部分帧拒绝、时间轴校验）",
+      "新增 tools/tests/test_batch_manifest.py：8 passed（批次编号、跨任务独立、manifest 无结果字段、原子写）",
+      "新增 tools/tests/test_manifest_integration.py：2 passed（导出自动登记 manifest、不写 _SUCCESS）",
+      "recorder 写 recording_frames.json 与批次号；capture_service 按中间层声明生成标准帧",
+      "完整 pytest tools/tests：400 passed / 46 subtests",
+      "compileall robot app main.py 通过；PTR_DEMO 五页均 200，无 traceback"
+    ],
+    "limitations": [
+      "未做真机录制与真机导出验证",
+      "采集端自检/拒收、_SUCCESS 封口、音频/language、音频对齐均未实现（基线已声明暂缓）",
+      "巡检未覆盖播放页读取 v2 文件的路径"
+    ]
+  },
+  "blocker": "",
+  "nextAction": "等待用户真机验收；如需继续，先确认播放/回放页对新 v2 键树的读取"
+}

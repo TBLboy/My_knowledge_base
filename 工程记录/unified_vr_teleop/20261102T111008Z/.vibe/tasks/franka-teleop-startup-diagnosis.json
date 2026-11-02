@@ -1,0 +1,32 @@
+{
+  "id": "franka-teleop-startup-diagnosis",
+  "title": "诊断 Franka 真机遥操作无法启动",
+  "goal": "通过远端只读状态与日志定位 Franka 已连接、PICO 已连接但手柄不能控制机械臂的原因，必要时最小修复启动逻辑。",
+  "doneWhen": [
+    "取得配置、控制进程、XR、Franka worker 和日志证据",
+    "明确阻断遥操作的直接原因及所属链路",
+    "若需代码修复，保持控制语义和安全边界并进行离线回归",
+    "不通过诊断操作触发真实机械臂运动"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "诊断阶段只读，不提交启动、复位、使能或目标指令",
+    "真实运动修复后的验收由用户明确操作"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "启动链路未进入遥操作执行；不是当前 Franka worker 或 PICO 输入故障。",
+    "checks": [
+      "adapter_worker 以 right 模式运行；只读 status 返回 owner=null、error=\"\"、enabled=false，符合尚未执行的状态",
+      "PICO ADB 在线，XR 63901 监听正常；control-state 为 mode=input、phase=ready、summary=手柄输入已就绪，right fresh=true",
+      "操作日志只有 control.check / control.stop / control.input，没有 control.preview 或 control.execute；preview={}",
+      "因此当前仅完成手柄检查，未经过运控预检和执行启动；未修改代码，未发送运动指令"
+    ],
+    "limitations": [
+      "尚未验证后续 preview/execute 是否会出现独立问题；需用户按正确顺序继续现场操作"
+    ]
+  },
+  "nextAction": ""
+}

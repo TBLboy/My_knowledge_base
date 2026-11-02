@@ -1,0 +1,40 @@
+{
+  "id": "legacy-residue-sweep",
+  "title": "清理 Franka 单主线遗留的旧命名、旧注释与旧逻辑",
+  "goal": "在 feat/franka 分支上系统排查并清理 CAN 时代、多机型时代和策略执行时代残留的命名、注释、脚本与死代码，使代码与注释只描述当前架构（注册表 + Franka 适配 + 公共 EEF 链路），并保证行为不变。",
+  "doneWhen": [
+    "全库扫描给出遗留清单：旧术语（CAN/piper/arx5/ur7e/dagger/policy/六轴/规则动作）、指向已删除文件的引用、无消费者的函数与模块",
+    "确认可安全删除的死代码与过期脚本、过期注释、过期文档段落，并完成清理",
+    "清理后离线测试全绿，演示模式五页可访问，真机启动链路（配置加载 + 机械臂 manager 构造）不受影响",
+    "不在本轮修改的业务事实（HDF5 基线、站点配置策略）显式记录为未动范围"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "只清理有证据的死代码与过期文本；语义不明或仍需现场确认的分支保留并记录，不凭猜测删除",
+    "重命名只限内部 API 与注释；对外 HTTP 字段与录制文件字段不因命名整洁而变更",
+    "站点数据值（piper2 上传桶名）、历史日志/会话名（legacy、can_start 别名）与 upload-piper1.sh 的个人目标路径保留，前者属数据、后两者属兼容或需用户决定部署约定",
+    "app/ui/franka.py 文案改写层随 i18n 中性化一并删除，UI 不再按机型改写文字"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "提交 e720c39；本机 269 passed / 46 subtests，compileall 与 node --check 通过，演示模式五页 200 无 traceback；工控机拉取后定向测试 98 passed",
+    "checks": [
+      "env -u PYTHONPATH ../../.venv/bin/python -m pytest -q -c tools/tests/pytest.ini tools/tests -> 269 passed, 46 subtests",
+      "env -u PYTHONPATH ../../.venv/bin/python -m compileall -q app robot main.py tools -> clean",
+      "node --check app/static/js/arm_viewer.mjs -> ok",
+      "演示模式 PTR_DEMO=1：/record /settings /playback /stats /events 全 200，traceback 0",
+      "工控机 192.168.10.38 拉取 e720c39 后：test_integration/test_flows/test_franka/test_hardware_discovery/test_supervisor/test_operator_p1 -> 98 passed",
+      "docs/README、README 内部链接校验：0 断链；i18n 孤儿键仅剩动态拼接的 hint.* 与 pb.h5.*"
+    ],
+    "limitations": [
+      "未在真机上重跑连接 Franka 全流程（需操作员在工位点击，且会连接 FCI）",
+      "工控机上真实模式 app 正在运行，全量测试中依赖启动演示服务器的用例会因运行模式保护而失败，属环境限制",
+      "upload-piper1.sh 的目标目录仍为个人路径，未改，需用户给出部署约定",
+      "HDF5 统一基线（v1.1）本轮未涉及"
+    ]
+  },
+  "blocker": "",
+  "nextAction": "操作员重启工控机上位机以加载 e720c39，再验证连接 Franka 与录制流程"
+}
