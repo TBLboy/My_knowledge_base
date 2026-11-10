@@ -1,0 +1,10 @@
+{
+  "id":"20261109-ieee-control-refinement",
+  "title":"第四章IEEE写作与论证组织精修",
+  "goal":"按用户批准方案改写IV.A为完整MPC问题并精化IV.B接口，保留控制律、理论条件和编号，新改标蓝。",
+  "policy":"balanced","status":"completed","phase":"complete",
+  "doneWhen":["IV.A包含完整有限时域问题(31)：决策变量、目标、初值、冻结动力学、输入约束；U/Ez/Eprev就地定义；u^r_-1为给定初始化数据；删除占位图分支指向","标称精确复现p(bar U)=bar q、非Jacobian线性化说明、U_k^*/W_k/J^fr(U;bar U_k)分工、输入缓存严格凸性机制齐全","IV.B保留全部量词/残差/参考/solver条件与值下降链；B-1..B-5精确化；以推论证明收尾；N=1与精确参考特例仅在附录B","章节结构、全部label及61个公式编号不变；前文/实验/图片/代码/附录A/C不改；新改标蓝","源级核查与两次编译通过并核看版面；PDF发布成功或明确占用阻塞"],
+  "decisions":["依据用户确认的chapter4-edit-plan与IV-A任务书，剔除其中会新增假设的建议（不要求参考精确可实现、不以Pi>0单独论证凸性、不新增终端集合）。","(31)改为含p决策变量的完整问题，同时说明消元等价与J_k^fr(U;bar U_k)记号，保持(39)与附录B接口一致。","algorithm浮动位置改为[!b]，避免切断引用句；公式编号与标签不变，未commit/push。"],
+  "verification":{"status":"passed","summary":"IV.A/IV.B改写完成，源级核查与两次编译通过，PDF已写回论文目录。","checks":["check2.py通过33项：IV之前、实验/结论/附录A、附录C/文献不变；附录B仅3处特例句；label/cite与61个公式编号不变，(29)(31)为唯一改动公式且(29)数学等价。","(31)含min_{U,p}、目标、p_0、动力学、u∈U；文中定义U_k^*、W_k=J(U_k^*;bar U)与J第二自变量含义，并说明消元等价；IV.A含标称精确复现p(bar U_k)=bar q、非一阶展开声明、输入缓存驱动的严格凸性机制、Q为分析域、bar U_k来源。","IV.B保留假设量词/独立残差/参考条件/值下降与比较链；B-2冻结半径改指bar_eta；B-4定理指认W_k为(31)最优值；B-5可行性对应(31)约束集；仍以推论证明收尾。","重新编译两次均exit0；0fatal/undefined/Overfull/缺字、5Underfull；aux核对61个eq编号不变；渲染确认11页，算法以[!b]置于栏底且未切断引用句。","源码SHA256=9EE8965D3301231BD25E0D80B9FF7298A7C14BBD1FEEF01115ACBAF4562EF22D；发布PDF SHA256=9B5D0F6F0E7FF210CC5D3D79752583D150B00910CD756676FFC47D5FF7EC17B5，与最新构建输出一致（不同次构建的PDF哈希可因内嵌时间戳不同，源哈希一致）。"],"limitations":["仅源级写作与数学核对，未运行训练/求解器/实验；5条Underfull保留。"]},
+  "nextAction":"交付蓝色审阅稿；未commit/push，无待恢复工作。"
+}

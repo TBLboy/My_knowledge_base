@@ -1,0 +1,10 @@
+{
+  "id":"20261109-contraction-paragraph-flow",
+  "title":"整理III.B收缩构造的对象顺序",
+  "goal":"落实批准的III.B局部重写：名义矩阵、Lyapunov度量、范数的即时使用、统一参数约束依次展开，不改变理论条件。",
+  "policy":"balanced","status":"completed","phase":"complete",
+  "doneWhen":["(24)仅定义M0，Lyapunov方程单独不编号展示；说明A0 Schur与幂零缓存共同给出M0 Schur","范数定义立即用于Q及lambda0，删除命题重复的lambda0定义；统一导数上界和固定增益条件保留","压缩约束段并将部署约定移至训练说明末尾；其余训练、公式(25)以后、定理/附录/实验代码不变；新改标蓝","核对label/cite及公式编号；连续两次真实编译并检查实际PDF版面，PDF成功写回或明确占用阻塞"],
+  "decisions":["按用户最近两轮确认的替换方案执行，实施规格见.vibe/docs/specs/20261109-contraction-paragraph-flow.md。","不添加Schur参数化或修改模型类；保留现有未提交修改，不commit/push。"],
+  "verification":{"status":"passed","summary":"III.B按批准的对象链重写；两次编译成功、核看实际版面且PDF写回，理论条件未改。","checks":["uv run --no-project --python 3.12 C:/Users/12187/AppData/Local/Temp/opencode/contraction-flow-20261109/check.py通过11项检查：仅III.B局部变动；训练参数/损失/样本/梯度不变；部署句原文移动；M0与Lyapunov等式不变，仅原编号公式24拆分展示；lambda0定义前移；命题条件/结论、证明、控制和附录实验逐字不变。","全部label/ref/eqref/cite命令保留，无重复或无效引用；对比编译aux，61个eq标签编号均不变。(24)仍指向骨架，(25)仍为导数常数；两处后文骨架引用仍准确。","tectonic --only-cached --keep-logs --keep-intermediates --outdir C:/Users/12187/AppData/Local/Temp/opencode/contraction-flow-20261109 Main.tex 连续两次exit0，0fatal/undefined/Overfull/缺字，6Underfull；git diff --check通过。","Windows PDF渲染核看第4/5页，矩阵24、独立无编号Lyapunov方程、即时使用的范数/分析域/收缩率、约束段及命题排版正常；新增与移动内容为蓝色。","发布前后源码SHA256=D50BCE16897C4FA5760AE2FD7D120DC02CB51A205AF8132C7A3CC67CD2E0A56D；Main.pdf SHA256=BDCFD871D02FF38544D2E2C9A9E4947D0E22CA82BBC278038520643FB4166B31与构建输出一致。"],"limitations":["仅语言及公式组织调整，未实施Schur参数化、运行训练/实验或进行数值认证。","6条Underfull及既有Fontconfig/缓存包UTF-8提示保留，PDF生成正常。"]},
+  "nextAction":"交付已标蓝的新稿；未commit/push，无待恢复工作。"
+}

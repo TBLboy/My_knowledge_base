@@ -1,0 +1,32 @@
+{
+  "id": "20261020-fh-split-sentence-c7a1",
+  "title": "将f和h拆成独立句子分别介绍",
+  "goal": "将Main.tex II.A第162行的'The maps f:... and h:... describe the state transition and measurement, respectively.'拆成两个独立句子，f单独一句，h单独一句。不改公式含义、公式编号、其他正文。",
+  "doneWhen": [
+    "f:S×R^m→S 单独一句说明状态转移映射",
+    "h:S→R^n 单独一句说明测量映射",
+    "两句各自独立，不使用'respectively'合并表述",
+    "其余正文、公式标签、引用键全部不变",
+    "真实两次编译exit0，strict reviewer go"
+  ],
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "只拆第162行末尾那一句，不改其他任何内容；以已有Tectonic离线编译。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "f/h 拆成两个独立句子，两次真实编译 exit 0，0 undefined/Overfull/缺字，6 Underfull，PDF 已更新。",
+    "checks": [
+      "f:S×Rm→S 单独一句 'is the state transition function'；h:S→Rn 单独一句 'is the measurement function'；where 子句三项 s/u/x 集中在前，两个 map 句各自独立。",
+      "已有 Tectonic 0.17.0 only-cached 对真实 Main 连续两次编译 exit 0；两次 log 均 0 fatal/undefined/缺字/font failure/Overfull，6 Underfull 保留。PDF 已复制到论文根目录。",
+      "Main.tex SHA256=ea2d1b845e2bd1b6404bb08e429cb2321eb1237dee86d8ae2073e7d2d3fa689a，Main.pdf SHA256=9b89a505b06bdf722224613ed90c43ece6c4ecc50bc0712449b828580e51f9f1。其余正文、公式 label、引用键均未改。"
+    ],
+    "limitations": [
+      "仅 Tectonic/XeTeX 实际运行，保留原 Fontconfig/缓存包/字体环境警告及 6 Underfull；未运行其他引擎。"
+    ]
+  },
+  "review": {"verdict": "go", "findings": [], "repairRounds": 0},
+  "nextAction": "独立 reviewer ses_ea6871f75ffeaFxj0T5K238A3L 返回 go；已交付，等待用户下一处修改。"
+}

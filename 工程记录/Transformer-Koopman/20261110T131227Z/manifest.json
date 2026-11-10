@@ -1,0 +1,195 @@
+{
+  "format": "vibe-v2-project-archive-1",
+  "created_at": "2026-11-10T13:12:27.152071+00:00",
+  "source": "D:\\Project\\Transformer-Koopman",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "8704db9633c6aee3b62a0d08feea8c9bf420faaceb387dda6e8cb14bedd483a3"
+    },
+    {
+      "path": ".vibe/backups/20261019-141848/AGENTS.md",
+      "sha256": "d18772cbc50e08f7894c7ccd2ec8999ae05c47c82ad7de4f0ae447995634068e"
+    },
+    {
+      "path": ".vibe/backups/20261019-141848/manifest.json",
+      "sha256": "fb4157fff2a8d8e64c771cdc0f8fb9fe929003f876cc0f535eb5b307f2a0f92e"
+    },
+    {
+      "path": ".vibe/backups/20261019-141848/project-memory.md",
+      "sha256": "a80164f1fe36f60a51926939b5a836eafcc806ef53150034ea97522626ba101e"
+    },
+    {
+      "path": ".vibe/docs/chapter4-edit-plan-20261109.md",
+      "sha256": "fea44a3bb1cd09a40f0017556fa98491a41f6fbd8eef3231c47dd4f876070145"
+    },
+    {
+      "path": ".vibe/docs/chapter4-output-tracking-rewrite-plan-20261110.md",
+      "sha256": "6b876c1bb0fcbbe2bfe9bd266e9add3c0f14318e09b4f2b2c694c712e05463ff"
+    },
+    {
+      "path": ".vibe/docs/chapter4-revision-log-20261109.md",
+      "sha256": "fc8dbbe8b4ae0ca4755bf61b9e75b2c4f1af0f99286ad1f1c44e68cae468c372"
+    },
+    {
+      "path": ".vibe/docs/papers/koopman-lifted-tracking-review-20261109/reading-note.md",
+      "sha256": "c88da809079d13e83bb3db1e4a1da43a74d8cef9b992084bc0b2db6b06c5b3f3"
+    },
+    {
+      "path": ".vibe/docs/specs/20261109-contraction-paragraph-flow.md",
+      "sha256": "1bacdd0ba208ec527708995568099d25115a4d89c6885876d6a7b2d458eda8f3"
+    },
+    {
+      "path": ".vibe/docs/specs/20261109-ieee-control-refinement.md",
+      "sha256": "eb96780167ffc5298227f869863b7aa84d086d575b9b2b9614a1a15a9881c649"
+    },
+    {
+      "path": ".vibe/docs/specs/20261109-iv-a-direct-mpc-baseline.md",
+      "sha256": "bfdb547db4cb7f3571bd878cfb7b6a2f2f0331158117f324c15d62b06e368999"
+    },
+    {
+      "path": ".vibe/docs/specs/20261109-proposition-proof-ending.md",
+      "sha256": "ef45013ef3c32b4f73a238c085902941df5f8f0a37c826b560791ea050973c6b"
+    },
+    {
+      "path": ".vibe/docs/specs/20261109-training-notation-budget.md",
+      "sha256": "707a6a33bc721914fa04b36a0107e9e34d9578a264ba1c8a52036766524a089e"
+    },
+    {
+      "path": ".vibe/progress.md",
+      "sha256": "29843a5549d9abe4be8fde8c4dc37f26dac6ded87f4d97b55f7d03351ad87bad"
+    },
+    {
+      "path": ".vibe/tasks/20261019-finalize-main-manuscript-7a3e.json",
+      "sha256": "fbfaa82f7924834b1eadbae4f75014f4e90424a208db96b77468c9eaeb96bae6"
+    },
+    {
+      "path": ".vibe/tasks/20261019-introduction-logic-rewrite-94f2.json",
+      "sha256": "fcbec4d6e741a4e2fec518ad13222857bffe7309d7bb30460b12d8dab7e2a819"
+    },
+    {
+      "path": ".vibe/tasks/20261019-paper-refinement-r2-6c12.json",
+      "sha256": "900fc2f5e870cf8275423b24f05191f655cf0620b1731cd22b0d626a7e168b96"
+    },
+    {
+      "path": ".vibe/tasks/20261019-paper-refinement-r3-81d4.json",
+      "sha256": "806d3bc0a645d62f67bd9f8a8610e3511add18535b0667c9883e3b7628b95061"
+    },
+    {
+      "path": ".vibe/tasks/20261019-paper-sixsection-rewrite-4e8a.json",
+      "sha256": "9ff7d2a42ff34c1d65c355acd494e7e8272d05856e1a8a7f26eb94644dd83694"
+    },
+    {
+      "path": ".vibe/tasks/20261019-reinit-v2-7c61.json",
+      "sha256": "fdb8e191b0d6ca143ff740fdf5e240e8d31d54027aa7049937405b1e98dbc1cb"
+    },
+    {
+      "path": ".vibe/tasks/20261019-v3-gpt-final-theory-bundle-9a41.json",
+      "sha256": "8bdcd32fb45e0cf806dda1c3708c471c7fc90a99c10e7ff3aaf83002cdf49743"
+    },
+    {
+      "path": ".vibe/tasks/20261019-v3-gpt-progress-5f2c.json",
+      "sha256": "6311a36333c7ea9a7eaa14af695cebd586157ab527526c9246bad146b364e087"
+    },
+    {
+      "path": ".vibe/tasks/20261019-v3-theory-closure-audit.json",
+      "sha256": "6e0865e8592a7bbfc7e9ef70d514dfd2ae948c4dd10c573cdd691aa6cbe8dd9b"
+    },
+    {
+      "path": ".vibe/tasks/20261020-dataset-symbols-f2a4.json",
+      "sha256": "c88fadf5c5528465bbf916093ac028f45947914e2329854c9f7a8fd6230af2db"
+    },
+    {
+      "path": ".vibe/tasks/20261020-fh-split-sentence-c7a1.json",
+      "sha256": "9206d89b68f6f372c70858b0be4e0ae8c559d4f591c480f5960f2c96c79508d1"
+    },
+    {
+      "path": ".vibe/tasks/20261020-koopman-oldver-adapt-b5e2.json",
+      "sha256": "0f26b02420deddef7c66b868a000dfcdc38cc71c63a653fd4312691084a946c1"
+    },
+    {
+      "path": ".vibe/tasks/20261020-koopman-subsection-rewrite-a3f8.json",
+      "sha256": "bc5ac6cb4cc6f815cbd1438f859badf0f1ba46a330e33e6b5ceeb4241e24b815"
+    },
+    {
+      "path": ".vibe/tasks/20261020-problem-formulation-oldver-e6b1.json",
+      "sha256": "1dd9c94daafbbb65b34aeb4c652dafe57cd3b481e6ec0c1d972ba83e31c59c0a"
+    },
+    {
+      "path": ".vibe/tasks/20261020-problem-formulation-rewrite-d3c9.json",
+      "sha256": "33591809ad04fbf4edc16dddf16da8422e82c917f8f62681e27a5579a0f02585"
+    },
+    {
+      "path": ".vibe/tasks/20261020-problem-formulation-user-version-g8c3.json",
+      "sha256": "f3eed96f9627c22bc3455f288abd4ba54dd735d736538471e3306592908a05b1"
+    },
+    {
+      "path": ".vibe/tasks/20261020-system-notation-31bc.json",
+      "sha256": "1d2f2ba05ac04fc04c0ec5397323e0905925a0b1b64b0be940c570d38e492ee3"
+    },
+    {
+      "path": ".vibe/tasks/20261021-rewrite-3a-from-old.json",
+      "sha256": "23e841971923764864436547c38f0a078af616b77190e3ee374f1e0665592ca9"
+    },
+    {
+      "path": ".vibe/tasks/20261022-3a-old41-faithful.json",
+      "sha256": "b9cfd1178801a5ab91b866e43260f50beb842c0c7ffda88a5b77ec0abc5ad504"
+    },
+    {
+      "path": ".vibe/tasks/20261022-3a-user-and-blank-figure.json",
+      "sha256": "fa392a3e81d717cb8be291104d644426a863f09dbbc539386600ffb6b470ba83"
+    },
+    {
+      "path": ".vibe/tasks/20261022-eq11-eq13-layout.json",
+      "sha256": "24b6b62ea9f84494468f082c743987b123d3d7c4aa216381b629a4704fb2cbbb"
+    },
+    {
+      "path": ".vibe/tasks/20261022-intro-user-replacement.json",
+      "sha256": "3ba979ef3b3e47f6710758152d3a05a59a54e7a53512829a02c2516e20a3cbb5"
+    },
+    {
+      "path": ".vibe/tasks/20261027-scheduled-matrix-description.json",
+      "sha256": "65c4131781f664fa4f071cead165a22f7f310c017b0ac56591f9a0756d7ce119"
+    },
+    {
+      "path": ".vibe/tasks/20261028-local-ssh-key.json",
+      "sha256": "9c3760df56e8eeaa93472bb4ecfdc0bda5a95a869e97a0568d4f0acfe0eb85d6"
+    },
+    {
+      "path": ".vibe/tasks/20261109-black-baseline-control-plan.json",
+      "sha256": "8149cbd1a878541d31ca1d96c7485fbcb3ed4a3de5f9699ebac8067cb19b5fa1"
+    },
+    {
+      "path": ".vibe/tasks/20261109-chapter4-guide-revision.json",
+      "sha256": "6425331fcb4dc98276962afe7fa3d5308e73cf277f250fac77fa77d2bc8c9a41"
+    },
+    {
+      "path": ".vibe/tasks/20261109-contraction-paragraph-flow.json",
+      "sha256": "d00ab2b145b01b9f07489acb32a04412673383c2b68f4c75d3b7c3060606a6f5"
+    },
+    {
+      "path": ".vibe/tasks/20261109-horizon-and-head-notation.json",
+      "sha256": "64607d87ba9aa512acd79e74a8e0fe8c72890051940a0d3d3a6a3d64332c6fab"
+    },
+    {
+      "path": ".vibe/tasks/20261109-ieee-control-refinement.json",
+      "sha256": "01625c5227b4795db126e528d2d31983588e3ce8c8b11f89c905c5748035843e"
+    },
+    {
+      "path": ".vibe/tasks/20261109-inline-notation.json",
+      "sha256": "13e97ec4a80d64677119f26186ef7363eb0406dc2f6d8c0c7e704b8467f826b3"
+    },
+    {
+      "path": ".vibe/tasks/20261109-iv-a-direct-mpc-structure.json",
+      "sha256": "46d560b462e8db08bec8bd8c341c3bafc26c90f32f931d0dd4618ecfe6360a71"
+    },
+    {
+      "path": ".vibe/tasks/20261109-proposition-proof-ending.json",
+      "sha256": "94ead3636b11c741cd55f84ea9677db9c9ce0f92941ccd663584b2d2a7d82acc"
+    },
+    {
+      "path": ".vibe/tasks/20261109-training-notation-budget.json",
+      "sha256": "23b00770ae96a7e6a1588f141004acbbe471cd803921ae9dbaa8936aac722676"
+    }
+  ]
+}

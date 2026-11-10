@@ -1,0 +1,43 @@
+{
+  "id": "20261020-problem-formulation-rewrite-d3c9",
+  "title": "重写 II.B 对象链",
+  "goal": "按 F 节写作原则重写 Main.tex II.B（第204–221行），建立数据→历史→预测任务→控制目标→参考规范→符号约定的对象链；拆分过长句子；保留所有公式、标签和引用键。",
+  "doneWhen": [
+    "数据集段清晰定义训练数据对象，接着自然引出历史窗口（X_k 由 II.A 已知，这里引出 v_k 作为对称的输入历史）",
+    "当前输入的时序位置单独一句说清楚，不和预测任务定义混在一起",
+    "预测任务定义为一句：给定 X_k、v_k 和未来输入序列，递归预测未来测量；不夹带'rather than re-encoding'的辩护性说明",
+    "控制段先定义 N 和 U，再引入参考轨迹对象，再说明约束条件，不把三层逻辑压在一句话里",
+    "目标句和符号定义拆成两个独立段落或句子",
+    "eq:trajectory_dataset/eq:history_windows 标签保留；不新增引用",
+    "不改 III 章及后续内容",
+    "两次真实 Tectonic 编译 exit 0，strict reviewer go"
+  ],
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "II.B 不能直接照抄老版本：老版本只有学习任务，新版本还需要包含控制目标和参考规范（老版本有单独的控制章）。按 F 节原则建立本节独有的对象链。",
+    "保留所有公式数学内容、标签、现有引用键；不删除参考轨迹约束或符号定义内容，只重排和拆句。",
+    "以已有 Tectonic 离线编译，不安装新依赖。",
+    "v_k 符号全文用非粗体（原文如此），改回 v_k 而非 \\vv_k。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "按对象链重组 II.B：数据→历史→预测任务→控制设置→参考轨迹→目标→符号约定；拆分过长句子；v_k 符号与全文一致；两次真实编译 exit 0，PDF 已更新。",
+    "checks": [
+      "数据集段改为'measured input--output trajectories'与 II.A 用语一致；eq:trajectory_dataset 标签保留。",
+      "历史段：'For each admissible index k, the measurement history X_k is defined in \\eqref{eq:measurement_window}, and the corresponding past-input history is v_k=col(...)' — X_k 由 II.A 的 eq:measurement_window 引出，v_k 对称引入；eq:history_windows 标签保留；v_k 符号与后续 Line 270 col(z,a,v) 及图注 v_k 一致。",
+      "当前输入时序位置单独一句：'The current input u_k is applied after both history windows have been observed and enters the predictor separately.'",
+      "预测任务单独一段清晰定义：given X_k, v_k, future inputs，递归预测未来测量；去除嵌入的辩护性说明。",
+      "控制段拆成三层：先 N/U，再参考轨迹对象，再约束条件；参考轨迹交叉引用 sec:model（不再是'defined below'）。",
+      "目标句和符号约定拆成独立段落，用'We write'引出符号，e^T 改为 e^\\top。",
+      "两次 Tectonic 0.17.0 only-cached 编译 exit 0；0 fatal/undefined/缺字/Overfull，5 Underfull；Main.tex SHA256=98287e68ac27e36ff599c0a3469022ea7b90990b0395bf03e66ec5d7b460122a，PDF SHA256=fd54d070c00cec937573cc94c10005a0e08f87ef60f242b7a1e3559b7657d089。"
+    ],
+    "limitations": [
+      "仅 Tectonic/XeTeX 实际运行，保留原 Fontconfig/缓存包/字体警告；未运行其他引擎。",
+      "参考轨迹的 E_prev、F 等符号在 sec:model 中定义，此处交叉引用正确但读者需查阅后文。"
+    ]
+  },
+  "review": {"verdict": "go", "findings": [], "repairRounds": 0},
+  "nextAction": "独立 reviewer ses_ea65ddc01ffeOB4G5c44uphEh0 返回 go；已交付，等待用户下一处修改。"
+}

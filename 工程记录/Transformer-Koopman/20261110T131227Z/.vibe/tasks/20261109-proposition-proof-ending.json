@@ -1,0 +1,10 @@
+{
+  "id":"20261109-proposition-proof-ending",
+  "title":"以命题证明结束III.B",
+  "goal":"按用户批准方案将III.B证明后段落的条件和结论分别归入命题与证明，证明结束后直接进入Section IV。",
+  "policy":"balanced","status":"completed","phase":"complete",
+  "doneWhen":["删除证明后重复总结；III.B以end{proof}结束，无尾随段落","命题前提明确残差界针对当前编码状态属于Q的实测转移，保留独立残差条件和初始编码状态入域要求","原预测误差界移入命题结论不编号；匹配初始状态、相同U内输入及零初始误差递推在证明中交代","保留结构条件、增益选择、非零调度与附录指向；原编号公式及III.B目标区外内容不变，新改标蓝","真实编译两次，核对标签/编号/引用及实际PDF版面，并写回PDF或明确占用阻塞"],
+  "decisions":["实施规格见.vibe/docs/specs/20261109-proposition-proof-ending.md；仅重组现有理论内容，不新增模型约束、定理路线或数值结论。","保留Git现有修改，不commit/push；修改前源码/PDF/aux保存在opencode临时目录proposition-ending-20261109。"],
+  "verification":{"status":"passed","summary":"III.B已按批准方案以命题证明结束；独立残差/初始化条件和已有预测界归位，证明补充递推论证，两次编译及PDF发布成功。","checks":["uv run --no-project --python 3.12 C:/Users/12187/AppData/Local/Temp/opencode/proposition-ending-20261109/check.py通过12项核查：仅目标命题/证明/尾段变动；全部原编号公式逐字不变、label/cite不变；只新增一次(21)引用；预测界原式仅移动；证明之后立即进入Section IV。","数学审计：残差是针对所选lift/system的单独假设，仅要求实测转移的当前q_t^E在Q、u_t在U，不预设下一步入域。原半径不等式保证完整/冻结预测入域，并在加残差后保证下一编码状态入域；由相同初始状态、相同输入和残差接口得误差递推<=lambda*当前误差+bar_w，零初始误差迭代得到原几何和界。统一参数预算、初始集覆盖和非零调度条件均保留。","tectonic --only-cached --keep-logs --keep-intermediates --outdir C:/Users/12187/AppData/Local/Temp/opencode/proposition-ending-20261109 Main.tex 连续两次exit0；0fatal/undefined/Overfull/缺字、6Underfull；git diff --check通过。","前后aux比较确认61个eq标签编号均不变；Windows PDF渲染核看第5/6页，新增无编号预测界、命题和证明排版正常，QED之后直接进入Section IV；新改及移动内容为蓝色。","发布前源码SHA256=F7CB39EC39956EC88EA4332FC52BFB4474D1A1124FFB22D96F0B7361BDF404E5未变；Main.pdf SHA256=020D0451428296666C119515B43C99478865F950718DD5550923648E4612CBA2与构建输出一致。"],"limitations":["仅重组并明确原有理论条件和推论，未执行训练、数值认证或实验。","保留6条Underfull及既有Fontconfig/缓存包UTF-8提示；PDF生成正常。"]},
+  "nextAction":"交付蓝色修订稿；无待恢复工作，未commit/push。"
+}
