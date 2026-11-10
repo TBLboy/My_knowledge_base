@@ -1,0 +1,51 @@
+{
+  "id": "20261019-paper-refinement-r3-81d4",
+  "title": "按R2审稿意见精修独立六章R3论文",
+  "goal": "基于真实R2另存R3，按用户R2审稿意见改善论文措辞、显式W_k与Xi_k逻辑及常数入口、示例符号和可验证字体编译路线；不改变理论合同/章节结构或开展实验。",
+  "doneWhen": [
+    "交付独立Main_SixSection_TheoryRewritten_R3.tex与实际编译PDF、短R3_Revision_Summary.md；Main/首版/R2/V3/代码/实验/原图片不改，不提交推送",
+    "删除B-EXACT临时术语、proof object和competing finite-history error hypothesis元叙述，保留名义序列full/frozen全程一致与任意候选仅首步一致的数学内容",
+    "显式定义Xi_k并写出norm(e_k)^2<=W_k<=Xi_k，主定理证明、输入推论及附录价值递推使用同一入口，当前delta_k不遗漏",
+    "定理之前有epsilon与A/B常数的明确统一定义入口，逐项常数保持附录或最少正文，不恢复密集常数清单且不新增小节",
+    "保持收缩族可构造/训练参数须符合预算/实际残差独立的边界，示例特征系数gamma改为无冲突符号，全部公式/量词/控制律及N=1零误差条件不变",
+    "明确以本机已有Tectonic为实际验证引擎，改进XeTeX字体选择的可移植性并真实测试，不声称其他引擎/所有机器通过；不安装环境或新在线依赖",
+    "六章/核心六小节/三附录与图算法文献保留，静态/数学对照、最终真实源连续两次编译和必要版面检查通过；如有环境限制明示",
+    "主Agent核验完成后strict独立审稿go，记录真实检查/局限，不添加研究支线或实验结论"
+  ],
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "沿用R2另存_R3，不覆盖任何既有候选；只实施附件的有针对性精修，论文结构与V3数学契约冻结。",
+    "先小幅措辞与显式价值上界/常数入口修订，继而验证字体方案、静态和数学一致性，再两次构建/版面核查及strict审查。",
+    "构建仍使用已有Tectonic0.17.0 only-cached且输出到批准Temp/opencode目录；字体可用性以实测为准，不将附件pdfLaTeX证据写成主Agent实跑。",
+    "epsilon/d_j/tau的精确定义统一移至附录B，A/B保留附录C，定理前一句精确公式入口；正文保留首步/名义一致性、shift递推、tail与实际值下降的核心证明。",
+    "不引入fontspec新依赖：在IEEEtran选Times前检查四个TeX Gyre Termes字体资源，可用则优先，否则按系统Times New Roman命名回退；mathsf优先TeX Gyre Heros资源，否则Arial。需分别实测正常与系统回退路径，并明示未测试的跨机/引擎范围。",
+    "strict reviewer ses_eabedc5cbffeKrd13cN71e0tcC独立核读R3/R2/修订记录及相关V3-C/D，返回go/findings=[]，无需修补。附件/日志与PDF访问受限，采用主Agent构建/字体回退/版面/哈希/Git证据。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "R3精修、同名9页PDF与短记录已完成；内部用语清理、显式价值Xi逻辑与附录常数入口通过对照，最终真实源两次离线构建及最终系统字体回退测试exit0；独立strict审稿go、无required finding。",
+    "checks": [
+      "静态检查：六章/核心六小节/三附录/1主定理/1算法/1原理图；79唯一label/72 ref-eqref/26引用全对应，环境括号UTF8通过；标签接口/文献/图与R2一致。",
+      "57个R2带label公式逐块对照，55块内容不变（包含移至附录的shift/epsilon）；仅显式价值Xi界和示例alpha_d两块展示变化。完整q/F、域量词、QP/shift实际返回序列、参考tail、w/eta/dref/delta入口、N=1与零误差/当前输入delta不变。",
+      "主定理明确norm(e)^2<=W<=Xi，证明由标量递推得W<=Xi，输入推论Jhat<=W+delta<=Xi+delta及附录一致；定理前epsilon/A-B精确入口，定理前源码仍53行；B-EXACT/proof object/competing hypothesis措辞已清除。",
+      "最终真实R3源两次Tectonic0.17.0 only-cached构建exit0，9页；两最终log均0fatal/undefined/缺字/字体失败/Overfull，9 Underfull。正常选择Termes+Arial；最终源模拟缺失Termes资源并走系统Times New Roman+Arial回退也exit0，9页无undefined/缺字/字体失败/Overfull。",
+      "已有uv Python与缓存pdfminer/pypdfium2提取渲染并实看最终1–9页，正文定理Xi/推论/附录预算/文献及原图无可见裁切越栏。",
+      "R3 TeX SHA256=18bb80f90f937849ea7f476d5414865e2cb5dd830f2cc6b75e4a7cb294858c58；PDF=0303da09f95ecbe56d5345992f87171c4d2290df1da87e35a8dbc23f5677a19f，已复制论文同目录。Main/V3六来源与首版R2 tex/pdf哈希保持，tracked diff为空，不改代码/实验/原图片，不提交推送。",
+      "独立strict reviewer ses_eabedc5cbffeKrd13cN71e0tcC核对冻结验收返回go，findings=[]，无修补轮次。"
+    ],
+    "limitations": [
+      "仅Tectonic/XeTeX实际测试，未独立测试XeLaTeX/pdfLaTeX/LuaLaTeX；Heros优先分支无本地字体资源未实测，系统fallback仍需Times New Roman/Arial且smallcaps退为正体。",
+      "9 Underfull及Fontconfig/算法包UTF8注释/系统Arial路径警告保留；未装依赖或改系统缓存，不保证跨机同版。",
+      "第V章仍无结果，未做训练仿真/实验/代码实施/当前模型plant认证；本轮不重新核验全量文献或开展形式证明。",
+      "reviewer附件/临时日志访问受限且工具不支持PDF，采用主Agent实际编译/字体回退/版面/哈希/Git证据，未独立复编或视觉检查。"
+    ]
+  },
+  "review": {
+    "verdict": "go",
+    "findings": [],
+    "repairRounds": 0
+  },
+  "nextAction": "R3已通过strict审稿，交付TeX/PDF与R3_Revision_Summary.md，等待用户审阅；不覆盖Main或旧候选，不自动开启代码/实验/模型认证。"
+}

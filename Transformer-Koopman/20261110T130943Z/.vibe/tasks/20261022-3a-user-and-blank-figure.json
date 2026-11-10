@@ -1,0 +1,11 @@
+{
+  "id":"20261022-3a-user-and-blank-figure",
+  "title":"III.A替换为用户版本并清空测试总览图",
+  "goal":"采用用户完整III.A文本，做必要宏/自动引用及证明接口适配；按追加授权将非最终总览图替换为空白占位图，不为旧图补正文定义。",
+  "doneWhen":["III.A与用户文本一致，仅适配现有宏、自动引用、C_phi统一记号及后续必需E_prev定义","现有总览图替换为空白占位框，保留fig:overview和figure环境，caption明确待替换，不再包含模型内容；正文不为旧图定义X(q)","保留后续证明需要的F/q/w和原残差标签兼容；图与III.A外源码不变","改前源/PDF归档；两次真实编译exit0，检查引用/溢出，strict审查go"],
+  "policy":"strict","status":"completed","phase":"complete",
+  "decisions":["用户明确旧图只是测试占位，授权清空，不为图改写正文。","C_varphi适配全文C_phi；[26]用vaswani2017attention；Section II/(6)/(7)/(8)/Appendix A用现有自动引用；新标签使用用户版本，后文唯一旧残差引用同步更新到eq:reencoding_residual（amsmath不允许同一公式双label）。","E_prev在后续成本/证明中真实使用，保留其维数和选择器定义，不恢复X(q)。"],
+  "verification":{"status":"passed","summary":"III.A已替换为用户版本并完成必要兼容适配；旧总览图已清空为占位框。修复同一公式双label后，两次Tectonic编译exit0，PDF已更新。","checks":["III.A按用户段落/公式顺序写入；现有宏、自动引用、C_phi和后续E_prev接口适配；不恢复X(q)。","总览figure保留fig:overview标签但仅含空白占位框和待替换caption；III.A外源码与改前备份一致，图片正文未被旧图约束。","首次编译发现amsmath同一公式双label错误，已删除旧残差label并将后文引用统一至eq:reencoding_residual；最终无重复label、无未解析ref/eqref。","Tectonic only-cached连续两次exit0；0fatal/undefined/缺字/Overfull，6Underfull；Main.tex SHA256=B7082DE99C8ACD5830A202DB596A77653013CD122FFC981580425734A0E266A7；Main.pdf SHA256=DE38DA129E2E653A4B636179DF9441E3E4C5451889E1D4596CAC586AD3E3E4DF。"],"limitations":["仅Tectonic实际运行；未运行训练/实验/数值认证；保留既有环境字体和缓存警告。"]},
+  "review":{"verdict":"go","findings":[],"repairRounds":0},
+  "nextAction":"reviewer ses_e9cfffe1effeawS5kyhZYlDYfa返回go，无finding；交付用户。"
+}

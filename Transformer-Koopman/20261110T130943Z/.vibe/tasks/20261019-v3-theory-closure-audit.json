@@ -1,0 +1,53 @@
+{
+  "id": "20261019-v3-theory-closure-audit",
+  "title": "V3理论先行Frozen-QP闭环审查与定稿",
+  "goal": "先独立审查V2收缩型Frozen-QP证明，修复所有逻辑阻塞；仅在阶段A通过后继续模型类、控制器契约、论文级定理和Gate报告。全程只读原件与新增研究文档，不实施论文、代码、checkpoint、实验或图片变更。",
+  "doneWhen": [
+    "阶段A逐条审查V2完整证明并给出独立推导、极端反例、BLOCKER及修复后公式；阶段A未通过不得宣称后续闭合",
+    "阶段B若准入，给出可构造非平凡历史调度模型类、参数选取顺序、严格裕量、残差接口、解析实例和适用边界",
+    "阶段C若准入，固定一次名义rollout、一次冻结、一次凸QP、首输入执行及shift-reference-tail的数学契约，并处理非唯一解/次优性",
+    "阶段D若准入，生成完整定理证明、IEEE LaTeX片段、假设到设计验证矩阵和Executive Gate Report",
+    "所有结果标注PROVED/CONDITIONAL/CONSTRUCTIBLE/OPEN/INAPPLICABLE/BLOCKED/NO-GO；不宣称当前checkpoint、plant或现有代码已认证"
+  ],
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "V3任务书是研究授权，不是实施授权；不修改Main.tex、训练/控制代码、checkpoint、实验、图片或历史B1报告",
+    "保留原B1作为备选，不宣称其错误；V3主线仅研究收缩型仅输入硬约束Frozen-QP",
+    "保持一次完整非线性名义rollout→一次Frozen-LTV→一次凸QP→首输入执行→下一采样，不引入额外在线full rollout、非凸优化、在线LMI或隐含终端优化",
+    "阶段A未通过时停止在审查/修补或NO-GO，不进入B/C/D",
+    "2026-10-19阶段A双独立授权review均go：ses_ead0dbf5affeuoUzjDEVUL0sDI与盲审ses_ead0861eeffeT0qRP26ANiPikB；允许进入B，不关闭整个Task。phase从阶段性review返回implement为后续阶段研究，不是review repair。",
+    "最终review ses_eacf51648ffeDU2niyRWBLWus5唯一required finding（mathscr未声明依赖）已在第1轮替换mathcal并重验；清除已解决findings以满足pending re-review门禁，repairRounds=1保留。",
+    "最终整体re-review返回go、findings=[]、G1–G7通过；只完成纯理论研究，不授权实施，不改变原B1 OPEN/旧P5 STOP。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "A双审go；B/C/D完整解析构造/证明和七份集中产物完成，最终strict re-review go。第1轮LaTeX命令依赖修补后重验通过，最终源文哈希不变、内层paper clean；纯理论目标达成，实际模型认证仍独立OPEN。",
+    "checks": [
+      "读取V2主稿、V1独立审查、原始资料合订本及当前V2项目记忆范围",
+      "独立重推A1-A6：完整F/缓存首步、公共域、参考成本、Frozen值下降、比较界/最终半径和极端边界",
+      "阶段A报告V3_Theory/V3_A_Independent_Proof_Audit.md已生成，明确条件证明、实例开放项和进入阶段B的门槛",
+      "未修改Main.tex、训练/控制代码、checkpoint、实验、图片或历史报告",
+      "Node UTF-8检查：无非法控制字符、无重复A公式tag，展示数学环境配对；阶段A双审版SHA256=1bc7339eb1cb9f4c5c5203546f8855e695c892a686a82fb7f517d8f23b723e1e；三份来源哈希核对通过；paper HEAD=d6af529且工作区clean",
+      "B主Agent符号自检：完整链式导数、头softmax×tanh幅值/导数、B5/B8正裕量及延迟编码两周期实例；B11改为充分上界定义避免不等号歧义",
+      "C/D主Agent符号自检：一次QP/严格shift、Hessian PD、精确与次优DeltaW及几何递推、测量投影和输入当前delta项、N=1边界",
+      "七份文档UTF-8/控制字符/display及begin/end/tag检查通过；LaTeX28个label及全部ref/eqref、花括号通过，无cite；Task按schema字段类型枚举及additionalProperties检查通过（非通用完整validator）",
+      "第1轮修补重验通过：mathscr已无残留；候选tex SHA256=2bf08382e9ca44c8544f6a18ed47af3c885a8deb0a210794c2326b5e3bdd9035；V2源哈希不变；git status clean和git diff --exit-code成功",
+      "最终strict reviewer ses_eacf51648ffeDU2niyRWBLWus5 返回go、无required finding，独立确认G1–G7；Final Executive SHA256=cbbd7fa92968a1d0b1f83a65f62a21f358c8042dee50c8c7bf6142c14e0db0f8；其余六份最终哈希绑定见Executive §5",
+      "最终只读边界：V2/V1审查/合订本三份来源SHA256均与原值一致；内层HEAD=d6af529802ab5ac7df6383cbdd5a15270d1ffe8a，git diff --exit-code成功，工作区clean；未重建.project-log，未提交/推送"
+    ],
+    "limitations": [
+      "本地模型参数、真实plant残差、当前checkpoint是否满足收缩条件未认证",
+      "非精确求解器已有可行目标差条件扩展，实际数值solver是否满足未认证",
+      "PATH及常见安装目录未找到LaTeX编译器，候选片段未编译；未安装依赖",
+      "reviewer未独立重算哈希/Git，采用主Agent真实验证；最终reviewer读取外部任务书受限，以冻结Task和明确传入要求验收，主Agent已直接核对全部任务书条目"
+    ]
+  },
+  "review": {
+    "verdict": "go",
+    "findings": [],
+    "repairRounds": 1
+  },
+  "nextAction": "本轮纯理论研究完成；等待用户另行决定是否实施，不自动改论文/模型/控制器，不运行训练、checkpoint认证或实验。"
+}

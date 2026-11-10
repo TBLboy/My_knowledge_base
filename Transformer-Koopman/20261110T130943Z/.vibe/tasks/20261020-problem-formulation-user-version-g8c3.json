@@ -1,0 +1,34 @@
+{
+  "id": "20261020-problem-formulation-user-version-g8c3",
+  "title": "替换 II.B 为用户指定版本",
+  "goal": "用用户提供的完整文本替换当前 Main.tex II.B（第204–225行），保留公式数学含义，更新标签（eq:training_data、eq:past_input_history），检查后续章节对旧标签和删除内容的引用。",
+  "doneWhen": [
+    "II.B 完整替换为用户版本：aligned 公式、X_k（非粗体）、(6) 直接引用、新标签、预测任务段重写、删除原参考轨迹/增广坐标/符号约定段",
+    "全文搜索 eq:trajectory_dataset、eq:history_windows、E_prev、F(q,u) 等被删除符号，确认后续章节无破损引用或已适配",
+    "\\mX_k 与 X_k 混用检查：确认 III 章及后续用的是哪种，保持一致",
+    "两次真实 Tectonic 编译 exit 0，strict reviewer go"
+  ],
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "用户提供完整替换文本，直接照搬；需核查后续章节引用完整性。",
+    "eq:trajectory_dataset → eq:training_data，eq:history_windows → eq:past_input_history；需确认后续无 \\eqref{eq:trajectory_dataset} 或 \\eqref{eq:history_windows}。",
+    "原 II.B 末尾参考轨迹/符号约定段全部删除；需确认 III 章是否依赖这些符号的提前定义。",
+    "III 章第 276 行已定义 E_{\\rm prev}；III.B 开头（第 296 行后）补充 \\norm{e}_\\Pi^2 和 \\norm{L}_\\Pi 符号定义。",
+    "第一轮 reviewer conditional：(1) H 符号冲突（预测时域与调度头索引），改为 H_p；(2) q_t^r/u_t^r 未定义，在 IV.A 开头补充 MPC 时域 N 和参考轨迹定义。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "II.B 替换为用户版本；III.B 补充符号定义；第一轮修复：H→H_p、IV.A 补充 N 和参考轨迹定义；两次真实编译 exit 0，PDF 已更新。",
+    "checks": [
+      "II.B 完整替换：aligned 公式（eq:training_data）、eq:past_input_history 标签、预测任务段重写、删除原参考轨迹/符号约定段。",
+      "III.B 第 296 行后补充符号定义：\\norm{e}_\\Pi^2=e^\\top\\Pi e，\\norm{L}_\\Pi=\\norm{\\Pi^{1/2}L\\Pi^{-1/2}}_2。",
+      "第一轮修复：第 222 行预测时域 H 改为 H_p，避免与第 259-264 行调度头索引 H∈{A,B} 冲突；IV.A 第 359 行前补充 MPC 时域 N≥1 和参考轨迹 {(q_t^r,u_t^r)} 定义。",
+      "两次 Tectonic 0.17.0 only-cached 编译 exit 0；0 fatal/undefined/缺字/Overfull，6 Underfull；Main.tex SHA256=5f217f78cba15971ef25d428aa56733309602ef914eea37283e8ffefb6f82acd，PDF SHA256=8cec8dfbc9c2b5a42c553618f8a32098d79bda34362ec8955b1ea72bd197746f。"
+    ],
+    "limitations": ["仅 Tectonic/XeTeX 实际运行；未运行其他引擎。"]
+  },
+  "review": {"verdict": "go", "findings": [], "repairRounds": 1},
+  "nextAction": "第一轮修复后重新申请审查。"
+}
