@@ -1,0 +1,35 @@
+{
+  "id": "20261110-output-tracking-controller-proof-record",
+  "title": "记录输出跟踪冻结MPC控制器与证明路线",
+  "goal": "仅将本轮确定的控制器设计和Route 0引理、Route 1主证明路线写入项目记忆，纠正旧方案的过时入口；不修改论文或代码，不启动实施。",
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "doneWhen": [
+    "记录仅接收期望输出的参考接口、Q/S两项代价、同权终端项、single-freeze QP、首输入执行与重复末端输入移位",
+    "记录Route 0有界性引理及Route 1移位比较、尾部缺陷、平均误差界与最终界的条件和推导接口",
+    "明确删除R项且不追加解释性辩护；不采用A3′、见证参考对、一步收缩约束或未证明的终端控制律",
+    "旧方案标为被替代并链接当前记录，progress指向当前决策与实施边界",
+    "静态核查公式时间索引、差分算子、N=1边界、文档链接与Task结构；核对Main.tex/PDF未变且内层仓库无新增改动"
+  ],
+  "decisions": [
+    "本任务完成仅指设计记录交付，不表示论文已修改、正式证明已写入或模型条件已认证。",
+    "新记录放入.vibe/docs/specs/；原20261110重构方案保留为历史并明确作废其A3′/见证对/ISS路线。",
+    "只记录当前Route 0+Route 1主线；Route 2/3不进入当前方案，后续启用须另行决定。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "当前控制器与条件证明路线已形成自包含记录；旧方案入口和progress已同步，论文与代码未改。",
+    "checks": [
+      "与现行Main.tex IV-A/IV-B、附录B/C及外部报告§4–6对照，静态核查两项代价、同权终端、首步/标称一致性、缓存结构、移位和值函数依赖。",
+      "逐式核查尾部k+N与k+N+1参考索引、d_j与epsilon_sh、仅加入delta_k、时间求和、常值候选N项计数及N=1边界；未把有界性写成ISS/指数精确跟踪。",
+      "自动静态检查通过：24个显示数学块及环境/括号/行内数学配对、3个本地文档链接、关键公式与无R控制器接口；Task基本字段/类型/枚举/ID匹配项目schema。",
+      "Main.tex/PDF SHA256与记录前完全一致：B5FA8EF6D21F84BDBA8FE83FEA27FC7DE7D0F502963AD929A85D6AF276A8CFC1 / F38CAA223713D8A2EEE3B375ACB6F07B79830CDE980C85B316825DE5880C1966。内层仓库无已跟踪差异，git diff --check通过，仅原有第三方未跟踪PDF。"
+    ],
+    "limitations": [
+      "这是设计与条件数学推导记录，不是正式改稿、目标模型/plant认证或求解器验证。",
+      "未修改TeX，故未运行LaTeX编译；未运行训练、实验、仿真或实时性测试。"
+    ]
+  },
+  "nextAction": "本次记录交付完成；后续改稿等待用户另行授权，以.vibe/docs/specs/20261110-output-tracking-controller-proof-record.md为当前依据。"
+}

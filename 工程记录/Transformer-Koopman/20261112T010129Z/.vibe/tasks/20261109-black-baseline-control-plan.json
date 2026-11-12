@@ -1,0 +1,10 @@
+{
+  "id":"20261109-black-baseline-control-plan",
+  "title":"恢复黑色基线并规划第四章精修",
+  "goal":"清除当前论文全部蓝色修订标记并验证正文保真；只读检查第四章类似的定义、公式、段落和证明组织问题，交付优化计划，不实施控制章节改写。",
+  "policy":"balanced","status":"completed","phase":"complete",
+  "doneWhen":["所有蓝色修订恢复黑色，去色前后文字/公式/引用完全一致","真实编译两次，验证编号/引用和PDF输出；成功写回或明确占用阻塞","通读IV.A/IV.B及相关附录，问题定位到公式或段落；区分写作组织问题和需确认的数学接口","给出保留章节结构/控制律/理论条件的增量方案，明确范围、顺序、不可删条件及附录联动；控制正文尚不实施"],
+  "decisions":["本轮唯一产品修改是移除匹配分组中的蓝色命令，不进行实质内容编辑。","前置规格：源/PDF/aux基线存入opencode临时目录black-baseline-control-plan-20261109；严格校验去色函数输出与修改后正文一致；源哈希防并发覆盖；PDF占用不强制解锁。","只读评估遵循AGENTS.md的就地定义、对象链、定义后立即使用、条件与结论归位、必要边界集中说明原则，不将所有证明后讨论一概删除。","方案保存.vibe/docs/chapter4-edit-plan-20261109.md，未来改写须用户确认；无软件API/schema/数据/安全/环境/部署变化，不commit/push，回退仅限本轮颜色差异。"],
+  "verification":{"status":"passed","summary":"19处蓝色分组已移除，形成保真黑色基线并更新PDF；第四章与相关附录只读检查完成，增量方案已交付，未实施正文优化。","checks":["uv run --no-project --python 3.12 C:/Users/12187/AppData/Local/Temp/opencode/black-baseline-control-plan-20261109/check.py通过：按嵌套分组去色后全稿文字/数学与现稿一致，19个蓝色分组移除，所有label/ref/cite及独立公式不变，零残留显式颜色命令。","tectonic --only-cached --keep-logs --keep-intermediates --outdir C:/Users/12187/AppData/Local/Temp/opencode/black-baseline-control-plan-20261109 Main.tex 连续两次exit0；0fatal/undefined/Overfull/缺字，6Underfull；aux对比61个eq编号全部不变，git diff --check通过。","Windows PDF渲染核看原蓝色集中的第5页及附录A第8页，均已为黑色，正文/公式版面正常。源码SHA256=752FDEDEA2037C162825C7AFE20E9E05B61ACDA4BB9D71E451F65231C821F298；发布PDF SHA256=E7C4368E57DEDB7018B54BF06629A97CCCB9A48A1729E3AD773F6CEE7FC3F95B与构建一致。",".vibe/docs/chapter4-edit-plan-20261109.md记录IV.A/IV.B现存问题、公式定位、对象链及条件/证明归位方案、不可删理论条件和附录B必要联动；明确参考u^r_{-1}初始化未交代，以及当前占位图与lower-branch文字指向不符。"],"limitations":["第四章优化只完成规划，尚未改写；参考上一输入的给定接口待后续方案确认，不能自动绑定实际上一输入。","本轮不构成完整理论再认证，未运行训练、代码/求解器、数值或实验认证；6条Underfull与既有环境提示保留。"]},
+  "nextAction":"交付黑色基线和第四章优化计划；未来改写待用户确认。未commit/push，无本任务待恢复工作。"
+}

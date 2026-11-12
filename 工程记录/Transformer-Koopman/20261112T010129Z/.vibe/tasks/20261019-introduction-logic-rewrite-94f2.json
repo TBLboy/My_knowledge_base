@@ -1,0 +1,43 @@
+{
+  "id": "20261019-introduction-logic-rewrite-94f2",
+  "title": "参考同类论文重写引言论证链",
+  "goal": "先实际阅读至少三篇相关高质量论文的引言并分析叙事结构，再重写当前Main.tex的Introduction，修复控制需求/历史信息/Koopman近似/调度控制与条件闭环论证之间的因果链。",
+  "doneWhen": [
+    "实际阅读至少三篇同类原论文引言，保存简短有来源定位的组织思路分析，不以搜索摘要冒充引言阅读，不照抄文字或借用未证结论",
+    "只替换Main.tex中Introduction文字/贡献/导航，原理图及其余章节、前言、数学公式、文献条目和实验均不改；旧源/PDF在杂项历史归档保留",
+    "开篇明确MPC对预测信息和可优化结构的双重需要；引出Koopman的原因是结构适于控制而非凭空解决部分观测；清楚区分有限字典EDMD近似与外部控制输入建模",
+    "神经提升由可观测函数选择自然引出，历史编码由单测量信息不足自然引出，历史调度和冻结QP由明确的作用/代价与候选输入依赖连续引出，不能用指代不明的this problem或短句文献列表代替论证",
+    "不声称所有Koopman模型忽略历史、所有固定算子必然失败、本文首次或任意系统无条件稳定；保留单次freeze/QP、shift实际输出/参考tail及独立残差条件的真实贡献",
+    "已有引用键与原论文主张匹配，无编造文献/结果/实现认证；必要代表文献按论点组织，不为凑引用堆砌或擅改书目信息",
+    "静态核对非引言字节不变、标签/引用/章节不损坏，真实两次编译生成当前Main.pdf，并核查引言版面；记录变化和局限，strict独立review go"
+  ],
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "本轮改动范围为Introduction文字，不改方法、定理、摘要/结论、图或实验；仍以当前用户定稿Main为基线，不恢复旧候选。",
+    "先提炼原论文的需求→建模选择→具体不足→本文回应组织逻辑，再构造本论文段落责任链，最后实施和编译，不将连接词堆砌视为逻辑修复。",
+    "已存在的论文目录归档产生Git删除/移动，属于前次用户授权工作；本轮不回滚或改写无关工作。新说明存于论文目录杂项中，保持根目录整洁。",
+    "已实际阅读Korda–Mezic 2018原文HTML引言及controlled EDMD部分、Koopa NeurIPS2023原文HTML引言/方法、MamKO ICLR2025官方PDF提取引言/相关定义、DeepKoopFormer 2026官方HTML引言。Shenoy ACC2025仅读官方摘要，不计入引言精读。",
+    "采用MPC双重要求→Koopman结构与有限近似/受控建模分层→单测量信息缺口与历史提升→有限模型的历史调度选择→候选输入依赖与freeze→跨轮闭环困难→本文回应/贡献的单线叙事。EDMD可扩展受控系统，不能把原句问题误解为受控方法无法有限维近似。"
+  ],
+  "verification": {
+    "status":"passed",
+    "summary":"完成四篇原论文引言阅读/组织分析，引言按明确因果链重写，非引言字节不变，最终真实源两次编译成功且引言版面检查通过；独立strict reviewer go/findings=[]。",
+    "checks":[
+      "实际读Korda–Mezic原文HTML §1及controlled EDMD部分；Koopa原文HTML §1/方法；MamKO ICLR官方PDF提取§1/§3.2；DeepKoopFormer官方HTML引言。来源和段落责任分析存论文目录杂项/Introduction_Rewrite_Analysis_20261019.md，不抄原句。",
+      "新链：MPC信息/优化结构双需求→Koopman结构/有限EDMD与外部输入建模分层→学习坐标不恢复缺失信息→历史编码→数据条件调度→候选依赖破坏整体凸性→一次freeze/QP与跨轮困难→本文设计和条件贡献。未称所有固定模型失败/首次/无条件稳定，未加实验结论。",
+      "Node实证Introduction之前前言/摘要及从figure*至文末分别与备份逐字一致，图/公式/文献/章节II–VI/附录全部未改；79唯一label/73 ref/26引用键全对应且无闲置bib，环境/括号检查通过。",
+      "最终真实Main连续两次已有Tectonic0.17.0 only-cached编译exit0，10页；两log均0fatal/undefined/缺字/字体失败/Overfull，6 Underfull保留。已有Python缓存pdfminer/pypdfium2提取渲染并实看1–3页，引言/贡献/II章衔接/原图无越栏裁切。",
+      "Main SHA256=db5e665dd642ec9ff00170a3252c517dd301d2090186c804b37b8933ca9e72d1，当前PDF=ad029ba09bbadc64737f1a548d278ba34d4718e8b8eed2a34ba9172316ab4f6e；旧Main/PDF归档pre-introduction-rewrite-20261019；当前PDF已复制论文根目录。保留既有Git归档变动，不改其他代码/实验/原件，不提交推送。"
+    ],
+    "limitations":[
+      "Shenoy ACC2025仅官方摘要核对，不计引言精读；Cisneros仅核验出版/机构摘要所述迭代QP定位，本轮未全量核验所有引用的正文。",
+      "只有Tectonic/XeTeX实际编译，保留6 Underfull及原Fontconfig/算法包注释UTF8/系统字体路径警告，其他引擎未测。",
+      "论文仍无实验结果，条件理论/模型适用性边界不变；写作与引用核读非全量数学/实现/plant认证。",
+      "reviewer未重新访问外部原论文，临时日志访问受限；采用主Agent阅读/编译/版面/字节对照证据，未独立复编或视觉核验。"
+    ]
+  },
+  "review":{"verdict":"go","findings":[],"repairRounds":0},
+  "nextAction": "已通过独立strict reviewer ses_eab6dd116ffeBpxBdRJiz8HAVU审查；交付当前Main/PDF及杂项内阅读/修改分析，等待用户审阅，不扩展其他章节。"
+}

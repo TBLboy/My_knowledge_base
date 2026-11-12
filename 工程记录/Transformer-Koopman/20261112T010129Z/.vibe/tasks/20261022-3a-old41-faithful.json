@@ -1,0 +1,23 @@
+{
+  "id": "20261022-3a-old41-faithful",
+  "title": "严格参照老版本4.1重写现行III.A",
+  "goal": "沿用老版本Temporal Lifting and Low-Rank Transition的段落和独立公式顺序，仅做现行模型、符号和后续依赖所必需的适配。",
+  "policy": "strict",
+  "status": "completed",
+  "phase": "complete",
+  "doneWhen": [
+    "III.A依次包含patch对象、向量化、嵌入、位置编码、Transformer、独立池化和投影、提升和读出、低秩动机、Definition及递归接口，与老版本253–344行对应",
+    "保留列向量历史定义、P_h/v_k/psi_theta/G_theta/C_x、现行A(c)/B(x)调度、q/F/w及所有现有标签；数学模型和理论不变",
+    "III.A以外源文件内容逐字不变，不改图片、实验或代码；保留修改前Main.tex/PDF历史备份",
+    "两次真实Tectonic编译exit0，检查标签/引用/维数及新增排版溢出，独立strict审查go"
+  ],
+  "decisions": [
+    "用户已明确要求严格参考老版本4.1，不采用上轮压缩改写；事实来源为老版本Main.tex253–344行，不再混淆章节号。",
+    "patch向量用t_k^(j)，池化用bar H_k，避免与增广q和残差r冲突。保留老版独立公式结构，新增标签而不改现行标签；编号由LaTeX自动顺延。",
+    "II.A已定义提升/读出，此处按老版顺序给出具体形式并引用II.A；保留现行B(x)调度和q/F/w尾部接口。新Definition不宣称已认证实现。",
+    "不移动或修改现有图，仅恢复fig:overview和附录construction的相关指针。"
+  ],
+  "verification": {"status":"passed","summary":"完成老版253–344行逐段结构适配；连续两次Tectonic编译exit0，PDF已写回。","checks":["与20261022-before-3a-old41备份比对：III.A之前和III.B起之后文本完全一致；原III.A标签全部保留，无重复label或缺失ref/eqref目标。","独立patch/向量化/嵌入/位置编码/编码/池化/投影/提升/读出公式以及低秩动机、Definition按老版顺序恢复。现行B(x)、q/F/w和递归机制保留。","Tectonic only-cached连续两次exit0；最终Main.log为0fatal/undefined/缺字/Overfull，7Underfull。","Main.tex SHA256=49024CC126527804DDA905F82E8A82F3AB151CD04CD2612FE14CFD1FAB0253E9；已写回Main.pdf SHA256=60BFF94F4FEE91AFB41588B21EB17DA635059D3A3142DAC250FA975EFC47B0FF。"],"limitations":["仅运行Tectonic；保留Fontconfig配置、缓存algorithm包注释UTF8及系统字体路径警告。未做训练、数值认证、实验或实现符合性认证。"]},
+  "review": {"verdict":"go","findings":[],"repairRounds":0},
+  "nextAction": "独立reviewer ses_e9d2246a6ffe3KNlwLny6mwvlH返回go，无finding；交付，等待用户下一处指示。"
+}

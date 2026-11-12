@@ -1,0 +1,24 @@
+{
+  "id":"20261109-iv-a-direct-mpc-structure",
+  "title":"重构IV-A直接模型MPC到single-freeze叙事",
+  "goal":"在第四章IV-A开头先用紧凑未编号优化问题给出直接使用完整history-conditioned predictor的MPC基准，再说明非线性来源并自然引出single-freeze；保持现有控制律、公式编号、IV-B接口和论文范围不变。",
+  "policy":"balanced",
+  "status":"completed",
+  "phase":"complete",
+  "doneWhen":[
+    "IV-A开头按直接MPC基准→非线性原因→single-freeze方案→标称rollout→冻结模型顺序组织",
+    "直接MPC基准使用完整递推F、现有stage cost/terminal cost与输入约束，仅为不编号展示，不被表述为新增实现",
+    "候选输入改变预测状态、历史context和后续调度矩阵的逻辑被简洁准确表达；不引入SQP/Jacobian线性化或额外理论结论",
+    "本轮开始时已有蓝色恢复黑色，仅本轮改写内容重新标蓝且颜色作用域闭合",
+    "第三章及之前、第五章/结论、IV-B、附录、代码、实验和图片不变；现有编号、标签和引用接口不变",
+    "完成源级不变量检查、两次真实离线编译、PDF版面核查并更新Main.pdf"
+  ],
+  "decisions":[
+    "直接MPC基准使用equation*，避免新增编号、把概念基准误读为第二个正式控制器或扰动现有公式接口。",
+    "阶段代价ell_t和终端权重beta仍在现有位置定义；基准公式明确说明二者在下文给出，避免移动(30)及改变编号顺序。",
+    "nominal sequence只生成冻结系数，不是后续QP的决策变量；实际控制器仍为一次完整nominal rollout、一次冻结QP、施加首输入和移位。",
+    "未commit/push；保留当前工作区已有Main.tex修改，不处理无关文件。"
+  ],
+  "verification":{"status":"passed","summary":"IV-A已按直接完整模型MPC基准→非线性来源→single-freeze方案的顺序重构，新增内容重新标蓝，源级检查、两次编译和PDF核查均通过。","checks":["源级检查通过：IV之前及Numerical Results之后与去色基线一致；label/ref/eqref/cite接口不变；61个编号公式保持；直接MPC基准使用equation*且无label；nominal rollout先于冻结矩阵；现有frozen_model、标称精确复现和Algorithm Given/Initialize保留。","颜色检查通过：本轮开始前27个旧蓝色命令恢复为黑色，仅本轮7个蓝色分组保留；去色后无残留color命令，颜色作用域闭合。","两次Tectonic离线编译exit0；0fatal/undefined/Overfull/缺字、5Underfull；11页；aux核对61个公式编号不变；git diff --check通过。","PDF第5–6页核看：直接基准公式、问题→single-freeze过渡、(28)–(31)和算法无溢出或断裂；Main.pdf与构建输出SHA256一致。源码原始SHA256=373730F4632B162A6C5D56166999D8225A2ABC4979EF3FAB212C4729AAF73419；PDF SHA256=68CCB219DAB33F72C7AE8EED2EA07E74A038B623C52390F6221CDB65619CD7F0。"],"limitations":["仅完成论文写作、结构和源级数学接口核查，未运行训练、求解器或实验。","5条Underfull及既有Fontconfig/算法包UTF-8环境提示保留；不影响PDF生成。"]},
+  "nextAction":"交付IV-A蓝色审阅版与修改记录；未commit/push，无待恢复工作。"
+}
