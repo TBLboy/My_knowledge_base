@@ -1,0 +1,54 @@
+{
+  "id": "data-collection-business-clarification",
+  "title": "澄清统一数据采集链路业务逻辑",
+  "goal": "假设 robot-adapter-abc-contract 已按验收完成，并行澄清从标准状态、实际控制参考、控制事件和相机数据进入公共同步、录制、质检、落盘与上传的业务逻辑，形成后续可直接实施的已批准基线。",
+  "doneWhen": [
+    "明确采集数据来源、所有权、主时间轴与正常录制流程",
+    "明确 action 来源、间歇缺失、状态/图像缺失及对应 episode 结果",
+    "明确控制事件、异常中断、人工质检、废弃、上传和 batch 封口的高影响分支",
+    "解决或显式降级现有 HDF5 基线中的阻塞未决项，不伪造字段或数据",
+    "形成原子业务规则与可观察验收条件，并经用户批准后固化为基线",
+    "只完成业务澄清和文档，不修改采集业务代码；实现等待 robot-adapter-abc-contract 实际完成"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "按用户要求，本对话现在假设 robot-adapter-abc-contract 已完成并开展业务澄清，以节省后续等待时间",
+    "该假设只用于需求和方案衔接，不改变 robot-adapter-abc-contract 的实际状态，也不允许提前开始采集代码实现",
+    "现有代码行为仅作为技术事实证据，不自动成为目标业务规则",
+    "沿用 hdf5-recording-format v1.1 已批准规则；任何冲突需显式变更并经用户确认",
+    "2026-10-30 用户决定暂缓 action 间歇缺失规则；本轮设计暂以操作员开始跟随采集后全程按住 Grip 为工作假设，不把该假设固化为永久业务规则，后续仍需单独澄清",
+    "2026-10-30 用户确认主时间轴可以继续由实际相机同步帧组驱动，每个帧组对齐一行机器人状态/action；目标采集频率允许后续配置为 60Hz，但必须由实际 60fps 同步采集支撑，不得通过复制、插值或伪造 timestamp 将低帧率数据扩成 60Hz",
+    "2026-10-30 用户决定暂不完整帧处理规则，不把整帧跳过提前固化为业务规则；完整开放问题清单保存于 .vibe/docs/数据采集链路业务待澄清清单.md",
+    "2026-11-01 用户指出此前清单过度澄清。重新筛选后，时间匹配、录制事件幂等、故障隔离、配置冻结、Schema 与保留策略等按现有基线/代码和安全默认进入技术设计，不逐项要求用户拍板；仅在支持松开 Grip 后的 action 缺失语义、或改变现有数据质量验收规则时再询问用户。当前 happy path 无新增业务阻塞",
+    "2026-11-01 用户确认普通松 Grip 后沿用上一时刻实际发送的 action 作为持续有效控制参考；已连同相机主时间轴和真实 60Hz 规则固化到 hdf5-recording-format v1.2。有效性必须来自 adapter 实际保持状态，recorder 不得自行复制；真正 hold/暂停/失去控制权后的缺失仍暂缓",
+    "2026-11-01 用户确认 action 可选字段为 eef_pose 与 joint_position（可单独或并存，由 mentor 认可按需选择），字段名/形状沿用 HDF5 规范；适配器声明能力、采集层按声明落盘，未声明不创建数据集；声明清单不写入 attrs。已固化到 hdf5-recording-format v1.3 与 unified-platform-integration-boundary v1.4",
+    "2026-11-01 用户确认 normal 采集路径不会进入 hold，hold/暂停/失控属异常分支，仍按暂缓处理，不作为正常链路前置条件",
+    "2026-11-01 用户确认 R5 的 robot_id 改为由机器人描述提供（具体机器编号），不再固定 Franka 型号；robot_model 才是型号。已并入 hdf5-recording-format v1.3",
+    "2026-11-01 用户同步元文档变更：manifest.json 删除 episodes[].success、episodes[].discarded、批次级 n_discarded；<cam>_dup 及其复制上一帧供插值的用途整体废弃。已固化到 hdf5-recording-format v1.4",
+    "2026-11-01 用户裁定 spec_version 取最新 inhouse-hdf5-v2；collect_mode 当前固定 teleop；project 只写 manifest 不写 episode attrs。已固化到 v1.5",
+    "2026-11-01 用户决定暂不考虑采集端自检与『拒收』逻辑，跳过该项，batch 封口判据随之悬置",
+    "2026-11-01 用户决定本阶段不采集、不记录相机内外参；图像只写 mount/serial/decoded_shape，未标定不影响录制。已固化到 hdf5-recording-format v1.6",
+    "2026-11-01 用户确认采集中间层提供抽象基类并集中注册字段白名单；适配器只能继承、声明子集，不得新增或改动字段，越界启动期即失败。已固化到 unified-platform-integration-boundary v1.5",
+    "2026-11-01 用户确认观测 eef_pose 与 action 对齐：统一 (T,7)、位置米、四元数 xyzw；已在 R7 明示观测字段白名单。已固化到 hdf5-recording-format v1.7",
+    "2026-11-02 用户确认 task_id、task、scene 在采集页面新建任务弹窗填写，保存为 YAML 任务配置；三者为必填；另有任务名称供人查看，不写入 HDF5；已保存任务可查看全部信息但只读不可修改，只支持删除；采集时从所选任务配置写入 episode attrs，删除不改历史数据。已固化到 hdf5-recording-format v1.9",
+    "2026-11-02 用户确认新增机器人配置模板，列明构型必填字段；robot_type/robot_model 只读，robot_id 可修改；左右臂 frame_axes 写入机器人 YAML，设置页只读并作为对应 EEF pose attrs 来源。已固化到 unified-platform-integration-boundary v1.6"
+    ,"2026-11-02 用户确认业务澄清收口：最终基线为 .vibe/requirements/hdf5-recording-final-baseline.md v1.0；当前只归档、明确范围并拆分后续任务，不开始代码修改。discarded/discard_reason 字段暂保留。"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "业务澄清已收口，最终基线 v1.0 已批准；尚未修改采集业务代码",
+    "checks": [
+      "最终基线写入 .vibe/requirements/hdf5-recording-final-baseline.md",
+      "基线索引已更新并将旧 hdf5-recording-format 标为 superseded",
+      "后续架构、契约、配置、任务生命周期和 HDF5 导出任务已拆分并记录"
+    ],
+    "limitations": [
+      "未修改或运行业务代码",
+      "未进行真实设备验证"
+    ]
+  },
+  "blocker": "",
+  "nextAction": "等待用户选择后续实现任务；在此之前不修改采集业务代码"
+}

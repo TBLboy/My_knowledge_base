@@ -1,0 +1,11 @@
+{
+  "id": "hdf5-requirement-baseline-v1-1",
+  "title": "更新统一平台与 HDF5 业务基线",
+  "goal": "在保留 v1.0 历史记录的基础上，固化最新的团队分工、统一平台适配边界和新 HDF5 落盘规则。",
+  "doneWhen": ["requirements.md 升级为 v1.1 并保留 v1.0 变更记录", "新增平台分工、公共链路和机器人适配边界", "明确 action 间歇缺失仍暂不解决", "更新项目进度中的当前基线版本"],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": ["不修改业务代码", "保留 v1.0 可追溯，不覆盖历史基线", "Franka/ARX5/UR7e 适配集中在机器人适配层，采集和 HDF5 走公共链路", "录制中间无 action 的处理仍不固化方案"],
+  "verification": {"status": "passed", "summary": "已将 v1.0 HDF5 规则与新增统一平台分工、公共链路和适配边界固化为 requirements.md v1.1，并保留版本历史。", "checks": ["requirements.md 包含 v1.1、变更摘要和 v1.0 supersede 历史", "公共链路、机器人适配、统一 recorder 和 rlinf_pipe 边界有验收条件", "action 间歇缺失明确列为暂缓问题", "共享 .vibe/ 位置验证，Franka worktree 保持干净"], "limitations": ["未修改业务代码", "具体 HDF5 spec_version 未冻结", "action 间歇缺失、历史兼容和质检封口规则仍未解决"]}
+}

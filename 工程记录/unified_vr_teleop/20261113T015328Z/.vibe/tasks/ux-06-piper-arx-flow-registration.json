@@ -1,0 +1,33 @@
+{
+  "id": "ux-06-piper-arx-flow-registration",
+  "title": "Piper/ARX 按同一注册机制接入流程与描述",
+  "goal": "Piper、ARX 注册 startup/shutdown/health_check/reset/recover 与连接参数描述，删除公共层残余机型判断。",
+  "doneWhen": [
+    "公共层无 type=='piper'/'arx5'/'franka' 分叉判断（registry 除外）",
+    "Piper demo 模式一键启动/关闭/健康检查可用",
+    "离线回归通过"
+  ],
+  "policy": "balanced",
+  "status": "completed",
+  "phase": "complete",
+  "decisions": [
+    "业务规则：teleop-startup-shutdown v1.0 §A3,H1,I1",
+    "不改控制算法/增益/限位/安全参数；不改 HDF5/上传",
+    "真实运动验收由用户显式操作"
+  ],
+  "verification": {
+    "status": "passed",
+    "summary": "Piper/ARX 注册流程与健康检查；公共层无流程机型分叉；demo Piper 启动全绿",
+    "checks": [
+      "pytest 全套 325 passed / 14 skipped / 1 failed（既有速度测试）",
+      "flows_for 分发到 robot.piper.flows / robot.arx5.flows / robot.franka.flows；robot/common/flows.py 删除",
+      "demo Piper：启动弹窗显示 CAN 阶段、单次确认后执行全绿",
+      "提交 26d3055 已推送 origin/feat/franka"
+    ],
+    "limitations": [
+      "ARX 实机未测；Piper 真机由用户验收"
+    ]
+  },
+  "blocker": "",
+  "nextAction": ""
+}
